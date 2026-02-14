@@ -212,6 +212,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
   // WORD STREAK
   // =============================================
   const [streakToast, setStreakToast] = useState<string | null>(null);
+  const [streakDisplay, setStreakDisplay] = useState(sessionStreak);
 
   useEffect(() => {
     if (game.celebration.isActive) {
@@ -222,6 +223,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
       } else {
         sessionStreak = 0; // completed with mistakes — full reset
       }
+      setStreakDisplay(sessionStreak);
 
       // Milestone toasts
       if (sessionStreak === 3 || sessionStreak === 5 || (sessionStreak > 5 && sessionStreak % 5 === 0)) {
@@ -433,6 +435,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
           </div>
         </div>
         </div>
+
+        {/* STREAK INDICATOR */}
+        {streakDisplay > 0 && (
+          <div className="streak-indicator">🔥 {streakDisplay}</div>
+        )}
 
         {/* STREAK TOAST */}
         {streakToast && (
