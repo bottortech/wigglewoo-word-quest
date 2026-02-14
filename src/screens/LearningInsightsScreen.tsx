@@ -56,97 +56,93 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
             </button>
           </div>
         ) : (
-          <>
-            {/* Section A — Overview Cards */}
-            <div className="insights-overview">
-              <div className="insights-card">
-                <span className="insights-card__icon">🗺️</span>
-                <div className="insights-card__content">
-                  <span className="insights-card__value">
-                    {insights.completedQuests}/{insights.totalQuests}
-                  </span>
-                  <span className="insights-card__label">Quests Completed</span>
-                </div>
+          <div className="insights-layout">
+            {/* LEFT — Stats + Actions */}
+            <div className="insights-sidebar">
+              <div className="insights-stat">
+                <span className="insights-stat__icon">🗺️</span>
+                <span className="insights-stat__value">
+                  {insights.completedQuests}/{insights.totalQuests}
+                </span>
+                <span className="insights-stat__label">Quests</span>
               </div>
-              <div className="insights-card">
-                <span className="insights-card__icon">🎯</span>
-                <div className="insights-card__content">
-                  <span className="insights-card__value">{insights.overallAccuracy}%</span>
-                  <span className="insights-card__label">Overall Accuracy</span>
-                </div>
+              <div className="insights-stat">
+                <span className="insights-stat__icon">🎯</span>
+                <span className="insights-stat__value">{insights.overallAccuracy}%</span>
+                <span className="insights-stat__label">Accuracy</span>
               </div>
-            </div>
 
-            {/* Section B — Progress by Quest Type */}
-            {Object.entries(grouped).map(([patternType, vowels]) => (
-              <div key={patternType} className="insights-section">
-                <h2 className="insights-section__title">{patternType} Progress</h2>
-                <div className="insights-vowel-list">
-                  {vowels.map((v) => (
-                    <div key={v.questId} className="insights-vowel-row">
-                      <div className="insights-vowel-row__label">
-                        <span className="insights-vowel-row__name">{v.vowelLabel}</span>
-                        <span className="insights-vowel-row__trophy">
-                          {v.trophyEarned ? "🏆" : v.nodesCompleted > 0 ? "⏳" : ""}
-                        </span>
-                      </div>
-                      <div className="insights-vowel-row__bar-track">
-                        <div
-                          className="insights-vowel-row__bar-fill"
-                          style={{ width: `${(v.nodesCompleted / v.totalNodes) * 100}%` }}
-                        />
-                        <span className="insights-vowel-row__bar-text">
-                          {v.nodesCompleted}/{v.totalNodes}
-                        </span>
-                      </div>
-                      <span className={`insights-vowel-row__accuracy ${
-                        v.accuracy < 70 ? "insights-vowel-row__accuracy--low" : ""
-                      }`}>
-                        {v.totalAttempts > 0 ? `${v.accuracy}%` : "—"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            {/* Section C — Needs Practice */}
-            {insights.needsPractice.length > 0 && (
-              <div className="insights-section insights-section--practice">
-                <h2 className="insights-section__title">💡 Needs Practice</h2>
-                <ul className="insights-practice-list">
+              {/* Needs Practice */}
+              {insights.needsPractice.length > 0 && (
+                <div className="insights-practice">
+                  <span className="insights-practice__title">💡 Practice</span>
                   {insights.needsPractice.map((tip, i) => (
-                    <li key={i} className="insights-practice-item">{tip}</li>
+                    <span key={i} className="insights-practice__tip">{tip}</span>
                   ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="insights-actions">
-              {!showResetConfirm ? (
-                <button
-                  className="insights-btn insights-btn--danger"
-                  onClick={() => setShowResetConfirm(true)}
-                >
-                  🗑️ Reset Progress
-                </button>
-              ) : (
-                <div className="insights-reset-confirm">
-                  <p>Are you sure? This will erase all learning data.</p>
-                  <button className="insights-btn insights-btn--danger" onClick={handleReset}>
-                    Yes, Reset Everything
-                  </button>
-                  <button
-                    className="insights-btn insights-btn--secondary"
-                    onClick={() => setShowResetConfirm(false)}
-                  >
-                    Cancel
-                  </button>
                 </div>
               )}
+
+              {/* Reset */}
+              <div className="insights-reset">
+                {!showResetConfirm ? (
+                  <button
+                    className="insights-btn insights-btn--danger"
+                    onClick={() => setShowResetConfirm(true)}
+                  >
+                    🗑️ Reset
+                  </button>
+                ) : (
+                  <div className="insights-reset-confirm">
+                    <p>Erase all data?</p>
+                    <button className="insights-btn insights-btn--danger" onClick={handleReset}>
+                      Yes
+                    </button>
+                    <button
+                      className="insights-btn insights-btn--secondary"
+                      onClick={() => setShowResetConfirm(false)}
+                    >
+                      No
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </>
+
+            {/* RIGHT — Vowel progress rows */}
+            <div className="insights-main">
+              {Object.entries(grouped).map(([patternType, vowels]) => (
+                <div key={patternType} className="insights-section">
+                  <h2 className="insights-section__title">{patternType} Progress</h2>
+                  <div className="insights-vowel-list">
+                    {vowels.map((v) => (
+                      <div key={v.questId} className="insights-vowel-row">
+                        <div className="insights-vowel-row__label">
+                          <span className="insights-vowel-row__name">{v.vowelLabel}</span>
+                          <span className="insights-vowel-row__trophy">
+                            {v.trophyEarned ? "🏆" : v.nodesCompleted > 0 ? "⏳" : ""}
+                          </span>
+                        </div>
+                        <div className="insights-vowel-row__bar-track">
+                          <div
+                            className="insights-vowel-row__bar-fill"
+                            style={{ width: `${(v.nodesCompleted / v.totalNodes) * 100}%` }}
+                          />
+                          <span className="insights-vowel-row__bar-text">
+                            {v.nodesCompleted}/{v.totalNodes}
+                          </span>
+                        </div>
+                        <span className={`insights-vowel-row__accuracy ${
+                          v.accuracy < 70 ? "insights-vowel-row__accuracy--low" : ""
+                        }`}>
+                          {v.totalAttempts > 0 ? `${v.accuracy}%` : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
