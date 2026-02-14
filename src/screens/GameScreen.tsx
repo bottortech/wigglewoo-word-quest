@@ -57,6 +57,20 @@ import "../styles/game.css";
 // =============================================
 let sessionStreak = 0;
 
+// =============================================
+// PER-WORD PERFORMANCE RATING
+// =============================================
+export type WordRating = "perfect" | "clean" | "assisted";
+
+function computeWordRating(hintLevel: number): WordRating {
+  if (hintLevel === 0) return "perfect";
+  if (hintLevel <= 2) return "clean";
+  return "assisted";
+}
+
+// Session-level ratings log (survives remounts)
+const wordRatings: { questId: string; wordIndex: number; rating: WordRating }[] = [];
+
 interface GameScreenProps {
   quest: Quest;
   currentWordIndex: number;
@@ -213,15 +227,23 @@ const GameScreen: React.FC<GameScreenProps> = ({
   // =============================================
   const [streakToast, setStreakToast] = useState<string | null>(null);
   const [streakDisplay, setStreakDisplay] = useState(sessionStreak);
+  const [lastRating, setLastRating] = useState<WordRating | null>(null);
 
   useEffect(() => {
     if (game.celebration.isActive) {
-      // Perfect = no hints triggered (level 0)
-      const wasPerfect = game.hint.level === 0;
-      if (wasPerfect) {
+      // Record per-word rating
+      const rating = computeWordRating(game.hint.level);
+      setLastRating(rating);
+      wordRatings.push({ questId: quest.id, wordIndex: currentWordIndex, rating });
+      console.log(
+        `[WordRating] ${quest.id} node ${currentWordIndex + 1}: ${rating} (hint level ${game.hint.level})`
+      );
+
+      // Streak: only perfect solves increment
+      if (rating === "perfect") {
         sessionStreak++;
       } else {
-        sessionStreak = 0; // completed with mistakes — full reset
+        sessionStreak = 0;
       }
       setStreakDisplay(sessionStreak);
 
