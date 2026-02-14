@@ -1614,3 +1614,37 @@
   0%   { transform: translate(0,0) scale(1); opacity:1; }
   100% { transform: translate(-10px,38px) scale(0); opacity:0; }
 }
+
+
+/* ============================================
+   Next-Target Highlight — post-completion pulse
+   ============================================ */
+
+.gear-node-wrapper--next-target .gear-node {
+  animation: next-target-pulse 0.8s ease-in-out 3;
+}
+
+.gear-node-wrapper--next-target::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70px;
+  height: 70px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 193, 7, 0.8);
+  animation: next-target-ring 1s ease-out 3;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes next-target-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%      { transform: scale(1.12); filter: brightness(1.2); }
+}
+
+@keyframes next-target-ring {
+  0%   { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}

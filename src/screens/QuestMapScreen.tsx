@@ -370,6 +370,28 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     }
   }, [arrivedFromWord, isMobile]);
 
+  // =============================================
+  // NEXT-TARGET HIGHLIGHT (after word completion)
+  // =============================================
+  const [nextTargetNode, setNextTargetNode] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (arrivedFromWord !== null && activeNodeIndex >= 0) {
+      // Delay slightly so map renders first, then highlight kicks in
+      const showTimer = setTimeout(() => {
+        setNextTargetNode(activeNodeIndex);
+      }, 400);
+      // Auto-clear after 3 seconds
+      const clearTimer = setTimeout(() => {
+        setNextTargetNode(null);
+      }, 3400);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [arrivedFromWord, activeNodeIndex]);
+
   // Calculate CSS transform for guided zoom
   // Slightly less aggressive since landscape is enforced
   const zoomTransform = useMemo(() => {
@@ -844,7 +866,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           return (
             <div
               key={i}
-              className={`gear-node-wrapper ${shakingNodeIndex === i ? 'gear-node-wrapper--shaking' : ''}`}
+              className={`gear-node-wrapper${shakingNodeIndex === i ? ' gear-node-wrapper--shaking' : ''}${nextTargetNode === i ? ' gear-node-wrapper--next-target' : ''}`}
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
