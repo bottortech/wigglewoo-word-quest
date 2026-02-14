@@ -12,6 +12,7 @@ import {
   loadTrophyProgress,
   getTrophyNodeState,
   areAllQuestsComplete,
+  isQuestFullyComplete,
 } from "../game/progression";
 import { ALL_QUESTS, CVC_QUESTS, CVCC_QUESTS, CVVC_QUESTS } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
@@ -513,9 +514,19 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   };
 
   const isVowelUnlocked = (questId: string): boolean => {
-    const questIndex = ALL_QUESTS.findIndex(q => q.id === questId);
-    if (questIndex === 0) return true;
-    return true; // All unlocked for testing
+    // Dev override — bypass all track locking
+    if (devUnlock) return true;
+
+    // Find which track list this quest belongs to
+    const catalog = QUEST_CATALOG[selectedQuestType];
+    const trackIndex = catalog.tracks.findIndex(t => t.id === questId);
+
+    // First track in any type is always unlocked
+    if (trackIndex <= 0) return true;
+
+    // Track N unlocks when Track N-1 is fully complete (16 nodes + trophy)
+    const prevTrackId = catalog.tracks[trackIndex - 1].id;
+    return isQuestFullyComplete(prevTrackId);
   };
 
   // ---- WW positioning ----
