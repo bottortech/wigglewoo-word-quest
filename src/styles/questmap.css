@@ -1648,3 +1648,29 @@
   0%   { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
 }
+
+
+/* ============================================
+   Node Rating Badge Colors
+   ============================================ */
+
+/* Perfect — gold trophy vibe */
+.gear-node-wrapper.rating-perfect .gear-node__check-badge {
+  background: #f9a825;
+  border-color: #fff8e1;
+  box-shadow: 0 1px 4px rgba(249, 168, 37, 0.5);
+}
+
+/* Clean — green (default, reinforced) */
+.gear-node-wrapper.rating-clean .gear-node__check-badge {
+  background: #2e7d32;
+  border-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* Assisted — muted blue-gray */
+.gear-node-wrapper.rating-assisted .gear-node__check-badge {
+  background: #78909c;
+  border-color: #eceff1;
+  box-shadow: 0 1px 4px rgba(120, 144, 156, 0.4);
+}
