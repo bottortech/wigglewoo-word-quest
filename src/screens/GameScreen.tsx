@@ -220,7 +220,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
       if (wasPerfect) {
         sessionStreak++;
       } else {
-        sessionStreak = 1; // completed but with mistakes — reset, count this one
+        sessionStreak = 0; // completed with mistakes — full reset
       }
 
       // Milestone toasts
