@@ -212,6 +212,25 @@ const QUEST_LABELS: Record<string, string> = {
   "quest-cvvc-mixed-ea": "EA Teams",
 };
 
+/** All known quests grouped by pattern type, in display order */
+const ALL_KNOWN_QUESTS: { questId: string; patternType: string }[] = [
+  { questId: "quest-short-a", patternType: "cvc" },
+  { questId: "quest-short-e", patternType: "cvc" },
+  { questId: "quest-short-i", patternType: "cvc" },
+  { questId: "quest-short-o", patternType: "cvc" },
+  { questId: "quest-short-u", patternType: "cvc" },
+  { questId: "quest-cvcc-short-a", patternType: "cvcc" },
+  { questId: "quest-cvcc-short-i", patternType: "cvcc" },
+  { questId: "quest-cvcc-short-o", patternType: "cvcc" },
+  { questId: "quest-cvcc-short-u", patternType: "cvcc" },
+  { questId: "quest-cvcc-short-e", patternType: "cvcc" },
+  { questId: "quest-cvvc-long-a", patternType: "cvvc" },
+  { questId: "quest-cvvc-long-e", patternType: "cvvc" },
+  { questId: "quest-cvvc-long-o", patternType: "cvvc" },
+  { questId: "quest-cvvc-long-u", patternType: "cvvc" },
+  { questId: "quest-cvvc-mixed-ea", patternType: "cvvc" },
+];
+
 /** Get aggregated insights for the Learning Insights screen */
 export function getInsights(): OverallInsight {
   const store = loadAnalytics();
@@ -219,15 +238,22 @@ export function getInsights(): OverallInsight {
   let totalCorrect = 0;
   let totalIncorrect = 0;
 
-  for (const [questId, quest] of Object.entries(store.quests)) {
+  for (const { questId, patternType } of ALL_KNOWN_QUESTS) {
+    const quest = store.quests[questId];
     let qCorrect = 0;
     let qIncorrect = 0;
     let qAttempts = 0;
+    let nodesCompleted = 0;
+    let trophyEarned = false;
 
-    for (const node of Object.values(quest.nodes)) {
-      qCorrect += node.correct;
-      qIncorrect += node.incorrect;
-      qAttempts += node.attempts;
+    if (quest) {
+      for (const node of Object.values(quest.nodes)) {
+        qCorrect += node.correct;
+        qIncorrect += node.incorrect;
+        qAttempts += node.attempts;
+      }
+      nodesCompleted = quest.nodesCompleted;
+      trophyEarned = quest.trophyEarned;
     }
 
     totalCorrect += qCorrect;
@@ -236,10 +262,10 @@ export function getInsights(): OverallInsight {
     vowels.push({
       questId,
       vowelLabel: QUEST_LABELS[questId] || questId,
-      patternType: quest.patternType,
-      nodesCompleted: quest.nodesCompleted,
+      patternType,
+      nodesCompleted,
       totalNodes: 16,
-      trophyEarned: quest.trophyEarned,
+      trophyEarned,
       accuracy: qAttempts > 0 ? Math.round((qCorrect / qAttempts) * 100) : 0,
       totalAttempts: qAttempts,
       totalCorrect: qCorrect,

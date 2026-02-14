@@ -87,7 +87,7 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
                       <div className="insights-vowel-row__label">
                         <span className="insights-vowel-row__name">{v.vowelLabel}</span>
                         <span className="insights-vowel-row__trophy">
-                          {v.trophyEarned ? "🏆" : "🔒"}
+                          {v.trophyEarned ? "🏆" : v.nodesCompleted > 0 ? "⏳" : ""}
                         </span>
                       </div>
                       <div className="insights-vowel-row__bar-track">
