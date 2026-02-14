@@ -1472,3 +1472,7 @@
   75%  { opacity: 1; }
   100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
 }
+
+.trophy-node--shaking {
+  animation: gear-shake 0.3s ease-out;
+}

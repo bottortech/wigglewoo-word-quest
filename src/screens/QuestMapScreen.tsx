@@ -448,19 +448,35 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   // LOCKED NODE FEEDBACK
   // =============================================
   const [shakingNodeIndex, setShakingNodeIndex] = useState<number | null>(null);
-  const [lockedToast, setLockedToast] = useState(false);
+  const [shakingTrophy, setShakingTrophy] = useState(false);
+  const [lockedToast, setLockedToast] = useState<string | null>(null);
   const shakeTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const handleLockedTap = useCallback((nodeIndex: number) => {
-    // Clear any existing shake
+  const showLockedFeedback = useCallback((toast: string, setShake: () => void, clearShake: () => void) => {
     if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
-    setShakingNodeIndex(nodeIndex);
-    setLockedToast(true);
+    setShake();
+    setLockedToast(toast);
     shakeTimerRef.current = setTimeout(() => {
-      setShakingNodeIndex(null);
-      setLockedToast(false);
+      clearShake();
+      setLockedToast(null);
     }, 1200);
   }, []);
+
+  const handleLockedTap = useCallback((nodeIndex: number) => {
+    showLockedFeedback(
+      "\uD83D\uDD12 Complete the current word first!",
+      () => setShakingNodeIndex(nodeIndex),
+      () => setShakingNodeIndex(null),
+    );
+  }, [showLockedFeedback]);
+
+  const handleLockedTrophyTap = useCallback(() => {
+    showLockedFeedback(
+      "\uD83C\uDFC6 Complete all words to unlock the trophy!",
+      () => setShakingTrophy(true),
+      () => setShakingTrophy(false),
+    );
+  }, [showLockedFeedback]);
 
   const handleInsightsClick = () => {
     setShowParentGate(true);
@@ -838,9 +854,15 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           </div>
           
           <button
-            className={`trophy-node trophy-node--${trophyNodeState}`}
-            onClick={() => trophyNodeState === "active" && onEnterTrophyRoom?.()}
-            disabled={trophyNodeState !== "active"}
+            className={`trophy-node trophy-node--${trophyNodeState}${shakingTrophy ? ' trophy-node--shaking' : ''}`}
+            onClick={() => {
+              if (trophyNodeState === "active") {
+                onEnterTrophyRoom?.();
+              } else if (trophyNodeState === "locked") {
+                handleLockedTrophyTap();
+              }
+            }}
+            disabled={false}
             aria-label={`Trophy Room — ${trophyNodeState}`}
           >
             <img 
@@ -896,8 +918,8 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
       {/* LOCKED NODE TOAST */}
       {lockedToast && (
-        <div className="locked-toast">
-          🔒 Complete the current word first!
+        <div className="locked-toast" key={lockedToast}>
+          {lockedToast}
         </div>
       )}
 
