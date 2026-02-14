@@ -573,20 +573,10 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     setQuestBoxView("types");
   };
 
-  const isVowelUnlocked = (questId: string): boolean => {
-    // Dev override — bypass all track locking
-    if (devUnlock) return true;
-
-    // Find which track list this quest belongs to
-    const catalog = QUEST_CATALOG[selectedQuestType];
-    const trackIndex = catalog.tracks.findIndex(t => t.id === questId);
-
-    // First track in any type is always unlocked
-    if (trackIndex <= 0) return true;
-
-    // Track N unlocks when Track N-1 is fully complete (16 nodes + trophy)
-    const prevTrackId = catalog.tracks[trackIndex - 1].id;
-    return isQuestFullyComplete(prevTrackId);
+  const isVowelUnlocked = (_questId: string): boolean => {
+    // All vowel tracks within a quest type are freely selectable.
+    // Players can jump between any Short A/E/I/O/U at will.
+    return true;
   };
 
   // ---- WW positioning ----
