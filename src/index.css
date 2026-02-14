@@ -1,0 +1,34 @@
+/* ============================================
+   index.css — Global resets for Wigglewoo CVC Quest
+   ============================================ */
+
+@import "./styles/theme.css";
+
+:root {
+  font-family: "Nunito", "Arial Rounded MT Bold", system-ui, Arial, sans-serif;
+  line-height: 1.4;
+  font-weight: 400;
+  color: var(--ww-text);
+  background-color: var(--ww-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}

@@ -1,0 +1,70 @@
+/* ==========================================
+   TROPHY TRANSITION OVERLAY
+   Spin animation between trophy room → map
+   ========================================== */
+.trophy-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, 
+    rgba(255, 215, 0, 0.3) 0%, 
+    rgba(20, 10, 40, 0.95) 70%);
+  animation: trophy-transition-fade 2s ease-in-out forwards;
+}
+
+@keyframes trophy-transition-fade {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.trophy-transition__spinner {
+  width: 180px;
+  height: 180px;
+  animation: trophy-spin 2s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+@keyframes trophy-spin {
+  0% { 
+    transform: scale(1) rotate(0deg); 
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+  }
+  30% { 
+    transform: scale(1.3) rotate(180deg); 
+    filter: drop-shadow(0 0 50px rgba(255, 215, 0, 1));
+  }
+  60% { 
+    transform: scale(1.1) rotate(540deg); 
+  }
+  100% { 
+    transform: scale(0.3) rotate(720deg); 
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
+    opacity: 0;
+  }
+}
+
+.trophy-transition__trophy-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.trophy-transition__text {
+  margin-top: 20px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffd700;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  animation: trophy-text-pulse 1.5s ease-in-out;
+}
+
+@keyframes trophy-text-pulse {
+  0% { opacity: 0; transform: scale(0.8); }
+  30% { opacity: 1; transform: scale(1.1); }
+  60% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.9); }
+}

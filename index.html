@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>wiggle-woo-cvc-quest</title>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Fallback shown until React mounts (or if it never does) -->
+      <div id="boot-fallback" style="
+        padding:32px; text-align:center; font-family:sans-serif;
+        background:#fff3cd; color:#856404; min-height:100vh;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+      ">
+        <h2 style="margin:0 0 8px">⏳ Loading Wigglewoo CVC Quest…</h2>
+        <p style="margin:0; font-size:14px">If this message stays, React failed to mount. Check console.</p>
+        <pre id="boot-error" style="
+          margin-top:16px; padding:12px; background:#f8d7da; color:#721c24;
+          border-radius:6px; font-size:12px; white-space:pre-wrap;
+          max-width:90vw; display:none;
+        "></pre>
+      </div>
+    </div>
+
+    <!-- Catch ANY error from the module script (import failures, runtime throws) -->
+    <script>
+      window.addEventListener('error', function(e) {
+        var el = document.getElementById('boot-error');
+        if (el) { el.style.display = 'block'; el.textContent = e.message + '\n' + (e.filename || '') + ':' + (e.lineno || ''); }
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var el = document.getElementById('boot-error');
+        if (el) { el.style.display = 'block'; el.textContent = 'Promise rejection: ' + (e.reason && e.reason.message || e.reason || 'unknown'); }
+      });
+    </script>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,264 @@
+/* ============================================
+   theme.css — Machine-world theme layer
+   Wigglewoo CVC Quest
+   ============================================
+   Shared visual identity for all screens.
+   Defines:
+     - CSS custom properties (palette)
+     - Decorative background (gears/pipes SVG)
+     - Machine frame styling
+     - Responsive breakpoints
+   ============================================ */
+
+/* ---- Palette ---- */
+:root {
+  --ww-bg: #F5EFE0;
+  --ww-bg-warm: #FFF8ED;
+  --ww-teal: #4DB6AC;
+  --ww-teal-dark: #37897F;
+  --ww-teal-light: #B2DFDB;
+  --ww-orange: #FF9800;
+  --ww-orange-light: #FFE0B2;
+  --ww-gold: #FFD700;
+  --ww-brown: #6D4C41;
+  --ww-brown-light: #A1887F;
+  --ww-text: #3E2723;
+  --ww-text-soft: #795548;
+  --ww-shadow: rgba(62, 39, 35, 0.12);
+  --ww-slot-empty: rgba(255,255,255,0.7);
+  --ww-radius: 16px;
+  --ww-radius-sm: 10px;
+}
+
+/* ---- Decorative machine-world background ---- */
+/* Full-bleed workshop illustration — scales proportionally,
+   never cropped or distorted. Pipes/gears/bulbs are baked
+   into the image; centre panel is left clear for game UI. */
+.machine-world {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  /* Fallback colour matches the image's dominant hue */
+  background-color: #7ec8e3;
+  background-image: url("../assets/node-screen-background.png");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* Gameplay screen uses different background */
+.machine-world--gameplay {
+  background-color: #c0ddf0;
+  background-image: url("../assets/game-play-background.png");
+}
+
+/* ==========================================
+   SUBTLE BACKGROUND ANIMATIONS
+   Makes the scene feel alive without distraction
+   ========================================== */
+
+/* Light bulb glow overlay — top area */
+.machine-world::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: radial-gradient(
+    ellipse 15% 40% at 20% 8%,
+    rgba(255, 230, 150, 0.25) 0%,
+    transparent 70%
+  ),
+  radial-gradient(
+    ellipse 15% 40% at 50% 6%,
+    rgba(255, 230, 150, 0.2) 0%,
+    transparent 70%
+  ),
+  radial-gradient(
+    ellipse 15% 40% at 80% 8%,
+    rgba(255, 230, 150, 0.25) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+  animation: bulb-glow 7s ease-in-out infinite;
+}
+
+@keyframes bulb-glow {
+  0%, 100% { 
+    opacity: 0.6;
+    filter: brightness(1);
+  }
+  50% { 
+    opacity: 1;
+    filter: brightness(1.1);
+  }
+}
+
+/* Gear rotation overlay — left and right sides */
+.machine-world::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    /* Left side gear suggestion */
+    radial-gradient(
+      circle at 8% 50%,
+      rgba(255, 255, 255, 0.03) 0%,
+      transparent 15%
+    ),
+    /* Right side gear suggestion */
+    radial-gradient(
+      circle at 92% 50%,
+      rgba(255, 255, 255, 0.03) 0%,
+      transparent 15%
+    );
+  pointer-events: none;
+  z-index: 1;
+  animation: gear-shimmer 12s ease-in-out infinite;
+}
+
+@keyframes gear-shimmer {
+  0%, 100% { 
+    opacity: 0.5;
+    transform: rotate(0deg);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: rotate(0.5deg);
+  }
+}
+
+/* ---- Pipe / bolt decorations ---- */
+/* Re-enable for pipe shimmer animation */
+.machine-world-pipes-top,
+.machine-world-pipes-bottom {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 12%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.machine-world-pipes-top {
+  top: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.08) 75%,
+    transparent 100%
+  );
+  animation: pipe-flow-top 8s ease-in-out infinite;
+}
+
+.machine-world-pipes-bottom {
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.06) 75%,
+    transparent 100%
+  );
+  animation: pipe-flow-bottom 10s ease-in-out infinite;
+}
+
+@keyframes pipe-flow-top {
+  0%, 100% { 
+    background-position: -100% 0;
+    opacity: 0.4;
+  }
+  50% { 
+    background-position: 100% 0;
+    opacity: 0.7;
+  }
+}
+
+@keyframes pipe-flow-bottom {
+  0%, 100% { 
+    background-position: 100% 0;
+    opacity: 0.3;
+  }
+  50% { 
+    background-position: -100% 0;
+    opacity: 0.6;
+  }
+}
+
+/* Corner bolts — subtle pulse */
+.machine-bolt {
+  display: block;
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 2;
+  animation: bolt-pulse 5s ease-in-out infinite;
+}
+
+.machine-bolt--tl { top: 5%; left: 5%; animation-delay: 0s; }
+.machine-bolt--tr { top: 5%; right: 5%; animation-delay: 1.25s; }
+.machine-bolt--bl { bottom: 5%; left: 5%; animation-delay: 2.5s; }
+.machine-bolt--br { bottom: 5%; right: 5%; animation-delay: 3.75s; }
+
+@keyframes bolt-pulse {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+/* ---- Machine frame card ---- */
+/* Gives UI panels a readable surface on top of
+   the illustrated background.                      */
+.machine-frame {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 3px solid var(--ww-brown-light);
+  border-radius: var(--ww-radius);
+  box-shadow:
+    0 2px 12px var(--ww-shadow),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+  padding: 16px;
+}
+
+/* ---- Image frame (machine viewport) ---- */
+.word-image {
+  background: linear-gradient(135deg, #fffdf7 0%, #f3ece0 100%);
+  border: 3px solid var(--ww-brown-light);
+  border-radius: var(--ww-radius);
+  box-shadow:
+    inset 0 2px 8px rgba(109,76,65,0.10),
+    0 2px 6px var(--ww-shadow);
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .machine-world::before,
+  .machine-world::after {
+    animation: none;
+  }
+}

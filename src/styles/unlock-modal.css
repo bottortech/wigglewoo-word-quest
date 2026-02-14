@@ -1,0 +1,133 @@
+/* =============================================
+   UnlockModal — Quest type unlock requirements
+   ============================================= */
+
+.unlock-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: unlockFadeIn 0.25s ease-out;
+}
+
+@keyframes unlockFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.unlock-modal {
+  background: linear-gradient(145deg, #fff8e1, #fff3c4);
+  border: 3px solid #d4a017;
+  border-radius: 18px;
+  padding: 28px 32px 24px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4),
+              inset 0 1px 0 rgba(255,255,255,0.8);
+  animation: unlockSlideUp 0.3s ease-out;
+}
+
+@keyframes unlockSlideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.unlock-modal__icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.unlock-modal__title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #5d4037;
+  margin: 0 0 8px;
+}
+
+.unlock-modal__desc {
+  font-size: 13px;
+  color: #795548;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.unlock-modal__progress {
+  margin-bottom: 16px;
+}
+
+.unlock-modal__progress-bar {
+  height: 10px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.unlock-modal__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #66bb6a, #43a047);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.unlock-modal__progress-text {
+  font-size: 12px;
+  color: #8d6e63;
+  font-weight: 600;
+}
+
+.unlock-modal__list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.unlock-modal__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 10px;
+  font-size: 14px;
+  color: #795548;
+  font-weight: 600;
+}
+
+.unlock-modal__item--done {
+  background: rgba(76, 175, 80, 0.12);
+  color: #2e7d32;
+}
+
+.unlock-modal__item-icon {
+  font-size: 18px;
+}
+
+.unlock-modal__btn {
+  background: linear-gradient(145deg, #42a5f5, #1e88e5);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(30,136,229,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.unlock-modal__btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 5px 12px rgba(30,136,229,0.4);
+}
+
+.unlock-modal__btn:active {
+  transform: scale(0.97);
+}

@@ -1,0 +1,394 @@
+/* =============================================
+   insights.css — Learning Insights + Parent Gate
+   ============================================= */
+
+/* ---- Parent Gate Overlay ---- */
+.parent-gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.parent-gate {
+  background: #fffdf5;
+  border-radius: 20px;
+  padding: 32px 28px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+
+.parent-gate__title {
+  font-size: 20px;
+  color: #2a2a2a;
+  margin: 0 0 12px;
+}
+
+.parent-gate__text {
+  font-size: 14px;
+  color: #555;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.parent-gate__hold-area {
+  margin-bottom: 16px;
+}
+
+.parent-gate__btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #4a90d9, #357abd);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: transform 0.1s;
+}
+
+.parent-gate__btn--holding {
+  transform: scale(0.97);
+  background: linear-gradient(135deg, #357abd, #2a6aaa);
+}
+
+.parent-gate__progress-track {
+  height: 6px;
+  background: #e0ddd5;
+  border-radius: 3px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.parent-gate__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4a90d9, #2ecc71);
+  border-radius: 3px;
+  transition: width 0.03s linear;
+}
+
+.parent-gate__cancel {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.parent-gate__cancel:hover {
+  color: #555;
+}
+
+/* ---- Insights Screen ---- */
+.insights-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: linear-gradient(160deg, #1a2a4a 0%, #0d1929 100%);
+  color: #e8e4dc;
+  overflow-y: auto;
+  font-family: 'Nunito', 'Segoe UI', sans-serif;
+}
+
+.insights-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(26, 42, 74, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.insights-header__back {
+  background: none;
+  border: none;
+  color: #8ab4f8;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.insights-header__back:hover {
+  background: rgba(138, 180, 248, 0.1);
+}
+
+.insights-header__title {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  flex: 1;
+}
+
+.insights-header__subtitle {
+  font-size: 12px;
+  color: #8899aa;
+  font-weight: 500;
+}
+
+.insights-body {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ---- Empty state ---- */
+.insights-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.insights-empty__icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.insights-empty p {
+  color: #8899aa;
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+/* ---- Overview cards ---- */
+.insights-overview {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.insights-card {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.insights-card__icon {
+  font-size: 28px;
+}
+
+.insights-card__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.insights-card__value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.insights-card__label {
+  font-size: 12px;
+  color: #8899aa;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ---- Sections ---- */
+.insights-section {
+  margin-bottom: 24px;
+}
+
+.insights-section__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #c0d0e0;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ---- Vowel progress rows ---- */
+.insights-vowel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insights-vowel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.insights-vowel-row__label {
+  width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.insights-vowel-row__name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.insights-vowel-row__trophy {
+  font-size: 14px;
+}
+
+.insights-vowel-row__bar-track {
+  flex: 1;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  min-width: 80px;
+}
+
+.insights-vowel-row__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4a90d9, #2ecc71);
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+
+.insights-vowel-row__bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.insights-vowel-row__accuracy {
+  width: 45px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2ecc71;
+  flex-shrink: 0;
+}
+
+.insights-vowel-row__accuracy--low {
+  color: #e74c3c;
+}
+
+/* ---- Needs Practice ---- */
+.insights-section--practice {
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.15);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.insights-practice-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insights-practice-item {
+  font-size: 14px;
+  color: #e8c4c0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  line-height: 1.4;
+}
+
+/* ---- Action buttons ---- */
+.insights-actions {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  text-align: center;
+}
+
+.insights-btn {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.1s;
+}
+
+.insights-btn:hover {
+  transform: scale(1.02);
+}
+
+.insights-btn--primary {
+  background: linear-gradient(135deg, #4a90d9, #357abd);
+  color: #fff;
+}
+
+.insights-btn--secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  margin-left: 8px;
+}
+
+.insights-btn--danger {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.insights-reset-confirm {
+  text-align: center;
+}
+
+.insights-reset-confirm p {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* ---- Insights button on Quest Map ---- */
+.insights-map-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 50;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(30, 40, 60, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, color 0.2s;
+}
+
+.insights-map-btn:hover {
+  background: rgba(30, 40, 60, 0.9);
+  color: #fff;
+}

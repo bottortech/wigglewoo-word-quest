@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Wigglewoo CVC Quest — Playable Prototype</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: Arial, sans-serif;
+  -webkit-user-select: none; user-select: none; touch-action: none;
+  overscroll-behavior: none; background: #f0f4f8; }
+
+/* ===== SCREENS ===== */
+.screen { display: none; width: 100%; height: 100dvh; position: relative; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+
+/* ===== QUEST MAP ===== */
+#quest-map { justify-content: center; gap: 12px; padding: 20px 0; }
+.map-title { font-size: 18px; font-weight: bold; color: #444; letter-spacing: 1px; }
+.map-machine { width: 70%; max-width: 260px; opacity: 0.18; position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; z-index: 0; }
+.nodes-column { display: flex; flex-direction: column-reverse; gap: 10px;
+  align-items: center; z-index: 1; padding: 20px 0; }
+.node { width: 44px; height: 44px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-size: 15px; font-weight: bold;
+  border: none; outline: none; -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease; cursor: default; position: relative; }
+</style>
+</head>
+<body>
+<!-- Content inserted by script; styles continued below -->
+<style>
+.node-locked { background: rgba(220,220,220,0.8); border: 2px dashed #aaa; color: #aaa; }
+.node-active { background: #fff; border: 3px solid #333; color: #333; cursor: pointer;
+  animation: nodePulse 1.5s ease-in-out infinite; }
+.node-active:active { transform: scale(0.93); }
+.node-completed { background: #4DB6AC; border: 2px solid #3a9e93; color: #fff; }
+@keyframes nodePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(77,182,172,0.3); }
+  50%     { box-shadow: 0 0 0 8px rgba(77,182,172,0); }
+}
+.ww-idle { position: absolute; width: 30px; pointer-events: none; z-index: 2;
+  transition: top 0.4s ease; }
+.map-label { font-size: 11px; color: #888; position: absolute; right: -36px;
+  white-space: nowrap; }
+
+/* ===== GAME SCREEN ===== */
+#game-screen { justify-content: space-between; padding: 16px 12px 20px; }
+.gs-progress { position: absolute; top: 8px; right: 12px; font-size: 12px;
+  color: #999; background: rgba(255,255,255,0.7); padding: 3px 10px; border-radius: 10px; }
+.gs-target { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 8px; }
+.gs-target-box { width: 100px; height: 100px; border: 2px dashed #ccc; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; color: #bbb;
+  background: rgba(255,255,255,0.5); }
+.gs-target-word { font-size: 20px; font-weight: bold; color: #555; letter-spacing: 6px; }
+
+/* Word slots */
+.gs-slots { display: flex; gap: 16px; justify-content: center; }
+.gs-slot { width: 66px; height: 66px; border: 2.5px dashed #aaa; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; color: #bbb;
+  background: rgba(255,255,255,0.5); transition: all 0.15s ease; position: relative; }
+.gs-slot.filled { border-style: solid; border-color: #4DB6AC; background: rgba(77,182,172,0.08); }
+.gs-slot.locked { border-color: #4DB6AC; background: rgba(77,182,172,0.2); }
+.gs-slot.hovered { border-color: #FFD700; background: rgba(255,215,0,0.12); transform: scale(1.06); }
+.gs-slot.hint { animation: slotHint 0.8s ease-in-out infinite; }
+@keyframes slotHint {
+  0%,100% { border-color: #FF9800; box-shadow: none; }
+  50%     { border-color: #FF9800; box-shadow: 0 0 10px rgba(255,152,0,0.4); }
+}
+.gs-slot-label { font-style: italic; pointer-events: none; }
+</style>
+<style>
+/* Letter tiles */
+.gs-bank { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  padding: 8px; min-height: 70px; }
+.tile { width: 58px; height: 58px; border: 2px solid #333; border-radius: 10px;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+  font-family: "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: 26px; font-weight: bold; color: #333; cursor: grab;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: box-shadow 0.12s ease; position: relative; }
+.tile:active { cursor: grabbing; }
+.tile.in-slot { border-color: #4DB6AC; width: 54px; height: 54px; font-size: 24px;
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 5; }
+.tile.dragging { opacity: 0.88; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  pointer-events: none; z-index: 300; position: fixed; }
+
+/* Wigglewoo helper */
+.gs-helper { position: absolute; bottom: 14px; left: 10px; width: 50px;
+  pointer-events: none; transition: transform 0.3s ease; }
+.gs-helper.pointing { animation: helpBounce 0.6s ease-in-out; transform: scale(1.12); }
+@keyframes helpBounce {
+  0%,100% { transform: scale(1.12) translateY(0); }
+  50%     { transform: scale(1.12) translateY(-5px); }
+}
+.gs-phoneme { text-align: center; font-size: 20px; margin-top: 2px;
+  animation: phonPulse 0.8s ease-in-out infinite; }
+@keyframes phonPulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+</style>
+<style>
+/* ===== CELEBRATION ===== */
+.celeb-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 100; display: flex; justify-content: center; }
+.celeb-char { position: absolute; top: 44%; transform: translateY(-50%); width: 70px;
+  opacity: 0; }
+.celeb-char.level { animation: cEnter .3s ease-out forwards, cClap .3s ease-in-out .3s,
+  cClap .3s ease-in-out .6s, cExit .3s ease-in 1.2s forwards; }
+.celeb-char.quest { animation: cEnter .4s ease-out forwards, cClap .3s ease-in-out .4s,
+  cClap .3s ease-in-out .7s, cExitQ .5s ease-in 1.5s forwards; }
+@keyframes cEnter { 0%{opacity:0;transform:translateY(-50%) scale(.85)} 100%{opacity:1;transform:translateY(-50%) scale(1)} }
+@keyframes cClap { 0%{transform:translateY(-50%) scaleX(1)} 50%{transform:translateY(-50%) scaleX(.95)} 100%{transform:translateY(-50%) scaleX(1)} }
+@keyframes cExit { 0%{opacity:1;transform:translateY(-50%) scale(1)} 100%{opacity:0;transform:translateY(-50%) scale(.9)} }
+@keyframes cExitQ { 0%{opacity:1;transform:translateY(-50%) scale(1)} 100%{opacity:0;transform:translateY(-50%) scale(.9)} }
+.sparkle { position: absolute; width: 5px; height: 5px; border-radius: 1px;
+  transform: rotate(45deg); opacity: 0; }
+.sparkle.go { animation: sDrift var(--dur,.5s) ease-out var(--delay,0s) forwards; }
+@keyframes sDrift { 0%{opacity:1;transform:rotate(45deg) translateY(0)} 100%{opacity:0;transform:rotate(45deg) translateY(-24px)} }
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .node-active, .gs-slot.hint, .gs-phoneme, .gs-helper.pointing { animation: none !important; }
+  .gs-slot.hovered { transform: none; }
+  .celeb-char.level, .celeb-char.quest { animation: cEnter .1s ease-out forwards !important; }
+}
+</style>
+
+<!-- ===== SCREENS HTML ===== -->
+<div id="quest-map" class="screen active">
+  <div class="map-title" id="map-title"></div>
+  <div class="nodes-column" id="nodes-col"></div>
+</div>
+
+<div id="game-screen" class="screen">
+  <div class="gs-progress" id="gs-progress"></div>
+  <div class="gs-target">
+    <div class="gs-target-box" id="gs-img">[ ]</div>
+    <div class="gs-target-word" id="gs-word"></div>
+  </div>
+  <div class="gs-slots" id="gs-slots"></div>
+  <div class="gs-bank" id="gs-bank"></div>
+  <div id="gs-helper-wrap" style="position:absolute;bottom:14px;left:10px;pointer-events:none;">
+    <div class="gs-helper" id="gs-helper">🐛</div>
+    <div class="gs-phoneme" id="gs-phoneme" style="display:none;">🔊</div>
+  </div>
+  <div class="celeb-overlay" id="celeb" style="display:none;"></div>
+</div>
+
+<script>
+// =============================================
+// Wigglewoo CVC Quest — Playable prototype
+// All game rules implemented in one file.
+// =============================================
+"use strict";
+</script>
+<script>
+// ---- QUEST DATA ----
+const QUESTS = [
+  {
+    id: "quest-short-a", title: "Short A Words",
+    words: [
+      { word:"cat", img:"🐱", letters:["c","a","t"], dist:[] },
+      { word:"hat", img:"🎩", letters:["h","a","t"], dist:[] },
+      { word:"bat", img:"🦇", letters:["b","a","t"], dist:[] },
+      { word:"map", img:"🗺️", letters:["m","a","p"], dist:[] },
+      { word:"cap", img:"🧢", letters:["c","a","p"], dist:["r"] },
+      { word:"van", img:"🚐", letters:["v","a","n"], dist:["g"] },
+      { word:"jam", img:"🍯", letters:["j","a","m"], dist:["s","o"] },
+      { word:"rag", img:"🧹", letters:["r","a","g"], dist:["l","i"] },
+    ],
+  },
+  {
+    id: "quest-short-i", title: "Short I Words",
+    words: [
+      { word:"sit", img:"🪑", letters:["s","i","t"], dist:[] },
+      { word:"pin", img:"📌", letters:["p","i","n"], dist:[] },
+      { word:"dig", img:"⛏️", letters:["d","i","g"], dist:[] },
+      { word:"lid", img:"🫙", letters:["l","i","d"], dist:[] },
+      { word:"wig", img:"💇", letters:["w","i","g"], dist:["b"] },
+      { word:"rip", img:"✂️", letters:["r","i","p"], dist:["n"] },
+      { word:"mix", img:"🥣", letters:["m","i","x"], dist:["t","a"] },
+      { word:"zip", img:"🤐", letters:["z","i","p"], dist:["k","u"] },
+    ],
+  },
+];
+const WORDS_PER_QUEST = 8;
+const STORAGE_KEY = "wigglewoo-cvc-progress";
+</script>
+<script>
+// ---- PERSISTENCE ----
+function loadProgress(questId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return all[questId] || { questId, currentWordIndex: 0, questComplete: false };
+  } catch { return { questId, currentWordIndex: 0, questComplete: false }; }
+}
+function saveProgress(prog) {
+  try {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    all[prog.questId] = prog;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  } catch {}
+}
+function advanceWord(prog) {
+  const next = prog.currentWordIndex + 1;
+  if (next >= WORDS_PER_QUEST) {
+    prog.questComplete = true;
+  } else {
+    prog.currentWordIndex = next;
+  }
+  saveProgress(prog);
+  return prog;
+}
+
+// ---- GLOBAL STATE ----
+let activeQuest = QUESTS[0];
+let progress = loadProgress(activeQuest.id);
+let wordIdx = 0;
+let wordData = null;
+let slots = [null, null, null];       // { letter, tileIdx } or null
+let slotsLocked = false;
+let bankTiles = [];                   // { letter, idx }
+let hintLevel = 0;
+let hintSlot = null;
+let dragState = null;                 // { tileIdx, letter, origin, startX, startY, el }
+let celebrating = false;
+</script>
+<script>
+// ---- HELPERS ----
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getSlotRects() {
+  const slotEls = document.querySelectorAll(".gs-slot");
+  return Array.from(slotEls).map((el, i) => {
+    const r = el.getBoundingClientRect();
+    return { idx: i, left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+  });
+}
+
+function hitTest(x, y, rects) {
+  for (const r of rects) {
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return r.idx;
+  }
+  return -1;
+}
+
+// ---- SCREEN SWITCHING ----
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+</script>
+<script>
+// =============================================
+// QUEST MAP SCREEN
+// =============================================
+function renderMap() {
+  progress = loadProgress(activeQuest.id);
+  document.getElementById("map-title").textContent = activeQuest.title;
+  const col = document.getElementById("nodes-col");
+  col.innerHTML = "";
+
+  for (let i = 0; i < WORDS_PER_QUEST; i++) {
+    let state;
+    if (progress.questComplete) state = "completed";
+    else if (i < progress.currentWordIndex) state = "completed";
+    else if (i === progress.currentWordIndex) state = "active";
+    else state = "locked";
+
+    const btn = document.createElement("button");
+    btn.className = `node node-${state}`;
+    btn.textContent = state === "completed" ? "✓" : (i + 1);
+    btn.setAttribute("aria-label", `Level ${i+1} — ${state}`);
+    if (state === "active") {
+      btn.onclick = () => startGame(i);
+    } else {
+      btn.disabled = true;
+    }
+    col.appendChild(btn);
+  }
+  showScreen("quest-map");
+}
+
+// =============================================
+// GAME SCREEN — INIT
+// =============================================
+function startGame(wIdx) {
+  wordIdx = wIdx;
+  wordData = activeQuest.words[wordIdx];
+  slots = [null, null, null];
+  slotsLocked = false;
+  hintLevel = 0;
+  hintSlot = null;
+  celebrating = false;
+
+  // Build letter bank
+  const all = [...wordData.letters, ...wordData.dist];
+  bankTiles = shuffle(all.map((l, i) => ({ letter: l, idx: i })));
+
+  renderGame();
+  showScreen("game-screen");
+}
+</script>
+<script>
+// =============================================
+// GAME SCREEN — RENDER
+// =============================================
+function renderGame() {
+  // Progress
+  document.getElementById("gs-progress").textContent = `${wordIdx + 1} / ${WORDS_PER_QUEST}`;
+
+  // Target
+  document.getElementById("gs-img").textContent = wordData.img;
+  document.getElementById("gs-img").style.fontSize = "48px";
+  document.getElementById("gs-word").textContent = wordData.word.toUpperCase();
+
+  // Slots
+  const slotsEl = document.getElementById("gs-slots");
+  slotsEl.innerHTML = "";
+  const labels = ["C", "V", "C"];
+
+  for (let i = 0; i < 3; i++) {
+    const slotDiv = document.createElement("div");
+    slotDiv.className = "gs-slot";
+    slotDiv.dataset.slotIdx = i;
+
+    if (slots[i]) {
+      slotDiv.classList.add("filled");
+      if (slotsLocked) slotDiv.classList.add("locked");
+
+      // Render draggable tile inside slot (if not locked)
+      if (!slotsLocked) {
+        const tileEl = createTileEl(slots[i].letter, slots[i].tileIdx, true, i);
+        slotDiv.appendChild(tileEl);
+      } else {
+        // Locked: show letter text only
+        const span = document.createElement("span");
+        span.className = "gs-slot-label";
+        span.style.fontWeight = "bold";
+        span.style.fontSize = "24px";
+        span.style.color = "#333";
+        span.style.fontStyle = "normal";
+        span.textContent = slots[i].letter.toUpperCase();
+        slotDiv.appendChild(span);
+      }
+    } else {
+      const lbl = document.createElement("span");
+      lbl.className = "gs-slot-label";
+      lbl.textContent = labels[i];
+      slotDiv.appendChild(lbl);
+    }
+
+    // Hint styling
+    if (hintSlot === i && hintLevel >= 2) {
+      slotDiv.classList.add("hint");
+    }
+
+    slotsEl.appendChild(slotDiv);
+  }
+
+  // Letter bank
+  const bankEl = document.getElementById("gs-bank");
+  bankEl.innerHTML = "";
+  const placedIdxs = new Set(slots.filter(Boolean).map(s => s.tileIdx));
+
+  for (const t of bankTiles) {
+    if (placedIdxs.has(t.idx)) continue; // tile is in a slot
+    const tileEl = createTileEl(t.letter, t.idx, false, null);
+    bankEl.appendChild(tileEl);
+  }
+
+  // Helper hint
+  const helperEl = document.getElementById("gs-helper");
+  helperEl.className = "gs-helper" + (hintLevel >= 2 ? " pointing" : "");
+  document.getElementById("gs-phoneme").style.display = hintLevel >= 3 ? "block" : "none";
+}
+</script>
+<script>
+// =============================================
+// TILE CREATION + DRAG INIT
+// =============================================
+function createTileEl(letter, tileIdx, inSlot, slotIdx) {
+  const el = document.createElement("div");
+  el.className = "tile" + (inSlot ? " in-slot" : "");
+  el.textContent = letter.toUpperCase();
+  el.dataset.tileIdx = tileIdx;
+  el.style.touchAction = "none";
+
+  el.addEventListener("pointerdown", (e) => {
+    if (slotsLocked || celebrating) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    // If dragging from slot → remove from slot
+    const origin = inSlot ? slotIdx : "bank";
+    if (typeof origin === "number") {
+      slots[origin] = null;
+      renderGame();
+    }
+
+    // Create drag ghost
+    const ghost = document.createElement("div");
+    ghost.className = "tile dragging";
+    ghost.textContent = letter.toUpperCase();
+    ghost.style.left = (e.clientX - 29) + "px";
+    ghost.style.top = (e.clientY - 29) + "px";
+    document.body.appendChild(ghost);
+
+    dragState = {
+      tileIdx, letter, origin,
+      startX: e.clientX, startY: e.clientY,
+      ghost,
+    };
+  }, { passive: false });
+
+  return el;
+}
+</script>
+<script>
+// =============================================
+// GLOBAL POINTER HANDLERS (move / up / cancel)
+// =============================================
+document.addEventListener("pointermove", (e) => {
+  if (!dragState) return;
+  e.preventDefault();
+
+  dragState.ghost.style.left = (e.clientX - 29) + "px";
+  dragState.ghost.style.top = (e.clientY - 29) + "px";
+
+  // Hover feedback on slots
+  const rects = getSlotRects();
+  const hit = hitTest(e.clientX, e.clientY, rects);
+  document.querySelectorAll(".gs-slot").forEach((el, i) => {
+    el.classList.toggle("hovered", i === hit && !slots[i] && !slotsLocked);
+  });
+}, { passive: false });
+
+document.addEventListener("pointerup", (e) => {
+  if (!dragState) return;
+  e.preventDefault();
+
+  // Remove ghost
+  dragState.ghost.remove();
+
+  // Clear hover
+  document.querySelectorAll(".gs-slot").forEach(el => el.classList.remove("hovered"));
+
+  // Hit-test slots
+  const rects = getSlotRects();
+  const hitIdx = hitTest(e.clientX, e.clientY, rects);
+
+  if (hitIdx >= 0 && !slots[hitIdx] && !slotsLocked) {
+    // Dropped on an open slot — check correctness
+    const correct = dragState.letter.toLowerCase() === wordData.letters[hitIdx].toLowerCase();
+
+    if (correct) {
+      // ✅ CORRECT: place letter
+      slots[hitIdx] = { letter: dragState.letter, tileIdx: dragState.tileIdx };
+      hintLevel = 0;
+      hintSlot = null;
+      renderGame();
+      checkCompletion();
+    } else {
+      // ❌ INCORRECT: snap back (no sound, no X, no penalty)
+      escalateHint();
+      renderGame();
+    }
+  } else {
+    // Dropped outside — return to bank
+    renderGame();
+  }
+
+  dragState = null;
+}, { passive: false });
+
+document.addEventListener("pointercancel", () => {
+  if (dragState) {
+    dragState.ghost.remove();
+    dragState = null;
+    renderGame();
+  }
+});
+</script>
+<script>
+// =============================================
+// HINT ESCALATION
+// =============================================
+// 1st mistake → no reaction
+// 2nd mistake → WW points to correct slot
+// 3rd+ mistake → WW points + phoneme replay
+function escalateHint() {
+  hintLevel = Math.min(hintLevel + 1, 3);
+
+  if (hintLevel >= 2) {
+    // Find first empty or wrong slot to point at
+    hintSlot = null;
+    for (let i = 0; i < 3; i++) {
+      if (!slots[i]) { hintSlot = i; break; }
+    }
+  }
+}
+
+// =============================================
+// WORD COMPLETION CHECK
+// =============================================
+function checkCompletion() {
+  // All 3 slots must be filled with correct letters
+  const allCorrect = slots.every((s, i) =>
+    s && s.letter.toLowerCase() === wordData.letters[i].toLowerCase()
+  );
+
+  if (!allCorrect) return;
+
+  // LOCK all slots
+  slotsLocked = true;
+  renderGame();
+
+  // Determine celebration type
+  const isQuestComplete = wordIdx >= WORDS_PER_QUEST - 1;
+  const celebType = isQuestComplete ? "quest" : "level";
+  const celebDuration = isQuestComplete ? 2000 : 1500;
+
+  celebrating = true;
+  showCelebration(celebType, celebDuration);
+}
+</script>
+<script>
+// =============================================
+// CELEBRATION
+// =============================================
+function showCelebration(type, duration) {
+  const overlay = document.getElementById("celeb");
+  overlay.style.display = "flex";
+  overlay.innerHTML = "";
+
+  // Character
+  const ch = document.createElement("div");
+  ch.className = `celeb-char ${type}`;
+  ch.textContent = "🐛🎉";
+  ch.style.fontSize = "36px";
+  ch.style.textAlign = "center";
+  overlay.appendChild(ch);
+
+  // Sparkles
+  const sparkleCount = type === "quest" ? 6 : 4;
+  const colors = ["#FFD700", "#4DB6AC"];
+  for (let i = 0; i < sparkleCount; i++) {
+    const sp = document.createElement("div");
+    sp.className = "sparkle";
+    sp.style.background = colors[i % 2];
+    sp.style.left = (45 + Math.random() * 30 - 15) + "%";
+    sp.style.top = (38 + Math.random() * 12 - 6) + "%";
+    sp.style.setProperty("--dur", (0.4 + Math.random() * 0.2) + "s");
+    sp.style.setProperty("--delay", (duration * 0.6 / 1000 + i * 0.08) + "s");
+    overlay.appendChild(sp);
+    // Trigger animation
+    requestAnimationFrame(() => sp.classList.add("go"));
+  }
+
+  // Auto-dismiss
+  setTimeout(() => {
+    overlay.style.display = "none";
+    overlay.innerHTML = "";
+    celebrating = false;
+
+    // AUTO-ADVANCE (no "Next" button)
+    setTimeout(() => {
+      if (type === "quest") {
+        // Quest complete → advance progress + return to map
+        advanceWord(progress);
+        renderMap();
+      } else {
+        // Level complete → advance + next word
+        advanceWord(progress);
+        startGame(wordIdx + 1);
+      }
+    }, 300);
+  }, duration);
+}
+</script>
+<script>
+// =============================================
+// BOOT
+// =============================================
+renderMap();
+</script>
+</body>
+</html>

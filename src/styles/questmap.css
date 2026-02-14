@@ -1,0 +1,1430 @@
+/* ============================================
+   questmap.css — Quest Map Overlay Styles
+   WiggleWoo's Word Quest
+   ============================================ */
+
+/* Remove browser focus rings on game elements */
+.gear-node:focus,
+.trophy-node:focus,
+.quest-map-overlay *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================
+   QUEST MAP OVERLAY — positioned inside blue frame
+   ========================================== */
+.quest-map-overlay {
+  position: absolute;
+  /* Position inside the blue frame "screen" area */
+  top: 18%;
+  left: 18%;
+  right: 18%;
+  bottom: 24%;
+  border-radius: 42px;
+  overflow: visible;
+  z-index: 5;
+  touch-action: manipulation;
+  /* Smooth zoom transitions */
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* ==========================================
+   GUIDED ZOOM SYSTEM — Mobile Navigation
+   ========================================== */
+
+/* Mobile-specific: allow taps, prevent pinch zoom and double-tap */
+.quest-map-overlay--mobile {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Zoomed state: node focus */
+.quest-map-overlay--zoomed {
+  /* Transform applied via inline style for dynamic targeting */
+}
+
+/* Trophy focus: stronger zoom effect */
+.quest-map-overlay--trophy-focus {
+  /* Slightly longer transition for trophy */
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Completion animation: quick zoom out */
+.quest-map-overlay--completing {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dimmed nodes during zoom (non-active nodes) — softer for landscape */
+.gear-node-wrapper--dimmed {
+  opacity: 0.6;
+  filter: brightness(0.75) saturate(0.7);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+/* Harder dimming when trophy is focused */
+.gear-node-wrapper--dimmed-hard {
+  opacity: 0.45;
+  filter: brightness(0.6) saturate(0.5);
+}
+
+/* Focused active node: enhanced visibility */
+.gear-node-wrapper--focused {
+  z-index: 20;
+  /* Increase tap target on mobile */
+}
+
+.gear-node-wrapper--focused .gear-node {
+  transform: scale(1.12);
+  transition: transform 0.3s ease;
+}
+
+/* Trophy dimmed when regular node is active */
+.trophy-node-wrapper--dimmed {
+  opacity: 0.6;
+  filter: brightness(0.75);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+/* Trophy focused: enhanced scale and glow */
+.trophy-node-wrapper--focused {
+  z-index: 25;
+}
+
+.trophy-node-wrapper--focused .trophy-node {
+  transform: scale(1.08);
+  transition: transform 0.4s ease;
+}
+
+.trophy-node-wrapper--focused .trophy-node__spotlight {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.trophy-node-wrapper--focused .trophy-sparkle {
+  animation-duration: 2s !important;
+}
+
+/* Path highlighting during zoom */
+.quest-map-overlay--zoomed .learning-path {
+  opacity: 0.7;
+  transition: opacity 0.4s ease;
+}
+
+.quest-map-overlay--trophy-focus .learning-path {
+  opacity: 0.5;
+}
+
+/* ==========================================
+   DEV GUIDELINE — Red dashed safe-zone box
+   Set display: none to hide when done
+   ========================================== */
+.quest-map-guideline {
+  display: none; /* Toggle to 'block' for dev calibration */
+  position: absolute;
+  top: 2%;
+  left: 2%;
+  right: 2%;
+  bottom: -22%;
+  border: 3px dashed rgba(255, 50, 50, 0.9);
+  border-radius: 42px;
+  pointer-events: none;
+  z-index: 999; /* Above everything for dev visibility */
+}
+
+/* ==========================================
+   LEARNING PATH — glowing line bottom to top
+   ========================================== */
+.learning-path {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.learning-path__line {
+  animation: path-pulse 3s ease-in-out infinite;
+}
+
+.learning-path__dots {
+  animation: path-flow 20s linear infinite;
+}
+
+@keyframes path-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes path-flow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100; }
+}
+
+/* ==========================================
+   GEAR NODE WRAPPER — positioning container
+   ========================================== */
+.gear-node-wrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+}
+
+/* ==========================================
+   TROPHY NODE — bonus node between 8 and 9
+   VISUAL DOMINANCE: spotlight, vignette, sparkles, pedestal
+   ========================================== */
+.trophy-node-wrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+  pointer-events: none;
+}
+
+/* Layer 1: Localized vignette — subtle darkening around trophy area */
+.trophy-node__vignette {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    transparent 0%,
+    transparent 30%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.15) 70%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -3;
+}
+
+/* Layer 2: Large soft spotlight glow behind trophy */
+.trophy-node__spotlight {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 220px;
+  height: 220px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse 50% 60% at center,
+    rgba(255, 223, 100, 0.5) 0%,
+    rgba(255, 200, 50, 0.35) 25%,
+    rgba(255, 180, 0, 0.15) 50%,
+    transparent 75%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -2;
+  animation: trophy-spotlight-breathe 4s ease-in-out infinite;
+}
+
+@keyframes trophy-spotlight-breathe {
+  0%, 100% { 
+    opacity: 0.85; 
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+/* Layer 3: Pedestal highlight ring beneath trophy */
+.trophy-node__pedestal {
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  width: 100px;
+  height: 30px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse 100% 100% at center,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 215, 0, 0.25) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(2px);
+}
+
+/* Layer 4: Animated sparkles container */
+.trophy-node__sparkles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 180px;
+  height: 180px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Individual sparkle */
+.trophy-sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #fff 0%, rgba(255, 223, 100, 0.9) 40%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  animation: trophy-sparkle-twinkle 3s ease-in-out infinite;
+}
+
+/* Sparkle positions - distributed around trophy */
+.trophy-sparkle--1 {
+  top: 10%;
+  left: 20%;
+  animation-delay: 0s;
+}
+.trophy-sparkle--2 {
+  top: 5%;
+  left: 70%;
+  animation-delay: 0.5s;
+}
+.trophy-sparkle--3 {
+  top: 30%;
+  left: 90%;
+  animation-delay: 1s;
+}
+.trophy-sparkle--4 {
+  top: 75%;
+  left: 85%;
+  animation-delay: 1.5s;
+}
+.trophy-sparkle--5 {
+  top: 80%;
+  left: 15%;
+  animation-delay: 2s;
+}
+.trophy-sparkle--6 {
+  top: 40%;
+  left: 5%;
+  animation-delay: 2.5s;
+}
+
+@keyframes trophy-sparkle-twinkle {
+  0%, 100% { 
+    opacity: 0; 
+    transform: scale(0.5);
+  }
+  15% { 
+    opacity: 1; 
+    transform: scale(1.2);
+  }
+  30% { 
+    opacity: 0.7; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0; 
+    transform: scale(0.5);
+  }
+}
+
+.trophy-node {
+  position: relative;
+  width: 215px;  /* 25% larger than 172px */
+  height: 215px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.trophy-node__img {
+  width: 100%;
+  height: auto;
+  filter: 
+    brightness(1.2)
+    contrast(1.1)
+    saturate(1.35)
+    drop-shadow(0 0 15px rgba(255, 215, 0, 0.7))
+    drop-shadow(0 0 30px rgba(255, 200, 0, 0.4))
+    drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5));
+  transition: filter 0.3s ease, transform 0.3s ease;
+  /* Image rendering for crispness */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Locked state — still golden and intriguing, slightly muted but visible */
+.trophy-node--locked .trophy-node__img {
+  filter: 
+    brightness(0.95) 
+    contrast(1.05)
+    saturate(0.85) 
+    drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))
+    drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+  opacity: 0.8;
+  animation: trophy-locked-pulse 3s ease-in-out infinite;
+}
+
+/* Locked: hide sparkles, dim spotlight */
+.trophy-node--locked ~ .trophy-node__sparkles .trophy-sparkle {
+  animation: none;
+  opacity: 0;
+}
+.trophy-node-wrapper:has(.trophy-node--locked) .trophy-node__spotlight {
+  opacity: 0.5;
+}
+.trophy-node-wrapper:has(.trophy-node--locked) .trophy-node__vignette {
+  opacity: 0.6;
+}
+
+@keyframes trophy-locked-pulse {
+  0%, 100% { 
+    filter: 
+      brightness(0.95) 
+      contrast(1.05)
+      saturate(0.85) 
+      drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))
+      drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+    transform: scale(1);
+  }
+  50% { 
+    filter: 
+      brightness(1.05) 
+      contrast(1.08)
+      saturate(0.95) 
+      drop-shadow(0 0 18px rgba(255, 215, 0, 0.6))
+      drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+    transform: scale(1.02);
+  }
+}
+
+/* Active trophy — BRIGHT, glowing, unmissable, draws eye immediately */
+.trophy-node--active .trophy-node__img {
+  filter: 
+    brightness(1.35) 
+    contrast(1.15)
+    saturate(1.5) 
+    drop-shadow(0 0 25px rgba(255, 215, 0, 1))
+    drop-shadow(0 0 50px rgba(255, 200, 0, 0.7))
+    drop-shadow(0 0 80px rgba(255, 180, 0, 0.4))
+    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+  animation: trophy-active-glow 2s ease-in-out infinite;
+}
+
+@keyframes trophy-active-glow {
+  0%, 100% { 
+    filter: 
+      brightness(1.35) 
+      contrast(1.15)
+      saturate(1.5) 
+      drop-shadow(0 0 25px rgba(255, 215, 0, 1))
+      drop-shadow(0 0 50px rgba(255, 200, 0, 0.7))
+      drop-shadow(0 0 80px rgba(255, 180, 0, 0.4))
+      drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+    transform: translateY(0) scale(1);
+  }
+  50% { 
+    filter: 
+      brightness(1.45) 
+      contrast(1.2)
+      saturate(1.6) 
+      drop-shadow(0 0 35px rgba(255, 215, 0, 1))
+      drop-shadow(0 0 70px rgba(255, 200, 0, 0.85))
+      drop-shadow(0 0 100px rgba(255, 180, 0, 0.5))
+      drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+    transform: translateY(-8px) scale(1.06);
+  }
+}
+
+.trophy-node__glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle, 
+    rgba(255, 223, 100, 0.7) 0%, 
+    rgba(255, 200, 50, 0.45) 30%,
+    rgba(255, 180, 0, 0.2) 55%, 
+    transparent 75%
+  );
+  border-radius: 50%;
+  animation: trophy-glow-pulse 2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes trophy-glow-pulse {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+}
+
+/* Completed trophy — satisfied golden glow with green accent, still prominent */
+.trophy-node--completed .trophy-node__img {
+  filter: 
+    brightness(1.15) 
+    contrast(1.1)
+    saturate(1.25) 
+    drop-shadow(0 0 15px rgba(255, 215, 0, 0.6))
+    drop-shadow(0 0 30px rgba(76, 175, 80, 0.5))
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  opacity: 1;
+}
+
+/* Completed: reduce sparkle frequency */
+.trophy-node-wrapper:has(.trophy-node--completed) .trophy-sparkle {
+  animation-duration: 5s;
+}
+
+.trophy-node__check {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.trophy-node:disabled {
+  cursor: default;
+}
+
+.trophy-node:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.trophy-node:active:not(:disabled) {
+  transform: scale(1.02);
+}
+
+/* ==========================================
+   GEAR NODE — solid tappable button
+   ========================================== */
+.gear-node {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: radial-gradient(circle at 30% 30%, #fff8e6 0%, #f5d89b 70%);
+  border: 3px solid #b8860b;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.35),
+    inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  opacity: 1 !important;
+  z-index: 10;
+  transform: scale(1.05);
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gear-node:hover:not(:disabled) {
+  transform: scale(1.12);
+}
+
+.gear-node:active:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.gear-node:disabled {
+  cursor: not-allowed;
+}
+
+/* Gear SVG styling — solid, no transparency */
+.gear-node__svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+  opacity: 1 !important;
+}
+
+/* Slow spinning animation for active node only */
+.gear-node__svg--spinning {
+  animation: gear-spin 10s linear infinite;
+}
+
+@keyframes gear-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* === ACTIVE STATE — bright gold, glowing, subtle pulse === */
+.gear-node--active {
+  background: radial-gradient(circle at 30% 30%, #fffde7 0%, #ffe082 70%);
+  border-color: #d4960a;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(255, 193, 7, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  opacity: 1;
+  animation: active-node-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes active-node-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.gear-node--active .gear-node__shape {
+  fill: #FFD54F;
+  stroke: #D4960A;
+  stroke-width: 3;
+}
+
+.gear-node--active .gear-node__inner {
+  fill: #FFFDE7;
+  stroke: #FFE082;
+  stroke-width: 1.5;
+}
+
+.gear-node--active .gear-node__svg {
+  filter: drop-shadow(0 0 10px rgba(255, 193, 7, 0.7))
+          drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+}
+
+/* === COMPLETED STATE — solid green, checkmark === */
+.gear-node--completed {
+  background: radial-gradient(circle at 30% 30%, #e8f5e9 0%, #81c784 70%);
+  border-color: #2e7d32;
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.35),
+    inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+.gear-node--completed .gear-node__shape {
+  fill: #81C784;
+  stroke: #2E7D32;
+  stroke-width: 3;
+}
+
+.gear-node--completed .gear-node__inner {
+  fill: #C8E6C9;
+  stroke: #66BB6A;
+  stroke-width: 1.5;
+}
+
+.gear-node--completed .gear-node__svg {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+  opacity: 1;
+}
+
+/* === LOCKED STATE — solid gold, tappable look === */
+.gear-node--locked {
+  background: radial-gradient(circle at 30% 30%, #fff8e6 0%, #f5d89b 70%);
+  border-color: #b8860b;
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.35),
+    inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  opacity: 0.5;
+}
+
+.gear-node--locked .gear-node__shape {
+  fill: #FFD54F;
+  stroke: #D4960A;
+  stroke-width: 3;
+}
+
+.gear-node--locked .gear-node__inner {
+  fill: #FFF8E1;
+  stroke: #FFE082;
+  stroke-width: 1.5;
+}
+
+.gear-node--locked .gear-node__svg {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+  opacity: 1;
+}
+
+/* Node content (number or checkmark) — high contrast */
+.gear-node__content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  z-index: 2;
+  pointer-events: none;
+  line-height: 1;
+  opacity: 1 !important;
+}
+
+.gear-node--active .gear-node__content {
+  color: #3a2a00;
+  opacity: 1 !important;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+.gear-node--completed .gear-node__content {
+  color: #1B5E20;
+  font-size: 22px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.gear-node--locked .gear-node__content {
+  color: #3a2a00;
+  opacity: 1 !important;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+/* Pulsing glow effect for active node only */
+.gear-node__glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 193, 7, 0.6) 0%,
+    rgba(255, 193, 7, 0.3) 45%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: node-glow-pulse 2s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes node-glow-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
+
+/* ==========================================
+   WIGGLEWOO ON MAP
+   ========================================== */
+.map-wigglewoo {
+  position: absolute;
+  z-index: 40;
+  pointer-events: none !important;
+  transition: all 0.5s ease-out;
+}
+
+.map-wigglewoo--moving {
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.map-wigglewoo__img {
+  width: 80px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  animation: ww-idle 2s ease-in-out infinite;
+  pointer-events: none !important;
+}
+
+@keyframes ww-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* ==========================================
+   QUEST COMPLETE OVERLAY
+   ========================================== */
+.quest-complete-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+}
+
+.quest-complete-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(180deg, #FFFDE7 0%, #FFF9C4 100%);
+  border: 4px solid #F9A825;
+  border-radius: 20px;
+  padding: 24px 40px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.quest-complete-banner__icon {
+  font-size: 48px;
+}
+
+.quest-complete-banner__text {
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 800;
+  color: #5D4037;
+}
+
+.quest-complete-banner__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.quest-complete-btn {
+  background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%);
+  border: 3px solid #2E7D32;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFF;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.quest-complete-btn:hover {
+  transform: translateY(-2px);
+}
+
+.quest-complete-btn--next {
+  background: linear-gradient(180deg, #29B6F6 0%, #0288D1 100%);
+  border-color: #0277BD;
+}
+
+/* ==========================================
+   MAP RESTART BUTTON
+   ========================================== */
+.map-restart-btn {
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #BCAAA4;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5D4037;
+  cursor: pointer;
+  z-index: 15;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease;
+}
+
+.map-restart-btn:hover {
+  background: #FFF;
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 600px) {
+  /* NO overlay repositioning — mobile uses same bounds as desktop
+     for proportional scale-down behavior */
+
+  .gear-node {
+    width: 38px;
+    height: 38px;
+  }
+
+  .gear-node__content {
+    font-size: 12px;
+  }
+
+  .gear-node--completed .gear-node__content {
+    font-size: 16px;
+  }
+
+  .gear-node__glow {
+    width: 55px;
+    height: 55px;
+  }
+
+  .map-wigglewoo__img {
+    width: 60px;
+  }
+
+  .quest-complete-banner {
+    padding: 16px 24px;
+  }
+
+  .quest-complete-banner__icon {
+    font-size: 36px;
+  }
+
+  .quest-complete-banner__text {
+    font-size: 18px;
+  }
+
+  .map-restart-btn {
+    bottom: 1%;
+    padding: 6px 16px;
+    font-size: 12px;
+  }
+  
+  /* Guided zoom: increase active node tap target */
+  .gear-node-wrapper--focused .gear-node {
+    width: 56px;
+    height: 56px;
+  }
+  
+  /* Trophy: larger tap target when focused */
+  .trophy-node-wrapper--focused .trophy-node {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+/* ==========================================
+   TABLET RESPONSIVE (768px)
+   ========================================== */
+@media (max-width: 768px) and (min-width: 601px) {
+  /* Guided zoom: moderate tap target increase */
+  .gear-node-wrapper--focused .gear-node {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .trophy-node-wrapper--focused .trophy-node {
+    width: 145px;
+    height: 145px;
+  }
+}
+
+/* ==========================================
+   TROPHY SHOWCASE — below badge logo
+   Featured prize display: silhouette (locked) → gold trophy (earned)
+   ========================================== */
+.trophy-showcase {
+  position: absolute;
+  top: 2%;
+  left: calc(3% + 70px);
+  transform: translateX(-50%);
+  z-index: 9;
+  margin-top: 143px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+  pointer-events: none;
+}
+
+/* Clickable when trophy is earned */
+.trophy-showcase--clickable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.trophy-showcase--clickable:hover {
+  filter: brightness(1.1);
+  transform: translateX(-50%) scale(1.03);
+  transition: filter 0.2s, transform 0.2s;
+}
+
+/* Soft spotlight / vignette behind the whole display */
+.trophy-showcase__spotlight {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(180, 200, 220, 0.25) 0%,
+    rgba(120, 150, 180, 0.1) 45%,
+    transparent 72%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.trophy-showcase__container {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Silhouette — locked state: muted but reads as a trophy centerpiece */
+.trophy-showcase__silhouette {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.5;
+  filter: brightness(0.75) saturate(0) drop-shadow(0 6px 28px rgba(150, 170, 200, 0.35));
+  transition: opacity 0.8s ease;
+}
+
+/* Gold trophy — hidden by default */
+.trophy-showcase__gold {
+  position: absolute;
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  opacity: 0;
+  transform: scale(0.6) rotateY(180deg);
+  transition: opacity 0.6s ease 0.4s, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s;
+}
+
+/* Pedestal — soft glowing base beneath trophy */
+.trophy-showcase__pedestal {
+  width: 160px;
+  height: 14px;
+  margin-top: -30px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(180, 200, 220, 0.4) 0%,
+    rgba(150, 170, 200, 0.18) 50%,
+    transparent 80%
+  );
+  border-radius: 50%;
+  filter: blur(4px);
+}
+
+/* Plaque frame — gold style, always visible */
+.trophy-showcase__plaque {
+  margin-top: -37px;
+  padding: 6px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    180deg,
+    rgba(200, 170, 80, 0.85) 0%,
+    rgba(160, 130, 50, 0.9) 40%,
+    rgba(130, 100, 30, 0.95) 100%
+  );
+  border: 2px solid rgba(255, 220, 100, 0.6);
+  border-radius: 8px;
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.35),
+    0 0 15px rgba(200, 170, 60, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Title — always visible, muted when locked */
+.trophy-showcase__title {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(60, 45, 20, 0.65);
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 0.6s ease 1s, text-shadow 0.6s ease 1s;
+}
+
+/* Sub-title — top line "CVC" */
+.trophy-showcase__title-sub {
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(60, 45, 20, 0.5);
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 1px;
+  transition: color 0.6s ease 1s, text-shadow 0.6s ease 1s;
+}
+
+/* Sparkles container — hidden until revealed */
+.trophy-showcase__sparkles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240px;
+  height: 240px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.8s;
+}
+
+.trophy-showcase__sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #FFD700 0%, rgba(255, 215, 0, 0.3) 50%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+/* ---- REVEALED STATE ---- */
+
+/* Spotlight brightens to warm gold */
+.trophy-showcase--revealed .trophy-showcase__spotlight {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 215, 0, 0.18) 0%,
+    rgba(255, 190, 50, 0.08) 45%,
+    transparent 72%
+  );
+  animation: trophy-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Silhouette spins out */
+.trophy-showcase--revealed .trophy-showcase__silhouette {
+  opacity: 0;
+  animation: trophy-spin-out 0.8s ease-in forwards;
+}
+
+/* Gold trophy spins in */
+.trophy-showcase--revealed .trophy-showcase__gold {
+  opacity: 1;
+  transform: scale(1) rotateY(0deg);
+  filter: drop-shadow(0 8px 30px rgba(255, 215, 0, 0.5));
+}
+
+/* Pedestal glows gold */
+.trophy-showcase--revealed .trophy-showcase__pedestal {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 215, 0, 0.45) 0%,
+    rgba(255, 190, 50, 0.18) 50%,
+    transparent 80%
+  );
+}
+
+/* Plaque brightens */
+.trophy-showcase--revealed .trophy-showcase__plaque {
+  background: linear-gradient(
+    180deg,
+    rgba(230, 195, 80, 0.95) 0%,
+    rgba(200, 165, 50, 0.95) 40%,
+    rgba(170, 135, 30, 0.95) 100%
+  );
+  border-color: rgba(255, 230, 120, 0.8);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(255, 215, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Title brightens to dark gold on bright plaque */
+.trophy-showcase--revealed .trophy-showcase__title {
+  color: rgba(50, 35, 10, 0.9);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.trophy-showcase--revealed .trophy-showcase__title-sub {
+  color: rgba(50, 35, 10, 0.7);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Sparkles appear */
+.trophy-showcase--revealed .trophy-showcase__sparkles {
+  opacity: 1;
+}
+
+.trophy-showcase--revealed .trophy-showcase__sparkle {
+  animation: showcase-sparkle 2.5s ease-in-out infinite;
+}
+
+.trophy-showcase__sparkle--1 {
+  top: 8%;
+  left: 18%;
+  animation-delay: 0s !important;
+}
+.trophy-showcase__sparkle--2 {
+  top: 5%;
+  right: 18%;
+  left: auto;
+  animation-delay: 0.5s !important;
+}
+.trophy-showcase__sparkle--3 {
+  top: 35%;
+  left: 5%;
+  animation-delay: 1.0s !important;
+}
+.trophy-showcase__sparkle--4 {
+  top: 35%;
+  right: 5%;
+  left: auto;
+  animation-delay: 1.5s !important;
+}
+.trophy-showcase__sparkle--5 {
+  bottom: 30%;
+  left: 12%;
+  top: auto;
+  animation-delay: 2.0s !important;
+}
+.trophy-showcase__sparkle--6 {
+  bottom: 30%;
+  right: 12%;
+  top: auto;
+  left: auto;
+  animation-delay: 0.8s !important;
+}
+
+/* ---- KEYFRAMES ---- */
+
+@keyframes trophy-spin-out {
+  0% {
+    opacity: 0.5;
+    transform: scale(1) rotateY(0deg);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.05) rotateY(90deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) rotateY(180deg);
+  }
+}
+
+@keyframes showcase-sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes trophy-glow-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* ---- Responsive: mobile ---- */
+@media (max-width: 600px) {
+  .trophy-showcase {
+    margin-top: 95px;
+    width: 170px;
+  }
+  
+  .trophy-showcase__container {
+    width: 165px;
+    height: 165px;
+  }
+
+  .trophy-showcase__spotlight {
+    width: 210px;
+    height: 210px;
+  }
+
+  .trophy-showcase__pedestal {
+    width: 120px;
+  }
+
+  .trophy-showcase__plaque {
+    padding: 6px 14px;
+  }
+  
+  .trophy-showcase__title {
+    font-size: 9px;
+    letter-spacing: 0.6px;
+  }
+
+  .trophy-showcase__sparkles {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+/* ==========================================
+   LANDSCAPE MOBILE — short viewport (iPhone landscape etc.)
+   Scale down sidebar elements so they don't crowd the map
+   ========================================== */
+@media (max-height: 500px) {
+  /* NO overlay repositioning — mobile uses same bounds as desktop
+     for proportional scale-down behavior */
+
+  /* Logo: landscape size */
+  .title-badge {
+    max-width: 136px;
+    top: 0.5%;
+    left: -0.7% !important;
+  }
+
+  /* Trophy showcase: below logo, properly sized */
+  .trophy-showcase {
+    margin-top: 163px;
+    width: 120px;
+    left: calc(1.3% + 48px);
+  }
+
+  .trophy-showcase__container {
+    width: 110px;
+    height: 110px;
+  }
+
+  .trophy-showcase__spotlight {
+    width: 140px;
+    height: 140px;
+  }
+
+  .trophy-showcase__pedestal {
+    width: 80px;
+    margin-top: -14px;
+  }
+
+  .trophy-showcase__plaque {
+    margin-top: -18px;
+    padding: 3px 10px;
+  }
+
+  .trophy-showcase__title {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .trophy-showcase__title-sub {
+    font-size: 6px;
+  }
+
+  .trophy-showcase__sparkles {
+    width: 120px;
+    height: 120px;
+  }
+
+  /* Right panel: visible with full labels */
+  .word-quest-box {
+    width: 100px;
+    right: 0.5% !important;
+    top: 12%;
+    max-height: 88%;
+    transform: none;
+    transform-origin: top right;
+  }
+
+  .word-quest-box__header {
+    padding: 2px 4px;
+    gap: 1px;
+  }
+
+  .word-quest-box__title {
+    font-size: 11px;
+  }
+
+  .word-quest-box__body {
+    padding: 2px;
+    gap: 2px;
+    overflow-y: auto;
+    max-height: calc(100% - 20px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .word-quest-box__vowel-btn {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .word-quest-box__quest-btn .quest-letter-badge {
+    width: 12px;
+    height: 12px;
+    font-size: 7px;
+  }
+}
+
+/* ==========================================
+   DEV UNLOCK BUTTON — development only
+   ========================================== */
+.dev-unlock-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 100;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ccc;
+  background: rgba(40, 40, 40, 0.85);
+  border: 1px solid rgba(100, 100, 100, 0.5);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
+  pointer-events: auto;
+}
+
+.dev-unlock-btn:hover {
+  opacity: 1;
+}
+
+.dev-unlock-btn--active {
+  color: #ffd700;
+  background: rgba(60, 50, 20, 0.9);
+  border-color: rgba(255, 215, 0, 0.5);
+  opacity: 0.8;
+}
+
+/* ---- DEV DEBUG LABEL ---- */
+.dev-debug-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-family: monospace;
+  color: #0f0;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  border-radius: 4px;
+  pointer-events: none;
+  line-height: 1.5;
+}
+
+/* Trophy transition styles → see trophy-transition.css */
