@@ -57,19 +57,13 @@ import "../styles/game.css";
 // =============================================
 let sessionStreak = 0;
 
-// =============================================
-// PER-WORD PERFORMANCE RATING
-// =============================================
-export type WordRating = "perfect" | "clean" | "assisted";
+import { saveNodeRating, type WordRating } from "../game/progression";
 
 function computeWordRating(hintLevel: number): WordRating {
   if (hintLevel === 0) return "perfect";
   if (hintLevel <= 2) return "clean";
   return "assisted";
 }
-
-// Session-level ratings log (survives remounts)
-const wordRatings: { questId: string; wordIndex: number; rating: WordRating }[] = [];
 
 interface GameScreenProps {
   quest: Quest;
@@ -234,7 +228,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
       // Record per-word rating
       const rating = computeWordRating(game.hint.level);
       setLastRating(rating);
-      wordRatings.push({ questId: quest.id, wordIndex: currentWordIndex, rating });
+      saveNodeRating(quest.id, currentWordIndex, rating);
       console.log(
         `[WordRating] ${quest.id} node ${currentWordIndex + 1}: ${rating} (hint level ${game.hint.level})`
       );

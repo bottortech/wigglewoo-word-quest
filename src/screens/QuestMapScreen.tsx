@@ -15,6 +15,7 @@ import {
   isQuestFullyComplete,
   hasTrophyUnlockBeenSeen,
   markTrophyUnlockSeen,
+  loadNodeRatings,
 } from "../game/progression";
 import { ALL_QUESTS, CVC_QUESTS, CVCC_QUESTS, CVVC_QUESTS } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
@@ -277,6 +278,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     getTrophyNodeState(progress, trophyProgress), 
     [progress, trophyProgress]
   );
+
+  // Per-node performance ratings
+  const nodeRatings = useMemo(() => loadNodeRatings(quest.id), [quest.id]);
   
   // Generate states for all 16 nodes — linear progression, no mid-quest gate
   const nodeStates: NodeState[] = useMemo(() => {
@@ -866,7 +870,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           return (
             <div
               key={i}
-              className={`gear-node-wrapper${shakingNodeIndex === i ? ' gear-node-wrapper--shaking' : ''}${nextTargetNode === i ? ' gear-node-wrapper--next-target' : ''}`}
+              className={`gear-node-wrapper${shakingNodeIndex === i ? ' gear-node-wrapper--shaking' : ''}${nextTargetNode === i ? ' gear-node-wrapper--next-target' : ''}${state === 'completed' && nodeRatings[i] ? ` rating-${nodeRatings[i]}` : ''}`}
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,

@@ -257,6 +257,44 @@ export function getTrophyNodeState(
 }
 
 
+// ---- Per-Node Performance Ratings ----
+
+export type WordRating = "perfect" | "clean" | "assisted";
+
+const RATINGS_KEY = "wigglewoo-node-ratings";
+
+function loadAllRatings(): Record<string, Record<number, WordRating>> {
+  try {
+    const raw = localStorage.getItem(RATINGS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* corrupted */ }
+  return {};
+}
+
+/** Save a rating for a specific node in a quest */
+export function saveNodeRating(questId: string, wordIndex: number, rating: WordRating): void {
+  const all = loadAllRatings();
+  if (!all[questId]) all[questId] = {};
+  all[questId][wordIndex] = rating;
+  try {
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  } catch { /* fail silently */ }
+}
+
+/** Load all node ratings for a quest */
+export function loadNodeRatings(questId: string): Record<number, WordRating> {
+  return loadAllRatings()[questId] || {};
+}
+
+/** Clear ratings for a quest (on restart) */
+export function clearNodeRatings(questId: string): void {
+  const all = loadAllRatings();
+  delete all[questId];
+  try {
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  } catch { /* fail silently */ }
+}
+
 // ---- Trophy Unlock Animation Flag ----
 
 const TROPHY_UNLOCK_SEEN_KEY = "wigglewoo-trophy-unlock-seen";
