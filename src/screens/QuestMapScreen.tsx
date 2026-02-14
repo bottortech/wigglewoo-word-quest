@@ -4,7 +4,7 @@
 // WiggleWoo's Word Quest
 // =============================================
 
-import React, { useMemo, useState, useEffect, useRef, Component } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback, Component } from "react";
 import type { Quest, NodeState } from "../game/types";
 import {
   loadQuestProgress,
