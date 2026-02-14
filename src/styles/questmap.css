@@ -1476,3 +1476,38 @@
 .trophy-node--shaking {
   animation: gear-shake 0.3s ease-out;
 }
+
+
+/* ============================================
+   Node Progress Clarity — badge + active pulse
+   ============================================ */
+
+/* Completed check badge — green circle, top-right of node */
+.gear-node__check-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  background: #2e7d32;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Active node breathe — subtle scale pulse on the gear itself */
+.gear-node--active {
+  animation: active-node-breathe 2s ease-in-out infinite;
+}
+
+@keyframes active-node-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}

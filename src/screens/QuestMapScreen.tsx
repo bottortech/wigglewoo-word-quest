@@ -223,10 +223,15 @@ const GearNode: React.FC<{
         />
       </svg>
       
-      {/* Node content: checkmark for completed, number otherwise */}
+      {/* Node content: number (always shown) */}
       <span className="gear-node__content">
-        {isCompleted ? "✓" : number}
+        {number}
       </span>
+
+      {/* Completed badge — small green check circle */}
+      {isCompleted && (
+        <span className="gear-node__check-badge" aria-label="completed">✓</span>
+      )}
       
       {/* Pulsing glow effect for active node only */}
       {isActive && <div className="gear-node__glow" />}
