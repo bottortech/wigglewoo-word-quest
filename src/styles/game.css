@@ -999,3 +999,35 @@
     font-size: 16px !important;
   }
 }
+
+
+/* ============================================
+   Streak Toast
+   ============================================ */
+
+.streak-toast {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff6d00 0%, #ff9100 100%);
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  padding: 8px 22px;
+  border-radius: 24px;
+  white-space: nowrap;
+  z-index: 200;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(255, 109, 0, 0.4);
+  animation: streak-pop 2.5s ease-out forwards;
+}
+
+@keyframes streak-pop {
+  0%   { opacity: 0; transform: translateX(-50%) scale(0.7); }
+  12%  { opacity: 1; transform: translateX(-50%) scale(1.1); }
+  20%  { transform: translateX(-50%) scale(1); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}

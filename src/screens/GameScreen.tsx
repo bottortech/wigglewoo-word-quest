@@ -52,6 +52,11 @@ import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import LabBackground from "../components/LabBackground";
 import "../styles/game.css";
 
+// =============================================
+// SESSION STREAK — persists across GameScreen remounts
+// =============================================
+let sessionStreak = 0;
+
 interface GameScreenProps {
   quest: Quest;
   currentWordIndex: number;
@@ -202,6 +207,30 @@ const GameScreen: React.FC<GameScreenProps> = ({
       onNavigate("quest-map");
     }
   }, [game.celebration.type, onNavigate]);
+
+  // =============================================
+  // WORD STREAK
+  // =============================================
+  const [streakToast, setStreakToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (game.celebration.isActive) {
+      // Perfect = no hints triggered (level 0)
+      const wasPerfect = game.hint.level === 0;
+      if (wasPerfect) {
+        sessionStreak++;
+      } else {
+        sessionStreak = 1; // completed but with mistakes — reset, count this one
+      }
+
+      // Milestone toasts
+      if (sessionStreak === 3 || sessionStreak === 5 || (sessionStreak > 5 && sessionStreak % 5 === 0)) {
+        setStreakToast(`\uD83D\uDD25 ${sessionStreak} Word Streak!`);
+        const t = setTimeout(() => setStreakToast(null), 2500);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [game.celebration.isActive]);
 
   // =============================================
   // SPEAK SENTENCE when word is complete
@@ -404,6 +433,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
           </div>
         </div>
         </div>
+
+        {/* STREAK TOAST */}
+        {streakToast && (
+          <div className="streak-toast" key={streakToast}>{streakToast}</div>
+        )}
 
         {/* CELEBRATION OVERLAY */}
         {game.celebration.isActive && game.celebration.type && (
