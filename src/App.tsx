@@ -26,6 +26,7 @@ import {
   completeTrophyRoom,
   resetTrophyProgress,
   getNextPlayableQuestInType,
+  clearTrophyUnlockSeen,
 } from "./game/progression";
 import { backgroundMusic } from "./audio/BackgroundMusic";
 import { recordTrophyEarned } from "./game/analytics";
@@ -130,6 +131,7 @@ export default function App() {
       questComplete: false,
     });
     resetTrophyProgress(activeQuest.id);
+    clearTrophyUnlockSeen(activeQuest.id);
     setArrivedFromWord(null);
     setMapRevision((r) => r + 1);
   }, [activeQuest.id]);

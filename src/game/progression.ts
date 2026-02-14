@@ -257,6 +257,41 @@ export function getTrophyNodeState(
 }
 
 
+// ---- Trophy Unlock Animation Flag ----
+
+const TROPHY_UNLOCK_SEEN_KEY = "wigglewoo-trophy-unlock-seen";
+
+function loadTrophyUnlockSeen(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(TROPHY_UNLOCK_SEEN_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* corrupted */ }
+  return {};
+}
+
+/** Check if trophy unlock animation has been shown for this quest */
+export function hasTrophyUnlockBeenSeen(questId: string): boolean {
+  return loadTrophyUnlockSeen()[questId] === true;
+}
+
+/** Mark trophy unlock animation as shown for this quest */
+export function markTrophyUnlockSeen(questId: string): void {
+  const all = loadTrophyUnlockSeen();
+  all[questId] = true;
+  try {
+    localStorage.setItem(TROPHY_UNLOCK_SEEN_KEY, JSON.stringify(all));
+  } catch { /* fail silently */ }
+}
+
+/** Clear trophy unlock seen flag (for quest restart) */
+export function clearTrophyUnlockSeen(questId: string): void {
+  const all = loadTrophyUnlockSeen();
+  delete all[questId];
+  try {
+    localStorage.setItem(TROPHY_UNLOCK_SEEN_KEY, JSON.stringify(all));
+  } catch { /* fail silently */ }
+}
+
 /**
  * Get the next playable quest within the SAME pattern type.
  * Follows fixed order (A → E → I → O → U for CVC/CVCC/CCVC).

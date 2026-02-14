@@ -13,6 +13,8 @@ import {
   getTrophyNodeState,
   areAllQuestsComplete,
   isQuestFullyComplete,
+  hasTrophyUnlockBeenSeen,
+  markTrophyUnlockSeen,
 } from "../game/progression";
 import { ALL_QUESTS, CVC_QUESTS, CVCC_QUESTS, CVVC_QUESTS } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
@@ -484,6 +486,33 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     );
   }, [showLockedFeedback]);
 
+  // =============================================
+  // TROPHY UNLOCK CELEBRATION (one-time)
+  // =============================================
+  const [trophyUnlockCelebrating, setTrophyUnlockCelebrating] = useState(false);
+
+  useEffect(() => {
+    // Trophy just became active (quest complete) and we haven't shown the celebration yet
+    if (
+      trophyNodeState === "active" &&
+      !hasTrophyUnlockBeenSeen(quest.id)
+    ) {
+      // Small delay so the map renders first, then sparkle kicks in
+      const timer = setTimeout(() => {
+        setTrophyUnlockCelebrating(true);
+        setLockedToast("\uD83C\uDFC6 Trophy unlocked!");
+        markTrophyUnlockSeen(quest.id);
+
+        // Auto-clear after animation
+        setTimeout(() => {
+          setTrophyUnlockCelebrating(false);
+          setLockedToast(null);
+        }, 2500);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [trophyNodeState, quest.id]);
+
   const handleInsightsClick = () => {
     setShowParentGate(true);
   };
@@ -841,7 +870,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         <div
           className={`trophy-node-wrapper ${
             isMobile && zoomState === 'zoomed-trophy' ? 'trophy-node-wrapper--focused' : ''
-          }`}
+          }${trophyUnlockCelebrating ? ' trophy-node-wrapper--celebrating' : ''}`}
           style={{
             position: 'absolute',
             left: `${TROPHY_POSITION.x}%`,
