@@ -242,10 +242,11 @@ export default function App() {
         </div>
       )}
 
+      </Stage>
+
       {route === "insights" && (
         <LearningInsightsScreen onClose={handleCloseInsights} />
       )}
-      </Stage>
     </>
   );
 }
