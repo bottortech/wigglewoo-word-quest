@@ -444,6 +444,24 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   // =============================================
   const [showParentGate, setShowParentGate] = useState(false);
 
+  // =============================================
+  // LOCKED NODE FEEDBACK
+  // =============================================
+  const [shakingNodeIndex, setShakingNodeIndex] = useState<number | null>(null);
+  const [lockedToast, setLockedToast] = useState(false);
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleLockedTap = useCallback((nodeIndex: number) => {
+    // Clear any existing shake
+    if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
+    setShakingNodeIndex(nodeIndex);
+    setLockedToast(true);
+    shakeTimerRef.current = setTimeout(() => {
+      setShakingNodeIndex(null);
+      setLockedToast(false);
+    }, 1200);
+  }, []);
+
   const handleInsightsClick = () => {
     setShowParentGate(true);
   };
@@ -765,7 +783,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           return (
             <div
               key={i}
-              className="gear-node-wrapper"
+              className={`gear-node-wrapper ${shakingNodeIndex === i ? 'gear-node-wrapper--shaking' : ''}`}
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
@@ -774,8 +792,14 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
               <GearNode
                 state={state}
                 number={i + 1}
-                onClick={() => tappable && onStartLevel(i)}
-                disabled={!tappable}
+                onClick={() => {
+                  if (tappable) {
+                    onStartLevel(i);
+                  } else if (state === 'locked') {
+                    handleLockedTap(i);
+                  }
+                }}
+                disabled={false}
               />
             </div>
           );
@@ -869,6 +893,13 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           </div>
         )}
       </div>
+
+      {/* LOCKED NODE TOAST */}
+      {lockedToast && (
+        <div className="locked-toast">
+          🔒 Complete the current word first!
+        </div>
+      )}
 
       {/* Restart link (during quest, not at completion) */}
       {!progress.questComplete && progress.currentWordIndex > 0 && (

@@ -1428,3 +1428,47 @@
 }
 
 /* Trophy transition styles → see trophy-transition.css */
+
+
+/* ============================================
+   Locked Node Feedback — shake + toast
+   ============================================ */
+
+@keyframes gear-shake {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  15%      { transform: translate(-50%, -50%) rotate(-8deg); }
+  30%      { transform: translate(-50%, -50%) rotate(7deg); }
+  45%      { transform: translate(-50%, -50%) rotate(-5deg); }
+  60%      { transform: translate(-50%, -50%) rotate(4deg); }
+  75%      { transform: translate(-50%, -50%) rotate(-2deg); }
+  90%      { transform: translate(-50%, -50%) rotate(1deg); }
+}
+
+.gear-node-wrapper--shaking {
+  animation: gear-shake 0.5s ease-out;
+}
+
+.locked-toast {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 20px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+  animation: toast-pop 1.2s ease-out forwards;
+}
+
+@keyframes toast-pop {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+}
