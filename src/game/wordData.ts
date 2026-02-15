@@ -71,7 +71,7 @@ export const QUEST_SHORT_I: Quest = {
     { word: "hit", imageKey: "hit", letters: ["h", "i", "t"], distractors: [] },
     { word: "kit", imageKey: "kit", letters: ["k", "i", "t"], distractors: [] },
     // Nodes 13-14: +1 distractor
-    { word: "tip", imageKey: "tip", letters: ["t", "i", "p"], distractors: ["s"] },
+    { word: "dip", imageKey: "dip", letters: ["d", "i", "p"], distractors: ["s"] },
     { word: "win", imageKey: "win", letters: ["w", "i", "n"], distractors: ["b"] },
     // Nodes 15-16: +2 distractors
     { word: "fin", imageKey: "fin", letters: ["f", "i", "n"], distractors: ["g", "o"] },
