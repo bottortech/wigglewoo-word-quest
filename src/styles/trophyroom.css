@@ -502,7 +502,7 @@
    ========================================== */
 .word-archive-plaque {
   position: absolute;
-  left: 4%;
+  left: 2%;
   top: 42%;
   transform: translateY(-50%);
   z-index: 30;
