@@ -17,7 +17,8 @@ import {
   markTrophyUnlockSeen,
   loadNodeRatings,
 } from "../game/progression";
-import { ALL_QUESTS, CVC_QUESTS, CVCC_QUESTS, CVVC_QUESTS } from "../game/wordData";
+import { CVC_QUEST_IDS, CVCC_QUEST_IDS, CVVC_QUEST_IDS } from "../game/questIds";
+import { loadCvccQuests, loadCvvcQuests } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import trophyIcon from "../assets/trophy.png";
@@ -93,14 +94,11 @@ type QuestType = "CVC" | "CVCC" | "CVVC" | "CCVC";
 // CVVC: unlocked when ALL CVCC quests complete
 // CCVC: unlocked when ALL CVVC quests complete
 function getQuestTypeLockState(): { id: QuestType; label: string; unlocked: boolean }[] {
-  const cvcIds = CVC_QUESTS.map((q) => q.id);
-  const cvccIds = CVCC_QUESTS.map((q) => q.id);
-  const cvvcIds = CVVC_QUESTS.map((q) => q.id);
   return [
     { id: "CVC", label: "CVC", unlocked: true },
-    { id: "CVCC", label: "CVCC", unlocked: areAllQuestsComplete(cvcIds) },
-    { id: "CVVC", label: "CVVC", unlocked: areAllQuestsComplete(cvccIds) },
-    { id: "CCVC", label: "CCVC", unlocked: areAllQuestsComplete(cvvcIds) },
+    { id: "CVCC", label: "CVCC", unlocked: areAllQuestsComplete([...CVC_QUEST_IDS]) },
+    { id: "CVVC", label: "CVVC", unlocked: areAllQuestsComplete([...CVCC_QUEST_IDS]) },
+    { id: "CCVC", label: "CCVC", unlocked: areAllQuestsComplete([...CVVC_QUEST_IDS]) },
   ];
 }
 
@@ -472,6 +470,16 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     })),
     [devUnlock]
   );
+
+  // Pre-load quest chunks when prerequisites are met
+  useEffect(() => {
+    if (areAllQuestsComplete([...CVC_QUEST_IDS]) || devUnlock) {
+      loadCvccQuests();
+    }
+    if (areAllQuestsComplete([...CVCC_QUEST_IDS]) || devUnlock) {
+      loadCvvcQuests();
+    }
+  }, [devUnlock]);
 
   // =============================================
   // PARENT GATE — guard for Learning Insights

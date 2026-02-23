@@ -4,7 +4,7 @@
 // =============================================
 
 import React from "react";
-import { CVC_QUESTS } from "../game/wordData";
+import { CVC_QUEST_IDS, CVCC_QUEST_IDS, CVVC_QUEST_IDS } from "../game/questIds";
 import { isQuestFullyComplete } from "../game/progression";
 import "../styles/unlock-modal.css";
 
@@ -15,15 +15,15 @@ const PREREQ_MAP: Record<QuestType, { label: string; questIds: string[] }> = {
   CVC: { label: "CVC", questIds: [] }, // always unlocked
   CVCC: {
     label: "CVC",
-    questIds: CVC_QUESTS.map((q) => q.id),
+    questIds: [...CVC_QUEST_IDS],
   },
   CVVC: {
     label: "CVCC",
-    questIds: [], // TODO: fill when CVCC quests exist
+    questIds: [...CVCC_QUEST_IDS],
   },
   CCVC: {
     label: "CVVC",
-    questIds: [], // TODO: fill when CVVC quests exist
+    questIds: [...CVVC_QUEST_IDS],
   },
 };
 

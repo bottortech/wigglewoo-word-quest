@@ -250,26 +250,6 @@ const GameScreen: React.FC<GameScreenProps> = ({
     }
   }, [game.celebration.isActive]);
 
-  // =============================================
-  // SPEAK SENTENCE when word is complete
-  // =============================================
-  useEffect(() => {
-    if (game.wordComplete && !game.celebration.isActive) {
-      // Small delay to let the UI update first
-      const timer = setTimeout(() => {
-        // Get the context-rich sentence and fill in the word
-        const sentenceTemplate = getWordSentence(currentWord.word);
-        const sentence = sentenceTemplate.replace("___", currentWord.word);
-        if ("speechSynthesis" in window) {
-          const utterance = new SpeechSynthesisUtterance(sentence);
-          utterance.rate = 0.85; // Slightly slower for kids
-          utterance.pitch = 1.1; // Slightly higher pitch, friendly
-          speechSynthesis.speak(utterance);
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [game.wordComplete, game.celebration.isActive, currentWord.word]);
 
   // =============================================
   // START OVER — reset current word

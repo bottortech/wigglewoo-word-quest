@@ -2,13 +2,17 @@
 // wordData.ts — CVC word definitions & quests
 // Wigglewoo CVC Quest
 // =============================================
+// CVC quest data lives here (always in main bundle).
+// CVCC/CVVC data is lazy-loaded from separate chunks.
+// =============================================
 // Letter bank rules:
 //   Early levels (words 1-4): 3 correct letters only
 //   Later levels (words 5-6): +1 distractor
 //   Final levels (words 7-8): +2 distractors
 // =============================================
 
-import type { CvcWord, Quest, LetterCategory, PatternType } from "./types";
+import type { Quest, LetterCategory } from "./types";
+import { ALL_QUEST_IDS } from "./questIds";
 
 /** Classify a letter */
 export function getLetterCategory(letter: string): LetterCategory {
@@ -165,349 +169,17 @@ export const QUEST_SHORT_E: Quest = {
     { word: "pet", imageKey: "pet", letters: ["p", "e", "t"], distractors: [] },
     { word: "ten", imageKey: "ten", letters: ["t", "e", "n"], distractors: [] },
     { word: "beg", imageKey: "beg", letters: ["b", "e", "g"], distractors: [] },
-    { word: "peg", imageKey: "peg", letters: ["p", "e", "g"], distractors: [] },
+    { word: "web", imageKey: "web", letters: ["w", "e", "b"], distractors: [] },
     // Nodes 13-14: +1 distractor
     { word: "set", imageKey: "set", letters: ["s", "e", "t"], distractors: ["m"] },
     { word: "get", imageKey: "get", letters: ["g", "e", "t"], distractors: ["n"] },
     // Nodes 15-16: +2 distractors
-    { word: "men", imageKey: "men", letters: ["m", "e", "n"], distractors: ["t", "a"] },
+    { word: "gem", imageKey: "gem", letters: ["g", "e", "m"], distractors: ["t", "a"] },
     { word: "vet", imageKey: "vet", letters: ["v", "e", "t"], distractors: ["p", "u"] },
   ],
 };
 
-// =============================================================
-// CVCC QUESTS — Ending Blends (LOCKED — no images/audio yet)
-// Same 16-node structure: 1-4 none, 5-6 +1, 7-8 +2,
-//   Trophy Room, 9-12 none, 13-14 +1, 15-16 +2
-// =============================================================
-
-/** CVCC Quest 1 — short-a ending blends (16 words) */
-export const QUEST_CVCC_SHORT_A: Quest = {
-  id: "quest-cvcc-short-a",
-  title: "Short A Ending Blends",
-  patternType: "cvcc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "lamp", imageKey: "lamp", letters: ["l", "a", "m", "p"], distractors: [] },
-    { word: "camp", imageKey: "camp", letters: ["c", "a", "m", "p"], distractors: [] },
-    { word: "damp", imageKey: "damp", letters: ["d", "a", "m", "p"], distractors: [] },
-    { word: "band", imageKey: "band", letters: ["b", "a", "n", "d"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "hand", imageKey: "hand", letters: ["h", "a", "n", "d"], distractors: ["k"] },
-    { word: "sand", imageKey: "sand", letters: ["s", "a", "n", "d"], distractors: ["g"] },
-    // Nodes 7-8: +2 distractors
-    { word: "land", imageKey: "land", letters: ["l", "a", "n", "d"], distractors: ["p", "o"] },
-    { word: "mask", imageKey: "mask", letters: ["m", "a", "s", "k"], distractors: ["t", "i"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "task", imageKey: "task", letters: ["t", "a", "s", "k"], distractors: [] },
-    { word: "fast", imageKey: "fast", letters: ["f", "a", "s", "t"], distractors: [] },
-    { word: "last", imageKey: "last", letters: ["l", "a", "s", "t"], distractors: [] },
-    { word: "mast", imageKey: "mast", letters: ["m", "a", "s", "t"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "pant", imageKey: "pant", letters: ["p", "a", "n", "t"], distractors: ["g"] },
-    { word: "rant", imageKey: "rant", letters: ["r", "a", "n", "t"], distractors: ["b"] },
-    // Nodes 15-16: +2 distractors
-    { word: "daft", imageKey: "daft", letters: ["d", "a", "f", "t"], distractors: ["n", "e"] },
-    { word: "raft", imageKey: "raft", letters: ["r", "a", "f", "t"], distractors: ["l", "u"] },
-  ],
-};
-
-/** CVCC Quest 2 — short-i ending blends (16 words) */
-export const QUEST_CVCC_SHORT_I: Quest = {
-  id: "quest-cvcc-short-i",
-  title: "Short I Ending Blends",
-  patternType: "cvcc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "milk", imageKey: "milk", letters: ["m", "i", "l", "k"], distractors: [] },
-    { word: "silk", imageKey: "silk", letters: ["s", "i", "l", "k"], distractors: [] },
-    { word: "gift", imageKey: "gift", letters: ["g", "i", "f", "t"], distractors: [] },
-    { word: "lift", imageKey: "lift", letters: ["l", "i", "f", "t"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "fist", imageKey: "fist", letters: ["f", "i", "s", "t"], distractors: ["n"] },
-    { word: "list", imageKey: "list", letters: ["l", "i", "s", "t"], distractors: ["p"] },
-    // Nodes 7-8: +2 distractors
-    { word: "mint", imageKey: "mint", letters: ["m", "i", "n", "t"], distractors: ["d", "a"] },
-    { word: "hint", imageKey: "hint", letters: ["h", "i", "n", "t"], distractors: ["g", "u"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "king", imageKey: "king", letters: ["k", "i", "n", "g"], distractors: [] },
-    { word: "ring", imageKey: "ring", letters: ["r", "i", "n", "g"], distractors: [] },
-    { word: "sing", imageKey: "sing", letters: ["s", "i", "n", "g"], distractors: [] },
-    { word: "wind", imageKey: "wind", letters: ["w", "i", "n", "d"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "limp", imageKey: "limp", letters: ["l", "i", "m", "p"], distractors: ["k"] },
-    { word: "disk", imageKey: "disk", letters: ["d", "i", "s", "k"], distractors: ["n"] },
-    // Nodes 15-16: +2 distractors
-    { word: "film", imageKey: "film", letters: ["f", "i", "l", "m"], distractors: ["t", "o"] },
-    { word: "tilt", imageKey: "tilt", letters: ["t", "i", "l", "t"], distractors: ["s", "a"] },
-  ],
-};
-
-/** CVCC Quest 3 — short-o ending blends (16 words) */
-export const QUEST_CVCC_SHORT_O: Quest = {
-  id: "quest-cvcc-short-o",
-  title: "Short O Ending Blends",
-  patternType: "cvcc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "pond", imageKey: "pond", letters: ["p", "o", "n", "d"], distractors: [] },
-    { word: "bond", imageKey: "bond", letters: ["b", "o", "n", "d"], distractors: [] },
-    { word: "fond", imageKey: "fond", letters: ["f", "o", "n", "d"], distractors: [] },
-    { word: "lost", imageKey: "lost", letters: ["l", "o", "s", "t"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "cost", imageKey: "cost", letters: ["c", "o", "s", "t"], distractors: ["n"] },
-    { word: "lock", imageKey: "lock", letters: ["l", "o", "c", "k"], distractors: ["d"] },
-    // Nodes 7-8: +2 distractors
-    { word: "dock", imageKey: "dock", letters: ["d", "o", "c", "k"], distractors: ["m", "i"] },
-    { word: "rock", imageKey: "rock", letters: ["r", "o", "c", "k"], distractors: ["t", "a"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "sock", imageKey: "sock", letters: ["s", "o", "c", "k"], distractors: [] },
-    { word: "long", imageKey: "long", letters: ["l", "o", "n", "g"], distractors: [] },
-    { word: "song", imageKey: "song", letters: ["s", "o", "n", "g"], distractors: [] },
-    { word: "gong", imageKey: "gong", letters: ["g", "o", "n", "g"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "romp", imageKey: "romp", letters: ["r", "o", "m", "p"], distractors: ["s"] },
-    { word: "loft", imageKey: "loft", letters: ["l", "o", "f", "t"], distractors: ["n"] },
-    // Nodes 15-16: +2 distractors
-    { word: "mock", imageKey: "mock", letters: ["m", "o", "c", "k"], distractors: ["l", "e"] },
-    { word: "soft", imageKey: "soft", letters: ["s", "o", "f", "t"], distractors: ["n", "i"] },
-  ],
-};
-
-/** CVCC Quest 4 — short-u ending blends (16 words) */
-export const QUEST_CVCC_SHORT_U: Quest = {
-  id: "quest-cvcc-short-u",
-  title: "Short U Ending Blends",
-  patternType: "cvcc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "dust", imageKey: "dust", letters: ["d", "u", "s", "t"], distractors: [] },
-    { word: "gust", imageKey: "gust", letters: ["g", "u", "s", "t"], distractors: [] },
-    { word: "must", imageKey: "must", letters: ["m", "u", "s", "t"], distractors: [] },
-    { word: "rust", imageKey: "rust", letters: ["r", "u", "s", "t"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "bump", imageKey: "bump", letters: ["b", "u", "m", "p"], distractors: ["t"] },
-    { word: "dump", imageKey: "dump", letters: ["d", "u", "m", "p"], distractors: ["g"] },
-    // Nodes 7-8: +2 distractors
-    { word: "jump", imageKey: "jump", letters: ["j", "u", "m", "p"], distractors: ["s", "a"] },
-    { word: "pump", imageKey: "pump", letters: ["p", "u", "m", "p"], distractors: ["l", "i"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "bulk", imageKey: "bulk", letters: ["b", "u", "l", "k"], distractors: [] },
-    { word: "hulk", imageKey: "hulk", letters: ["h", "u", "l", "k"], distractors: [] },
-    { word: "bunk", imageKey: "bunk", letters: ["b", "u", "n", "k"], distractors: [] },
-    { word: "dunk", imageKey: "dunk", letters: ["d", "u", "n", "k"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "lung", imageKey: "lung", letters: ["l", "u", "n", "g"], distractors: ["d"] },
-    { word: "hung", imageKey: "hung", letters: ["h", "u", "n", "g"], distractors: ["t"] },
-    // Nodes 15-16: +2 distractors
-    { word: "husk", imageKey: "husk", letters: ["h", "u", "s", "k"], distractors: ["n", "o"] },
-    { word: "tusk", imageKey: "tusk", letters: ["t", "u", "s", "k"], distractors: ["m", "a"] },
-  ],
-};
-
-/** CVCC Quest 5 — short-e ending blends (16 words) */
-export const QUEST_CVCC_SHORT_E: Quest = {
-  id: "quest-cvcc-short-e",
-  title: "Short E Ending Blends",
-  patternType: "cvcc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "belt", imageKey: "belt", letters: ["b", "e", "l", "t"], distractors: [] },
-    { word: "melt", imageKey: "melt", letters: ["m", "e", "l", "t"], distractors: [] },
-    { word: "felt", imageKey: "felt", letters: ["f", "e", "l", "t"], distractors: [] },
-    { word: "desk", imageKey: "desk", letters: ["d", "e", "s", "k"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "nest", imageKey: "nest", letters: ["n", "e", "s", "t"], distractors: ["g"] },
-    { word: "best", imageKey: "best", letters: ["b", "e", "s", "t"], distractors: ["m"] },
-    // Nodes 7-8: +2 distractors
-    { word: "test", imageKey: "test", letters: ["t", "e", "s", "t"], distractors: ["r", "a"] },
-    { word: "west", imageKey: "west", letters: ["w", "e", "s", "t"], distractors: ["p", "u"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "bend", imageKey: "bend", letters: ["b", "e", "n", "d"], distractors: [] },
-    { word: "lend", imageKey: "lend", letters: ["l", "e", "n", "d"], distractors: [] },
-    { word: "mend", imageKey: "mend", letters: ["m", "e", "n", "d"], distractors: [] },
-    { word: "send", imageKey: "send", letters: ["s", "e", "n", "d"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "help", imageKey: "help", letters: ["h", "e", "l", "p"], distractors: ["t"] },
-    { word: "kelp", imageKey: "kelp", letters: ["k", "e", "l", "p"], distractors: ["n"] },
-    // Nodes 15-16: +2 distractors
-    { word: "pest", imageKey: "pest", letters: ["p", "e", "s", "t"], distractors: ["r", "i"] },
-    { word: "vent", imageKey: "vent", letters: ["v", "e", "n", "t"], distractors: ["s", "o"] },
-  ],
-};
-
-// =============================================================
-// CVVC QUESTS — Vowel Teams (LOCKED — no images/audio yet)
-// Same 16-node structure: 1-4 none, 5-6 +1, 7-8 +2,
-//   Trophy Room, 9-12 none, 13-14 +1, 15-16 +2
-// =============================================================
-
-/** CVVC Quest 1 — long-a vowel teams (16 words) */
-export const QUEST_CVVC_LONG_A: Quest = {
-  id: "quest-cvvc-long-a",
-  title: "Long A Vowel Teams",
-  patternType: "cvvc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "rain", imageKey: "rain", letters: ["r", "a", "i", "n"], distractors: [] },
-    { word: "tail", imageKey: "tail", letters: ["t", "a", "i", "l"], distractors: [] },
-    { word: "mail", imageKey: "mail", letters: ["m", "a", "i", "l"], distractors: [] },
-    { word: "sail", imageKey: "sail", letters: ["s", "a", "i", "l"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "pail", imageKey: "pail", letters: ["p", "a", "i", "l"], distractors: ["t"] },
-    { word: "wait", imageKey: "wait", letters: ["w", "a", "i", "t"], distractors: ["n"] },
-    // Nodes 7-8: +2 distractors
-    { word: "pain", imageKey: "pain", letters: ["p", "a", "i", "n"], distractors: ["g", "o"] },
-    { word: "gain", imageKey: "gain", letters: ["g", "a", "i", "n"], distractors: ["s", "u"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "rail", imageKey: "rail", letters: ["r", "a", "i", "l"], distractors: [] },
-    { word: "nail", imageKey: "nail", letters: ["n", "a", "i", "l"], distractors: [] },
-    { word: "bait", imageKey: "bait", letters: ["b", "a", "i", "t"], distractors: [] },
-    { word: "laid", imageKey: "laid", letters: ["l", "a", "i", "d"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "paid", imageKey: "paid", letters: ["p", "a", "i", "d"], distractors: ["m"] },
-    { word: "main", imageKey: "main", letters: ["m", "a", "i", "n"], distractors: ["t"] },
-    // Nodes 15-16: +2 distractors
-    { word: "fail", imageKey: "fail", letters: ["f", "a", "i", "l"], distractors: ["d", "e"] },
-    { word: "wail", imageKey: "wail", letters: ["w", "a", "i", "l"], distractors: ["p", "o"] },
-  ],
-};
-
-/** CVVC Quest 2 — long-e vowel teams (16 words) */
-export const QUEST_CVVC_LONG_E: Quest = {
-  id: "quest-cvvc-long-e",
-  title: "Long E Vowel Teams",
-  patternType: "cvvc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "seed", imageKey: "seed", letters: ["s", "e", "e", "d"], distractors: [] },
-    { word: "feed", imageKey: "feed", letters: ["f", "e", "e", "d"], distractors: [] },
-    { word: "weed", imageKey: "weed", letters: ["w", "e", "e", "d"], distractors: [] },
-    { word: "feel", imageKey: "feel", letters: ["f", "e", "e", "l"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "peel", imageKey: "peel", letters: ["p", "e", "e", "l"], distractors: ["d"] },
-    { word: "heel", imageKey: "heel", letters: ["h", "e", "e", "l"], distractors: ["s"] },
-    // Nodes 7-8: +2 distractors
-    { word: "reef", imageKey: "reef", letters: ["r", "e", "e", "f"], distractors: ["t", "a"] },
-    { word: "beef", imageKey: "beef", letters: ["b", "e", "e", "f"], distractors: ["n", "i"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "deep", imageKey: "deep", letters: ["d", "e", "e", "p"], distractors: [] },
-    { word: "keep", imageKey: "keep", letters: ["k", "e", "e", "p"], distractors: [] },
-    { word: "seep", imageKey: "seep", letters: ["s", "e", "e", "p"], distractors: [] },
-    { word: "week", imageKey: "week", letters: ["w", "e", "e", "k"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "seek", imageKey: "seek", letters: ["s", "e", "e", "k"], distractors: ["n"] },
-    { word: "peek", imageKey: "peek", letters: ["p", "e", "e", "k"], distractors: ["f"] },
-    // Nodes 15-16: +2 distractors
-    { word: "deer", imageKey: "deer", letters: ["d", "e", "e", "r"], distractors: ["t", "o"] },
-    { word: "jeep", imageKey: "jeep", letters: ["j", "e", "e", "p"], distractors: ["l", "a"] },
-  ],
-};
-
-/** CVVC Quest 3 — long-o vowel teams (16 words) */
-export const QUEST_CVVC_LONG_O: Quest = {
-  id: "quest-cvvc-long-o",
-  title: "Long O Vowel Teams",
-  patternType: "cvvc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "boat", imageKey: "boat", letters: ["b", "o", "a", "t"], distractors: [] },
-    { word: "coat", imageKey: "coat", letters: ["c", "o", "a", "t"], distractors: [] },
-    { word: "goat", imageKey: "goat", letters: ["g", "o", "a", "t"], distractors: [] },
-    { word: "road", imageKey: "road", letters: ["r", "o", "a", "d"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "toad", imageKey: "toad", letters: ["t", "o", "a", "d"], distractors: ["n"] },
-    { word: "load", imageKey: "load", letters: ["l", "o", "a", "d"], distractors: ["s"] },
-    // Nodes 7-8: +2 distractors
-    { word: "soap", imageKey: "soap", letters: ["s", "o", "a", "p"], distractors: ["t", "i"] },
-    { word: "foam", imageKey: "foam", letters: ["f", "o", "a", "m"], distractors: ["d", "e"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "coal", imageKey: "coal", letters: ["c", "o", "a", "l"], distractors: [] },
-    { word: "foal", imageKey: "foal", letters: ["f", "o", "a", "l"], distractors: [] },
-    { word: "goal", imageKey: "goal", letters: ["g", "o", "a", "l"], distractors: [] },
-    { word: "moan", imageKey: "moan", letters: ["m", "o", "a", "n"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "loan", imageKey: "loan", letters: ["l", "o", "a", "n"], distractors: ["t"] },
-    { word: "soak", imageKey: "soak", letters: ["s", "o", "a", "k"], distractors: ["d"] },
-    // Nodes 15-16: +2 distractors
-    { word: "roam", imageKey: "roam", letters: ["r", "o", "a", "m"], distractors: ["t", "i"] },
-    { word: "moat", imageKey: "moat", letters: ["m", "o", "a", "t"], distractors: ["l", "e"] },
-  ],
-};
-
-/** CVVC Quest 4 — oo/ou vowel teams (16 words) */
-export const QUEST_CVVC_LONG_U: Quest = {
-  id: "quest-cvvc-long-u",
-  title: "OO Vowel Teams",
-  patternType: "cvvc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "moon", imageKey: "moon", letters: ["m", "o", "o", "n"], distractors: [] },
-    { word: "noon", imageKey: "noon", letters: ["n", "o", "o", "n"], distractors: [] },
-    { word: "soon", imageKey: "soon", letters: ["s", "o", "o", "n"], distractors: [] },
-    { word: "boot", imageKey: "boot", letters: ["b", "o", "o", "t"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "hoop", imageKey: "hoop", letters: ["h", "o", "o", "p"], distractors: ["n"] },
-    { word: "loop", imageKey: "loop", letters: ["l", "o", "o", "p"], distractors: ["t"] },
-    // Nodes 7-8: +2 distractors
-    { word: "roof", imageKey: "roof", letters: ["r", "o", "o", "f"], distractors: ["m", "a"] },
-    { word: "pool", imageKey: "pool", letters: ["p", "o", "o", "l"], distractors: ["t", "e"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "cool", imageKey: "cool", letters: ["c", "o", "o", "l"], distractors: [] },
-    { word: "fool", imageKey: "fool", letters: ["f", "o", "o", "l"], distractors: [] },
-    { word: "tool", imageKey: "tool", letters: ["t", "o", "o", "l"], distractors: [] },
-    { word: "room", imageKey: "room", letters: ["r", "o", "o", "m"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "zoom", imageKey: "zoom", letters: ["z", "o", "o", "m"], distractors: ["l"] },
-    { word: "boom", imageKey: "boom", letters: ["b", "o", "o", "m"], distractors: ["n"] },
-    // Nodes 15-16: +2 distractors
-    { word: "loom", imageKey: "loom", letters: ["l", "o", "o", "m"], distractors: ["s", "a"] },
-    { word: "hoot", imageKey: "hoot", letters: ["h", "o", "o", "t"], distractors: ["p", "i"] },
-  ],
-};
-
-/** CVVC Quest 5 — ea/ee mixed vowel teams (16 words) */
-export const QUEST_CVVC_MIXED_EA: Quest = {
-  id: "quest-cvvc-mixed-ea",
-  title: "EA Vowel Teams",
-  patternType: "cvvc",
-  words: [
-    // Nodes 1-4: no distractors
-    { word: "bean", imageKey: "bean", letters: ["b", "e", "a", "n"], distractors: [] },
-    { word: "leaf", imageKey: "leaf", letters: ["l", "e", "a", "f"], distractors: [] },
-    { word: "meal", imageKey: "meal", letters: ["m", "e", "a", "l"], distractors: [] },
-    { word: "seal", imageKey: "seal", letters: ["s", "e", "a", "l"], distractors: [] },
-    // Nodes 5-6: +1 distractor
-    { word: "bead", imageKey: "bead", letters: ["b", "e", "a", "d"], distractors: ["n"] },
-    { word: "read", imageKey: "read", letters: ["r", "e", "a", "d"], distractors: ["l"] },
-    // Nodes 7-8: +2 distractors
-    { word: "heap", imageKey: "heap", letters: ["h", "e", "a", "p"], distractors: ["t", "o"] },
-    { word: "lean", imageKey: "lean", letters: ["l", "e", "a", "n"], distractors: ["d", "i"] },
-    // === NODES 9-16 (after Trophy Room) ===
-    // Nodes 9-12: no distractors
-    { word: "peak", imageKey: "peak", letters: ["p", "e", "a", "k"], distractors: [] },
-    { word: "beak", imageKey: "beak", letters: ["b", "e", "a", "k"], distractors: [] },
-    { word: "teak", imageKey: "teak", letters: ["t", "e", "a", "k"], distractors: [] },
-    { word: "deal", imageKey: "deal", letters: ["d", "e", "a", "l"], distractors: [] },
-    // Nodes 13-14: +1 distractor
-    { word: "heal", imageKey: "heal", letters: ["h", "e", "a", "l"], distractors: ["p"] },
-    { word: "real", imageKey: "real", letters: ["r", "e", "a", "l"], distractors: ["n"] },
-    // Nodes 15-16: +2 distractors
-    { word: "beat", imageKey: "beat", letters: ["b", "e", "a", "t"], distractors: ["l", "o"] },
-    { word: "heat", imageKey: "heat", letters: ["h", "e", "a", "t"], distractors: ["s", "u"] },
-  ],
-};
-
-/** CVC quests only (for current enabled gameplay) */
+/** CVC quests (always in main bundle) */
 export const CVC_QUESTS: Quest[] = [
   QUEST_SHORT_A,
   QUEST_SHORT_I,
@@ -516,48 +188,48 @@ export const CVC_QUESTS: Quest[] = [
   QUEST_SHORT_E,
 ];
 
-/** CVCC quests (locked — no images/audio yet) */
-export const CVCC_QUESTS: Quest[] = [
-  QUEST_CVCC_SHORT_A,
-  QUEST_CVCC_SHORT_I,
-  QUEST_CVCC_SHORT_O,
-  QUEST_CVCC_SHORT_U,
-  QUEST_CVCC_SHORT_E,
-];
+// =============================================================
+// QUEST REGISTRY — CVC registered at load, others added lazily
+// =============================================================
 
-/** CVVC quests (locked — no images/audio yet) */
-export const CVVC_QUESTS: Quest[] = [
-  QUEST_CVVC_LONG_A,
-  QUEST_CVVC_LONG_E,
-  QUEST_CVVC_LONG_O,
-  QUEST_CVVC_LONG_U,
-  QUEST_CVVC_MIXED_EA,
-];
+const questRegistry = new Map<string, Quest>();
 
-/** Ordered quest sequence — all patterns */
-export const ALL_QUESTS: Quest[] = [
-  ...CVC_QUESTS,
-  ...CVCC_QUESTS,
-  ...CVVC_QUESTS,
-];
+// Register CVC quests immediately
+for (const q of CVC_QUESTS) {
+  questRegistry.set(q.id, q);
+}
 
-/** Get a quest by ID */
+/** Register quests from a lazy-loaded chunk */
+export function registerQuests(quests: Quest[]): void {
+  for (const q of quests) {
+    questRegistry.set(q.id, q);
+  }
+}
+
+/** Get all currently loaded quests */
+export function getLoadedQuests(): Quest[] {
+  return Array.from(questRegistry.values());
+}
+
+/** Get a quest by ID (returns undefined if chunk not loaded) */
 export function getQuestById(id: string): Quest | undefined {
-  return ALL_QUESTS.find((q) => q.id === id);
+  return questRegistry.get(id);
 }
 
-/** Get the next quest in sequence (null if at end) */
+/** Get the next quest in the global sequence (null if at end or chunk not loaded) */
 export function getNextQuest(currentQuestId: string): Quest | null {
-  const idx = ALL_QUESTS.findIndex((q) => q.id === currentQuestId);
-  if (idx < 0 || idx >= ALL_QUESTS.length - 1) return null;
-  return ALL_QUESTS[idx + 1];
+  const idx = ALL_QUEST_IDS.indexOf(currentQuestId as typeof ALL_QUEST_IDS[number]);
+  if (idx < 0 || idx >= ALL_QUEST_IDS.length - 1) return null;
+  const nextId = ALL_QUEST_IDS[idx + 1];
+  return questRegistry.get(nextId) ?? null;
 }
 
-/** 
- * Context-rich sentences for each word
- * Each sentence provides a semantic clue to help early readers
- */
-export const WORD_SENTENCES: Record<string, string> = {
+// =============================================================
+// SENTENCE REGISTRY — CVC loaded immediately, others lazily
+// =============================================================
+
+/** CVC sentences (always in main bundle) */
+const CVC_SENTENCES: Record<string, string> = {
   // Short A words (nodes 1-8)
   cat: "This furry pet says meow. It is a ___.",
   hat: "I put this on my head when it is sunny. It is a ___.",
@@ -572,11 +244,11 @@ export const WORD_SENTENCES: Record<string, string> = {
   pan: "I cook eggs in this flat metal thing. It is a ___.",
   can: "Soup comes in this metal container. It is a ___.",
   fan: "When I am hot, I turn on the ___ to cool down.",
-  bag: "I carry my lunch to school in a ___.",
+  bag: "I pack my lunch in a ___.",
   nap: "When I am sleepy, I take a short ___.",
   sad: "When my friend moved away, I felt ___.",
-  tag: "The game where you chase and touch someone is called ___.",
-  
+  tag: "The ___ is on my bag.",
+
   // Short I words (nodes 1-8)
   sit: "When I am tired, I find a chair and ___.",
   pin: "I use this sharp little thing to hold fabric together. It is a ___.",
@@ -590,12 +262,12 @@ export const WORD_SENTENCES: Record<string, string> = {
   pig: "This pink farm animal says oink. It is a ___.",
   bib: "A baby wears this to keep food off their clothes. It is a ___.",
   hit: "In baseball, I use a bat to ___ the ball.",
-  kit: "A box with supplies for a project is called a ___.",
-  tip: "The pointy end of a pencil is called the ___.",
+  kit: "Mom got the first-aid ___ to fix my cut.",
+  dip: "I ___ my chip into the yummy salsa.",
   win: "When you finish first in a race, you ___!",
   fin: "A fish uses this to swim. It is a ___.",
   sip: "I take a small ___ of my juice.",
-  
+
   // Short O words (nodes 1-8)
   dog: "This pet barks and wags its tail. It is a ___.",
   hop: "A bunny likes to ___ around the garden.",
@@ -614,7 +286,7 @@ export const WORD_SENTENCES: Record<string, string> = {
   sob: "When you cry hard, you ___.",
   pop: "A balloon makes a loud ___ when it bursts.",
   nod: "I ___ my head up and down to say yes.",
-  
+
   // Short U words (nodes 1-8)
   cup: "I drink my milk from a ___.",
   bus: "I ride this big yellow vehicle to school. It is a ___.",
@@ -633,7 +305,7 @@ export const WORD_SENTENCES: Record<string, string> = {
   dug: "The dog ___ a hole in the backyard.",
   nut: "A squirrel loves to eat this crunchy seed. It is a ___.",
   cut: "I use scissors to ___ the paper.",
-  
+
   // Short E words (nodes 1-8)
   bed: "At night, I sleep in my cozy ___.",
   hen: "This farm bird lays eggs. It is a ___.",
@@ -641,205 +313,73 @@ export const WORD_SENTENCES: Record<string, string> = {
   pen: "I use this to write my name. It is a ___.",
   jet: "This fast airplane flies through the sky. It is a ___.",
   net: "I catch butterflies with a ___.",
-  wet: "After swimming, my hair is all ___.",
-  leg: "I have two of these to walk and run. Each one is a ___.",
+  wet: "I bring an umbrella when it's raining so I don't get ___.",
+  leg: "I have two of these to run and jump. Each one is a ___.",
   // Short E words (nodes 9-16)
   pet: "A dog or cat that lives with you is a ___.",
   ten: "I have ___ fingers on my two hands.",
   beg: "My dog will ___ for a treat.",
-  peg: "I hang my coat on a wooden ___.",
-  set: "I ___ the table for dinner.",
+  web: "A spider makes a sticky ___.",
+  set: "The kids play on the swing ___.",
   get: "I ___ my backpack before school.",
-  men: "Grown-up boys are called ___.",
+  gem: "The ___ is in a chest.",
   vet: "When my pet is sick, I take it to the ___.",
-
-  // ── CVCC: Short A ending blends ──
-  lamp: "I turn on the ___ so I can read at night.",
-  camp: "In the summer, we set up tents at ___.",
-  damp: "After the rain, the grass feels ___.",
-  band: "The ___ plays music on stage.",
-  hand: "I wave my ___ to say hello.",
-  sand: "At the beach, I build castles in the ___.",
-  land: "The airplane comes down to ___ on the runway.",
-  mask: "On Halloween, I wear a spooky ___.",
-  task: "The teacher gave us a fun ___ to finish.",
-  fast: "A cheetah can run really ___.",
-  last: "I was the ___ one to finish the race.",
-  mast: "The tall pole on a sailboat is called a ___.",
-  pant: "After running, I huff and ___.",
-  rant: "When someone talks angrily for a long time, they ___.",
-  daft: "That silly idea sounds a bit ___.",
-  raft: "We floated down the river on a ___.",
-
-  // ── CVCC: Short I ending blends ──
-  milk: "I pour cold ___ into my cereal.",
-  silk: "This smooth, shiny fabric is called ___.",
-  gift: "On my birthday, I open a wrapped ___.",
-  lift: "I ___ the heavy box off the floor.",
-  fist: "I make a ___ by closing my hand tight.",
-  list: "I wrote a ___ of things to buy at the store.",
-  mint: "This fresh green herb is called ___.",
-  hint: "Give me a ___ so I can guess the answer.",
-  king: "The ___ wears a golden crown.",
-  ring: "I wear a shiny ___ on my finger.",
-  sing: "The birds ___ a pretty song in the morning.",
-  wind: "The ___ blows the leaves off the trees.",
-  limp: "When my leg hurts, I walk with a ___.",
-  disk: "I saved my work on a round ___.",
-  film: "We watched a fun ___ at the movies.",
-  tilt: "If you lean the cup, it will ___ and spill.",
-
-  // ── CVCC: Short O ending blends ──
-  pond: "Ducks swim in the ___ at the park.",
-  bond: "Best friends share a strong ___.",
-  fond: "I am very ___ of my grandma's cookies.",
-  lost: "I can't find my toy — it is ___.",
-  cost: "How much does this candy ___?",
-  lock: "I use a key to open the ___.",
-  dock: "The boat is tied up at the ___.",
-  rock: "I found a smooth ___ by the river.",
-  sock: "I put a ___ on each foot before my shoes.",
-  long: "A giraffe has a very ___ neck.",
-  song: "My favorite ___ makes me want to dance.",
-  gong: "The big metal ___ makes a loud ringing sound.",
-  romp: "The puppies love to ___ and play in the yard.",
-  loft: "We store old boxes up in the ___.",
-  mock: "It is not nice to ___ someone or make fun of them.",
-  soft: "This fluffy pillow feels very ___.",
-
-  // ── CVCC: Short U ending blends ──
-  dust: "I wipe the ___ off the shelf with a cloth.",
-  gust: "A strong ___ of wind blew my hat away.",
-  must: "I ___ brush my teeth before bed.",
-  rust: "Old metal turns orange-brown with ___.",
-  bump: "I hit a ___ in the road and bounced up.",
-  dump: "The truck will ___ the dirt in a pile.",
-  jump: "I love to ___ on the trampoline.",
-  pump: "I use a ___ to fill my bike tire with air.",
-  bulk: "We buy snacks in ___ to save money.",
-  hulk: "The big strong green hero is called the ___.",
-  bunk: "I sleep on the top ___ bed.",
-  dunk: "I ___ my cookie in the milk.",
-  lung: "I take a deep breath and fill my ___ with air.",
-  hung: "I ___ my coat on the hook by the door.",
-  husk: "The dry outer shell of corn is called a ___.",
-  tusk: "An elephant has a long white ___ made of ivory.",
-
-  // ── CVCC: Short E ending blends ──
-  belt: "I wear a ___ to hold up my pants.",
-  melt: "Ice cream will ___ if you leave it in the sun.",
-  felt: "I ___ happy when my friend came to visit.",
-  desk: "I do my homework sitting at my ___.",
-  nest: "A bird builds a ___ for its eggs.",
-  best: "You are my ___ friend in the whole world.",
-  test: "The teacher gave us a spelling ___.",
-  west: "The sun goes down in the ___.",
-  bend: "I ___ down to tie my shoe.",
-  lend: "Can you ___ me your pencil?",
-  mend: "Mom will ___ the hole in my sock.",
-  send: "I will ___ a letter to my grandma.",
-  help: "Can you ___ me reach the top shelf?",
-  kelp: "Long green seaweed in the ocean is called ___.",
-  pest: "A bug that bothers you is called a ___.",
-  vent: "Cool air blows out of the ___ on the ceiling.",
-
-  // ── CVVC: Long A vowel teams (ai) ──
-  rain: "Water falls from the clouds when it starts to ___.",
-  tail: "A dog wags its ___ when it is happy.",
-  mail: "The letter carrier brings the ___ to our house.",
-  sail: "The wind fills the ___ and pushes the boat.",
-  pail: "I carry water in a ___.",
-  wait: "We have to ___ in line for our turn.",
-  pain: "When I stubbed my toe, I felt ___.",
-  gain: "I study hard to ___ new knowledge.",
-  rail: "I hold onto the ___ when I walk down the stairs.",
-  nail: "I hammer a ___ into the wood.",
-  bait: "We put ___ on the hook to catch a fish.",
-  laid: "The hen ___ an egg in the nest.",
-  paid: "Mom ___ for the groceries at the store.",
-  main: "The ___ road through town is always busy.",
-  fail: "If you try your best, you will not ___.",
-  wail: "The baby started to ___ and cry loudly.",
-
-  // ── CVVC: Long E vowel teams (ee) ──
-  seed: "I plant a ___ in the garden and watch it grow.",
-  feed: "I ___ my fish every morning.",
-  weed: "I pull out this unwanted plant — it is a ___.",
-  feel: "I ___ happy when the sun is shining.",
-  peel: "I ___ the banana before I eat it.",
-  heel: "The back of my shoe rubs against my ___.",
-  reef: "Colorful fish swim around the coral ___.",
-  beef: "A hamburger is made from ___.",
-  deep: "The ocean is very ___ in the middle.",
-  keep: "I ___ my favorite toys in a special box.",
-  seep: "Water will ___ slowly through the cracks.",
-  week: "There are seven days in a ___.",
-  seek: "In hide and seek, one person must ___ the others.",
-  peek: "I ___ through the window to see outside.",
-  deer: "A ___ has big antlers and lives in the forest.",
-  jeep: "We drove the big ___ over the bumpy trail.",
-
-  // ── CVVC: Long O vowel teams (oa) ──
-  boat: "We ride across the lake in a ___.",
-  coat: "I wear my warm ___ when it is cold outside.",
-  goat: "This farm animal has a beard and says baa. It is a ___.",
-  road: "Cars drive on the ___.",
-  toad: "A ___ is like a bumpy frog that lives on land.",
-  load: "The truck carries a heavy ___ of bricks.",
-  soap: "I wash my hands with bubbly ___.",
-  foam: "The waves leave white ___ on the sand.",
-  coal: "This black rock burns in a fireplace. It is ___.",
-  foal: "A baby horse is called a ___.",
-  goal: "I kicked the ball into the ___!",
-  moan: "When my tummy hurts, I ___ a little.",
-  loan: "The library will ___ you books for free.",
-  soak: "I ___ in a warm bath to feel better.",
-  roam: "The dogs love to ___ around the big yard.",
-  moat: "A castle has water around it called a ___.",
-
-  // ── CVVC: OO vowel teams ──
-  moon: "The ___ shines bright in the night sky.",
-  noon: "Lunchtime is at ___, right in the middle of the day.",
-  soon: "We will arrive at the park very ___.",
-  boot: "I put on my rain ___ to splash in puddles.",
-  hoop: "I throw the ball through the basketball ___.",
-  loop: "I tied my ribbon in a big ___.",
-  roof: "The ___ of the house keeps the rain out.",
-  pool: "I swim in the ___ when it is hot outside.",
-  cool: "The breeze feels nice and ___.",
-  fool: "April first is when people play ___ tricks.",
-  tool: "A hammer is a ___ you use to build things.",
-  room: "My bedroom is my favorite ___ in the house.",
-  zoom: "The race car goes ___ around the track.",
-  boom: "Thunder makes a loud ___ sound.",
-  loom: "Dark clouds ___ in the sky before a storm.",
-  hoot: "An owl says ___ at night.",
-
-  // ── CVVC: EA vowel teams ──
-  bean: "I like to eat green ___ with my dinner.",
-  leaf: "A green ___ fell from the tree.",
-  meal: "Breakfast is the first ___ of the day.",
-  seal: "This animal claps its flippers and lives by the sea. It is a ___.",
-  bead: "I string each colorful ___ onto the necklace.",
-  read: "I love to ___ books before bedtime.",
-  heap: "I raked the leaves into a big ___.",
-  lean: "Don't ___ too far over the railing.",
-  peak: "The mountain ___ is covered in snow.",
-  beak: "A bird picks up food with its ___.",
-  teak: "This strong brown wood is called ___.",
-  deal: "Let's make a ___— I'll trade you my apple.",
-  heal: "A bandage helps a cut ___ faster.",
-  real: "Is that a ___ diamond or a fake one?",
-  beat: "I ___ the drum with my sticks.",
-  heat: "The ___ from the sun warms my face.",
 };
+
+let sentenceRegistry: Record<string, string> = { ...CVC_SENTENCES };
+
+/** Register sentences from a lazy-loaded chunk */
+export function registerSentences(sentences: Record<string, string>): void {
+  sentenceRegistry = { ...sentenceRegistry, ...sentences };
+}
 
 /** Get the learning sentence for a word */
 export function getWordSentence(word: string): string {
-  return WORD_SENTENCES[word] || `Can you spell the word ___?`;
+  return sentenceRegistry[word] || `Can you spell the word ___?`;
 }
 
-/** 
+// =============================================================
+// LAZY LOADERS — load CVCC/CVVC chunks on demand
+// =============================================================
+
+let cvccLoaded = false;
+let cvvcLoaded = false;
+let cvccLoadPromise: Promise<void> | null = null;
+let cvvcLoadPromise: Promise<void> | null = null;
+
+/** Load CVCC quest data. Idempotent — safe to call multiple times. */
+export async function loadCvccQuests(): Promise<void> {
+  if (cvccLoaded) return;
+  if (cvccLoadPromise) return cvccLoadPromise;
+
+  cvccLoadPromise = import("./wordData.cvcc").then((mod) => {
+    registerQuests(mod.CVCC_QUESTS);
+    registerSentences(mod.CVCC_SENTENCES);
+    cvccLoaded = true;
+  });
+
+  return cvccLoadPromise;
+}
+
+/** Load CVVC quest data. Idempotent — safe to call multiple times. */
+export async function loadCvvcQuests(): Promise<void> {
+  if (cvvcLoaded) return;
+  if (cvvcLoadPromise) return cvvcLoadPromise;
+
+  cvvcLoadPromise = import("./wordData.cvvc").then((mod) => {
+    registerQuests(mod.CVVC_QUESTS);
+    registerSentences(mod.CVVC_SENTENCES);
+    cvvcLoaded = true;
+  });
+
+  return cvvcLoadPromise;
+}
+
+// =============================================================
+// CVC WORD BANK — Trophy Room mini-game
+// =============================================================
+
+/**
  * CVC Word Bank organized by vowel for Trophy Room mini-game
  * Each entry has word and imageKey for potential future use
  */
@@ -905,91 +445,6 @@ export const CVC_WORD_BANK: Record<string, Array<{ word: string; imageKey: strin
     { word: "bug", imageKey: "bug" },
     { word: "pup", imageKey: "pup" },
     { word: "jug", imageKey: "jug" },
-  ],
-};
-
-/** 
- * CVCC Word Bank organized by vowel for Trophy Room mini-game
- * (Locked — included for data completeness)
- */
-export const CVCC_WORD_BANK: Record<string, Array<{ word: string; imageKey: string }>> = {
-  shortA: [
-    { word: "lamp", imageKey: "lamp" }, { word: "camp", imageKey: "camp" },
-    { word: "band", imageKey: "band" }, { word: "hand", imageKey: "hand" },
-    { word: "sand", imageKey: "sand" }, { word: "mask", imageKey: "mask" },
-    { word: "fast", imageKey: "fast" }, { word: "task", imageKey: "task" },
-    { word: "raft", imageKey: "raft" }, { word: "last", imageKey: "last" },
-  ],
-  shortI: [
-    { word: "milk", imageKey: "milk" }, { word: "silk", imageKey: "silk" },
-    { word: "gift", imageKey: "gift" }, { word: "lift", imageKey: "lift" },
-    { word: "fist", imageKey: "fist" }, { word: "mint", imageKey: "mint" },
-    { word: "king", imageKey: "king" }, { word: "ring", imageKey: "ring" },
-    { word: "sing", imageKey: "sing" }, { word: "film", imageKey: "film" },
-  ],
-  shortO: [
-    { word: "pond", imageKey: "pond" }, { word: "bond", imageKey: "bond" },
-    { word: "lost", imageKey: "lost" }, { word: "lock", imageKey: "lock" },
-    { word: "dock", imageKey: "dock" }, { word: "rock", imageKey: "rock" },
-    { word: "sock", imageKey: "sock" }, { word: "long", imageKey: "long" },
-    { word: "song", imageKey: "song" }, { word: "soft", imageKey: "soft" },
-  ],
-  shortU: [
-    { word: "dust", imageKey: "dust" }, { word: "gust", imageKey: "gust" },
-    { word: "rust", imageKey: "rust" }, { word: "bump", imageKey: "bump" },
-    { word: "jump", imageKey: "jump" }, { word: "pump", imageKey: "pump" },
-    { word: "bulk", imageKey: "bulk" }, { word: "bunk", imageKey: "bunk" },
-    { word: "dunk", imageKey: "dunk" }, { word: "tusk", imageKey: "tusk" },
-  ],
-  shortE: [
-    { word: "belt", imageKey: "belt" }, { word: "melt", imageKey: "melt" },
-    { word: "desk", imageKey: "desk" }, { word: "nest", imageKey: "nest" },
-    { word: "best", imageKey: "best" }, { word: "test", imageKey: "test" },
-    { word: "bend", imageKey: "bend" }, { word: "send", imageKey: "send" },
-    { word: "help", imageKey: "help" }, { word: "vent", imageKey: "vent" },
-  ],
-};
-
-/** 
- * CVVC Word Bank organized by vowel team for Trophy Room mini-game
- * (Locked — included for data completeness)
- */
-export const CVVC_WORD_BANK: Record<string, Array<{ word: string; imageKey: string }>> = {
-  longA: [
-    { word: "rain", imageKey: "rain" }, { word: "tail", imageKey: "tail" },
-    { word: "mail", imageKey: "mail" }, { word: "sail", imageKey: "sail" },
-    { word: "pail", imageKey: "pail" }, { word: "wait", imageKey: "wait" },
-    { word: "nail", imageKey: "nail" }, { word: "bait", imageKey: "bait" },
-    { word: "paid", imageKey: "paid" }, { word: "rail", imageKey: "rail" },
-  ],
-  longE: [
-    { word: "seed", imageKey: "seed" }, { word: "feed", imageKey: "feed" },
-    { word: "feel", imageKey: "feel" }, { word: "peel", imageKey: "peel" },
-    { word: "reef", imageKey: "reef" }, { word: "deep", imageKey: "deep" },
-    { word: "keep", imageKey: "keep" }, { word: "week", imageKey: "week" },
-    { word: "seek", imageKey: "seek" }, { word: "deer", imageKey: "deer" },
-    { word: "jeep", imageKey: "jeep" },
-  ],
-  longO: [
-    { word: "boat", imageKey: "boat" }, { word: "coat", imageKey: "coat" },
-    { word: "goat", imageKey: "goat" }, { word: "road", imageKey: "road" },
-    { word: "toad", imageKey: "toad" }, { word: "soap", imageKey: "soap" },
-    { word: "coal", imageKey: "coal" }, { word: "goal", imageKey: "goal" },
-    { word: "soak", imageKey: "soak" }, { word: "moat", imageKey: "moat" },
-  ],
-  longOO: [
-    { word: "moon", imageKey: "moon" }, { word: "boot", imageKey: "boot" },
-    { word: "hoop", imageKey: "hoop" }, { word: "loop", imageKey: "loop" },
-    { word: "roof", imageKey: "roof" }, { word: "pool", imageKey: "pool" },
-    { word: "cool", imageKey: "cool" }, { word: "tool", imageKey: "tool" },
-    { word: "room", imageKey: "room" }, { word: "zoom", imageKey: "zoom" },
-  ],
-  longEA: [
-    { word: "bean", imageKey: "bean" }, { word: "leaf", imageKey: "leaf" },
-    { word: "meal", imageKey: "meal" }, { word: "seal", imageKey: "seal" },
-    { word: "read", imageKey: "read" }, { word: "peak", imageKey: "peak" },
-    { word: "beak", imageKey: "beak" }, { word: "deal", imageKey: "deal" },
-    { word: "heal", imageKey: "heal" }, { word: "beat", imageKey: "beat" },
   ],
 };
 
