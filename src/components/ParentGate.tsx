@@ -15,7 +15,7 @@ const HOLD_DURATION_MS = 3000;
 const ParentGate: React.FC<ParentGateProps> = ({ onPass, onCancel }) => {
   const [progress, setProgress] = useState(0); // 0 to 100
   const [holding, setHolding] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const startTimeRef = useRef<number>(0);
 
   const startHold = useCallback(() => {

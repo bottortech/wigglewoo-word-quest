@@ -34,11 +34,9 @@ import {
   gameReducer,
   initGameState,
   isDropValid,
-  type GameState,
-  type GameAction,
 } from "../game/state";
 
-import { getHintAction, AUTO_ADVANCE_DELAY } from "../game/triggers";
+import { getHintAction } from "../game/triggers";
 import { useGameDrag } from "../game/useGameDrag";
 import {
   recordCorrectPlacement,
@@ -47,10 +45,33 @@ import {
   recordTimeSpent,
 } from "../game/analytics";
 
+import {
+  recordWordCompletion,
+  recordIncorrectDrop,
+} from "../game/learningAnalytics";
+import { questIdToVowelId } from "../game/wordData";
+
+import {
+  playLetterSound,
+  playSuccessPhrase,
+  playPromptPhrase,
+  playProgressionPhrase,
+  playRetryPhrase,
+} from "../audio/SoundEffects";
 import helperImg from "../assets/wigglewoo_helper_transparent.png";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
-import LabBackground from "../components/LabBackground";
+import machine1 from "../assets/machine1.png";
+import machine2 from "../assets/machine2.png";
+import gaugeImg from "../assets/guage.png";
+import needleImg from "../assets/needle_guage_pin.png";
+import gear1 from "../assets/gear1.png";
+import gear2 from "../assets/gear2.png";
+import gear3 from "../assets/gear3.png";
+import pipe1 from "../assets/pipe1.png";
+import pipe2 from "../assets/pipe2.png";
 import "../styles/game.css";
+import "../styles/questmap.css";
+import "../styles/home.css";
 
 // =============================================
 // SESSION STREAK — persists across GameScreen remounts
@@ -86,6 +107,18 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
   // Track when WiggleWoo should nod (on correct letter placement)
   const [helperNodding, setHelperNodding] = useState(false);
+
+  // Track incorrect drops for mastery analytics
+  const incorrectDropCount = useRef(0);
+
+  // Play "Let's build a word" on first mount
+  const hasPlayedPrompt = useRef(false);
+  useEffect(() => {
+    if (!hasPlayedPrompt.current) {
+      hasPlayedPrompt.current = true;
+      setTimeout(() => playPromptPhrase(), 400);
+    }
+  }, []);
 
   // Analytics: track time spent on this node
   const nodeStartTime = useRef(Date.now());
@@ -160,6 +193,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
       if (typeof origin === "number") {
         dispatch({ type: "REMOVE_LETTER", slotIndex: origin });
       }
+      // Play letter phoneme sound on pick up
+      playLetterSound(tile.letter);
       beginDrag(tile.id, tile.letter, origin, e);
     },
     [game.wordComplete, game.slots, beginDrag]
@@ -191,6 +226,10 @@ const GameScreen: React.FC<GameScreenProps> = ({
           dispatch({ type: "INVALID_DROP" });
           triggerSnapBack();
           recordIncorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
+          incorrectDropCount.current++;
+          recordIncorrectDrop(currentWord.word, quest.id, questIdToVowelId(quest.id));
+          // Play "Try it again" on wrong drop
+          playRetryPhrase();
         }
       } else {
         triggerSnapBack();
@@ -208,6 +247,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
     const celebType = game.celebration.type;
     // Record node completion in analytics
     recordNodeComplete(quest.id, quest.patternType, currentWordIndex);
+    // Play next-word phrase
+    playProgressionPhrase();
     // Navigate immediately — no delay, no flash of gameplay
     if (celebType === "quest-complete") {
       onNavigate("quest-summary");
@@ -221,10 +262,24 @@ const GameScreen: React.FC<GameScreenProps> = ({
   // =============================================
   const [streakToast, setStreakToast] = useState<string | null>(null);
   const [streakDisplay, setStreakDisplay] = useState(sessionStreak);
-  const [lastRating, setLastRating] = useState<WordRating | null>(null);
+  const [, setLastRating] = useState<WordRating | null>(null);
 
   useEffect(() => {
     if (game.celebration.isActive) {
+      // Play word complete phrase
+      playSuccessPhrase();
+
+      // Record mastery analytics
+      const elapsed = Date.now() - nodeStartTime.current;
+      recordWordCompletion(
+        currentWord.word,
+        quest.id,
+        questIdToVowelId(quest.id),
+        incorrectDropCount.current,
+        elapsed,
+      );
+      incorrectDropCount.current = 0;
+
       // Record per-word rating
       const rating = computeWordRating(game.hint.level);
       setLastRating(rating);
@@ -305,35 +360,22 @@ const GameScreen: React.FC<GameScreenProps> = ({
   // JSX — machine-world themed layout
   // =============================================
   return (
-    <LabBackground className="lab-bg--gameplay">
-      {/* DEBUG: Temporary overlay to calibrate inner screen bounds */}
-      {import.meta.env.DEV && <div className="screen-debug" />}
+    <div className="machine-world">
+      {/* ---- Blue rounded frame (play area) ---- */}
+      <div className="map-window">
+        <div className="game-shell-panel" />
 
-      {/* TITLE BADGE — top-left, clickable home button (hidden during celebration) */}
-      {!game.celebration.isActive && (
-        <img 
-          src={badgeLogo} 
-          alt="WiggleWoo's Word Quest - Go Home" 
-          className="title-badge title-badge--clickable"
-          draggable={false}
-          onClick={onGoHome}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
-        />
-      )}
-
-      <div
-        ref={containerRef as React.RefObject<HTMLDivElement>}
-        className="game-screen"
-        style={{
-          touchAction: "none",
-          zIndex: 2,
-        }}
-        onPointerMove={onPointerMove}
-        onPointerUp={handleContainerPointerUp}
-        onPointerCancel={onPointerCancel}
-      >
+        <div
+          ref={containerRef as React.RefObject<HTMLDivElement>}
+          className="game-screen"
+          style={{
+            touchAction: "none",
+            zIndex: 2,
+          }}
+          onPointerMove={onPointerMove}
+          onPointerUp={handleContainerPointerUp}
+          onPointerCancel={onPointerCancel}
+        >
         {/* TOP BAR — progress + start over */}
         <div className="game-top-bar">
           <div className="progress-indicator">
@@ -452,7 +494,58 @@ const GameScreen: React.FC<GameScreenProps> = ({
           />
         )}
       </div>
-    </LabBackground>
+      </div>
+      {/* end map-window */}
+
+      {/* ==== OUTER UI — outside the blue frame ==== */}
+
+      {/* Background decorative gears */}
+      <img src={gear2} alt="" className="bg-gear bg-gear-1" draggable={false} />
+      <img src={gear3} alt="" className="bg-gear bg-gear-2" draggable={false} />
+      <img src={gear2} alt="" className="bg-gear bg-gear-3" draggable={false} />
+      <img src={gear3} alt="" className="bg-gear bg-gear-4" draggable={false} />
+      <img src={gear3} alt="" className="bg-gear bg-gear-5" draggable={false} />
+      <img src={gear2} alt="" className="bg-gear bg-gear-6" draggable={false} />
+      <img src={gear3} alt="" className="bg-gear bg-gear-7" draggable={false} />
+      <img src={gear2} alt="" className="bg-gear bg-gear-8" draggable={false} />
+
+      {/* Left machine + gear + pipe */}
+      <img src={machine2} alt="" className="home-machine home-machine-left" draggable={false} />
+      <img src={gear1} alt="" className="home-gear home-gear-left" draggable={false} />
+      <img src={pipe1} alt="" className="home-pipe home-pipe-left" draggable={false} />
+      <img src={pipe2} alt="" className="home-pipe home-pipe-bottom" draggable={false} />
+
+      {/* Right machine with gauge + needle */}
+      <div className="home-machine-right-wrap">
+        <img src={machine1} alt="" className="home-machine home-machine-right" draggable={false} />
+        <img src={gaugeImg} alt="" className="home-gauge-face" draggable={false} />
+        <div className="home-needle-wrap">
+          <img src={needleImg} alt="" className="home-gauge-needle" draggable={false} />
+        </div>
+      </div>
+
+      {/* TITLE BADGE — top-left, clickable home button */}
+      {!game.celebration.isActive && (
+        <img
+          src={badgeLogo}
+          alt="WiggleWoo's Word Quest - Go Home"
+          className="title-badge title-badge--clickable"
+          draggable={false}
+          onClick={onGoHome}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
+        />
+      )}
+
+      {/* Pipe strips + corner bolts */}
+      <div className="machine-world-pipes-top" />
+      <div className="machine-world-pipes-bottom" />
+      <span className="machine-bolt machine-bolt--tl" />
+      <span className="machine-bolt machine-bolt--tr" />
+      <span className="machine-bolt machine-bolt--bl" />
+      <span className="machine-bolt machine-bolt--br" />
+    </div>
   );
 };
 

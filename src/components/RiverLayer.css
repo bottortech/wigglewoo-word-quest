@@ -1,0 +1,60 @@
+/* =============================================
+   RiverLayer.css — Animated river overlay
+   WiggleWoo's Word Quest
+   ============================================= */
+
+.river-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.river-layer__svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Subtle undulating animation on the main river */
+.river-layer__path {
+  animation: river-undulate 8s ease-in-out infinite alternate;
+}
+
+@keyframes river-undulate {
+  0%   { opacity: 0.85; }
+  50%  { opacity: 0.95; }
+  100% { opacity: 0.85; }
+}
+
+/* Shimmer highlight sweeping across the river */
+.river-layer__shimmer {
+  opacity: 0.6;
+  animation: river-shimmer-pulse 6s ease-in-out infinite;
+}
+
+@keyframes river-shimmer-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.7; }
+}
+
+/* Branch stream — slightly different timing */
+.river-layer__branch {
+  animation: river-undulate 10s ease-in-out infinite alternate;
+  animation-delay: -3s;
+}
+
+/* Ambient toggle — kill animations when ambient is off */
+.quest-map-overlay:not(.ambient-on) .river-layer__path,
+.quest-map-overlay:not(.ambient-on) .river-layer__shimmer,
+.quest-map-overlay:not(.ambient-on) .river-layer__branch {
+  animation: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .river-layer__path,
+  .river-layer__shimmer,
+  .river-layer__branch {
+    animation: none;
+  }
+}

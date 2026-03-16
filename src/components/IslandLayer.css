@@ -1,0 +1,130 @@
+/* =============================================
+   IslandLayer.css — Positioned island assets
+   WiggleWoo's Word Quest
+   ============================================= */
+
+.island-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.island-layer__item {
+  /* no position:absolute — wrapper div handles positioning */
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+}
+
+/* DEBUG: highlight a specific asset for positioning */
+.island-layer__item--highlight {
+  outline: 4px solid red !important;
+  filter: drop-shadow(0 0 20px red) !important;
+}
+
+/* Bridge — sits above land-fills but below landmarks */
+.island-layer__item--bridge-left {
+  z-index: 2;
+  transform: rotate(33deg);
+  transform-origin: center center;
+}
+
+.island-layer__item--bridge-right {
+  z-index: 2;
+  transform: rotate(-5deg);
+  transform-origin: center center;
+}
+
+/* ---- Submarine bob — gentle float in water ---- */
+.island-layer__item--submarine {
+  animation: sub-bob 6s ease-in-out infinite;
+}
+
+@keyframes sub-bob {
+  0%   { margin-top: 0;      transform: rotate(0deg); }
+  25%  { margin-top: -0.8px; transform: rotate(1.2deg); }
+  50%  { margin-top: -1.5px; transform: rotate(0deg); }
+  75%  { margin-top: -0.8px; transform: rotate(-1.2deg); }
+  100% { margin-top: 0;      transform: rotate(0deg); }
+}
+
+/* ---- Shipwreck — gentle rock in water ---- */
+.island-layer__item--shipwreck {
+  animation: shipwreck-bob 8s ease-in-out infinite;
+}
+
+@keyframes shipwreck-bob {
+  0%   { margin-top: 0;      transform: rotate(0deg); }
+  25%  { margin-top: -0.5px; transform: rotate(0.8deg); }
+  50%  { margin-top: -1px;   transform: rotate(0deg); }
+  75%  { margin-top: -0.5px; transform: rotate(-0.8deg); }
+  100% { margin-top: 0;      transform: rotate(0deg); }
+}
+
+/* Freeze when ambient is off */
+.quest-map-overlay:not(.ambient-on) .island-layer__item--submarine {
+  animation: none;
+}
+
+/* ---- Explorable landmark — clickable state ---- */
+.island-layer__landmark-wrap {
+  z-index: 4;
+  transition: scale 0.2s ease;
+}
+
+.island-layer__landmark-wrap:hover {
+  scale: 1.03;
+}
+
+.island-layer__landmark-wrap:active {
+  scale: 0.96;
+}
+
+.island-layer__item--explorable {
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25))
+          drop-shadow(0 0 8px rgba(255,215,0,0.35));
+}
+
+/* Explore badge — "tap here" indicator anchored on unlocked landmarks */
+.island-layer__explore-badge {
+  position: absolute;
+  left: 70%;
+  top: 55%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  border: 2px solid rgba(255,215,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  animation: explore-badge-pulse 2s ease-in-out infinite;
+  pointer-events: none; /* parent wrapper handles clicks */
+}
+
+.island-layer__explore-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+@keyframes explore-badge-pulse {
+  0%, 100% {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2), 0 0 0 0 rgba(255,215,0,0.4);
+  }
+  50% {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2), 0 0 0 6px rgba(255,215,0,0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-layer__item--submarine,
+  .island-layer__item--shipwreck {
+    animation: none;
+  }
+  .island-layer__explore-badge {
+    animation: none;
+  }
+}

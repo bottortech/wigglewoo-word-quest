@@ -1,10 +1,10 @@
 // =============================================
-// Stage.tsx — Fixed-aspect-ratio stage container
+// Stage.tsx — Full-viewport stage container
 // WiggleWoo's Word Quest
 // =============================================
-// Maintains iPhone 14 Pro Max aspect ratio (430:932)
-// Scales up on desktop (max ~580px wide), stays centered
-// Sets --u CSS variable for proportional scaling
+// Fills the browser viewport edge-to-edge.
+// Sets --u / --uv CSS scale units via ResizeObserver
+// (design reference: 932 × 430 landscape).
 // =============================================
 
 import React, { useRef, useEffect, useState } from "react";
@@ -13,7 +13,7 @@ import "./Stage.css";
 // iPhone 14 Pro Max: 430 x 932 (landscape: 932 x 430)
 const DESIGN_W = 932; // landscape width
 const DESIGN_H = 430; // landscape height
-const ASPECT = DESIGN_W / DESIGN_H; // ≈ 2.167
+
 
 interface StageProps {
   children: React.ReactNode;

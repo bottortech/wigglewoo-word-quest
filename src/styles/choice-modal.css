@@ -1,0 +1,159 @@
+/* ============================================
+   choice-modal.css — Choice & Daily Cap modals
+   WiggleWoo's Word Quest
+   ============================================ */
+
+.choice-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: choice-fade-in 0.2s ease-out;
+}
+
+@keyframes choice-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.choice-modal {
+  position: relative;
+  width: min(90%, 380px);
+  background: linear-gradient(180deg, #1a3a5c 0%, #0f2440 100%);
+  border: 2px solid rgba(100, 200, 255, 0.3);
+  border-radius: 24px;
+  padding: 28px 24px 24px;
+  text-align: center;
+  animation: choice-pop-in 0.25s ease-out;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes choice-pop-in {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.choice-modal__x {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.choice-modal__x:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.choice-modal__title {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  font-family: var(--font-display, "Fredoka", sans-serif);
+}
+
+.choice-modal__note {
+  color: rgba(255, 200, 100, 0.8);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.choice-modal__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.choice-modal__btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.choice-modal__btn:active {
+  transform: scale(0.97);
+}
+
+.choice-modal__btn--learn {
+  background: linear-gradient(135deg, #2da399 0%, #1b7a72 100%);
+  box-shadow: 0 4px 14px rgba(45, 163, 153, 0.4);
+}
+
+.choice-modal__btn--power {
+  background: linear-gradient(135deg, #e8922d 0%, #c4641a 100%);
+  box-shadow: 0 4px 14px rgba(232, 146, 45, 0.4);
+}
+
+.choice-modal__btn-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.choice-modal__btn-label {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  flex: 1;
+  font-family: var(--font-display, "Fredoka", sans-serif);
+}
+
+.choice-modal__btn-reward {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+/* ---- Daily Cap variant ---- */
+
+.choice-modal--cap {
+  padding: 32px 24px;
+}
+
+.choice-modal__emoji {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.choice-modal__cap-msg {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.choice-modal__close-btn {
+  background: linear-gradient(135deg, #2da399 0%, #1b7a72 100%);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 40px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-display, "Fredoka", sans-serif);
+  transition: transform 0.15s;
+}
+
+.choice-modal__close-btn:active {
+  transform: scale(0.96);
+}

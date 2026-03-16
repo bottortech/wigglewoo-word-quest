@@ -17,8 +17,8 @@ class BackgroundMusicManager {
   private userHasInteracted = false;
   private pendingPlay = false;
 
-  // Volume: 20-30% as requested (0.25 = 25%)
-  private readonly VOLUME = 0.25;
+  // Volume: low so it sits behind letter sounds and phrases
+  private readonly VOLUME = 0.35;
 
   private constructor() {
     // Singleton — use getInstance()
@@ -80,7 +80,7 @@ class BackgroundMusicManager {
     }
 
     if (this.audio && this.audio.paused) {
-      this.audio.play().catch((err) => {
+      this.audio.play().catch(() => {
         // Autoplay was blocked — will retry on user interaction
         console.log("Background music autoplay blocked, waiting for user interaction");
         this.pendingPlay = true;

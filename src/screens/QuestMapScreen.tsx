@@ -12,7 +12,6 @@ import {
   loadTrophyProgress,
   getTrophyNodeState,
   areAllQuestsComplete,
-  isQuestFullyComplete,
   hasTrophyUnlockBeenSeen,
   markTrophyUnlockSeen,
   loadNodeRatings,
@@ -26,9 +25,16 @@ import Bulb from "../components/Bulb";
 import GlassDisplayCase from "../components/GlassDisplayCase";
 import UnlockModal from "../components/UnlockModal";
 import ParentGate from "../components/ParentGate";
+import WaterBaseLayer from "../components/WaterBaseLayer";
+import RiverLayer from "../components/RiverLayer";
+import WaterAmbientLayer from "../components/WaterAmbientLayer";
+import IslandLayer from "../components/IslandLayer";
+import SkyLayer from "../components/SkyLayer";
+import { playNewChallengePhrase } from "../audio/SoundEffects";
 import "../styles/game.css";
 import "../styles/home.css";
 import "../styles/questmap.css";
+import "../styles/stickerbook.css";
 
 // ---- ErrorBoundary (safety net) ----
 interface EBProps { children: React.ReactNode }
@@ -59,21 +65,21 @@ class QuestMapErrorBoundary extends Component<EBProps, EBState> {
 // Node 1 at left, Node 16 at right, arranged in two rows
 const NODE_POSITIONS = [
   // Bottom row (nodes 1-8, left to right) - y=75% (within 8-92% safe zone)
-  { x: 4, y: 95 },   // 1 — LOCKED
-  { x: 14, y: 75 },   // 2 — LOCKED
-  { x: 26, y: 88 },   // 3 — LOCKED
-  { x: 39, y: 108 },   // 4 — LOCKED
-  { x: 39, y: 78 },   // 5 — LOCKED
-  { x: 53, y: 103 },   // 6
-  { x: 69, y: 98 },   // 7 — LOCKED
-  { x: 79, y: 78 },   // 8
+  { x: 12, y: 93 },   // 1 — LOCKED
+  { x: 18, y: 77 },   // 2 — LOCKED
+  { x: 10, y: 67 },   // 3 — LOCKED
+  { x: 28, y: 67 },   // 4 — LOCKED
+  { x: 35, y: 78 },   // 5 — LOCKED
+  { x: 60, y: 94 },   // 6
+  { x: 79, y: 90 },   // 7 — LOCKED
+  { x: 67, y: 74 },   // 8
   // Top row (nodes 9-16, left to right) - y=30% (within 8-92% safe zone)
   { x: 37, y: 58 },   // 9 — LOCKED
-  { x: 6, y: 56 },   // 10 — LOCKED
+  { x: 14, y: 51 },   // 10 — LOCKED
   { x: 23, y: 30 },   // 11 — LOCKED
-  { x: 37, y: 25 },   // 12 — LOCKED
-  { x: 45, y: 7 },   // 13 — LOCKED
-  { x: 62, y: 26 },   // 14 — LOCKED
+  { x: 37, y: 31 },   // 12 — LOCKED
+  { x: 45, y: 17 },   // 13 — LOCKED
+  { x: 62, y: 39 },   // 14 — LOCKED
   { x: 78, y: 22 },   // 15 — LOCKED
   { x: 86, y: 48 },   // 16 — LOCKED
 ];
@@ -244,14 +250,14 @@ interface QuestMapScreenProps {
   quest: Quest;
   onStartLevel: (wordIndex: number) => void;
   onRestartQuest: () => void;
-  onNextQuest: () => void;
   onSelectQuest?: (questId: string) => void;
   onGoHome?: () => void;
   onEnterTrophyRoom?: () => void;
   onViewTrophyRoom?: () => void;
   onOpenInsights?: () => void;
+  onExplore?: (envId: string) => void;
+  onOpenStickerBook?: () => void;
   arrivedFromWord: number | null;
-  hasNextQuest: boolean;
   trophyJustEarned?: boolean; // true when coming from trophy-transition → triggers snap animation
 }
 
@@ -259,18 +265,21 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   quest,
   onStartLevel,
   onRestartQuest,
-  onNextQuest,
   onSelectQuest,
   onGoHome,
   onEnterTrophyRoom,
   onViewTrophyRoom,
   onOpenInsights,
+  onExplore,
+  onOpenStickerBook,
   arrivedFromWord,
-  hasNextQuest,
 }) => {
   const progress = useMemo(() => loadQuestProgress(quest.id), [quest.id]);
   const trophyProgress = useMemo(() => loadTrophyProgress(quest.id), [quest.id]);
-  
+
+  // Quest fully done — nodes, path, trophy, WiggleWoo all hidden
+  const questFullyDone = progress.questComplete && trophyProgress.trophyRoomComplete;
+
   // Trophy node state
   const trophyNodeState = useMemo(() => 
     getTrophyNodeState(progress, trophyProgress), 
@@ -310,7 +319,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   // GUIDED ZOOM STATE (mobile navigation)
   // =============================================
   const [zoomState, setZoomState] = useState<'overview' | 'zoomed-node' | 'zoomed-trophy'>('overview');
-  const [zoomTarget, setZoomTarget] = useState<{ x: number; y: number } | null>(null);
+  const [, setZoomTarget] = useState<{ x: number; y: number } | null>(null);
   const mapOverlayRef = useRef<HTMLDivElement>(null);
   
   // Detect if we're on mobile
@@ -319,11 +328,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     return window.innerWidth <= 768 || 'ontouchstart' in window;
   }, []);
 
-  // Detect landscape mobile — disable zoom for landscape phones
-  const isLandscapeMobile = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    return isMobile && window.innerHeight <= 500;
-  }, [isMobile]);
+
 
   // Calculate zoom target position based on active node or trophy
   useEffect(() => {
@@ -355,7 +360,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   }, [activeNodeIndex, trophyNodeState, isMobile]);
 
   // Completion animation: zoom out then refocus
-  const [completionAnimating, setCompletionAnimating] = useState(false);
+  const [, setCompletionAnimating] = useState(false);
   
   useEffect(() => {
     if (arrivedFromWord !== null && isMobile) {
@@ -394,27 +399,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     }
   }, [arrivedFromWord, activeNodeIndex]);
 
-  // Calculate CSS transform for guided zoom
-  // Slightly less aggressive since landscape is enforced
-  const zoomTransform = useMemo(() => {
-    if (!isMobile || zoomState === 'overview' || !zoomTarget) {
-      return {
-        transform: 'scale(1) translate(0, 0)',
-        transformOrigin: 'center center',
-      };
-    }
 
-    // Reduced zoom levels for landscape-locked mobile
-    const scale = zoomState === 'zoomed-trophy' ? 1.18 : 1.10;
-    // Convert percentage to offset from center (50%)
-    const offsetX = (50 - zoomTarget.x) * (scale - 1) * 0.75;
-    const offsetY = (50 - zoomTarget.y) * (scale - 1) * 0.75;
-    
-    return {
-      transform: `scale(${scale}) translate(${offsetX}%, ${offsetY}%)`,
-      transformOrigin: `${zoomTarget.x}% ${zoomTarget.y}%`,
-    };
-  }, [zoomState, zoomTarget, isMobile]);
 
   // =============================================
   // WORD QUEST BOX STATE
@@ -443,6 +428,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       return next;
     });
   };
+
+  // Dev: hide nodes to see board layout clearly
+  const [devHideNodes, setDevHideNodes] = useState(false);
 
   // Keyboard shortcuts: [ and ] to cycle quest types in DEV
   useEffect(() => {
@@ -492,7 +480,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   const [shakingNodeIndex, setShakingNodeIndex] = useState<number | null>(null);
   const [shakingTrophy, setShakingTrophy] = useState(false);
   const [lockedToast, setLockedToast] = useState<string | null>(null);
-  const shakeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const showLockedFeedback = useCallback((toast: string, setShake: () => void, clearShake: () => void) => {
     if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
@@ -535,6 +523,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       const timer = setTimeout(() => {
         setTrophyUnlockCelebrating(true);
         setLockedToast("\uD83C\uDFC6 Trophy unlocked!");
+        playNewChallengePhrase();
         markTrophyUnlockSeen(quest.id);
 
         // Auto-clear after animation
@@ -600,7 +589,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     arrivedFromWord !== null ? arrivedFromWord : initialWwLevel
   );
   const [wwAnimating, setWwAnimating] = useState(false);
-  const animTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const animTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     // Case 1: Arrived from node 16 (index 15), trophy is active → animate to trophy
@@ -675,149 +664,27 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   return (
     <div className="machine-world">
-      {/* ---- Mechanical environment (bulbs only — left machine removed for now) ---- */}
-      <div className="bulb-overlay">
-        <Bulb className="bulb-top-1" interval={4000} delay={300} onDuration={1400} />
-        <Bulb className="bulb-top-2" interval={3500} delay={1200} onDuration={1200} />
-        <Bulb className="bulb-top-3" interval={4500} delay={2000} onDuration={1300} />
-        <Bulb className="bulb-top-4" interval={3800} delay={700} onDuration={1100} />
-      </div>
+      {/* ---- Map viewport (blue rounded frame) ---- */}
+      <div className="map-window">
+        {/* Layer 2: Animated water */}
+        <WaterBaseLayer />
+        {/* <RiverLayer /> — TEMP HIDDEN to identify straight line */}
+        <WaterAmbientLayer />
+        {/* Layer 3-4: Land pieces, objects, landmarks */}
+        <IslandLayer onExplore={onExplore} devUnlock={devUnlock} hideBadges={!questFullyDone && !devUnlock} />
+        {/* Layer 5: Clouds at top of map */}
+        <SkyLayer />
 
-      {/* TITLE BADGE — top-left, clickable home button */}
-      <img 
-        src={badgeLogo} 
-        alt="WiggleWoo's Word Quest - Go Home" 
-        className="title-badge title-badge--clickable"
-        draggable={false}
-        onClick={onGoHome}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
-      />
-
-      {/* TROPHY SHOWCASE — below badge logo, glass display case */}
-      <div 
-        className={`trophy-showcase ${trophyProgress.trophyRoomComplete ? 'trophy-showcase--clickable' : ''}`}
-        onClick={() => trophyProgress.trophyRoomComplete && onViewTrophyRoom?.()}
-        role={trophyProgress.trophyRoomComplete ? "button" : undefined}
-        tabIndex={trophyProgress.trophyRoomComplete ? 0 : undefined}
-      >
-        <GlassDisplayCase
-          earned={trophyProgress.trophyRoomComplete}
-          patternType={quest.patternType}
-          size="medium"
-        />
-      </div>
-
-      {/* WORD QUEST BOX — right side */}
-      <div className="word-quest-box">
-        <div className="word-quest-box__header">
-          {questBoxView === "vowels" && (
-            <button 
-              className="word-quest-box__back-btn"
-              onClick={handleBackToTypes}
-              aria-label="Back to quest types"
-            >
-              ←
-            </button>
-          )}
-          <span className="word-quest-box__title">
-            {questBoxView === "types" ? "Quest Type" : `${selectedQuestType} Quests`}
-          </span>
-        </div>
-        
-        <div className="word-quest-box__content">
-          {questBoxView === "types" ? (
-            <div className="word-quest-box__types">
-              {effectiveQuestTypes.map((type) => (
-                <button
-                  key={type.id}
-                  className={`word-quest-box__type-btn ${
-                    selectedQuestType === type.id ? "word-quest-box__type-btn--active" : ""
-                  } ${!type.unlocked ? "word-quest-box__type-btn--locked" : ""}`}
-                  onClick={() => {
-                    if (type.unlocked) {
-                      handleQuestTypeSelect(type.id);
-                    } else {
-                      setUnlockModalType(type.id);
-                      setShowUnlockModal(true);
-                    }
-                  }}
-                >
-                  {type.label}
-                  {!type.unlocked && <span className="word-quest-box__lock">🔒</span>}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="word-quest-box__vowels">
-              {QUEST_CATALOG[selectedQuestType].tracks.map((track) => {
-                const isActive = activeVowelId === track.id;
-                const isUnlocked = devUnlock || isVowelUnlocked(track.id);
-                return (
-                  <button
-                    key={track.id}
-                    className={`word-quest-box__vowel-btn ${
-                      isActive ? "word-quest-box__vowel-btn--active" : ""
-                    } ${!isUnlocked ? "word-quest-box__vowel-btn--locked" : ""}`}
-                    onClick={() => isUnlocked && handleVowelSelect(track.id)}
-                    disabled={!isUnlocked}
-                  >
-                    <span className="word-quest-box__vowel-letter">{track.vowel}</span>
-                    <span className="word-quest-box__vowel-label">{track.label}</span>
-                    {!isUnlocked && <span className="word-quest-box__lock">🔒</span>}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* LEARNING INSIGHTS — Parent/Teacher button */}
-      <button
-        className="insights-map-btn"
-        onClick={handleInsightsClick}
-        title="Learning Insights (For Parents & Teachers)"
-      >
-        📊 Insights
-      </button>
-
-      {/* DEV UNLOCK TOGGLE — only visible in development */}
-      {import.meta.env.DEV && (
-        <button
-          className={`dev-unlock-btn ${devUnlock ? "dev-unlock-btn--active" : ""}`}
-          onClick={toggleDevUnlock}
-          title={`Dev Unlock: ${devUnlock ? "ON" : "OFF"} — [ ] to cycle quests`}
-        >
-          🔓 Dev {devUnlock ? "ON" : "OFF"}
-        </button>
-      )}
-
-      {/* DEBUG LABEL — temporary routing verification */}
-      {import.meta.env.DEV && (
-        <div className="dev-debug-label">
-          ActiveQuest: {quest.patternType.toUpperCase()} ({quest.id})<br />
-          ActiveTrack: {quest.title}
-        </div>
-      )}
-
-      {/* Decorative pipe strips */}
-      <div className="machine-world-pipes-top" />
-      <div className="machine-world-pipes-bottom" />
-      <span className="machine-bolt machine-bolt--tl" />
-      <span className="machine-bolt machine-bolt--tr" />
-      <span className="machine-bolt machine-bolt--bl" />
-      <span className="machine-bolt machine-bolt--br" />
-
-      {/* Quest Map Overlay (inside blue frame area) */}
-      <div 
+        {/* Layer 5: Quest Map Overlay — nodes, trophy, path, wigglewoo */}
+      <div
         ref={mapOverlayRef}
         className="quest-map-overlay"
+        style={devHideNodes ? { display: "none" } : questFullyDone ? { pointerEvents: "none" } : undefined}
       >
         {/* DEV: Red dashed guideline for safe-zone calibration */}
         <div className="quest-map-guideline" />
-        
+
+        {!questFullyDone && (<>
         {/* Glowing learning path SVG */}
         <svg className="learning-path" viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
@@ -860,11 +727,6 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         {NODE_POSITIONS.map((pos, i) => {
           const state = nodeStates[i];
           const tappable = isNodeTappable(state);
-          const isActiveNode = state === "active";
-          // Only dim nodes during active zoom transitions, NOT in normal view
-          const shouldDim = false; // Disabled — nodes should always be solid
-          const shouldDimHard = false;
-          
           return (
             <div
               key={i}
@@ -964,26 +826,166 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           </div>
         )}
 
-        {/* Quest complete banner — only after trophy room is done */}
-        {progress.questComplete && trophyProgress.trophyRoomComplete && (
-          <div className="quest-complete-overlay">
-            <div className="quest-complete-banner">
-              <span className="quest-complete-banner__icon">🏆</span>
-              <span className="quest-complete-banner__text">Quest Complete!</span>
-              <div className="quest-complete-banner__actions">
-                <button className="quest-complete-btn" onClick={onRestartQuest}>
-                  🔄 Play Again
-                </button>
-                {hasNextQuest && (
-                  <button className="quest-complete-btn quest-complete-btn--next" onClick={onNextQuest}>
-                    ➡️ Next Quest
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        </>)}
       </div>
+      {/* end quest-map-overlay */}
+      </div>
+      {/* end map-window */}
+
+      {/* ==== OUTER UI — outside the blue frame ==== */}
+
+      {/* Mechanical environment */}
+      <div className="machine-world-pipes-top" />
+      <div className="machine-world-pipes-bottom" />
+      <span className="machine-bolt machine-bolt--tl" />
+      <span className="machine-bolt machine-bolt--tr" />
+      <span className="machine-bolt machine-bolt--bl" />
+      <span className="machine-bolt machine-bolt--br" />
+
+      {/* TITLE BADGE — top-left, clickable home button */}
+      <img
+        src={badgeLogo}
+        alt="WiggleWoo's Word Quest - Go Home"
+        className="title-badge title-badge--clickable"
+        draggable={false}
+        onClick={onGoHome}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
+      />
+
+      {/* TROPHY SHOWCASE — below badge logo, glass display case */}
+      <div
+        className={`trophy-showcase ${trophyProgress.trophyRoomComplete ? 'trophy-showcase--clickable' : ''}`}
+        onClick={() => trophyProgress.trophyRoomComplete && onViewTrophyRoom?.()}
+        role={trophyProgress.trophyRoomComplete ? "button" : undefined}
+        tabIndex={trophyProgress.trophyRoomComplete ? 0 : undefined}
+      >
+        <GlassDisplayCase
+          earned={trophyProgress.trophyRoomComplete}
+          patternType={quest.patternType}
+          size="medium"
+        />
+      </div>
+
+      {/* STICKER BOOK — below trophy showcase */}
+      <button
+        className="stickerbook-map-btn"
+        onClick={onOpenStickerBook}
+        aria-label="Open Sticker Book"
+      >
+        <img
+          className="stickerbook-map-btn__img"
+          src="/assets/sticker book/sticker-book-closed.png"
+          alt="Sticker Book"
+          draggable={false}
+        />
+      </button>
+
+      {/* WORD QUEST BOX — right side */}
+      <div className="word-quest-box">
+        <div className="word-quest-box__header">
+          {questBoxView === "vowels" && (
+            <button
+              className="word-quest-box__back-btn"
+              onClick={handleBackToTypes}
+              aria-label="Back to quest types"
+            >
+              ←
+            </button>
+          )}
+          <span className="word-quest-box__title">
+            {questBoxView === "types" ? "Quest Type" : `${selectedQuestType} Quests`}
+          </span>
+        </div>
+        <div className="word-quest-box__content">
+          {questBoxView === "types" ? (
+            <div className="word-quest-box__types">
+              {effectiveQuestTypes.map((type) => (
+                <button
+                  key={type.id}
+                  className={`word-quest-box__type-btn ${
+                    selectedQuestType === type.id ? "word-quest-box__type-btn--active" : ""
+                  } ${!type.unlocked ? "word-quest-box__type-btn--locked" : ""}`}
+                  onClick={() => {
+                    if (type.unlocked) {
+                      handleQuestTypeSelect(type.id);
+                    } else {
+                      setUnlockModalType(type.id);
+                      setShowUnlockModal(true);
+                    }
+                  }}
+                >
+                  {type.label}
+                  {!type.unlocked && <span className="word-quest-box__lock">🔒</span>}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="word-quest-box__vowels">
+              {QUEST_CATALOG[selectedQuestType].tracks.map((track) => {
+                const isActive = activeVowelId === track.id;
+                const isUnlocked = devUnlock || isVowelUnlocked(track.id);
+                return (
+                  <button
+                    key={track.id}
+                    className={`word-quest-box__vowel-btn ${
+                      isActive ? "word-quest-box__vowel-btn--active" : ""
+                    } ${!isUnlocked ? "word-quest-box__vowel-btn--locked" : ""}`}
+                    onClick={() => isUnlocked && handleVowelSelect(track.id)}
+                    disabled={!isUnlocked}
+                  >
+                    <span className="word-quest-box__vowel-letter">{track.vowel}</span>
+                    <span className="word-quest-box__vowel-label">{track.label}</span>
+                    {!isUnlocked && <span className="word-quest-box__lock">🔒</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PARENT DASHBOARD — gear icon → parent gate → dashboard */}
+      <button
+        className="insights-map-btn"
+        onClick={handleInsightsClick}
+        title="Parent Dashboard"
+        aria-label="Parent Dashboard"
+      >
+        <img src="/assets/gear1.png" alt="" style={{ width: 24, height: 24 }} draggable={false} />
+      </button>
+
+      {/* DEV UNLOCK TOGGLE */}
+      {import.meta.env.DEV && (
+        <button
+          className={`dev-unlock-btn ${devUnlock ? "dev-unlock-btn--active" : ""}`}
+          onClick={toggleDevUnlock}
+          title={`Dev Unlock: ${devUnlock ? "ON" : "OFF"} — [ ] to cycle quests`}
+        >
+          🔓 Dev {devUnlock ? "ON" : "OFF"}
+        </button>
+      )}
+
+      {/* DEV: Hide/Show Nodes toggle */}
+      {import.meta.env.DEV && (
+        <button
+          className={`dev-unlock-btn ${devHideNodes ? "dev-unlock-btn--active" : ""}`}
+          onClick={() => setDevHideNodes((h) => !h)}
+          style={{ bottom: "40px", top: "auto" }}
+          title="Toggle node visibility for layout work"
+        >
+          {devHideNodes ? "👁 Show Nodes" : "🙈 Hide Nodes"}
+        </button>
+      )}
+
+      {/* DEBUG LABEL */}
+      {import.meta.env.DEV && (
+        <div className="dev-debug-label">
+          ActiveQuest: {quest.patternType.toUpperCase()} ({quest.id})<br />
+          ActiveTrack: {quest.title}
+        </div>
+      )}
 
       {/* LOCKED NODE TOAST */}
       {lockedToast && (

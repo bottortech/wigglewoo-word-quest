@@ -390,7 +390,10 @@
   top: 8px;
   right: 8px;
   z-index: 50;
-  padding: 6px 14px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.8);
@@ -405,4 +408,242 @@
 .insights-map-btn:hover {
   background: rgba(30, 40, 60, 0.9);
   color: #fff;
+}
+
+/* ---- Tabs ---- */
+.insights-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 16px;
+  background: rgba(26, 42, 74, 0.6);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.insights-tab {
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #8899aa;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.insights-tab:hover { color: #c0d0e0; }
+
+.insights-tab--active {
+  color: #fff;
+  border-bottom-color: #4FC3F7;
+}
+
+/* ---- Stat cards row ---- */
+.insights-stats-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.insights-stat-card {
+  flex: 1;
+  min-width: 100px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.insights-stat-card__value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.insights-stat-card__label {
+  font-size: 11px;
+  color: #8899aa;
+  font-weight: 600;
+}
+
+/* ---- Mastery legend ---- */
+.insights-legend {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.insights-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #a0b0c0;
+}
+
+.insights-legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---- Vowel card ---- */
+.insights-vowel-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.insights-vowel-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.insights-vowel-card__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e0e8f0;
+}
+
+.insights-vowel-card__count {
+  font-size: 11px;
+  color: #8899aa;
+}
+
+.insights-vowel-card__details {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #7088a0;
+}
+
+/* ---- Mastery bar ---- */
+.insights-mastery-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+}
+
+.insights-mastery-bar__seg {
+  min-width: 2px;
+  transition: width 0.3s ease;
+}
+
+.insights-mastery-bar__seg--mastered { background: #38b764; }
+.insights-mastery-bar__seg--learning { background: #4FC3F7; }
+.insights-mastery-bar__seg--practicing { background: #FFA726; }
+.insights-mastery-bar__seg--support { background: #EF5350; }
+
+/* ---- Tips ---- */
+.insights-tips {
+  background: rgba(255, 200, 50, 0.06);
+  border: 1px solid rgba(255, 200, 50, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.insights-tips__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd54f;
+  margin: 0 0 6px;
+}
+
+.insights-tips__item {
+  font-size: 12px;
+  color: #c0b080;
+  margin: 0 0 4px;
+}
+
+/* ---- Toggle switches ---- */
+.insights-toggle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.insights-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.insights-toggle__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.insights-toggle__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e0e8f0;
+}
+
+.insights-toggle__desc {
+  font-size: 11px;
+  color: #7088a0;
+}
+
+.insights-toggle__switch {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.12);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.insights-toggle__switch--on {
+  background: #38b764;
+  border-color: #2d9a54;
+}
+
+.insights-toggle__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.insights-toggle__switch--on .insights-toggle__knob {
+  left: 24px;
+}
+
+/* ---- Reading / Progress / Accessibility sections ---- */
+.insights-reading,
+.insights-progress,
+.insights-accessibility {
+  max-width: 700px;
+  margin: 0 auto;
 }

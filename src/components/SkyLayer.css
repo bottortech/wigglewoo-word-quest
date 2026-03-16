@@ -1,0 +1,111 @@
+/* =============================================
+   SkyLayer.css — Sky gradient + clouds above islands
+   WiggleWoo's Word Quest
+   ============================================= */
+
+.cloud-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ---- Smooth gradient sky backdrop ---- */
+.sky-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 28%;
+  background: linear-gradient(
+    to bottom,
+    #4FA3E3 0%,
+    #7BC0F0 30%,
+    #A8D8F8 55%,
+    #D0ECFB 75%,
+    rgba(208, 236, 251, 0) 100%
+  );
+  z-index: 0;
+}
+
+/* ---- Cloud base ---- */
+.cloud {
+  position: absolute;
+  height: auto;
+  object-fit: contain;
+  will-change: transform;
+  z-index: 1;
+  /* Soft bottom edge blend into sky */
+  mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 95%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 95%);
+}
+
+/* ---- 4 clouds across the top sky area ---- */
+
+/* 1: Above castle island (top-left) */
+.cloud--1 {
+  top: -14%;
+  left: -2%;
+  width: 30%;
+  opacity: 0.70;
+  transform: rotate(-4deg);
+  animation: drift-c1 50s ease-in-out infinite alternate;
+}
+
+/* 2: Above volcano (top-center-left) */
+.cloud--2 {
+  top: -22%;
+  left: 24%;
+  width: 34%;
+  opacity: 0.65;
+  transform: scaleX(-1) rotate(3deg);
+  animation: drift-c2 55s ease-in-out 3s infinite alternate;
+}
+
+/* 3: Small filler between volcano and city */
+.cloud--3 {
+  top: -6%;
+  left: 52%;
+  width: 22%;
+  opacity: 0.60;
+  transform: rotate(6deg);
+  animation: drift-c3 45s ease-in-out 7s infinite alternate;
+}
+
+/* 4: Above crystal city (top-right) */
+.cloud--4 {
+  top: -9%;
+  right: -3%;
+  width: 28%;
+  opacity: 0.75;
+  transform: scaleX(-1) rotate(-5deg);
+  animation: drift-c4 48s ease-in-out 2s infinite alternate;
+}
+
+/* ---- Per-cloud drift keyframes ---- */
+@keyframes drift-c1 {
+  0%   { transform: rotate(-4deg) translate3d(0, 0, 0); }
+  100% { transform: rotate(-4deg) translate3d(40px, 0, 0); }
+}
+
+@keyframes drift-c2 {
+  0%   { transform: scaleX(-1) rotate(3deg) translate3d(0, 0, 0); }
+  100% { transform: scaleX(-1) rotate(3deg) translate3d(35px, 0, 0); }
+}
+
+@keyframes drift-c3 {
+  0%   { transform: rotate(6deg) translate3d(0, 0, 0); }
+  100% { transform: rotate(6deg) translate3d(45px, 0, 0); }
+}
+
+@keyframes drift-c4 {
+  0%   { transform: scaleX(-1) rotate(-5deg) translate3d(0, 0, 0); }
+  100% { transform: scaleX(-1) rotate(-5deg) translate3d(30px, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud {
+    animation: none;
+  }
+}

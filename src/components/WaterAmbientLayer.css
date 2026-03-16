@@ -1,0 +1,281 @@
+/* =============================================
+   WaterAmbientLayer.css — Ambient ocean life
+   WiggleWoo's Word Quest
+   =============================================
+   All animations are CSS-only for performance.
+   GPU-friendly transforms, no JS re-renders.
+   ============================================= */
+
+.water-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ==========================================
+   1. CAUSTICS SHIMMER
+   Slow-drifting light refraction pattern.
+   Uses layered radial gradients to simulate
+   underwater caustics without a texture PNG.
+   ========================================== */
+.water-ambient__shimmer {
+  position: absolute;
+  inset: -20%;          /* oversized so edges don't flash */
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+  will-change: transform;
+  animation: shimmer-drift 10s linear infinite;
+  background:
+    /* Primary caustic cells */
+    radial-gradient(ellipse 18% 22% at 20% 30%, rgba(255,255,255,0.5) 0%, transparent 70%),
+    radial-gradient(ellipse 14% 18% at 55% 20%, rgba(255,255,255,0.4) 0%, transparent 70%),
+    radial-gradient(ellipse 20% 16% at 80% 45%, rgba(255,255,255,0.45) 0%, transparent 70%),
+    radial-gradient(ellipse 16% 20% at 35% 65%, rgba(255,255,255,0.35) 0%, transparent 70%),
+    radial-gradient(ellipse 18% 14% at 70% 75%, rgba(255,255,255,0.4) 0%, transparent 70%),
+    radial-gradient(ellipse 12% 16% at 15% 80%, rgba(255,255,255,0.3) 0%, transparent 70%),
+    /* Secondary smaller cells offset */
+    radial-gradient(ellipse 10% 12% at 45% 45%, rgba(200,240,255,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 10% 14% at 90% 25%, rgba(200,240,255,0.25) 0%, transparent 60%),
+    radial-gradient(ellipse 12% 10% at 10% 50%, rgba(200,240,255,0.3) 0%, transparent 60%);
+}
+
+@keyframes shimmer-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(2%, 1.5%) scale(1.02); }
+  50%  { transform: translate(3.5%, 0%) scale(1); }
+  75%  { transform: translate(1.5%, -1.5%) scale(1.01); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ==========================================
+   2. MICRO-BUBBLES
+   Tiny rising bubbles, staggered spawn.
+   Max 8 on screen, each on its own cycle.
+   ========================================== */
+.water-ambient__bubbles {
+  position: absolute;
+  inset: 0;
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 35%,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(200, 240, 255, 0.3) 50%,
+    transparent 70%
+  );
+  will-change: transform, opacity;
+  opacity: 0;
+}
+
+/* Each bubble: unique size, start position, delay, and duration */
+.bubble--1 {
+  width: 4px; height: 4px;
+  left: 12%; bottom: 15%;
+  animation: bubble-rise 5s ease-in 0s infinite;
+}
+.bubble--2 {
+  width: 3px; height: 3px;
+  left: 28%; bottom: 25%;
+  animation: bubble-rise 6s ease-in 3.5s infinite;
+}
+.bubble--3 {
+  width: 5px; height: 5px;
+  left: 45%; bottom: 10%;
+  animation: bubble-rise 5.5s ease-in 1.2s infinite;
+}
+.bubble--4 {
+  width: 3px; height: 3px;
+  left: 62%; bottom: 20%;
+  animation: bubble-rise 6.5s ease-in 4.8s infinite;
+}
+.bubble--5 {
+  width: 6px; height: 6px;
+  left: 78%; bottom: 12%;
+  animation: bubble-rise 5s ease-in 2.5s infinite;
+}
+.bubble--6 {
+  width: 4px; height: 4px;
+  left: 88%; bottom: 30%;
+  animation: bubble-rise 5.8s ease-in 5.5s infinite;
+}
+.bubble--7 {
+  width: 3px; height: 3px;
+  left: 35%; bottom: 18%;
+  animation: bubble-rise 6.2s ease-in 3s infinite;
+}
+.bubble--8 {
+  width: 5px; height: 5px;
+  left: 55%; bottom: 22%;
+  animation: bubble-rise 5.3s ease-in 1.8s infinite;
+}
+
+@keyframes bubble-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(0.5);
+  }
+  8% {
+    opacity: 0.4;
+    transform: translateY(-5%) translateX(1px) scale(0.8);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translateY(-30%) translateX(-2px) scale(1);
+  }
+  85% {
+    opacity: 0.15;
+    transform: translateY(-55%) translateX(1px) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-70%) translateX(0) scale(1.2);
+  }
+}
+
+/* ==========================================
+   3. FISH SILHOUETTE
+   Faint teal fish shadow that crosses the
+   map slowly. One at a time, long intervals.
+   ========================================== */
+.water-ambient__fish {
+  position: absolute;
+  top: 60%;
+  left: 0;
+  width: 100%;
+  height: 30%;
+  overflow: hidden;
+}
+
+.fish-shadow {
+  position: absolute;
+  width: 90px;
+  height: auto;
+  opacity: 0;
+  filter: blur(1.5px);
+  will-change: transform, opacity;
+  animation: fish-pass 42s linear infinite;
+}
+
+/* Fish swims across once every ~42s (visible for ~16s in the middle) */
+@keyframes fish-pass {
+  0% {
+    opacity: 0;
+    transform: translateX(-60px) translateY(0);
+  }
+  /* Wait phase: invisible for first ~60% of cycle (~25s gap) */
+  58% {
+    opacity: 0;
+    transform: translateX(-60px) translateY(0);
+  }
+  /* Enter */
+  62% {
+    opacity: 0.12;
+    transform: translateX(10vw) translateY(5px);
+  }
+  /* Mid-cross */
+  80% {
+    opacity: 0.13;
+    transform: translateX(55vw) translateY(-3px);
+  }
+  /* Exit */
+  95% {
+    opacity: 0.08;
+    transform: translateX(105vw) translateY(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(115vw) translateY(0);
+  }
+}
+
+/* ==========================================
+   4. DEEP WHALE SHADOW
+   Very large, very faint blurred oval.
+   Drifts across lower third. Ultra-subtle.
+   ========================================== */
+.water-ambient__whale {
+  position: absolute;
+  bottom: 8%;
+  left: 0;
+  width: 100%;
+  height: 25%;
+  overflow: hidden;
+}
+
+.water-ambient__whale::after {
+  content: "";
+  position: absolute;
+  width: 18%;
+  height: 55%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(15, 60, 75, 0.07) 0%,
+    rgba(15, 60, 75, 0.03) 40%,
+    transparent 70%
+  );
+  filter: blur(8px);
+  will-change: transform, opacity;
+  opacity: 0;
+  animation: whale-drift 55s linear infinite;
+}
+
+@keyframes whale-drift {
+  0% {
+    opacity: 0;
+    transform: translateX(-20%) translateY(0);
+  }
+  /* Invisible wait: ~70% of cycle (~38s) */
+  70% {
+    opacity: 0;
+    transform: translateX(-20%) translateY(0);
+  }
+  /* Fade in */
+  75% {
+    opacity: 0.06;
+    transform: translateX(15%) translateY(-5px);
+  }
+  /* Peak */
+  85% {
+    opacity: 0.07;
+    transform: translateX(50%) translateY(3px);
+  }
+  /* Fade out */
+  95% {
+    opacity: 0.04;
+    transform: translateX(90%) translateY(-2px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(110%) translateY(0);
+  }
+}
+
+/* ==========================================
+   AMBIENT TOGGLE & REDUCED MOTION
+   ========================================== */
+
+/* Freeze all animations when ambient is off */
+.quest-map-overlay:not(.ambient-on) .water-ambient__shimmer,
+.quest-map-overlay:not(.ambient-on) .bubble,
+.quest-map-overlay:not(.ambient-on) .fish-shadow,
+.quest-map-overlay:not(.ambient-on) .water-ambient__whale::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .water-ambient__shimmer,
+  .bubble,
+  .fish-shadow,
+  .water-ambient__whale::after {
+    animation: none;
+    opacity: 0;
+  }
+}

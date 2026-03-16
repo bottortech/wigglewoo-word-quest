@@ -3,7 +3,7 @@
 // Wigglewoo CVC Quest
 // =============================================
 
-import React, { forwardRef } from "react";
+import { forwardRef } from "react";
 import type { SlotPosition, SlotState, LetterCategory } from "../game/types";
 import { SLOT_CATEGORIES } from "../game/types";
 import "../styles/game.css";

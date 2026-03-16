@@ -502,7 +502,7 @@
    ========================================== */
 .word-archive-plaque {
   position: absolute;
-  left: 2%;
+  left: 1%;
   top: 42%;
   transform: translateY(-50%);
   z-index: 30;
@@ -602,7 +602,7 @@
    ========================================== */
 .trophy-showcase-wall {
   position: absolute;
-  right: 4%;
+  right: 1%;
   top: 42%;
   transform: translateY(-50%);
   z-index: 15;
@@ -740,6 +740,13 @@
   font-size: calc(14px * var(--u));
   color: #8D6E63;
   font-style: italic;
+}
+
+/* ---- Desktop — raise title for better centering ---- */
+@media (min-width: 700px) and (min-height: 500px) {
+  .trophy-room__title-area {
+    transform: translateY(calc(-14px * var(--uv)));
+  }
 }
 
 /* Landscape adjustments now handled automatically by --u scaling.

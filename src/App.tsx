@@ -14,18 +14,19 @@ import QuestMapScreen from "./screens/QuestMapScreen";
 import GameScreen from "./screens/GameScreen";
 import TrophyRoomScreen from "./screens/TrophyRoomScreen";
 import LearningInsightsScreen from "./screens/LearningInsightsScreen";
-import OrientationOverlay from "./components/OrientationOverlay";
+import ExploreScreen from "./screens/ExploreScreen";
+import StickerBookScreen from "./screens/StickerBookScreen";
+import OrientationGuard from "./components/OrientationOverlay";
 import Stage from "./components/Stage";
 import {
   CVC_QUESTS,
-  getNextQuest,
   getQuestById,
-  getLoadedQuests,
   questIdToVowelId,
   loadCvccQuests,
   loadCvvcQuests,
 } from "./game/wordData";
 import { DEFAULT_QUEST_ID } from "./game/questIds";
+import { QUEST_ENVIRONMENT_MAP } from "./game/exploreData";
 import {
   loadQuestProgress,
   advanceWord,
@@ -34,9 +35,9 @@ import {
   saveQuestProgress,
   completeTrophyRoom,
   resetTrophyProgress,
-  getNextPlayableQuestInType,
   clearTrophyUnlockSeen,
   clearNodeRatings,
+  markEnvironmentVisited,
 } from "./game/progression";
 import { backgroundMusic } from "./audio/BackgroundMusic";
 import { recordTrophyEarned } from "./game/analytics";
@@ -44,7 +45,7 @@ import trophyTransitionImg from "./assets/trophy.png";
 import "./styles/trophy-transition.css";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights";
+type Route = "home" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "sticker-book";
 
 /** Load the correct quest chunk for a given quest ID */
 async function ensureQuestLoaded(questId: string): Promise<void> {
@@ -99,6 +100,7 @@ export default function App() {
 
   // ---- Go Home (from badge click) ----
   const handleGoHome = useCallback(() => {
+    setTrophyJustCompleted(false);
     setRoute("home");
   }, []);
 
@@ -108,6 +110,7 @@ export default function App() {
     backgroundMusic.play();
     setWordIndex(selectedWordIndex);
     setArrivedFromWord(null); // clear animation signal
+    setTrophyJustCompleted(false);
     setRoute("game");
   }, []);
 
@@ -176,29 +179,57 @@ export default function App() {
   }, []);
 
   // ---- Trophy Room Complete — progression saved, animation handles in-screen ----
+  const [trophyJustCompleted, setTrophyJustCompleted] = useState(false);
+
   const handleTrophyRoomComplete = useCallback(() => {
     if (!activeQuest) return;
     completeTrophyRoom(activeQuest.id);
     recordTrophyEarned(activeQuest.id, activeQuest.patternType);
+    setTrophyJustCompleted(true);
     setMapRevision((r) => r + 1);
   }, [activeQuest?.id]);
 
-  // ---- Switch to next quest (within same type, then cross-type) ----
-  const handleNextQuest = useCallback(async () => {
-    if (!activeQuest) return;
-    // First try next within same pattern type (A→E→I→O→U)
-    const nextInType = getNextPlayableQuestInType(activeQuest.id, getLoadedQuests());
-    const next = nextInType || getNextQuest(activeQuest.id);
-    if (!next) return;
-    setActiveQuest(next);
-    saveGlobalProgress({ activeQuestId: next.id });
-    setArrivedFromWord(null);
-    setMapRevision((r) => r + 1);
+  // ---- Trophy Room exit → Discovery Room (or map fallback) ----
+  const handleTrophyRoomExit = useCallback(() => {
+    if (!activeQuest) { setRoute("map"); return; }
+    const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
+    if (envId) {
+      markEnvironmentVisited(envId);
+      setExploreEnvId(envId);
+      setTrophyJustCompleted(false);
+      setRoute("explore");
+    } else {
+      setRoute("map");
+    }
   }, [activeQuest?.id]);
 
   // ---- Open/close Learning Insights ----
   const handleOpenInsights = useCallback(() => setRoute("insights"), []);
   const handleCloseInsights = useCallback(() => setRoute("map"), []);
+
+  // ---- Explore Mode ----
+  const [exploreEnvId, setExploreEnvId] = useState<string | null>(null);
+
+  const handleExplore = useCallback((envId: string) => {
+    markEnvironmentVisited(envId);
+    setExploreEnvId(envId);
+    setTrophyJustCompleted(false);
+    setRoute("explore");
+  }, []);
+
+  const handleExploreBack = useCallback(() => {
+    setExploreEnvId(null);
+    setRoute("map");
+  }, []);
+
+  // ---- Sticker Book ----
+  const handleOpenStickerBook = useCallback(() => {
+    setRoute("sticker-book");
+  }, []);
+
+  const handleStickerBookBack = useCallback(() => {
+    setRoute("map");
+  }, []);
 
   // Brief loading state while lazy chunk loads (returning CVCC/CVVC user)
   if (!activeQuest) {
@@ -213,9 +244,7 @@ export default function App() {
   }
 
   return (
-    <>
-      {/* Soft orientation hint for mobile portrait mode */}
-      <OrientationOverlay />
+    <OrientationGuard>
 
       <Stage>
 
@@ -229,14 +258,15 @@ export default function App() {
           quest={activeQuest}
           onStartLevel={handleStartLevel}
           onRestartQuest={handleRestartQuest}
-          onNextQuest={handleNextQuest}
           onSelectQuest={handleSelectQuest}
           onGoHome={handleGoHome}
           onEnterTrophyRoom={handleEnterTrophyRoom}
           onViewTrophyRoom={handleViewTrophyRoom}
           onOpenInsights={handleOpenInsights}
+          onExplore={handleExplore}
+          onOpenStickerBook={handleOpenStickerBook}
+          trophyJustEarned={trophyJustCompleted}
           arrivedFromWord={arrivedFromWord}
-          hasNextQuest={getNextQuest(activeQuest.id) !== null}
         />
       )}
 
@@ -255,7 +285,7 @@ export default function App() {
           vowelId={questIdToVowelId(activeQuest.id) as VowelId}
           quest={activeQuest}
           onComplete={handleTrophyRoomComplete}
-          onExit={() => setRoute("map")}
+          onExit={handleTrophyRoomExit}
         />
       )}
 
@@ -267,6 +297,18 @@ export default function App() {
           onExit={() => setRoute("map")}
           viewOnly
         />
+      )}
+
+      {route === "explore" && exploreEnvId && (
+        <ExploreScreen
+          environmentId={exploreEnvId}
+          questId={activeQuest.id}
+          onBack={handleExploreBack}
+        />
+      )}
+
+      {route === "sticker-book" && (
+        <StickerBookScreen onBack={handleStickerBookBack} />
       )}
 
       {route === "trophy-transition" && (
@@ -288,6 +330,6 @@ export default function App() {
       {route === "insights" && (
         <LearningInsightsScreen onClose={handleCloseInsights} />
       )}
-    </>
+    </OrientationGuard>
   );
 }

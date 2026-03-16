@@ -1,0 +1,1429 @@
+/* ============================================
+   explore.css — Explore Mode styles
+   WiggleWoo's Word Quest
+   ============================================
+   Styles for ExploreScreen: environment viewer,
+   hotspot markers, fact popups, and animations.
+   ============================================ */
+
+/* ---- Full-viewport environment container ---- */
+.explore-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-size: 100% 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  z-index: 100;
+}
+
+/* ---- Scene props — positioned decorative elements ---- */
+.explore-prop {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  height: auto;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.explore-prop--top {
+  position: absolute;
+  top: 6%;
+  right: 4%;
+  left: auto;
+  transform: none;
+  width: clamp(160px, 22vw, 320px);
+}
+
+/* ---- Floating back button ---- */
+.explore-back-btn {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.explore-back-btn:hover {
+  background: rgba(0,0,0,0.5);
+  transform: scale(1.05);
+}
+
+.explore-back-btn:active {
+  transform: scale(0.95);
+}
+
+/* ---- Hotspot container ---- */
+.explore-hotspots {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ---- Hotspot marker ---- */
+.explore-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 11;
+  transition: transform 0.2s;
+}
+
+.explore-hotspot:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.explore-hotspot:active {
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+.explore-hotspot__marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 3px solid rgba(255,255,255,0.45);
+  box-shadow:
+    0 2px 12px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.explore-hotspot__label {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+/* ---- Idle animations ---- */
+.explore-hotspot--pulse .explore-hotspot__marker {
+  animation: hotspot-pulse 2s ease-in-out infinite;
+}
+
+.explore-hotspot--glow .explore-hotspot__marker {
+  animation: hotspot-glow 2.5s ease-in-out infinite;
+}
+
+.explore-hotspot--bob .explore-hotspot__marker {
+  animation: hotspot-bob 2s ease-in-out infinite;
+}
+
+.explore-hotspot--smoke .explore-hotspot__marker {
+  animation: hotspot-smoke 3s ease-in-out infinite;
+}
+
+.explore-hotspot--bubble .explore-hotspot__marker {
+  animation: hotspot-bubble 2.2s ease-in-out infinite;
+}
+
+@keyframes hotspot-pulse {
+  0%, 100% {
+    box-shadow:
+      0 2px 12px rgba(0,0,0,0.25),
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      0 0 0 0 rgba(255,255,255,0.3);
+  }
+  50% {
+    box-shadow:
+      0 2px 12px rgba(0,0,0,0.25),
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      0 0 0 10px rgba(255,255,255,0);
+  }
+}
+
+@keyframes hotspot-glow {
+  0%, 100% {
+    background: rgba(255,200,50,0.2);
+    box-shadow:
+      0 2px 12px rgba(0,0,0,0.25),
+      0 0 16px rgba(255,165,0,0.3);
+  }
+  50% {
+    background: rgba(255,200,50,0.4);
+    box-shadow:
+      0 2px 12px rgba(0,0,0,0.25),
+      0 0 28px rgba(255,165,0,0.5);
+  }
+}
+
+@keyframes hotspot-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes hotspot-smoke {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.7; }
+  50% { opacity: 1; transform: translateY(-3px); }
+  75% { opacity: 0.8; }
+}
+
+@keyframes hotspot-bubble {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 2px 12px rgba(0,0,0,0.25),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 2px 16px rgba(0,0,0,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      0 0 12px rgba(100,200,255,0.3);
+  }
+}
+
+/* ---- Tap animations ---- */
+.explore-hotspot--tapped .explore-hotspot__marker {
+  animation: hotspot-tap-pop 0.4s ease-out;
+}
+
+.explore-hotspot--tap-pop .explore-hotspot__marker {
+  animation: hotspot-tap-pop 0.4s ease-out;
+}
+
+.explore-hotspot--tap-burst .explore-hotspot__marker {
+  animation: hotspot-tap-burst 0.5s ease-out;
+}
+
+.explore-hotspot--tap-shake .explore-hotspot__marker {
+  animation: hotspot-tap-shake 0.4s ease-out;
+}
+
+.explore-hotspot--tap-erupt .explore-hotspot__marker {
+  animation: hotspot-tap-erupt 0.5s ease-out;
+}
+
+.explore-hotspot--tap-sparkle .explore-hotspot__marker {
+  animation: hotspot-tap-sparkle 0.5s ease-out;
+}
+
+@keyframes hotspot-tap-pop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+@keyframes hotspot-tap-burst {
+  0% { transform: scale(1); opacity: 1; }
+  30% { transform: scale(1.4); opacity: 0.8; }
+  60% { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes hotspot-tap-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-5px); }
+  30% { transform: translateX(5px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(2px); }
+}
+
+@keyframes hotspot-tap-erupt {
+  0% { transform: scale(1) translateY(0); }
+  20% { transform: scale(1.2) translateY(-8px); }
+  50% { transform: scale(1.05) translateY(-4px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes hotspot-tap-sparkle {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.2); filter: brightness(1.5); }
+  60% { transform: scale(1.05); filter: brightness(1.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* ---- Fact popup backdrop ---- */
+.explore-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  animation: popup-backdrop-in 0.25s ease-out;
+}
+
+@keyframes popup-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---- Fact popup card ---- */
+.explore-fact-popup {
+  position: relative;
+  max-width: 420px;
+  width: 88%;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 3px solid rgba(255,255,255,0.6);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  padding: 24px 20px 20px;
+  text-align: center;
+  animation: popup-card-in 0.3s ease-out;
+}
+
+@keyframes popup-card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.explore-fact-popup__emoji {
+  font-size: 40px;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.explore-fact-popup__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #3E2723;
+  margin: 0 0 10px;
+}
+
+.explore-fact-popup__text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #5D4037;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+.explore-fact-popup__close-btn {
+  display: inline-block;
+  padding: 8px 28px;
+  background: linear-gradient(180deg, #4DB6AC 0%, #37897F 100%);
+  border: 2px solid #2d736a;
+  border-radius: 24px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.explore-fact-popup__close-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.explore-fact-popup__close-btn:active {
+  transform: scale(0.95);
+}
+
+/* ---- Hint text at bottom ---- */
+.explore-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ---- Interactive scene props ---- */
+.explore-prop--interactive {
+  pointer-events: auto;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.explore-prop--interactive:hover {
+  filter: brightness(1.15) drop-shadow(0 0 10px rgba(255,200,50,0.5));
+}
+
+.explore-prop--interactive:active {
+  transform: translate(-50%, -100%) scale(0.95);
+}
+
+/* ---- Earth Model Globe — idle float + click pop ---- */
+.earth-model {
+  animation: none;
+}
+
+@keyframes earth-float {
+  0%, 100% { transform: translate(-50%, -100%) translateY(0) rotate(0deg); }
+  50%      { transform: translate(-50%, -100%) translateY(-4px) rotate(1.5deg); }
+}
+
+.earth-model:hover {
+  filter: brightness(1.15) drop-shadow(0 0 12px rgba(255, 140, 50, 0.5));
+}
+
+/* Override generic :active scale — pop animation handles feedback */
+.earth-model.explore-prop--interactive:active {
+  transform: translate(-50%, -100%);
+}
+
+.earth-model--active {
+  animation: earth-pop 0.4s ease-out forwards;
+}
+
+@keyframes earth-pop {
+  0%   { transform: translate(-50%, -100%) scale(1); }
+  30%  { transform: translate(-50%, -100%) scale(1.05) rotate(-2deg); }
+  60%  { transform: translate(-50%, -100%) scale(0.98) rotate(1deg); }
+  100% { transform: translate(-50%, -100%) scale(1) rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .earth-model { animation: none; }
+  .earth-model--active { animation: none; }
+}
+
+/* ---- Greenhouse: Butterfly gentle float ---- */
+.explore-prop--butterfly {
+  animation: butterfly-float 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.butterfly-frame {
+  position: relative;
+  transition: opacity 0.28s ease-in-out;
+}
+
+.butterfly-frame--alt {
+  position: absolute;
+  inset: 0;
+}
+
+@keyframes butterfly-float {
+  0%, 100% { transform: translate(-50%, -100%) translateY(0) rotate(0deg); }
+  25%      { transform: translate(-50%, -100%) translateY(-5px) rotate(1.5deg); }
+  50%      { transform: translate(-50%, -100%) translateY(-2px) rotate(-0.5deg); }
+  75%      { transform: translate(-50%, -100%) translateY(-6px) rotate(1deg); }
+}
+
+/* ---- Greenhouse: Flower stage pop ---- */
+.explore-prop--flower-grow {
+  animation: flower-pop 0.3s ease-out;
+}
+
+@keyframes flower-pop {
+  0%   { transform: translate(-50%, -100%) scale(0.9); }
+  50%  { transform: translate(-50%, -100%) scale(1.05); }
+  100% { transform: translate(-50%, -100%) scale(1); }
+}
+
+/* ---- Fact panel — bottom sheet ---- */
+.fact-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9000;
+  animation: popup-backdrop-in 0.2s ease-out;
+}
+
+/* ---- Fact narration button ---- */
+.fact-narration-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 200, 100, 0.2);
+  border: 1.5px solid rgba(255, 200, 100, 0.4);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.fact-narration-btn:hover {
+  background: rgba(255, 200, 100, 0.35);
+  transform: scale(1.1);
+}
+
+.fact-narration-btn:active {
+  transform: scale(0.95);
+}
+
+.fact-panel {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(88%, 520px);
+  max-height: 60vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #3d1a0a 0%, #2a0e04 100%);
+  border: 2px solid rgba(255,140,50,0.35);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  box-shadow:
+    0 -4px 24px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,200,100,0.15);
+  padding: 10px 20px 24px;
+  z-index: 9001;
+  animation: fact-panel-slide-up 0.25s ease-out;
+  transition: transform 0.2s ease-out;
+}
+
+@keyframes fact-panel-slide-up {
+  from {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Drag handle */
+.fact-panel__handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.3);
+  margin: 0 auto 12px;
+}
+
+/* Close button */
+.fact-panel__close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.fact-panel__close:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* Title */
+.fact-panel__title {
+  color: #ffb347;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  margin: 0 0 14px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  letter-spacing: 0.5px;
+}
+
+/* Grid — 2 columns */
+.fact-panel__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Individual item card */
+.fact-panel__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0,0,0,0.3);
+  border: 2px solid rgba(255,140,50,0.2);
+  border-radius: 14px;
+  padding: 12px 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  text-align: center;
+  width: 100%;
+}
+
+.fact-panel__item:hover {
+  background: rgba(255,140,50,0.12);
+  border-color: rgba(255,140,50,0.4);
+}
+
+.fact-panel__item:active {
+  transform: scale(0.97);
+}
+
+.fact-panel__item--expanded {
+  grid-column: 1 / -1;
+  background: rgba(255,100,30,0.15);
+  border-color: rgba(255,140,50,0.5);
+}
+
+.fact-panel__item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fact-panel__item-emoji {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.fact-panel__item-name {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.fact-panel__item-fact {
+  margin: 10px 0 0;
+  color: rgba(255,255,255,0.85);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  animation: fact-item-expand 0.2s ease-out;
+}
+
+@keyframes fact-item-expand {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+  }
+}
+
+/* ---- Eruption — volcano overlays & animations ---- */
+
+/* Full-viewport erupted background (crossfade via opacity transition) */
+.eruption-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 40%;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.eruption-bg-overlay--active {
+  opacity: 1;
+  transition: opacity 0.15s ease-in;
+}
+
+/* Lava pit wrapper — clips bubbling overlay to pit bounds */
+.lava-pit-container {
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Bubbling lava overlay inside lava pit */
+.lava-bubbling-overlay {
+  position: absolute;
+  inset: 10%;
+  width: 80%;
+  height: 80%;
+  object-fit: cover;
+  pointer-events: none;
+  animation: lava-bubble 0.6s ease-in-out infinite, lava-bubble-in 0.3s ease-out;
+}
+
+@keyframes lava-bubble {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.03) translateY(-1px);
+    opacity: 1;
+  }
+}
+
+@keyframes lava-bubble-in {
+  from { opacity: 0; }
+  to { opacity: 0.85; }
+}
+
+/* Quake wrapper — shakes entire room on eruption */
+.volcano-room-root {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.quake {
+  animation: quake 400ms cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes quake {
+  0%   { transform: translate(0, 0) rotate(0); }
+  10%  { transform: translate(-6px, 3px) rotate(-0.6deg); }
+  20%  { transform: translate(5px, -4px) rotate(0.6deg); }
+  30%  { transform: translate(-4px, -2px) rotate(-0.4deg); }
+  40%  { transform: translate(4px, 3px) rotate(0.4deg); }
+  50%  { transform: translate(-3px, 2px) rotate(-0.3deg); }
+  60%  { transform: translate(3px, -2px) rotate(0.3deg); }
+  70%  { transform: translate(-2px, 1px) rotate(-0.2deg); }
+  80%  { transform: translate(2px, -1px) rotate(0.2deg); }
+  90%  { transform: translate(-1px, 1px) rotate(-0.1deg); }
+  100% { transform: translate(0, 0) rotate(0); }
+}
+
+/* ---- Lava pit — bubbling when erupting ---- */
+.lava-pit--bubbling {
+  animation: lava-pit-bubble 0.4s ease-in-out infinite;
+  filter: brightness(1.3) saturate(1.4) drop-shadow(0 0 12px rgba(255, 80, 0, 0.6));
+}
+
+@keyframes lava-pit-bubble {
+  0%   { transform: translate(-50%, -100%) scale(1); }
+  25%  { transform: translate(-50%, -100%) scale(1.02, 0.97); }
+  50%  { transform: translate(-50%, -100%) scale(0.98, 1.03); }
+  75%  { transform: translate(-50%, -100%) scale(1.01, 0.99); }
+  100% { transform: translate(-50%, -100%) scale(1); }
+}
+
+/* ---- Interactive tap bounce (all rooms) ---- */
+.explore-prop--interactive:active {
+  filter: brightness(1.15) drop-shadow(0 0 10px rgba(255, 200, 50, 0.5));
+}
+
+/* ---- Coral Cove: Fish swim across screen ---- */
+.explore-prop--fish-1 {
+  z-index: 6 !important;
+  animation: fish-swim-lr 14s linear infinite;
+}
+
+.explore-prop--fish-1 img {
+  animation: fish-bob-1 3s ease-in-out infinite;
+}
+
+.explore-prop--fish-2 {
+  z-index: 1 !important;
+  animation: fish-swim-rl 16s linear infinite;
+}
+
+.explore-prop--fish-2 img {
+  animation: fish-bob-2 3.5s ease-in-out infinite;
+}
+
+/* Fish 1: left to right, full screen crossing */
+@keyframes fish-swim-lr {
+  0%   { transform: translate(-50%, -100%) translateX(0vw); }
+  100% { transform: translate(-50%, -100%) translateX(140vw); }
+}
+
+/* Fish 2: right to left, full screen crossing */
+@keyframes fish-swim-rl {
+  0%   { transform: translate(-50%, -100%) translateX(0vw) scaleX(-1); }
+  100% { transform: translate(-50%, -100%) translateX(-140vw) scaleX(-1); }
+}
+
+/* Gentle vertical bob while swimming */
+@keyframes fish-bob-1 {
+  0%, 100% { transform: translateY(0); }
+  30%      { transform: translateY(-8px); }
+  70%      { transform: translateY(6px); }
+}
+
+@keyframes fish-bob-2 {
+  0%, 100% { transform: translateY(0); }
+  40%      { transform: translateY(7px); }
+  75%      { transform: translateY(-6px); }
+}
+
+/* ---- Coral Cove: Bubbles ---- */
+.coral-bubbles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.bubble-img {
+  position: absolute;
+  width: 8%;
+  height: auto;
+  opacity: 0;
+}
+
+.bubble-img--1 { left: 12%; bottom: 5%;  width: 10%; animation: bubble-rise 9s ease-in 0s infinite; }
+.bubble-img--2 { left: 35%; bottom: 3%;  width: 8%;  animation: bubble-rise 11s ease-in 2s infinite; }
+.bubble-img--3 { left: 55%; bottom: 8%;  width: 12%; animation: bubble-rise 8s ease-in 4s infinite; }
+.bubble-img--4 { left: 72%; bottom: 4%;  width: 7%;  animation: bubble-rise 10s ease-in 1.5s infinite; }
+.bubble-img--5 { left: 10%; bottom: 8%;  width: 9%;  animation: bubble-rise 11s ease-in 0.5s infinite; }
+.bubble-img--6 { left: 22%; bottom: 6%;  width: 8%;  animation: bubble-rise 9s ease-in 1s infinite; }
+.bubble-img--7 { left: 42%; bottom: 5%;  width: 10%; animation: bubble-rise 8.5s ease-in 0s infinite; }
+.bubble-img--8 { left: 63%; bottom: 4%;  width: 8%;  animation: bubble-rise 10s ease-in 0.5s infinite; }
+.bubble-img--9 { left: 85%; bottom: 7%;  width: 9%;  animation: bubble-rise 9.5s ease-in 1s infinite; }
+
+/* Foreground bubbles — larger, closer to camera */
+.bubble-img--fg1 { left: 5%;  bottom: 2%;  width: 18%; z-index: 8; animation: bubble-rise-fg 10s ease-in 0s infinite; }
+.bubble-img--fg2 { left: 48%; bottom: 1%;  width: 22%; z-index: 8; animation: bubble-rise-fg 12s ease-in 3s infinite; }
+.bubble-img--fg3 { left: 78%; bottom: 3%;  width: 16%; z-index: 8; animation: bubble-rise-fg 9s ease-in 1.5s infinite; }
+
+/* Very close bubbles — biggest, right up front */
+.bubble-img--close1 { left: 15%; bottom: 0%;  width: 28%; z-index: 12; animation: bubble-rise-close 8s ease-in 0.5s infinite; }
+.bubble-img--close2 { left: 40%; bottom: 1%;  width: 32%; z-index: 12; animation: bubble-rise-close 11s ease-in 4s infinite; }
+.bubble-img--close3 { left: 65%; bottom: 0%;  width: 26%; z-index: 12; animation: bubble-rise-close 9.5s ease-in 2s infinite; }
+.bubble-img--close4 { left: 90%; bottom: 2%;  width: 30%; z-index: 12; animation: bubble-rise-close 10s ease-in 6s infinite; }
+
+@keyframes bubble-rise-close {
+  0%   { opacity: 0; transform: translateY(0) translateX(0) scale(1); }
+  6%   { opacity: 0.45; }
+  40%  { opacity: 0.3; transform: translateY(-200px) translateX(15px) scale(1.08); }
+  75%  { opacity: 0.15; }
+  100% { opacity: 0; transform: translateY(-400px) translateX(-10px) scale(0.85); }
+}
+
+@keyframes bubble-rise-fg {
+  0%   { opacity: 0; transform: translateY(0) translateX(0) scale(1); }
+  8%   { opacity: 0.7; }
+  50%  { opacity: 0.5; transform: translateY(-180px) translateX(12px) scale(1.05); }
+  80%  { opacity: 0.25; }
+  100% { opacity: 0; transform: translateY(-350px) translateX(-8px) scale(0.9); }
+}
+
+@keyframes bubble-rise {
+  0%   { opacity: 0; transform: translateY(0) translateX(0); }
+  10%  { opacity: 1; }
+  50%  { opacity: 0.85; transform: translateY(-150px) translateX(10px); }
+  80%  { opacity: 0.5; }
+  100% { opacity: 0; transform: translateY(-300px) translateX(-6px); }
+}
+
+/* ---- Coral Cove: Octopus glow pulse ---- */
+.explore-prop--interactive img {
+  transition: filter 0.3s ease-out;
+}
+
+/* ---- Power It Up — enhanced glow + sparkle ---- */
+.explore-prop--powered-up {
+  animation: powered-glow 2s ease-in-out;
+  filter: brightness(1.3) drop-shadow(0 0 20px rgba(255, 200, 50, 0.7)) drop-shadow(0 0 40px rgba(255, 150, 0, 0.4));
+}
+
+@keyframes powered-glow {
+  0%   { filter: brightness(1); }
+  30%  { filter: brightness(1.4) drop-shadow(0 0 25px rgba(255, 200, 50, 0.8)) drop-shadow(0 0 50px rgba(255, 150, 0, 0.5)); }
+  70%  { filter: brightness(1.3) drop-shadow(0 0 20px rgba(255, 200, 50, 0.6)); }
+  100% { filter: brightness(1); }
+}
+
+/* ---- Castle: Flame flicker ---- */
+.explore-prop--flame img {
+  animation: flame-flicker 1.5s ease-in-out infinite;
+}
+
+@keyframes flame-flicker {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  25%      { opacity: 0.82; filter: brightness(1.1); }
+  50%      { opacity: 0.92; filter: brightness(0.95); }
+  75%      { opacity: 0.85; filter: brightness(1.05); }
+}
+
+/* ---- Castle: Sword glow on tap ---- */
+.explore-prop--sword-glow {
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  transition: filter 0.3s ease-out;
+}
+
+/* ---- Geartown: Dust particles ---- */
+.geartown-dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.dust-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  opacity: 0;
+}
+
+.dust-particle--1 {
+  left: 15%;
+  top: 20%;
+  animation: dust-float 8s ease-in-out 0s infinite;
+}
+
+.dust-particle--2 {
+  left: 45%;
+  top: 40%;
+  animation: dust-float 10s ease-in-out 1.5s infinite;
+}
+
+.dust-particle--3 {
+  left: 70%;
+  top: 15%;
+  animation: dust-float 9s ease-in-out 3s infinite;
+}
+
+.dust-particle--4 {
+  left: 30%;
+  top: 60%;
+  animation: dust-float 11s ease-in-out 2s infinite;
+}
+
+.dust-particle--5 {
+  left: 80%;
+  top: 50%;
+  animation: dust-float 7s ease-in-out 4s infinite;
+}
+
+.dust-particle--6 {
+  left: 55%;
+  top: 30%;
+  animation: dust-float 12s ease-in-out 5s infinite;
+}
+
+@keyframes dust-float {
+  0%   { opacity: 0; transform: translateY(0) translateX(0); }
+  15%  { opacity: 0.4; }
+  50%  { opacity: 0.25; transform: translateY(-30px) translateX(10px); }
+  85%  { opacity: 0.35; }
+  100% { opacity: 0; transform: translateY(-60px) translateX(-5px); }
+}
+
+/* ---- Erupt button — pulsing interactive ---- */
+.explore-prop--erupting {
+  animation: erupt-btn-press 0.25s ease-out;
+  pointer-events: none;
+}
+
+@keyframes erupt-btn-press {
+  0%   { transform: translate(-50%, -100%) scale(1); }
+  40%  { transform: translate(-50%, -100%) scale(0.85); }
+  100% { transform: translate(-50%, -100%) scale(1); }
+}
+
+/* ---- Volcano fact hotspot overlays ---- */
+
+/* Back-wall picture — subtle interactive hint */
+.volcano-picture-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: filter 0.3s;
+}
+
+.volcano-picture-btn:hover {
+  filter: brightness(1.1) drop-shadow(0 0 8px rgba(255,200,50,0.3));
+}
+
+.volcano-picture-btn:active {
+  filter: brightness(1.15) drop-shadow(0 0 12px rgba(255,200,50,0.4));
+}
+
+/* Lava pit — invisible clickable overlay */
+.lava-pit-hotspot {
+  position: absolute;
+  inset: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 1;
+  transition: background 0.2s;
+}
+
+.lava-pit-hotspot:hover {
+  background: rgba(255,100,30,0.08);
+}
+
+/* ---- Fact card — volcanic themed pop-up ---- */
+
+.fact-card-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  animation: popup-backdrop-in 0.25s ease-out;
+}
+
+.fact-card {
+  width: clamp(240px, 40vw, 420px);
+  background: linear-gradient(180deg, #4a1a0a 0%, #2a0e04 100%);
+  border: 2px solid rgba(255,140,50,0.4);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,200,100,0.15),
+    0 0 20px rgba(255,100,30,0.15);
+  padding: 28px 24px 24px;
+  text-align: center;
+  animation: fact-card-in 0.3s ease-out;
+}
+
+@keyframes fact-card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.fact-card__title {
+  color: #ffb347;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 14px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  letter-spacing: 0.5px;
+}
+
+.fact-card__text {
+  color: rgba(255,255,255,0.9);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0 0 22px;
+  min-height: 48px;
+}
+
+.fact-card__buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.fact-card__next-btn {
+  padding: 8px 22px;
+  background: linear-gradient(180deg, #ff8c3a 0%, #e06520 100%);
+  border: 2px solid #c4551a;
+  border-radius: 24px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.fact-card__next-btn:hover {
+  filter: brightness(1.1);
+}
+
+.fact-card__next-btn:active {
+  transform: scale(0.95);
+}
+
+.fact-card__close-btn {
+  padding: 8px 22px;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 24px;
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.fact-card__close-btn:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+.fact-card__close-btn:active {
+  transform: scale(0.95);
+}
+
+/* Erupt button — disabled during animation */
+.erupt-btn--disabled {
+  pointer-events: none;
+  cursor: default;
+  filter: brightness(0.85);
+}
+
+/* ---- Desktop — push volcano bottom elements "back" (higher + smaller) ---- */
+@media (min-width: 700px) and (min-height: 500px) {
+  /* Lava pit — pull UP + shrink for distance */
+  .lava-pit-container {
+    margin-top: calc(-28px * var(--uv));
+    scale: 0.95;
+  }
+  /* Erupt button + bottom interactive props — same direction, stay aligned */
+  .volcano-room-root > .explore-prop--interactive {
+    margin-top: calc(-28px * var(--uv));
+    scale: 0.96;
+  }
+}
+
+/* ---- Hanging lights — geartown workshop ---- */
+.hanging-light {
+  top: -45% !important;
+  transform-origin: top center;
+  animation: light-sway 5s ease-in-out infinite;
+  transition: filter 0.4s ease;
+}
+
+.hanging-light--on {
+  filter: drop-shadow(0 8px 16px rgba(255, 200, 80, 0.35));
+}
+
+/* ---- Gears on wall — flipped horizontally ---- */
+.explore-prop[aria-label="Gears & Machines"] img {
+  transform: scaleX(-1);
+}
+
+@keyframes light-sway {
+  0%, 100% { transform: translate(-50%, 0) rotate(0deg);    }
+  50%      { transform: translate(-50%, 0) rotate(1.2deg);  }
+}
+
+/* ---- Power core — geartown workshop ---- */
+.power-core {
+  transition: filter 0.5s ease;
+}
+.power-core--glowing {
+  filter: drop-shadow(0 0 12px rgba(100, 200, 255, 0.6))
+          drop-shadow(0 0 24px rgba(100, 200, 255, 0.3));
+}
+
+/* ---- Geartown logo — smoke animation ---- */
+.geartown-logo {
+  transition: filter 0.4s ease;
+}
+.geartown-logo--smoking {
+  filter: drop-shadow(0 -4px 10px rgba(180, 180, 180, 0.5));
+  animation: smoke-pulse 3s ease-in-out infinite;
+}
+@keyframes smoke-pulse {
+  0%, 100% { filter: drop-shadow(0 -4px 10px rgba(180, 180, 180, 0.5)); }
+  50%      { filter: drop-shadow(0 -8px 18px rgba(180, 180, 180, 0.7)); }
+}
+
+/* ---- Butterfly overlay — greenhouse domes ---- */
+.butterfly-overlay {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  pointer-events: none;
+  /* Three layered animations at coprime durations — path never repeats exactly */
+  animation:
+    butterfly-drift   6s ease-in-out infinite,
+    butterfly-sway   10s ease-in-out infinite,
+    butterfly-breath 10s ease-in-out infinite;
+}
+
+.butterfly-overlay__img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Slow vertical float — tiny Y movement */
+@keyframes butterfly-drift {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0);    }
+  40%      { transform: translate(-50%, -50%) translateY(-5px);  }
+  70%      { transform: translate(-50%, -50%) translateY(-2px);  }
+}
+
+/* Gentle horizontal sway — different period so it wanders */
+@keyframes butterfly-sway {
+  0%, 100% { margin-left: 0;    }
+  30%      { margin-left: 3px;  }
+  60%      { margin-left: -2px; }
+  85%      { margin-left: 4px;  }
+}
+
+/* Subtle opacity flicker — barely noticeable life pulse */
+@keyframes butterfly-breath {
+  0%, 100% { opacity: 1;    }
+  50%      { opacity: 0.95; }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .butterfly-overlay {
+    animation: none;
+  }
+  .hanging-light {
+    animation: none;
+  }
+  .explore-hotspot--pulse .explore-hotspot__marker,
+  .explore-hotspot--glow .explore-hotspot__marker,
+  .explore-hotspot--bob .explore-hotspot__marker,
+  .explore-hotspot--smoke .explore-hotspot__marker,
+  .explore-hotspot--bubble .explore-hotspot__marker {
+    animation: none;
+  }
+  .fact-panel {
+    animation: none;
+  }
+  .fact-panel__item-fact {
+    animation: none;
+  }
+  .lava-bubbling-overlay {
+    animation: none;
+  }
+  .eruption-bg-overlay {
+    transition: none;
+  }
+  .quake {
+    animation: none;
+  }
+  .fact-card {
+    animation: none;
+  }
+}
+
+/* ---- Shield wobble — castle ---- */
+@keyframes shield-wobble {
+  0%   { transform: translate(-50%, -100%) rotate(0deg); }
+  20%  { transform: translate(-50%, -100%) rotate(-8deg); }
+  40%  { transform: translate(-50%, -100%) rotate(6deg); }
+  60%  { transform: translate(-50%, -100%) rotate(-4deg); }
+  80%  { transform: translate(-50%, -100%) rotate(2deg); }
+  100% { transform: translate(-50%, -100%) rotate(0deg); }
+}
+
+.castle-shield--wobble {
+  animation: shield-wobble 0.5s ease-in-out;
+}
+
+/* ---- Stonewall logo float — castle ---- */
+@keyframes castle-logo-float {
+  0%, 100% { transform: translate(-50%, -100%) translateY(0); }
+  50%      { transform: translate(-50%, -100%) translateY(-8px); }
+}
+
+.explore-prop.castle-logo {
+  animation: none;
+  transform: translate(-50%, 0%);
+}
+
+/* ---- Coral clam — village ---- */
+@keyframes clam-wobble {
+  0%, 100% { transform: translate(-50%, -100%) rotate(0deg); }
+  50%      { transform: translate(-50%, -100%) rotate(0.5deg); }
+}
+
+.coral-clam--closed {
+  animation: clam-wobble 4s ease-in-out infinite;
+}
+
+@keyframes clam-pop {
+  0%   { transform: translate(-50%, -100%) scale(1); }
+  50%  { transform: translate(-50%, -100%) scale(1.05); }
+  100% { transform: translate(-50%, -100%) scale(1); }
+}
+
+.coral-clam--open {
+  animation: clam-pop 0.3s ease-out;
+}
+
+/* ---- Octopus glow — village ---- */
+@keyframes octopus-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(100, 200, 255, 0.4)); }
+  50%      { filter: drop-shadow(0 0 12px rgba(100, 200, 255, 0.8)); }
+}
+
+.coral-octopus--glowing {
+  animation: octopus-glow 2s ease-in-out infinite;
+}
+
+/* ---- Coral Cove logo float — village ---- */
+@keyframes coral-logo-float {
+  0%, 100% { transform: translate(-50%, 0%) translateY(0); }
+  50%      { transform: translate(-50%, 0%) translateY(-5px); }
+}
+
+.explore-prop.coral-cove-logo {
+  animation: coral-logo-float 4s ease-in-out infinite;
+}
+
+/* ---- School of fish — swimming across screen ---- */
+@keyframes fish-swim {
+  0%   { left: -20%; }
+  100% { left: 120%; }
+}
+
+@keyframes fish-bob {
+  0%, 100% { transform: translate(-50%, -100%) translateY(0) rotate(0deg); }
+  25%      { transform: translate(-50%, -100%) translateY(-6px) rotate(-1.5deg); }
+  50%      { transform: translate(-50%, -100%) translateY(2px) rotate(0deg); }
+  75%      { transform: translate(-50%, -100%) translateY(-4px) rotate(1.5deg); }
+}
+
+.school-of-fish {
+  animation:
+    fish-swim 20s linear infinite,
+    fish-bob 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes fish-swim-reverse {
+  0%   { left: 120%; }
+  100% { left: -20%; }
+}
+
+.school-of-fish-reverse {
+  animation:
+    fish-swim-reverse 22s linear infinite,
+    fish-bob 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ---- Bubbles — coral cove village ---- */
+.bubbles-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(0) scale(0.3);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-110vh) scale(1);
+    opacity: 0;
+  }
+}
+
+.bubble {
+  position: absolute;
+  bottom: -10%;
+  width: 6%;
+  height: auto;
+  animation: bubble-rise linear infinite;
+  opacity: 0;
+}
+
+.bubble--0 { left:  8%; animation-duration: 9s;  animation-delay: 0s; }
+.bubble--1 { left: 22%; animation-duration: 11s; animation-delay: 2.5s; }
+.bubble--2 { left: 40%; animation-duration: 8s;  animation-delay: 5s; }
+.bubble--3 { left: 55%; animation-duration: 12s; animation-delay: 1s; }
+.bubble--4 { left: 70%; animation-duration: 10s; animation-delay: 3.5s; }
+.bubble--5 { left: 85%; animation-duration: 9.5s; animation-delay: 6s; }
+.bubble--6 { left: 33%; animation-duration: 13s; animation-delay: 4s; }
+.bubble--7 { left: 63%; animation-duration: 10.5s; animation-delay: 7.5s; }
+
+/* ---- Powered animation — "Power It Up" reward ---- */
+.powered-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  pointer-events: none;
+  animation: powered-flash 1.5s ease-out forwards;
+}
+
+@keyframes powered-flash {
+  0%  { background: rgba(255, 215, 0, 0); }
+  15% { background: rgba(255, 215, 0, 0.25); }
+  30% { background: rgba(255, 215, 0, 0.08); }
+  100% { background: rgba(255, 215, 0, 0); }
+}
+
+.powered-overlay__burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.5) 0%, transparent 70%);
+  animation: powered-burst 1.5s ease-out forwards;
+}
+
+@keyframes powered-burst {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  50%  { transform: translate(-50%, -50%) scale(2); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+.explore-prop--powered {
+  animation: prop-power-up 1.5s ease-out !important;
+  z-index: 10 !important;
+}
+
+@keyframes prop-power-up {
+  0%   { transform: translate(-50%, -100%) scale(1); filter: brightness(1); }
+  20%  { transform: translate(-50%, -100%) scale(1.15); filter: brightness(1.5) drop-shadow(0 0 30px rgba(255, 215, 0, 1)); }
+  40%  { transform: translate(-50%, -100%) scale(1.05); filter: brightness(1.3) drop-shadow(0 0 20px rgba(255, 215, 0, 0.7)); }
+  60%  { transform: translate(-50%, -100%) scale(1.1); filter: brightness(1.4) drop-shadow(0 0 25px rgba(255, 215, 0, 0.8)); }
+  100% { transform: translate(-50%, -100%) scale(1); filter: brightness(1); }
+}

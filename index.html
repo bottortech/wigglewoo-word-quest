@@ -4,27 +4,345 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>wiggle-woo-cvc-quest</title>
+    <title>WiggleWoo's Word Quest</title>
+    <style>
+      /* ---- Loading Screen ---- */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      #boot-fallback {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        z-index: 99999;
+        transition: opacity 0.5s ease-out;
+        font-family: "Fredoka", "Nunito", "Comic Sans MS", sans-serif;
+      }
+
+      #boot-fallback.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* ---- Sky background ---- */
+      .boot-sky {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg,
+          #3A8FD6 0%,
+          #4FA3E3 15%,
+          #7BC0F0 35%,
+          #A8D8F8 55%,
+          #D0ECFB 70%,
+          #E8F4FD 80%,
+          #E8F4FD 100%
+        );
+      }
+
+      /* ---- Water area (bottom third) ---- */
+      .boot-water {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 35%;
+        background: linear-gradient(180deg,
+          #5BB8E8 0%,
+          #3A9DD6 15%,
+          #2D8BC4 40%,
+          #2580B5 60%,
+          #1E6FA0 100%
+        );
+        overflow: hidden;
+      }
+
+      /* Water surface shimmer line */
+      .boot-water::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -10%;
+        right: -10%;
+        height: 3px;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(255,255,255,0.4) 20%,
+          rgba(255,255,255,0.6) 50%,
+          rgba(255,255,255,0.4) 80%,
+          transparent 100%
+        );
+        animation: shimmer-slide 6s ease-in-out infinite;
+      }
+
+      @keyframes shimmer-slide {
+        0%, 100% { transform: translateX(-5%); }
+        50% { transform: translateX(5%); }
+      }
+
+      /* Subtle water wave pattern */
+      .boot-water::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%);
+      }
+
+      /* ---- Clouds ---- */
+      .boot-cloud {
+        position: absolute;
+        height: auto;
+        opacity: 0.7;
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.05));
+      }
+
+      .boot-cloud--1 {
+        top: 2%;
+        left: -3%;
+        width: clamp(120px, 28vw, 240px);
+        animation: cloud-drift-1 25s ease-in-out infinite alternate;
+      }
+
+      .boot-cloud--2 {
+        top: 5%;
+        right: -5%;
+        width: clamp(100px, 24vw, 200px);
+        opacity: 0.55;
+        animation: cloud-drift-2 30s ease-in-out 2s infinite alternate;
+      }
+
+      @keyframes cloud-drift-1 {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(20px); }
+      }
+
+      @keyframes cloud-drift-2 {
+        0% { transform: scaleX(-1) translateX(0); }
+        100% { transform: scaleX(-1) translateX(15px); }
+      }
+
+      /* ---- Distant islands ---- */
+      .boot-island {
+        position: absolute;
+        height: auto;
+        opacity: 0.2;
+        filter: blur(1px) saturate(0.6);
+      }
+
+      .boot-island--1 {
+        bottom: 32%;
+        left: 5%;
+        width: clamp(60px, 12vw, 100px);
+      }
+
+      .boot-island--2 {
+        bottom: 33%;
+        right: 8%;
+        width: clamp(50px, 10vw, 80px);
+      }
+
+      /* ---- Submarine ---- */
+      .boot-submarine {
+        position: absolute;
+        bottom: 10%;
+        width: clamp(50px, 10vw, 80px);
+        height: auto;
+        opacity: 0.4;
+        animation: sub-drift 12s ease-in-out infinite;
+      }
+
+      @keyframes sub-drift {
+        0%   { left: -12%; transform: translateY(0); }
+        25%  { transform: translateY(-4px); }
+        50%  { left: 110%; transform: translateY(2px); }
+        75%  { transform: translateY(-3px); }
+        100% { left: -12%; transform: translateY(0); }
+      }
+
+      /* ---- School of fish ---- */
+      .boot-fish {
+        position: absolute;
+        height: auto;
+        opacity: 0.5;
+      }
+
+      /* Fish 1: swims left to right, upper water */
+      .boot-fish--1 {
+        width: clamp(40px, 8vw, 70px);
+        top: 25%;
+        animation: fish-lr 16s linear infinite;
+      }
+
+      @keyframes fish-lr {
+        0%   { left: -15%; margin-top: 0; }
+        25%  { margin-top: -5px; }
+        50%  { left: 50%; margin-top: 0; }
+        75%  { margin-top: -4px; }
+        100% { left: 110%; margin-top: 0; }
+      }
+
+      /* Fish 2: swims right to left, lower water */
+      .boot-fish--2 {
+        width: clamp(35px, 7vw, 60px);
+        top: 55%;
+        animation: fish-rl 18s linear infinite;
+      }
+
+      @keyframes fish-rl {
+        0%   { left: 110%; margin-top: 0; transform: scaleX(-1); }
+        25%  { margin-top: 4px; transform: scaleX(-1); }
+        50%  { left: 50%; margin-top: 0; transform: scaleX(-1); }
+        75%  { margin-top: 3px; transform: scaleX(-1); }
+        100% { left: -15%; margin-top: 0; transform: scaleX(-1); }
+      }
+
+      /* ---- Main content (logo, gears, text) ---- */
+      .boot-content {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 8vh;
+        z-index: 10;
+      }
+
+      .boot-logo {
+        width: clamp(120px, 28vw, 220px);
+        height: auto;
+        filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.2));
+        margin-bottom: 28px;
+        animation: logo-float 3s ease-in-out infinite;
+      }
+
+      @keyframes logo-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+
+      /* Gear loader */
+      .boot-gears {
+        position: relative;
+        width: clamp(90px, 18vw, 150px);
+        height: clamp(45px, 9vw, 75px);
+        margin-bottom: 24px;
+      }
+
+      .boot-gear {
+        position: absolute;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25));
+      }
+
+      .boot-gear--center {
+        width: 55%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        animation: gear-spin-cw 4s linear infinite;
+        z-index: 2;
+      }
+
+      .boot-gear--left {
+        width: 40%;
+        left: 2%;
+        top: 50%;
+        transform: translateY(-50%);
+        animation: gear-spin-ccw 3.2s linear infinite;
+        z-index: 1;
+      }
+
+      .boot-gear--right {
+        width: 40%;
+        right: 2%;
+        top: 50%;
+        transform: translateY(-50%);
+        animation: gear-spin-ccw 3.6s linear infinite;
+        z-index: 1;
+      }
+
+      @keyframes gear-spin-cw {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+
+      @keyframes gear-spin-ccw {
+        from { transform: translateY(-50%) rotate(0deg); }
+        to { transform: translateY(-50%) rotate(-360deg); }
+      }
+
+      .boot-text {
+        color: #1a5a8a;
+        font-size: clamp(13px, 2.5vw, 18px);
+        font-weight: 700;
+        text-shadow: 0 1px 3px rgba(255, 255, 255, 0.7);
+        letter-spacing: 0.5px;
+      }
+
+      /* Error display */
+      #boot-error {
+        margin-top: 16px;
+        padding: 12px;
+        background: rgba(255, 60, 60, 0.15);
+        border: 1px solid rgba(255, 60, 60, 0.3);
+        color: #8b1a1a;
+        border-radius: 10px;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-width: 90vw;
+        display: none;
+        font-family: monospace;
+        z-index: 20;
+        position: relative;
+      }
+    </style>
   </head>
   <body>
     <div id="root">
-      <!-- Fallback shown until React mounts (or if it never does) -->
-      <div id="boot-fallback" style="
-        padding:32px; text-align:center; font-family:sans-serif;
-        background:#fff3cd; color:#856404; min-height:100vh;
-        display:flex; flex-direction:column; align-items:center; justify-content:center;
-      ">
-        <h2 style="margin:0 0 8px">⏳ Loading Wigglewoo CVC Quest…</h2>
-        <p style="margin:0; font-size:14px">If this message stays, React failed to mount. Check console.</p>
-        <pre id="boot-error" style="
-          margin-top:16px; padding:12px; background:#f8d7da; color:#721c24;
-          border-radius:6px; font-size:12px; white-space:pre-wrap;
-          max-width:90vw; display:none;
-        "></pre>
+      <!-- Branded loading screen — replaced when React mounts -->
+      <div id="boot-fallback">
+        <!-- Scene layers -->
+        <div class="boot-sky"></div>
+
+        <!-- Clouds -->
+        <img class="boot-cloud boot-cloud--1" src="/assets/cloud-cluster.png" alt="" draggable="false" />
+        <img class="boot-cloud boot-cloud--2" src="/assets/cloud-cluster.png" alt="" draggable="false" />
+
+        <!-- Distant islands -->
+        <img class="boot-island boot-island--1" src="/assets/castle-island.png" alt="" draggable="false" />
+        <img class="boot-island boot-island--2" src="/assets/small-coastal-village.png" alt="" draggable="false" />
+
+        <!-- Water -->
+        <div class="boot-water">
+          <img class="boot-submarine" src="/assets/submarine.png" alt="" draggable="false" />
+          <img class="boot-fish boot-fish--1" src="/assets/discovery rooms/coral-cove-village/school of fish 1.png" alt="" draggable="false" />
+          <img class="boot-fish boot-fish--2" src="/assets/discovery rooms/coral-cove-village/school of fish 2.png" alt="" draggable="false" />
+        </div>
+
+        <!-- Main content -->
+        <div class="boot-content">
+          <img
+            class="boot-logo"
+            src="/assets/wigglewoos_word_quest_badge-logo.png"
+            alt="WiggleWoo's Word Quest"
+            draggable="false"
+          />
+
+          <div class="boot-gears">
+            <img class="boot-gear boot-gear--left" src="/assets/gear2.png" alt="" draggable="false" />
+            <img class="boot-gear boot-gear--center" src="/assets/gear1.png" alt="" draggable="false" />
+            <img class="boot-gear boot-gear--right" src="/assets/gear3.png" alt="" draggable="false" />
+          </div>
+
+          <p class="boot-text">Loading WiggleWoo's Word Quest…</p>
+
+          <pre id="boot-error"></pre>
+        </div>
       </div>
     </div>
 
-    <!-- Catch ANY error from the module script (import failures, runtime throws) -->
+    <!-- Catch errors before React loads -->
     <script>
       window.addEventListener('error', function(e) {
         var el = document.getElementById('boot-error');

@@ -2,14 +2,15 @@
 // PlayNowScreen.tsx — Play Now / Start screen
 // WiggleWoo's Word Quest
 // =============================================
-// Displays the animated logo with Play Now button.
+// Displays the animated logo with Play Now button
+// over the shared GameShell (gears, machines, bulbs,
+// blue frame) with map world layers visible.
 // Press Enter/Space or click to start.
-// Uses LabBackground for shared decorative environment.
 // =============================================
 
 import React, { useEffect, useCallback } from "react";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
-import LabBackground from "../components/LabBackground";
+import GameShell from "../components/GameShell";
 import "../styles/home.css";
 
 interface PlayNowScreenProps {
@@ -34,26 +35,29 @@ const PlayNowScreen: React.FC<PlayNowScreenProps> = ({ onPlay }) => {
   }, [handleKeyDown]);
 
   return (
-    <LabBackground className="home-screen">
-      {/* Animated logo */}
-      <div className="home-logo-container">
-        <img
-          src={badgeLogo}
-          alt="WiggleWoo's Word Quest"
-          className="home-logo"
-          draggable={false}
-        />
-        <div className="home-logo-glow" />
+    <GameShell showMapWorld titleBadge={false}>
+      {/* ---- Play Now UI overlay ---- */}
+      <div className="home-overlay">
+        {/* Animated logo */}
+        <div className="home-logo-container">
+          <img
+            src={badgeLogo}
+            alt="WiggleWoo's Word Quest"
+            className="home-logo"
+            draggable={false}
+          />
+          <div className="home-logo-glow" />
+        </div>
+
+        {/* Play Now button */}
+        <button className="home-play-btn" onClick={onPlay}>
+          Play Now
+        </button>
+
+        {/* Keyboard hint */}
+        <p className="home-hint">Press Enter or Space to start</p>
       </div>
-
-      {/* Play Now button */}
-      <button className="home-play-btn" onClick={onPlay}>
-        Play Now
-      </button>
-
-      {/* Keyboard hint */}
-      <p className="home-hint">Press Enter or Space to start</p>
-    </LabBackground>
+    </GameShell>
   );
 };
 

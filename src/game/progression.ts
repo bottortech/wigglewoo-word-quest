@@ -361,3 +361,115 @@ export function getNextPlayableQuestInType(
   
   return null; // All quests in this type are complete
 }
+
+// ---- Environment / Explore tracking ----
+
+const ENV_VISITED_KEY = "ww_env_visited";
+
+export function markEnvironmentVisited(envId: string): void {
+  const visited = JSON.parse(localStorage.getItem(ENV_VISITED_KEY) || "{}");
+  visited[envId] = true;
+  localStorage.setItem(ENV_VISITED_KEY, JSON.stringify(visited));
+}
+
+export function countEarnedTrophies(): number {
+  const all = loadAllTrophyProgress();
+  return Object.values(all).filter(tp => tp.trophyRoomComplete).length;
+}
+
+// =============================================
+// DAILY FACT PROGRESS — 4 facts per room per day
+// =============================================
+const FACT_PROGRESS_KEY = "ww_factProgress";
+const MAX_FACTS_PER_DAY = 4;
+
+function getTodayKey(): string {
+  return new Date().toISOString().slice(0, 10); // "2026-03-16"
+}
+
+function loadFactProgress(): Record<string, Record<string, number>> {
+  try {
+    return JSON.parse(localStorage.getItem(FACT_PROGRESS_KEY) || "{}");
+  } catch { return {}; }
+}
+
+function saveFactProgress(data: Record<string, Record<string, number>>): void {
+  localStorage.setItem(FACT_PROGRESS_KEY, JSON.stringify(data));
+}
+
+/** Get how many facts discovered today for a room */
+export function getFactsDiscoveredToday(roomId: string): number {
+  const data = loadFactProgress();
+  const today = getTodayKey();
+  return data[today]?.[roomId] ?? 0;
+}
+
+/** Check if daily fact cap is reached for a room */
+export function isDailyFactCapReached(roomId: string): boolean {
+  return getFactsDiscoveredToday(roomId) >= MAX_FACTS_PER_DAY;
+}
+
+/** Record a fact discovery for a room today */
+export function recordFactDiscovery(roomId: string): void {
+  const data = loadFactProgress();
+  const today = getTodayKey();
+  if (!data[today]) {
+    // New day — clear old entries
+    const cleaned: Record<string, Record<string, number>> = {};
+    cleaned[today] = {};
+    data[today] = cleaned[today];
+    // Remove old days
+    for (const key of Object.keys(data)) {
+      if (key !== today) delete data[key];
+    }
+  }
+  data[today][roomId] = (data[today][roomId] ?? 0) + 1;
+  saveFactProgress(data);
+}
+
+// =============================================
+// STICKER TRACKING — individual sticker rewards
+// =============================================
+const STICKER_KEY = "ww_stickers";
+
+/** Load all sticker data: { roomId: { factId: stickerValue } } */
+export function loadStickers(): Record<string, Record<string, number>> {
+  try {
+    return JSON.parse(localStorage.getItem(STICKER_KEY) || "{}");
+  } catch { return {}; }
+}
+
+/** Save sticker data */
+function saveStickers(data: Record<string, Record<string, number>>): void {
+  localStorage.setItem(STICKER_KEY, JSON.stringify(data));
+}
+
+/** Award a sticker for a specific fact in a room */
+export function awardSticker(roomId: string, factId: string, value: 1 | 2): void {
+  const data = loadStickers();
+  if (!data[roomId]) data[roomId] = {};
+  // Only upgrade, never downgrade (if they got 2, keep 2)
+  const current = data[roomId][factId] ?? 0;
+  if (value > current) {
+    data[roomId][factId] = value;
+  }
+  saveStickers(data);
+}
+
+/** Get sticker value for a specific fact (0 = not earned, 1 = learned, 2 = powered up) */
+export function getStickerValue(roomId: string, factId: string): number {
+  const data = loadStickers();
+  return data[roomId]?.[factId] ?? 0;
+}
+
+/** Get total sticker count across all rooms (unique facts discovered) */
+export function getTotalStickerCount(): number {
+  const data = loadStickers();
+  let total = 0;
+  for (const room of Object.values(data)) {
+    for (const val of Object.values(room)) {
+      if (val > 0) total++;
+    }
+  }
+  return total;
+}

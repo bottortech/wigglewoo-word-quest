@@ -1,0 +1,157 @@
+/* ============================================
+   mini-challenge.css — Mini CVC word challenge
+   WiggleWoo's Word Quest
+   ============================================ */
+
+.mini-challenge-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mc-fade-in 0.2s ease-out;
+}
+
+@keyframes mc-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mini-challenge {
+  position: relative;
+  width: min(92%, 400px);
+  background: linear-gradient(180deg, #1e3d5f 0%, #132a44 100%);
+  border: 2px solid rgba(100, 200, 255, 0.25);
+  border-radius: 24px;
+  padding: 24px 20px 28px;
+  text-align: center;
+  animation: mc-pop-in 0.25s ease-out;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes mc-pop-in {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.mini-challenge__x {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.mini-challenge__x:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mini-challenge__prompt {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  margin: 0 0 14px;
+  font-weight: 600;
+}
+
+.mini-challenge__image-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.mini-challenge__image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px;
+}
+
+.mini-challenge__options {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mini-challenge__option {
+  flex: 1;
+  min-width: 90px;
+  max-width: 130px;
+  padding: 14px 8px;
+  border: 2px solid rgba(100, 200, 255, 0.25);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #2a5a8a 0%, #1d4060 100%);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  font-family: var(--font-display, "Fredoka", sans-serif);
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s, background 0.12s;
+  letter-spacing: 2px;
+}
+
+.mini-challenge__option:hover:not(:disabled) {
+  border-color: rgba(100, 200, 255, 0.5);
+  transform: scale(1.04);
+}
+
+.mini-challenge__option:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Correct answer */
+.mini-challenge__option--correct {
+  background: linear-gradient(180deg, #38b764 0%, #2a8f4e 100%);
+  border-color: rgba(100, 255, 130, 0.6);
+  animation: mc-correct-pop 0.4s ease-out;
+}
+
+@keyframes mc-correct-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* Wrong answer — gentle shake, no red */
+.mini-challenge__option--wrong {
+  animation: mc-wrong-shake 0.4s ease-out;
+}
+
+@keyframes mc-wrong-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(5px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(3px); }
+}
+
+/* Feedback text */
+.mini-challenge__feedback {
+  margin: 14px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-display, "Fredoka", sans-serif);
+  animation: mc-feedback-in 0.2s ease-out;
+}
+
+@keyframes mc-feedback-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.mini-challenge__feedback--wrong {
+  color: #f0a840;
+}
+
+.mini-challenge__feedback--correct {
+  color: #5ee87b;
+}

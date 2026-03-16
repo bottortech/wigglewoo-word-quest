@@ -13,9 +13,10 @@ import "./OrientationOverlay.css";
 interface OrientationOverlayProps {
   /** Optional: completely disable the overlay */
   disabled?: boolean;
+  children?: React.ReactNode;
 }
 
-const OrientationOverlay: React.FC<OrientationOverlayProps> = ({ disabled = false }) => {
+const OrientationOverlay: React.FC<OrientationOverlayProps> = ({ disabled = false, children }) => {
   const [isPortrait, setIsPortrait] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -53,7 +54,7 @@ const OrientationOverlay: React.FC<OrientationOverlayProps> = ({ disabled = fals
 
   // Only show on mobile devices in portrait mode
   if (disabled || !isMobile || !isPortrait) {
-    return null;
+    return <>{children}</>;
   }
 
   return (

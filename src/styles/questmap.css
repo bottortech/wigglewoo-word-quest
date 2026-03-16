@@ -13,19 +13,79 @@
 }
 
 /* ==========================================
-   QUEST MAP OVERLAY — positioned inside blue frame
+   MAP WINDOW — clips all map layers to the
+   inner blue-frame window. Percent-based insets
+   relative to .machine-world so it scales with
+   the frame artwork.
+   ========================================== */
+.map-window {
+  position: absolute;
+  top: 21%;
+  bottom: 13%;
+  left: 16%;
+  right: 16%;
+  border-radius: 42px;
+  overflow: hidden;
+  z-index: 5;
+  /* Base board texture */
+  background-image: url("/assets/no map background copy.png");
+  background-size: cover;
+  background-position: center;
+  background-color: #7ec8e3;
+  /* Force clipping on Safari/WebKit — overflow:hidden + border-radius
+     can fail to clip children with will-change/transform */
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  isolation: isolate;
+}
+
+/* Plain panel background — used inside map-window when
+   map world layers are hidden (e.g. gameplay screen).
+   Warm lab-parchment surface with subtle grain + inset depth. */
+.game-shell-panel {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #ece5d4 0%, #e2dacb 50%, #d9d0c0 100%);
+  box-shadow:
+    inset 0 3px 12px rgba(80, 55, 30, 0.18),
+    inset 0 0 40px rgba(80, 55, 30, 0.06);
+}
+
+/* Paper-grain noise overlay — barely visible texture */
+.game-shell-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-conic-gradient(
+      rgba(120, 90, 50, 0.03) 0% 25%,
+      transparent 0% 50%
+    );
+  background-size: 4px 4px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Soft vignette around edges for depth */
+.game-shell-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 60px rgba(80, 55, 30, 0.10);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ==========================================
+   QUEST MAP OVERLAY — fills MapWindow,
+   carries zoom transforms for node navigation
    ========================================== */
 .quest-map-overlay {
   position: absolute;
-  /* Position inside the blue frame "screen" area */
-  top: 18%;
-  left: 18%;
-  right: 18%;
-  bottom: 24%;
-  border-radius: 42px;
+  inset: 0;
   overflow: visible;
-  z-index: 5;
   touch-action: manipulation;
+  z-index: 5;
   /* Smooth zoom transitions */
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
@@ -135,6 +195,8 @@
   z-index: 999; /* Above everything for dev visibility */
 }
 
+/* (old .map-frame removed — replaced by .map-window) */
+
 /* ==========================================
    LEARNING PATH — glowing line bottom to top
    ========================================== */
@@ -145,15 +207,16 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 1;
+  z-index: 3;
+  display: none;
 }
 
 .learning-path__line {
-  animation: path-pulse 3s ease-in-out infinite;
+  animation: none;
 }
 
 .learning-path__dots {
-  animation: path-flow 20s linear infinite;
+  animation: none;
 }
 
 @keyframes path-pulse {
@@ -186,56 +249,40 @@
   pointer-events: none;
 }
 
-/* Layer 1: Localized vignette — subtle darkening around trophy area */
+/* Layer 1: Localized vignette — hidden (was darkening around trophy area) */
 .trophy-node__vignette {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 320px;
-  height: 320px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(
-    circle,
-    transparent 0%,
-    transparent 30%,
-    rgba(0, 0, 0, 0.08) 50%,
-    rgba(0, 0, 0, 0.15) 70%,
-    rgba(0, 0, 0, 0.2) 100%
-  );
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: -3;
+  display: none;
 }
 
-/* Layer 2: Large soft spotlight glow behind trophy */
+/* Layer 2: Soft subtle spotlight glow behind trophy */
 .trophy-node__spotlight {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 220px;
-  height: 220px;
+  width: 180px;
+  height: 180px;
   transform: translate(-50%, -50%);
   background: radial-gradient(
     ellipse 50% 60% at center,
-    rgba(255, 223, 100, 0.5) 0%,
-    rgba(255, 200, 50, 0.35) 25%,
-    rgba(255, 180, 0, 0.15) 50%,
+    rgba(255, 223, 100, 0.22) 0%,
+    rgba(255, 200, 50, 0.14) 25%,
+    rgba(255, 180, 0, 0.06) 50%,
     transparent 75%
   );
   border-radius: 50%;
   pointer-events: none;
   z-index: -2;
-  animation: trophy-spotlight-breathe 4s ease-in-out infinite;
+  animation: trophy-spotlight-breathe 5s ease-in-out infinite;
 }
 
 @keyframes trophy-spotlight-breathe {
-  0%, 100% { 
-    opacity: 0.85; 
+  0%, 100% {
+    opacity: 0.45;
     transform: translate(-50%, -50%) scale(1);
   }
-  50% { 
-    opacity: 1; 
-    transform: translate(-50%, -50%) scale(1.08);
+  50% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1.03);
   }
 }
 
@@ -352,98 +399,92 @@
 .trophy-node__img {
   width: 100%;
   height: auto;
-  filter: 
-    brightness(1.2)
+  filter:
+    brightness(1.0)
     contrast(1.1)
-    saturate(1.35)
-    drop-shadow(0 0 15px rgba(255, 215, 0, 0.7))
-    drop-shadow(0 0 30px rgba(255, 200, 0, 0.4))
-    drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5));
+    saturate(0.7)
+    drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
   transition: filter 0.3s ease, transform 0.3s ease;
-  /* Image rendering for crispness */
   image-rendering: -webkit-optimize-contrast;
 }
 
-/* Locked state — still golden and intriguing, slightly muted but visible */
+/* Locked state — metallic and prestigious but inactive, no glow */
 .trophy-node--locked .trophy-node__img {
-  filter: 
-    brightness(0.95) 
-    contrast(1.05)
-    saturate(0.85) 
-    drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))
+  filter:
+    brightness(0.9)
+    contrast(1.1)
+    saturate(0.5)
     drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
-  opacity: 0.8;
-  animation: trophy-locked-pulse 3s ease-in-out infinite;
+  opacity: 0.75;
 }
 
-/* Locked: hide sparkles, dim spotlight */
+/* Locked: hide sparkles and spotlight completely */
 .trophy-node--locked ~ .trophy-node__sparkles .trophy-sparkle {
   animation: none;
   opacity: 0;
 }
 .trophy-node-wrapper:has(.trophy-node--locked) .trophy-node__spotlight {
-  opacity: 0.5;
+  opacity: 0;
 }
-.trophy-node-wrapper:has(.trophy-node--locked) .trophy-node__vignette {
-  opacity: 0.6;
+.trophy-node-wrapper:has(.trophy-node--locked) .trophy-node__pedestal {
+  opacity: 0;
 }
 
-@keyframes trophy-locked-pulse {
-  0%, 100% { 
-    filter: 
-      brightness(0.95) 
-      contrast(1.05)
-      saturate(0.85) 
-      drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))
+/* Active trophy — warm gold glow fades in, then subtle breathing pulse */
+.trophy-node--active .trophy-node__img {
+  filter:
+    brightness(1.15)
+    contrast(1.08)
+    saturate(1.25)
+    drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))
+    drop-shadow(0 0 20px rgba(255, 200, 0, 0.25))
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  animation: trophy-activate-fade 2s ease-out forwards, trophy-active-breathe 5s ease-in-out 2s infinite;
+}
+
+/* Initial fade-in: from inactive to warm gold */
+@keyframes trophy-activate-fade {
+  0% {
+    filter:
+      brightness(0.9)
+      contrast(1.1)
+      saturate(0.5)
       drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+    opacity: 0.75;
+  }
+  100% {
+    filter:
+      brightness(1.15)
+      contrast(1.08)
+      saturate(1.25)
+      drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))
+      drop-shadow(0 0 20px rgba(255, 200, 0, 0.25))
+      drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+    opacity: 1;
+  }
+}
+
+/* Subtle breathing after fade-in settles */
+@keyframes trophy-active-breathe {
+  0%, 100% {
+    filter:
+      brightness(1.15)
+      contrast(1.08)
+      saturate(1.25)
+      drop-shadow(0 0 10px rgba(255, 215, 0, 0.45))
+      drop-shadow(0 0 20px rgba(255, 200, 0, 0.2))
+      drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
     transform: scale(1);
   }
-  50% { 
-    filter: 
-      brightness(1.05) 
-      contrast(1.08)
-      saturate(0.95) 
-      drop-shadow(0 0 18px rgba(255, 215, 0, 0.6))
-      drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
-    transform: scale(1.02);
-  }
-}
-
-/* Active trophy — BRIGHT, glowing, unmissable, draws eye immediately */
-.trophy-node--active .trophy-node__img {
-  filter: 
-    brightness(1.35) 
-    contrast(1.15)
-    saturate(1.5) 
-    drop-shadow(0 0 25px rgba(255, 215, 0, 1))
-    drop-shadow(0 0 50px rgba(255, 200, 0, 0.7))
-    drop-shadow(0 0 80px rgba(255, 180, 0, 0.4))
-    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
-  animation: trophy-active-glow 2s ease-in-out infinite;
-}
-
-@keyframes trophy-active-glow {
-  0%, 100% { 
-    filter: 
-      brightness(1.35) 
-      contrast(1.15)
-      saturate(1.5) 
-      drop-shadow(0 0 25px rgba(255, 215, 0, 1))
-      drop-shadow(0 0 50px rgba(255, 200, 0, 0.7))
-      drop-shadow(0 0 80px rgba(255, 180, 0, 0.4))
-      drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
-    transform: translateY(0) scale(1);
-  }
-  50% { 
-    filter: 
-      brightness(1.45) 
-      contrast(1.2)
-      saturate(1.6) 
-      drop-shadow(0 0 35px rgba(255, 215, 0, 1))
-      drop-shadow(0 0 70px rgba(255, 200, 0, 0.85))
-      drop-shadow(0 0 100px rgba(255, 180, 0, 0.5))
-      drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
-    transform: translateY(-8px) scale(1.06);
+  50% {
+    filter:
+      brightness(1.18)
+      contrast(1.1)
+      saturate(1.3)
+      drop-shadow(0 0 12px rgba(255, 215, 0, 0.55))
+      drop-shadow(0 0 24px rgba(255, 200, 0, 0.28))
+      drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+    transform: scale(1.01);
   }
 }
 
@@ -451,28 +492,39 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
   transform: translate(-50%, -50%);
   background: radial-gradient(
-    circle, 
-    rgba(255, 223, 100, 0.7) 0%, 
-    rgba(255, 200, 50, 0.45) 30%,
-    rgba(255, 180, 0, 0.2) 55%, 
+    circle,
+    rgba(255, 223, 100, 0.3) 0%,
+    rgba(255, 200, 50, 0.18) 30%,
+    rgba(255, 180, 0, 0.08) 55%,
     transparent 75%
   );
   border-radius: 50%;
-  animation: trophy-glow-pulse 2s ease-in-out infinite;
   pointer-events: none;
   z-index: -1;
+  opacity: 0;
+  animation: trophy-glow-fadein 2s ease-out forwards, trophy-glow-pulse 5s ease-in-out 2s infinite;
+}
+
+/* Glow fades in over 2s */
+@keyframes trophy-glow-fadein {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
 }
 
 @keyframes trophy-glow-pulse {
-  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+  0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.04); }
 }
 
 /* Completed trophy — satisfied golden glow with green accent, still prominent */
+.trophy-node--completed {
+  pointer-events: none;
+}
+
 .trophy-node--completed .trophy-node__img {
   filter: 
     brightness(1.15) 
@@ -524,11 +576,11 @@
    ========================================== */
 .gear-node {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: radial-gradient(circle at 30% 30%, #fff8e6 0%, #f5d89b 70%);
-  border: 3px solid #b8860b;
+  border: 2px solid #b8860b;
   border-radius: 50%;
   cursor: pointer;
   padding: 0;
@@ -538,8 +590,8 @@
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
   box-shadow:
-    0 6px 12px rgba(0, 0, 0, 0.35),
-    inset 0 2px 4px rgba(255, 255, 255, 0.6);
+    0 4px 8px rgba(0, 0, 0, 0.35),
+    inset 0 1px 3px rgba(255, 255, 255, 0.6);
   opacity: 1 !important;
   z-index: 10;
   transform: scale(1.05);
@@ -959,6 +1011,102 @@
   filter: brightness(1.1);
   transform: translateX(-50%) scale(1.03);
   transition: filter 0.2s, transform 0.2s;
+}
+
+/* ---- Discovery Status Badge — overlaid on glass case ---- */
+.discovery-badge {
+  position: absolute;
+  bottom: 18%;
+  right: -4%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(120, 120, 120, 0.5);
+  background: rgba(40, 40, 40, 0.6);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: 10;
+  transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s;
+}
+
+.discovery-badge__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Locked state — grayscale + dim */
+.discovery-badge--locked {
+  opacity: 0.6;
+}
+
+.discovery-badge--locked .discovery-badge__img {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.discovery-badge__lock {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  font-size: 12px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* Unlocked state — full color + glow border */
+.discovery-badge--unlocked {
+  opacity: 1;
+  border-color: rgba(255, 215, 0, 0.8);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(255, 215, 0, 0.4);
+  animation: discovery-badge-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes discovery-badge-glow {
+  0%, 100% { box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 8px rgba(255,215,0,0.4); }
+  50% { box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 14px rgba(255,215,0,0.6); }
+}
+
+/* Visited state — full color, no glow, checkmark */
+.discovery-badge--visited {
+  opacity: 1;
+  border-color: rgba(100, 180, 100, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  animation: none;
+}
+
+.discovery-badge__check {
+  position: absolute;
+  bottom: -1px;
+  right: 0px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4caf50;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discovery-badge--unlocked {
+    animation: none;
+  }
+}
+
+/* ---- Desktop — seat badge on glass case edge ---- */
+@media (min-width: 700px) and (min-height: 500px) {
+  .discovery-badge {
+    bottom: calc(18% + 30px * var(--uv));
+    right: calc(-4% + 22px * var(--u));
+  }
 }
 
 /* Soft spotlight / vignette behind the whole display */
@@ -1674,3 +1822,65 @@
   border-color: #eceff1;
   box-shadow: 0 1px 4px rgba(120, 144, 156, 0.4);
 }
+
+/* ============================================
+   EXPLORE MODE — Announcement
+   ============================================ */
+
+/* Unlock announcement banner — centered top area */
+.explore-unlock-announcement {
+  position: absolute;
+  top: 6%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 60;
+  pointer-events: none;
+  animation: announce-in 0.5s ease-out;
+}
+
+@keyframes announce-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.explore-unlock-announcement__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 3px solid rgba(255, 215, 0, 0.6);
+  border-radius: 18px;
+  padding: 14px 28px;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+.explore-unlock-announcement__icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.explore-unlock-announcement__text {
+  font-size: 16px;
+  font-weight: 800;
+  color: #3E2723;
+}
+
+.explore-unlock-announcement__sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #795548;
+}
+

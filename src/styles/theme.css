@@ -30,18 +30,32 @@
   --ww-radius-sm: 10px;
 }
 
+/* ---- Quest stage viewport ---- */
+/* Fills the parent Stage; centres the fixed-ratio machine-world.
+   Background matches the scene so no dark bars are visible. */
+.quest-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #7ec8e3; /* matches machine-world fallback */
+  overflow: hidden;
+}
+
 /* ---- Decorative machine-world background ---- */
-/* Full-bleed workshop illustration — scales proportionally,
-   never cropped or distorted. Pipes/gears/bulbs are baked
-   into the image; centre panel is left clear for game UI. */
+/* Fixed 3:2 ratio matching the blue-frame artwork (1536×1024).
+   Scales uniformly to fit inside the stage — never cropped.
+   width:100% + max-height:100% → contain behaviour. */
 .machine-world {
   position: relative;
+  aspect-ratio: 3 / 2;
   width: 100%;
-  min-height: 100%;
+  max-height: 100%;
   /* Fallback colour matches the image's dominant hue */
   background-color: #7ec8e3;
-  background-image: url("../assets/node-screen-background.png");
-  background-size: cover;
+  background-image: url("../assets/no map background.png");
+  background-size: 100% 100%;
   background-position: center center;
   background-repeat: no-repeat;
   overflow: hidden;

@@ -40,7 +40,7 @@ export interface DragResult {
   /** Refs array for the 3 word slot elements */
   slotRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
   /** Ref for the game container (attach to root div) */
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   /** Start a drag from bank or slot */
   beginDrag: (
     tileId: string,

@@ -111,7 +111,7 @@ export const QUEST_SHORT_O: Quest = {
     { word: "sob", imageKey: "sob", letters: ["s", "o", "b"], distractors: ["n"] },
     // Nodes 15-16: +2 distractors
     { word: "pop", imageKey: "pop", letters: ["p", "o", "p"], distractors: ["t", "a"] },
-    { word: "nod", imageKey: "nod", letters: ["n", "o", "d"], distractors: ["g", "i"] },
+    { word: "hot", imageKey: "hot", letters: ["h", "o", "t"], distractors: ["g", "i"] },
   ],
 };
 
@@ -282,9 +282,10 @@ const CVC_SENTENCES: Record<string, string> = {
   dot: "A tiny round spot is called a ___.",
   jog: "When I run slowly for exercise, I ___.",
   rot: "When fruit gets old and bad, it starts to ___.",
-  top: "A spinning toy is called a ___.",
+  top: "The cherry is on ___ of the cake.",
   sob: "When you cry hard, you ___.",
   pop: "A balloon makes a loud ___ when it bursts.",
+  hot: "I blow on my soup when it is ___.",
   nod: "I ___ my head up and down to say yes.",
 
   // Short U words (nodes 1-8)

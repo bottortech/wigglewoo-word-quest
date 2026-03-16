@@ -1,0 +1,86 @@
+/* =============================================
+   accessibility.css — Accessibility modes
+   WiggleWoo's Word Quest
+   ============================================= */
+
+/* ---- OpenDyslexic Font ---- */
+@import url('https://fonts.cdnfonts.com/css/opendyslexic');
+
+html.dyslexia-font .sentence-display__text,
+html.dyslexia-font .fact-panel__item-fact,
+html.dyslexia-font .fact-panel__item-name,
+html.dyslexia-font .fact-panel__title,
+html.dyslexia-font .explore-fact-popup__text,
+html.dyslexia-font .explore-fact-popup__title,
+html.dyslexia-font .explore-hint,
+html.dyslexia-font .mini-challenge__prompt,
+html.dyslexia-font .mini-challenge__feedback,
+html.dyslexia-font .choice-modal__title,
+html.dyslexia-font .choice-modal__note,
+html.dyslexia-font .choice-modal__btn-label,
+html.dyslexia-font .boot-text,
+html.dyslexia-font .locked-toast,
+html.dyslexia-font .stickerbook__room-title,
+html.dyslexia-font .stickerbook__room-desc,
+html.dyslexia-font .stickerbook__slot-label {
+  font-family: "OpenDyslexic", "Comic Sans MS", sans-serif !important;
+  letter-spacing: 0.5px;
+  word-spacing: 2px;
+  line-height: 1.6;
+}
+
+/* ---- Color-Blind Safe Mode ---- */
+/* Replace reds/greens with blue/orange for deuteranopia/protanopia */
+html.color-blind-mode {
+  --color-correct: #2196F3;      /* blue instead of green */
+  --color-incorrect: #FF9800;    /* orange instead of red */
+  --color-active: #1565C0;       /* darker blue */
+  --color-locked: #9E9E9E;       /* neutral gray */
+  --color-mastered: #2196F3;
+  --color-learning: #42A5F5;
+  --color-practicing: #FF9800;
+  --color-needs-support: #FF5722;
+}
+
+/* Override specific color classes when color-blind mode is on */
+html.color-blind-mode .mini-challenge__option--correct {
+  background: linear-gradient(180deg, #2196F3 0%, #1565C0 100%);
+  border-color: rgba(33, 150, 243, 0.6);
+}
+
+html.color-blind-mode .mini-challenge__option--wrong {
+  border-color: rgba(255, 152, 0, 0.6);
+}
+
+html.color-blind-mode .mini-challenge__feedback--correct {
+  color: #42A5F5;
+}
+
+html.color-blind-mode .mini-challenge__feedback--wrong {
+  color: #FF9800;
+}
+
+html.color-blind-mode .gear-node--completed .gear-node__shape {
+  color: #2196F3;
+}
+
+html.color-blind-mode .gear-node--active .gear-node__shape {
+  color: #1565C0;
+}
+
+html.color-blind-mode .gear-node__check-badge {
+  background: #2196F3;
+}
+
+/* Mastery bar segments in color-blind mode */
+html.color-blind-mode .insights-mastery-bar__seg--mastered { background: #2196F3; }
+html.color-blind-mode .insights-mastery-bar__seg--learning { background: #42A5F5; }
+html.color-blind-mode .insights-mastery-bar__seg--practicing { background: #FF9800; }
+html.color-blind-mode .insights-mastery-bar__seg--support { background: #FF5722; }
+
+/* ---- Slow Phoneme ---- */
+/* Handled in SoundEffects.ts via playback rate */
+/* CSS class used as a flag read by JS */
+html.slow-phoneme {
+  /* marker class only — actual speed change in audio code */
+}

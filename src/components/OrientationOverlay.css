@@ -1,5 +1,5 @@
 /* =============================================
-   OrientationOverlay.css — Portrait mode hint
+   OrientationOverlay.css — Orientation guard
    WiggleWoo's Word Quest
    ============================================= */
 
@@ -7,9 +7,11 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(30, 60, 90, 0.92);
+  width: 100%;
+  height: 100%;
+  /* iOS Safari: fill safe-area + prevent rubber-band scroll */
+  height: 100dvh;
+  background: rgba(30, 60, 90, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: 9999;
@@ -17,6 +19,10 @@
   align-items: center;
   justify-content: center;
   animation: overlay-fade-in 0.4s ease-out;
+  /* Prevent scroll bleed-through on iOS */
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 @keyframes overlay-fade-in {

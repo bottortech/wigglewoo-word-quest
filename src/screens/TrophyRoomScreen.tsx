@@ -18,6 +18,7 @@ import continueQuestBtn from "../assets/cont_quest.png";
 import wigglewooTrophyRoom from "../assets/wigglewoo_trophyroom.png";
 import GlassDisplayCase from "../components/GlassDisplayCase";
 
+import { playTapCardPhrase, playMatchPhrase, playSuccessPhrase } from "../audio/SoundEffects";
 import "../styles/trophyroom.css";
 
 interface TrophyRoomScreenProps {
@@ -131,6 +132,13 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
     return quest.words.slice(0, completedCount).map(w => w.word);
   }, [quest]);
 
+  // Play "Tap a card" on enter
+  useEffect(() => {
+    if (!viewOnly) {
+      setTimeout(() => playTapCardPhrase(), 500);
+    }
+  }, [viewOnly]);
+
   const patternLabel = PATTERN_LABELS[quest.patternType] || "CVC";
   const vowelLabel = VOWEL_LABELS[vowelId] || "Short A";
   const questEarned = isQuestFullyComplete(quest.id);
@@ -139,6 +147,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
   useEffect(() => {
     if (matchCount === 3 && !showCelebration) {
       // All pairs matched!
+      playSuccessPhrase();
       setTimeout(() => {
         setShowCelebration(true);
       }, 400);
@@ -201,8 +210,9 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
       
       if (firstCard.word === secondCard.word) {
         // Match found!
+        playMatchPhrase();
         setTimeout(() => {
-          setCards(prev => prev.map(c => 
+          setCards(prev => prev.map(c =>
             c.id === firstId || c.id === secondId
               ? { ...c, isMatched: true }
               : c

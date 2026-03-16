@@ -1,0 +1,59 @@
+/* =============================================
+   WaterBaseLayer.css — Tiled water base fill
+   WiggleWoo's Word Quest
+   =============================================
+   Covers 100% of the quest map frame with a
+   seamless repeating water texture. No gaps.
+   Swap background-image URL for a custom tile.
+
+   Top ~18% is masked out so the SkyBand reads
+   as sky, not water-with-clouds-on-top.
+   ============================================= */
+
+.water-base-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Uniform bright turquoise base — no two-tone split */
+  background-color: #3a9fd4;
+
+  /* Tiled water texture on top of the colour */
+  background-image:
+    /* Repeating water texture only — no gradient overlays */
+    url("/assets/river_overlay.png");
+
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  background-position: 0 40px;
+  animation: water-base-drift 30s linear infinite;
+
+  /* Brighter tropical turquoise — matches island shoreline tones */
+  filter: brightness(1.12) saturate(1.25) hue-rotate(-12deg);
+
+  /* River mask — shapes where water is visible */
+  mask-image: url("/assets/river_mask.png");
+  -webkit-mask-image: url("/assets/river_mask.png");
+  mask-size: cover;
+  -webkit-mask-size: cover;
+  mask-position: center;
+  -webkit-mask-position: center;
+}
+
+@keyframes water-base-drift {
+  0%   { background-position: 0 40px; }
+  100% { background-position: 256px 296px; }
+}
+
+/* Ambient toggle — freeze animation when ambient is off */
+.quest-map-overlay:not(.ambient-on) .water-base-layer {
+  animation: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .water-base-layer {
+    animation: none;
+  }
+}

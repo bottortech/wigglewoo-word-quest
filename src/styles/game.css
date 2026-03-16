@@ -26,6 +26,17 @@
   -webkit-overflow-scrolling: auto;
 }
 
+/* When game-screen lives inside map-window (GameShell),
+   the frame clipping is already handled by map-window.
+   Reset the --screen-* insets so machine-viewport fills
+   the container instead of double-insetting. */
+.map-window .game-screen {
+  --screen-top: 0%;
+  --screen-left: 0%;
+  --screen-right: 0%;
+  --screen-bottom: 0%;
+}
+
 /* --- Machine viewport: the interior screen area --- */
 .machine-viewport {
   position: absolute;
@@ -151,6 +162,11 @@
   -webkit-user-select: none;
 }
 
+/* Gameplay screen — logo shifted up */
+.machine-world--gameplay .title-badge {
+  top: -2%;
+}
+
 /* Clickable badge (home button) */
 .title-badge--clickable {
   cursor: pointer;
@@ -171,6 +187,14 @@
   outline: 3px solid rgba(255, 215, 0, 0.6);
   outline-offset: 4px;
   border-radius: 8px;
+}
+
+/* ---- Desktop: shrink badge so it clears the glass frame ---- */
+@media (min-width: 700px) and (min-height: 500px) {
+  .title-badge {
+    max-width: calc(80px + 28px * var(--u));
+    top: 1%;
+  }
 }
 
 /* ---- Responsive: scale down on mobile ---- */
@@ -410,8 +434,9 @@
 .sentence-display {
   text-align: center;
   padding: 4px 12px;
-  margin: 0 0 16px 0;
+  margin: 0 auto 16px auto;
   max-width: 95%;
+  width: 100%;
 }
 
 .sentence-display__text {
@@ -899,8 +924,8 @@
 
   /* Tighten sentence spacing */
   .sentence-display {
-    margin: 0 0 6px 0;
-    padding: 2px 8px 2px 22%;
+    margin: 0 auto 6px auto;
+    padding: 2px 8px;
   }
   .sentence-display__text {
     font-size: 12px;
