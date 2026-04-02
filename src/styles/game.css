@@ -914,6 +914,19 @@
   .phoneme-indicator { animation: none; opacity: 1; }
 }
 
+/* ==========================================
+   PORTRAIT MOBILE — tighter insets, fill screen
+   ========================================== */
+@media (orientation: portrait) and (max-width: 1024px) {
+  :root {
+    --screen-top: 6%;
+    --screen-left: 4%;
+    --screen-right: 4%;
+    --screen-bottom: 4%;
+    --screen-radius: 24px;
+  }
+}
+
 
 /* ============================================
    Streak Toast

@@ -2017,3 +2017,16 @@
   }
 }
 
+/* ==========================================
+   PORTRAIT MOBILE — tighter insets, fill screen
+   ========================================== */
+@media (orientation: portrait) and (max-width: 1024px) {
+  .map-window {
+    top: 12%;
+    bottom: 8%;
+    left: 4%;
+    right: 4%;
+    border-radius: 24px;
+  }
+}
+
