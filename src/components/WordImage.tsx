@@ -46,7 +46,7 @@ const WORD_EMOJI_FALLBACK: Record<string, string> = {
   jet: "✈️", net: "🥅", wet: "💧", leg: "🦵",
   // Short E (nodes 9-16)
   pet: "🐾", ten: "🔟", beg: "🙏", peg: "🪝",
-  set: "📐", get: "🎁", men: "👨", vet: "👨‍⚕️",
+  ref: "🏁", fed: "🍼", men: "👨", vet: "👨‍⚕️",
 
   // Blends (placement test + future tiers)
   hand: "✋", stop: "🛑", flag: "🚩", lamp: "💡", drum: "🥁",

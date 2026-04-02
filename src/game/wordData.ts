@@ -171,8 +171,8 @@ export const QUEST_SHORT_E: Quest = {
     { word: "beg", imageKey: "beg", letters: ["b", "e", "g"], distractors: [] },
     { word: "web", imageKey: "web", letters: ["w", "e", "b"], distractors: [] },
     // Nodes 13-14: +1 distractor
-    { word: "set", imageKey: "set", letters: ["s", "e", "t"], distractors: ["m"] },
-    { word: "get", imageKey: "get", letters: ["g", "e", "t"], distractors: ["n"] },
+    { word: "ref", imageKey: "ref", letters: ["r", "e", "f"], distractors: ["m"] },
+    { word: "fed", imageKey: "fed", letters: ["f", "e", "d"], distractors: ["n"] },
     // Nodes 15-16: +2 distractors
     { word: "gem", imageKey: "gem", letters: ["g", "e", "m"], distractors: ["t", "a"] },
     { word: "vet", imageKey: "vet", letters: ["v", "e", "t"], distractors: ["p", "u"] },
