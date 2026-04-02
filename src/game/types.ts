@@ -39,7 +39,7 @@ export interface CvcWord {
 }
 
 /** Supported word pattern types */
-export type PatternType = "cvc" | "cvcc" | "cvvc" | "ccvc";
+export type PatternType = "cvc" | "cvcc" | "magic-e" | "cvvc" | "advanced";
 
 /** Which patterns are currently playable (images/audio ready) */
 export const ENABLED_PATTERNS: PatternType[] = ["cvc"];

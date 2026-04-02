@@ -7,7 +7,7 @@
 // for future backend sync.
 // =============================================
 
-import { countEarnedTrophies, getTotalStickerCount } from "./progression";
+import { countEarnedTrophies } from "./progression";
 
 const ANALYTICS_KEY = "ww_learning_analytics";
 
@@ -59,7 +59,6 @@ export interface OverallSummary {
   currentStreak: number;
   questsCompleted: number;
   nodesCompleted: number;
-  stickersCollected: number;
   vowelSummaries: VowelSummary[];
 }
 
@@ -242,7 +241,6 @@ export function getOverallSummary(): OverallSummary {
   const avgAttempts = totalCompleted > 0 ? Math.round((totalIncorrect / totalCompleted) * 10) / 10 : 0;
 
   const questsCompleted = countEarnedTrophies();
-  const stickersCollected = getTotalStickerCount();
 
   return {
     totalWords: 80,
@@ -254,7 +252,6 @@ export function getOverallSummary(): OverallSummary {
     currentStreak: store.streaks.current,
     questsCompleted,
     nodesCompleted: totalSeen,
-    stickersCollected,
     vowelSummaries,
   };
 }

@@ -8,6 +8,7 @@
 
 import React, { useMemo, useState, useCallback } from "react";
 import { getOverallSummary, resetAnalytics } from "../game/learningAnalytics";
+import { resetPlacement, isPlacementComplete } from "../game/placementTest";
 import type { OverallSummary, VowelSummary, MasteryLevel } from "../game/learningAnalytics";
 import { loadSettings, updateSetting, applySettingsToDOM } from "../game/settings";
 import type { AppSettings } from "../game/settings";
@@ -156,10 +157,6 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
                 <span className="insights-stat-card__value">{summary.nodesCompleted}/80</span>
                 <span className="insights-stat-card__label">Words Completed</span>
               </div>
-              <div className="insights-stat-card">
-                <span className="insights-stat-card__value">{summary.stickersCollected}</span>
-                <span className="insights-stat-card__label">Stickers Collected</span>
-              </div>
             </div>
 
             <div className="insights-stats-row">
@@ -186,6 +183,25 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
                   ))}
               </div>
             )}
+
+            {/* Reset Placement Test */}
+            <div className="insights-reset" style={{ marginBottom: 12 }}>
+              <button
+                className="insights-btn insights-btn--secondary"
+                onClick={() => {
+                  resetPlacement();
+                  localStorage.removeItem("ww_placement_tiers");
+                  // Reload to trigger placement flow
+                  window.location.reload();
+                }}
+                disabled={!isPlacementComplete()}
+              >
+                Reset Placement Test
+              </button>
+              <p style={{ fontSize: 11, color: "#8D6E63", marginTop: 4 }}>
+                Re-assess reading level and starting point
+              </p>
+            </div>
 
             {/* Reset */}
             <div className="insights-reset">

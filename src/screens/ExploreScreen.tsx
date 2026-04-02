@@ -3,25 +3,21 @@
 // WiggleWoo's Word Quest
 // =============================================
 // Smart Discovery Room system:
-//   - Tap object → Choice Modal (Learn a Fact / Power It Up)
-//   - Learn a Fact → animation → fact panel → +1 sticker
-//   - Power It Up → mini CVC challenge → enhanced animation → fact → +2 stickers
+//   - Tap object → learn a fact → animation → fact panel
+//   - Every 4th fact → Picture Match challenge before learning
 //   - Daily cap: 4 facts per room per day
 // =============================================
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { ENVIRONMENTS, ENVIRONMENT_QUEST_MAP } from "../game/exploreData";
-import { getQuestById } from "../game/wordData";
+import DiscoverySession from "../components/miniGames/DiscoverySession";
+import "../styles/miniGames.css";
 import type { EnvironmentConfig, SceneProp, Hotspot, FactPanel, FactItem } from "../game/exploreData";
-import type { CvcWord } from "../game/types";
 import {
   isDailyFactCapReached,
   recordFactDiscovery,
-  awardSticker,
 } from "../game/progression";
-import ChoiceModal from "../components/ChoiceModal";
 import DailyCapModal from "../components/DailyCapModal";
-import MiniChallenge from "../components/MiniChallenge";
 import FactNarration from "../components/FactNarration";
 import PictureMatch from "../components/PictureMatch";
 import "../styles/explore.css";
@@ -30,6 +26,8 @@ interface ExploreScreenProps {
   environmentId: string;
   questId?: string;
   onBack: () => void;
+  /** Called once on first visit when used as discovery room reward */
+  onComplete?: () => void;
 }
 
 // ---- Sub-components ----
@@ -66,8 +64,8 @@ const FactPanelSheet: React.FC<{
                 </div>
                 {isExpanded && (
                   <>
-                    <p className="fact-panel__item-fact">{item.fact}</p>
-                    <FactNarration text={item.fact} audioSrc={item.audioSrc} autoPlay />
+                    <p className="fact-panel__item-fact">{item.core}</p>
+                    <FactNarration text={item.core} audioSrc={item.audioSrc} autoPlay />
                   </>
                 )}
               </div>
@@ -98,17 +96,40 @@ const HotspotPopup: React.FC<{
 
 // ---- Main component ----
 
-const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, onBack }) => {
+const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, onBack, onComplete }) => {
   const env: EnvironmentConfig | undefined = ENVIRONMENTS[environmentId];
 
-  // Resolve quest words and vowel group for challenges
-  const questWords: CvcWord[] = useMemo(() => {
-    const qId = questId ?? ENVIRONMENT_QUEST_MAP[environmentId];
-    if (!qId) return [];
-    const quest = getQuestById(qId);
-    return quest?.words ?? [];
-  }, [questId, environmentId]);
+  // Mini-game session state (only when entering as discovery-room reward)
+  const [showMiniGames, setShowMiniGames] = useState(!!onComplete);
+  const [, setMiniGamesCompleted] = useState(false);
 
+  const handleMiniGamesComplete = useCallback(() => {
+    setMiniGamesCompleted(true);
+    setShowMiniGames(false);
+    // Fire onComplete after mini-games done (triggers skin unlock)
+    onComplete?.();
+  }, [onComplete]);
+
+  const handleMiniGamesBack = useCallback(() => {
+    setShowMiniGames(false);
+    onBack();
+  }, [onBack]);
+
+  // Gather facts for mini-game rewards
+  const roomFacts = useMemo(() => {
+    if (!env?.props) return [];
+    const facts: string[] = [];
+    for (const prop of env.props) {
+      if (prop.factPanel?.items) {
+        for (const item of prop.factPanel.items) {
+          if (item.core) facts.push(item.core);
+        }
+      }
+    }
+    return facts;
+  }, [env]);
+
+  // Resolve vowel group for picture match challenges
   const vowelGroup = useMemo(() => {
     const qId = questId ?? ENVIRONMENT_QUEST_MAP[environmentId] ?? "";
     if (qId.includes("short-a")) return "shortA";
@@ -127,10 +148,8 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   // Choice modal state
   const [choiceTarget, setChoiceTarget] = useState<SceneProp | null>(null);
   const [showDailyCap, setShowDailyCap] = useState(false);
-  const [showMiniChallenge, setShowMiniChallenge] = useState(false);
   const [showPictureMatch, setShowPictureMatch] = useState(false);
   const [factsDiscoveredThisSession, setFactsDiscoveredThisSession] = useState(0);
-  const [poweredUpProp, setPoweredUpProp] = useState<string | null>(null); // prop ID currently powered up
 
   // Volcano eruption state
   const [erupting, setErupting] = useState(false);
@@ -151,7 +170,6 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
 
   // Greenhouse flower stage cycling
   const [flowerStage, setFlowerStage] = useState(0);
-  const [flowerAnimating, setFlowerAnimating] = useState(false);
 
   // Butterfly wing-flap animation
   const [butterflyFrame, setButterflyFrame] = useState(1);
@@ -176,14 +194,13 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   }, [environmentId]);
 
   // ---- Object animation triggers ----
-  const playObjectAnimation = useCallback((prop: SceneProp, enhanced: boolean) => {
-    const delay = enhanced ? 600 : 400;
+  const playObjectAnimation = useCallback((prop: SceneProp) => {
+    const delay = 400;
 
     if (prop.id === "flower-stage") {
       setFlowerStage(1);
       setTimeout(() => setFlowerStage(2), delay);
       setTimeout(() => setFlowerStage(3), delay * 2);
-      setTimeout(() => { setFlowerStage(0); }, delay * 3);
     } else if (prop.id === "clam") {
       setClamOpen(true);
     } else if (prop.id === "octopus") {
@@ -195,68 +212,35 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     } else if (prop.id === "power-core") {
       setPowerCoreGlowing(true);
     }
-
-    if (enhanced) {
-      setPoweredUpProp(prop.id);
-      setTimeout(() => setPoweredUpProp(null), 2000);
-    }
   }, []);
 
   // ---- Fact discovery flow ----
   const showFactForProp = useCallback((prop: SceneProp) => {
     if (prop.factPanel) {
-      setTimeout(() => setActivePanel(prop.factPanel!), 500);
+      // Wait for object animation to finish before showing fact panel
+      const delay = prop.id === "flower-stage" ? 1800 : 1500;
+      setTimeout(() => setActivePanel(prop.factPanel!), delay);
     }
   }, []);
 
-  const handleLearnFact = useCallback(() => {
-    if (!choiceTarget?.factPanel) return;
-    const prop = choiceTarget;
-    setChoiceTarget(null);
-
+  // Learn a fact directly (no choice modal)
+  const learnFactForProp = useCallback((prop: SceneProp) => {
     recordFactDiscovery(environmentId);
-    awardSticker(environmentId, prop.factPanel!.items[0]?.id ?? prop.id, 1);
     setFactsDiscoveredThisSession(c => c + 1);
 
-    playObjectAnimation(prop, false);
+    playObjectAnimation(prop);
     showFactForProp(prop);
-  }, [choiceTarget, environmentId, playObjectAnimation, showFactForProp]);
+  }, [environmentId, playObjectAnimation, showFactForProp]);
 
-  const handlePowerUp = useCallback(() => {
-    if (!choiceTarget) return;
-    setChoiceTarget(null);
-    // Every 3rd fact → PictureMatch, otherwise MiniChallenge
-    if ((factsDiscoveredThisSession + 1) % 3 === 0) {
-      setShowPictureMatch(true);
-    } else {
-      setShowMiniChallenge(true);
-    }
-  }, [choiceTarget, factsDiscoveredThisSession]);
-
-  const completePowerUp = useCallback(() => {
-    const prop = choiceTarget;
-    if (!prop?.factPanel) return;
-
-    recordFactDiscovery(environmentId);
-    awardSticker(environmentId, prop.factPanel.items[0]?.id ?? prop.id, 2);
-    setFactsDiscoveredThisSession(c => c + 1);
-
-    playObjectAnimation(prop, true);
-    showFactForProp(prop);
-  }, [choiceTarget, environmentId, playObjectAnimation, showFactForProp]);
-
-  const handleMiniChallengeCorrect = useCallback(() => {
-    setShowMiniChallenge(false);
-    completePowerUp();
-  }, [completePowerUp]);
-
+  // After picture match challenge completes, award the fact
   const handlePictureMatchCorrect = useCallback(() => {
     setShowPictureMatch(false);
-    completePowerUp();
-  }, [completePowerUp]);
+    if (!choiceTarget?.factPanel) return;
+    learnFactForProp(choiceTarget);
+    setChoiceTarget(null);
+  }, [choiceTarget, learnFactForProp]);
 
   const handleChallengeClose = useCallback(() => {
-    setShowMiniChallenge(false);
     setShowPictureMatch(false);
     setChoiceTarget(null);
   }, []);
@@ -269,7 +253,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       return;
     }
 
-    // Only fact-panel props trigger the choice flow
+    // Only fact-panel props trigger the discovery flow
     if (!prop.factPanel) return;
 
     // Check daily cap
@@ -278,9 +262,15 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       return;
     }
 
-    // Show choice modal
-    setChoiceTarget(prop);
-  }, [environmentId]);
+    // Every 4th fact → PictureMatch challenge before learning
+    if ((factsDiscoveredThisSession + 1) % 4 === 0) {
+      setChoiceTarget(prop);
+      setShowPictureMatch(true);
+    } else {
+      // Learn fact directly — no choice modal
+      learnFactForProp(prop);
+    }
+  }, [environmentId, factsDiscoveredThisSession, learnFactForProp]);
 
   const handleHotspotClick = useCallback((hotspot: Hotspot) => {
     setTappedHotspotId(hotspot.id);
@@ -295,7 +285,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     setQuaking(true);
     if (eruptTimerRef.current) clearTimeout(eruptTimerRef.current);
     setTimeout(() => setQuaking(false), 500);
-    eruptTimerRef.current = setTimeout(() => setErupting(false), 1500);
+    // Eruption holds — does not reset
   }, [erupting]);
 
   if (!env) {
@@ -331,7 +321,6 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       const isCastleScroll = prop.id === "castle-scroll";
       const isClam = prop.id === "clam";
       const isOctopus = prop.id === "octopus";
-      const isPoweredUp = poweredUpProp === prop.id;
       const anchorTransform =
         prop.anchor === "top" ? "translate(-50%, 0%)" : "translate(-50%, -100%)";
 
@@ -397,7 +386,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         return (
           <button
             key={prop.id}
-            className={`explore-prop explore-prop--interactive ${isPoweredUp ? "explore-prop--powered-up" : ""}`}
+            className="explore-prop explore-prop--interactive"
             style={{
               position: "absolute",
               left: `${prop.x}%`,
@@ -493,6 +482,20 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
 
   return (
     <div className={`explore-screen ${quaking ? "quake" : ""}`} style={bgStyle}>
+      {/* Mini-game overlay — renders ON TOP of the room */}
+      {showMiniGames && (
+        <div className="mg-overlay">
+          <div className="mg-overlay__backdrop" />
+          <div className="mg-overlay__panel">
+            <DiscoverySession
+              roomId={environmentId}
+              facts={roomFacts.slice(0, 3)}
+              onComplete={handleMiniGamesComplete}
+              onBack={handleMiniGamesBack}
+            />
+          </div>
+        </div>
+      )}
       {/* Geartown dust particles */}
       {environmentId === "industrial-tech-city" && (
         <div className="geartown-dust">
@@ -557,31 +560,12 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       {/* Hint text */}
       <div className="explore-hint">Tap objects to discover facts!</div>
 
-      {/* Choice modal — Learn a Fact / Power It Up */}
-      {choiceTarget && !showMiniChallenge && (
-        <ChoiceModal
-          objectName={choiceTarget.factPanel?.title ?? "Discovery"}
-          onLearnFact={handleLearnFact}
-          onPowerUp={handlePowerUp}
-          onClose={() => setChoiceTarget(null)}
-        />
-      )}
-
       {/* Daily cap modal */}
       {showDailyCap && (
         <DailyCapModal onClose={() => setShowDailyCap(false)} />
       )}
 
-      {/* Mini CVC challenge (Power It Up) */}
-      {showMiniChallenge && questWords.length >= 3 && (
-        <MiniChallenge
-          questWords={questWords}
-          onCorrect={handleMiniChallengeCorrect}
-          onClose={handleChallengeClose}
-        />
-      )}
-
-      {/* Picture Match challenge (every 3rd fact Power It Up) */}
+      {/* Picture Match challenge (every 4th fact) */}
       {showPictureMatch && (
         <PictureMatch
           vowelGroup={vowelGroup}

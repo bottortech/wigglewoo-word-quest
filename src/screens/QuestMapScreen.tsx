@@ -11,22 +11,24 @@ import {
   isNodeTappable,
   loadTrophyProgress,
   getTrophyNodeState,
+  loadDiscoveryProgress,
+  getDiscoveryNodeState,
   areAllQuestsComplete,
   hasTrophyUnlockBeenSeen,
   markTrophyUnlockSeen,
   loadNodeRatings,
 } from "../game/progression";
-import { CVC_QUEST_IDS, CVCC_QUEST_IDS, CVVC_QUEST_IDS } from "../game/questIds";
-import { loadCvccQuests, loadCvvcQuests } from "../game/wordData";
+import { getActiveSkinAssets } from "../game/skins";
+import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS } from "../game/questIds";
+import { loadCvccQuests, loadCvvcQuests, loadMagicEQuests, loadAdvancedQuests } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import trophyIcon from "../assets/trophy.png";
-import Bulb from "../components/Bulb";
 import GlassDisplayCase from "../components/GlassDisplayCase";
 import UnlockModal from "../components/UnlockModal";
 import ParentGate from "../components/ParentGate";
 import WaterBaseLayer from "../components/WaterBaseLayer";
-import RiverLayer from "../components/RiverLayer";
+// import RiverLayer from "../components/RiverLayer"; // temp hidden
 import WaterAmbientLayer from "../components/WaterAmbientLayer";
 import IslandLayer from "../components/IslandLayer";
 import SkyLayer from "../components/SkyLayer";
@@ -34,7 +36,6 @@ import { playNewChallengePhrase } from "../audio/SoundEffects";
 import "../styles/game.css";
 import "../styles/home.css";
 import "../styles/questmap.css";
-import "../styles/stickerbook.css";
 
 // ---- ErrorBoundary (safety net) ----
 interface EBProps { children: React.ReactNode }
@@ -91,20 +92,39 @@ const NODE_POSITIONS = [
 // y = (1-t)²×75 + 2(1-t)t×52.5 + t²×30 ≈ 46
 const TROPHY_POSITION = { x: 52, y: 46 };
 
-// Quest type definitions for Word Quest Box
-type QuestType = "CVC" | "CVCC" | "CVVC" | "CCVC";
+// Discovery room node position — after node 16 (86, 48), slightly offset
+const DISCOVERY_POSITION = { x: 92, y: 32 };
 
-// Quest type lock rules:
+// Quest type definitions for Word Quest Box
+// 5 tiers in order: CVC → Blending → Magic E → Vowel Teams → Advanced
+type QuestType = "CVC" | "CVCC" | "MAGIC_E" | "CVVC" | "ADVANCED";
+
+// Tier unlock rules (sequential):
 // CVC: always unlocked
-// CVCC: unlocked when ALL CVC quests (A,E,I,O,U) + trophies complete
-// CVVC: unlocked when ALL CVCC quests complete
-// CCVC: unlocked when ALL CVVC quests complete
-function getQuestTypeLockState(): { id: QuestType; label: string; unlocked: boolean }[] {
+// Blending Power: all CVC complete OR placement
+// Magic E: all CVCC complete OR placement
+// Vowel Teams: all Magic E complete OR placement
+// Advanced: all CVVC complete OR placement
+
+/** Check if a tier was unlocked via placement test */
+function isPlacementUnlocked(tier: string): boolean {
+  try {
+    const raw = localStorage.getItem("ww_placement_tiers");
+    if (!raw) return false;
+    const tiers: string[] = JSON.parse(raw);
+    return tiers.includes(tier);
+  } catch {
+    return false;
+  }
+}
+
+function getQuestTypeLockState(): { id: QuestType; label: string; unlocked: boolean; unlockHint?: string }[] {
   return [
-    { id: "CVC", label: "CVC", unlocked: true },
-    { id: "CVCC", label: "CVCC", unlocked: areAllQuestsComplete([...CVC_QUEST_IDS]) },
-    { id: "CVVC", label: "CVVC", unlocked: areAllQuestsComplete([...CVCC_QUEST_IDS]) },
-    { id: "CCVC", label: "CCVC", unlocked: areAllQuestsComplete([...CVVC_QUEST_IDS]) },
+    { id: "CVC", label: "Sound Builders", unlocked: true },
+    { id: "CVCC", label: "Blending Power", unlocked: areAllQuestsComplete([...CVC_QUEST_IDS]) || isPlacementUnlocked("CVCC"), unlockHint: "Complete all Sound Builder quests to unlock" },
+    { id: "MAGIC_E", label: "Magic E", unlocked: areAllQuestsComplete([...CVCC_QUEST_IDS]) || isPlacementUnlocked("MAGIC_E"), unlockHint: "Complete all Blending Power quests to unlock" },
+    { id: "CVVC", label: "Vowel Teams", unlocked: areAllQuestsComplete([...MAGIC_E_QUEST_IDS]) || isPlacementUnlocked("CVVC"), unlockHint: "Complete all Magic E quests to unlock" },
+    { id: "ADVANCED", label: "Advanced Reading", unlocked: areAllQuestsComplete([...CVVC_QUEST_IDS]) || isPlacementUnlocked("ADVANCED"), unlockHint: "Complete all Vowel Team quests to unlock" },
   ];
 }
 
@@ -144,8 +164,16 @@ const CVCC_TRACKS: TrackDef[] = [
   { id: "quest-cvcc-short-e", label: "Short E", vowel: "E" },
 ];
 
-// CVVC tracks — existing 5 quests mapped to vowel-team labels
-// Future: expand to 25 vowel-pair tracks (AA, AE, AI, ...)
+// Magic E tracks — 4 vowels + mixed review
+const MAGIC_E_TRACKS: TrackDef[] = [
+  { id: "quest-magic-e-a", label: "Long A (a_e)", vowel: "A" },
+  { id: "quest-magic-e-i", label: "Long I (i_e)", vowel: "I" },
+  { id: "quest-magic-e-o", label: "Long O (o_e)", vowel: "O" },
+  { id: "quest-magic-e-u", label: "Long U (u_e)", vowel: "U" },
+  { id: "quest-magic-e-mixed", label: "Mixed Review", vowel: "MIX" },
+];
+
+// CVVC tracks — vowel teams
 const CVVC_TRACKS: TrackDef[] = [
   { id: "quest-cvvc-long-a", label: "Long A Teams", vowel: "AI" },
   { id: "quest-cvvc-long-e", label: "Long E Teams", vowel: "EA" },
@@ -154,19 +182,33 @@ const CVVC_TRACKS: TrackDef[] = [
   { id: "quest-cvvc-mixed-ea", label: "EA Teams", vowel: "EE" },
 ];
 
-// CCVC tracks — placeholder (no quests in wordData yet)
-const CCVC_TRACKS: TrackDef[] = [];
+// Advanced Reading tracks — r-controlled + multisyllable
+const ADVANCED_TRACKS: TrackDef[] = [
+  { id: "quest-adv-ar-or", label: "AR & OR", vowel: "AR" },
+  { id: "quest-adv-er-ir-ur", label: "ER, IR & UR", vowel: "ER" },
+  { id: "quest-adv-bossy-r-mix", label: "Bossy R Mix", vowel: "R" },
+  { id: "quest-adv-2syl-closed", label: "2-Syllable", vowel: "2S" },
+  { id: "quest-adv-mixed-mastery", label: "Mixed Mastery", vowel: "MX" },
+];
 
 const QUEST_CATALOG: QuestCatalog = {
-  CVC:  { tracks: CVC_TRACKS,  defaultTrackId: "quest-short-a" },
-  CVCC: { tracks: CVCC_TRACKS, defaultTrackId: "quest-cvcc-short-a" },
-  CVVC: { tracks: CVVC_TRACKS, defaultTrackId: "quest-cvvc-long-a" },
-  CCVC: { tracks: CCVC_TRACKS, defaultTrackId: "" },
+  CVC:      { tracks: CVC_TRACKS,      defaultTrackId: "quest-short-a" },
+  CVCC:     { tracks: CVCC_TRACKS,     defaultTrackId: "quest-cvcc-short-a" },
+  MAGIC_E:  { tracks: MAGIC_E_TRACKS,  defaultTrackId: "quest-magic-e-a" },
+  CVVC:     { tracks: CVVC_TRACKS,     defaultTrackId: "quest-cvvc-long-a" },
+  ADVANCED: { tracks: ADVANCED_TRACKS, defaultTrackId: "quest-adv-ar-or" },
 };
 
 // Derive quest type from a quest's patternType
 function questTypeFromPattern(patternType: string): QuestType {
-  return patternType.toUpperCase() as QuestType;
+  const map: Record<string, QuestType> = {
+    cvc: "CVC",
+    cvcc: "CVCC",
+    "magic-e": "MAGIC_E",
+    cvvc: "CVVC",
+    advanced: "ADVANCED",
+  };
+  return map[patternType] ?? "CVC";
 }
 
 // Gear SVG component for nodes — friendly rounded gear shape
@@ -254,9 +296,12 @@ interface QuestMapScreenProps {
   onGoHome?: () => void;
   onEnterTrophyRoom?: () => void;
   onViewTrophyRoom?: () => void;
+  onEnterDiscoveryRoom?: () => void;
   onOpenInsights?: () => void;
   onExplore?: (envId: string) => void;
-  onOpenStickerBook?: () => void;
+  onOpenWardrobe?: () => void;
+  hasNewSkin?: boolean;
+  onDevResetAll?: () => void;
   arrivedFromWord: number | null;
   trophyJustEarned?: boolean; // true when coming from trophy-transition → triggers snap animation
 }
@@ -269,22 +314,37 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   onGoHome,
   onEnterTrophyRoom,
   onViewTrophyRoom,
+  onEnterDiscoveryRoom,
   onOpenInsights,
   onExplore,
-  onOpenStickerBook,
+
+  onOpenWardrobe,
+  hasNewSkin,
+  onDevResetAll,
   arrivedFromWord,
 }) => {
+  void onOpenWardrobe; void hasNewSkin; // hidden in demo mode
   const progress = useMemo(() => loadQuestProgress(quest.id), [quest.id]);
   const trophyProgress = useMemo(() => loadTrophyProgress(quest.id), [quest.id]);
+  const discoveryProgress = useMemo(() => loadDiscoveryProgress(quest.id), [quest.id]);
 
-  // Quest fully done — nodes, path, trophy, WiggleWoo all hidden
-  const questFullyDone = progress.questComplete && trophyProgress.trophyRoomComplete;
+  // Quest fully done — nodes, path, trophy, discovery, WiggleWoo all hidden
+  const questFullyDone = progress.questComplete && trophyProgress.trophyRoomComplete && discoveryProgress.discoveryRoomComplete;
 
   // Trophy node state
-  const trophyNodeState = useMemo(() => 
-    getTrophyNodeState(progress, trophyProgress), 
+  const trophyNodeState = useMemo(() =>
+    getTrophyNodeState(progress, trophyProgress),
     [progress, trophyProgress]
   );
+
+  // Discovery room node state
+  const discoveryNodeState = useMemo(() =>
+    getDiscoveryNodeState(progress, discoveryProgress),
+    [progress, discoveryProgress]
+  );
+
+  // Skin-aware WiggleWoo hero image
+  const skinAssets = useMemo(() => getActiveSkinAssets(), []);
 
   // Per-node performance ratings
   const nodeRatings = useMemo(() => loadNodeRatings(quest.id), [quest.id]);
@@ -461,11 +521,17 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   // Pre-load quest chunks when prerequisites are met
   useEffect(() => {
-    if (areAllQuestsComplete([...CVC_QUEST_IDS]) || devUnlock) {
+    if (areAllQuestsComplete([...CVC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("CVCC")) {
       loadCvccQuests();
     }
-    if (areAllQuestsComplete([...CVCC_QUEST_IDS]) || devUnlock) {
+    if (areAllQuestsComplete([...CVCC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("MAGIC_E")) {
+      loadMagicEQuests();
+    }
+    if (areAllQuestsComplete([...MAGIC_E_QUEST_IDS]) || devUnlock || isPlacementUnlocked("CVVC")) {
       loadCvvcQuests();
+    }
+    if (areAllQuestsComplete([...CVVC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("ADVANCED")) {
+      loadAdvancedQuests();
     }
   }, [devUnlock]);
 
@@ -539,6 +605,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   const handleInsightsClick = () => {
     setShowParentGate(true);
   };
+  void handleInsightsClick; // hidden in demo mode
 
   const handleParentGatePass = () => {
     setShowParentGate(false);
@@ -577,35 +644,41 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   };
 
   // ---- WW positioning ----
-  // Special value: 'trophy' means WW is at trophy node
+  // Special values: 'trophy' = at trophy node, 'discovery' = at discovery node
   const initialWwLevel = useMemo(() => {
+    if (discoveryNodeState === "active") {
+      return 'discovery' as const;
+    }
     if (trophyNodeState === "active") {
       return 'trophy' as const;
     }
     return progress.currentWordIndex;
   }, []);
-  
-  const [wwLevel, setWwLevel] = useState<number | 'trophy'>(
+
+  const [wwLevel, setWwLevel] = useState<number | 'trophy' | 'discovery'>(
     arrivedFromWord !== null ? arrivedFromWord : initialWwLevel
   );
   const [wwAnimating, setWwAnimating] = useState(false);
   const animTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    // Case 1: Arrived from node 16 (index 15), trophy is active → animate to trophy
-    if (arrivedFromWord === 15 && trophyNodeState === "active") {
-      setWwLevel(15); // Start at node 16
+    // Case 1: Arrived from node 8 (index 7), trophy is active → animate to trophy
+    if (arrivedFromWord === 7 && trophyNodeState === "active") {
+      setWwLevel(7); // Start at node 8
       setWwAnimating(false);
       animTimerRef.current = setTimeout(() => {
         setWwAnimating(true);
         setWwLevel('trophy'); // Slide to trophy
       }, 80);
     }
-    // Case 2: Arrived back from trophy room (trophy now complete)
-    // → WW stays at trophy, quest fully done
-    else if (arrivedFromWord === 15 && trophyProgress.trophyRoomComplete) {
-      setWwLevel('trophy');
+    // Case 2: Arrived from node 16 (index 15), discovery is active → animate to discovery
+    else if (arrivedFromWord === 15 && discoveryNodeState === "active") {
+      setWwLevel(15); // Start at node 16
       setWwAnimating(false);
+      animTimerRef.current = setTimeout(() => {
+        setWwAnimating(true);
+        setWwLevel('discovery'); // Slide to discovery node
+      }, 80);
     }
     // Case 3: Normal node-to-node movement
     else if (arrivedFromWord !== null && arrivedFromWord !== progress.currentWordIndex) {
@@ -616,18 +689,27 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         setWwLevel(progress.currentWordIndex);
       }, 80);
     }
-    // Case 4: Trophy is active but no animation needed (fresh load)
+    // Case 4: Discovery is active but no animation needed (fresh load)
+    else if (discoveryNodeState === "active" && arrivedFromWord === null) {
+      setWwLevel('discovery');
+    }
+    // Case 5: Trophy is active but no animation needed (fresh load)
     else if (trophyNodeState === "active" && arrivedFromWord === null) {
       setWwLevel('trophy');
     }
-    
+
     return () => { if (animTimerRef.current) clearTimeout(animTimerRef.current); };
-  }, [arrivedFromWord, progress.currentWordIndex, trophyNodeState, trophyProgress.trophyRoomComplete]);
+  }, [arrivedFromWord, progress.currentWordIndex, trophyNodeState, discoveryNodeState, trophyProgress.trophyRoomComplete]);
 
   // Calculate WW position based on active node (horizontal layout)
-  // Special case: when trophy node is active, position WW at trophy
   const wwPosition = useMemo(() => {
-    // If WW level is 'trophy', position at trophy node
+    if (wwLevel === 'discovery') {
+      return {
+        left: `${DISCOVERY_POSITION.x}%`,
+        top: `calc(${DISCOVERY_POSITION.y}% - 70px)`,
+        transform: 'translateX(-50%)',
+      };
+    }
     if (wwLevel === 'trophy') {
       return {
         left: `${TROPHY_POSITION.x}%`,
@@ -647,18 +729,26 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   // Generate SVG path for the glowing learning line (horizontal flow)
   const pathD = useMemo(() => {
-    // Path flows: 1→2→3→...→16 → TROPHY (linear, trophy at the end)
+    // Path flows: 1→...→8 → TROPHY → 9→...→16 → DISCOVERY
     const points = NODE_POSITIONS;
-    
-    // Full path through all 16 nodes
+
+    // Nodes 1-8
     let d = `M ${points[0].x} ${points[0].y}`;
-    for (let i = 1; i < 16; i++) {
+    for (let i = 1; i < 8; i++) {
       d += ` L ${points[i].x} ${points[i].y}`;
     }
-    
-    // Node 16 to Trophy node (final reward)
+
+    // Node 8 to Trophy node (midpoint reward)
     d += ` L ${TROPHY_POSITION.x} ${TROPHY_POSITION.y}`;
-    
+
+    // Trophy to Nodes 9-16
+    for (let i = 8; i < 16; i++) {
+      d += ` L ${points[i].x} ${points[i].y}`;
+    }
+
+    // Node 16 to Discovery node (final reward)
+    d += ` L ${DISCOVERY_POSITION.x} ${DISCOVERY_POSITION.y}`;
+
     return d;
   }, []);
 
@@ -805,20 +895,50 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             {trophyNodeState === "active" && (
               <div className="trophy-node__glow" />
             )}
-            {trophyNodeState === "completed" && (
+          </button>
+        </div>
+
+        {/* Discovery Room Node — only visible when active or completed */}
+        {discoveryNodeState !== "locked" && (
+        <div
+          className={`trophy-node-wrapper${discoveryNodeState === "active" ? ' trophy-node-wrapper--celebrating' : ''}`}
+          style={{
+            position: 'absolute',
+            left: `${DISCOVERY_POSITION.x}%`,
+            top: `${DISCOVERY_POSITION.y}%`,
+            transform: 'translate(-50%, -50%)',
+            zIndex: 15,
+          }}
+        >
+          <div className="trophy-node__spotlight" />
+          <button
+            className={`trophy-node trophy-node--${discoveryNodeState}`}
+            onClick={() => {
+              if (discoveryNodeState === "active") {
+                onEnterDiscoveryRoom?.();
+              }
+            }}
+            aria-label={`Discovery Room — ${discoveryNodeState}`}
+          >
+            <span style={{ fontSize: 28 }}>🔬</span>
+            {discoveryNodeState === "active" && (
+              <div className="trophy-node__glow" />
+            )}
+            {discoveryNodeState === "completed" && (
               <span className="trophy-node__check">✓</span>
             )}
           </button>
         </div>
+        )}
 
-        {/* WiggleWoo positioned near active node or trophy */}
-        {(activeNodeIndex >= 0 || trophyNodeState === "active") && (
+        {/* WiggleWoo positioned near active node, trophy, or discovery */}
+        {(activeNodeIndex >= 0 || trophyNodeState === "active" || discoveryNodeState === "active") && (
           <div
             className={`map-wigglewoo ${wwAnimating ? "map-wigglewoo--moving" : ""}`}
             style={wwPosition}
           >
             <img
-              src={heroImg}
+              src={skinAssets.heroImg || heroImg}
               alt="WiggleWoo"
               className="map-wigglewoo__img"
               draggable={false}
@@ -868,19 +988,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         />
       </div>
 
-      {/* STICKER BOOK — below trophy showcase */}
-      <button
-        className="stickerbook-map-btn"
-        onClick={onOpenStickerBook}
-        aria-label="Open Sticker Book"
-      >
-        <img
-          className="stickerbook-map-btn__img"
-          src="/assets/sticker book/sticker-book-closed.png"
-          alt="Sticker Book"
-          draggable={false}
-        />
-      </button>
+      {/* WARDROBE — hidden in demo mode */}
 
       {/* WORD QUEST BOX — right side */}
       <div className="word-quest-box">
@@ -895,7 +1003,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             </button>
           )}
           <span className="word-quest-box__title">
-            {questBoxView === "types" ? "Quest Type" : `${selectedQuestType} Quests`}
+            {questBoxView === "types" ? "Quest Type" : `${effectiveQuestTypes.find(t => t.id === selectedQuestType)?.label ?? selectedQuestType} Quests`}
           </span>
         </div>
         <div className="word-quest-box__content">
@@ -918,6 +1026,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                 >
                   {type.label}
                   {!type.unlocked && <span className="word-quest-box__lock">🔒</span>}
+                  {!type.unlocked && type.unlockHint && (
+                    <span className="word-quest-box__tooltip">{type.unlockHint}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -946,44 +1057,59 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         </div>
       </div>
 
-      {/* PARENT DASHBOARD — gear icon → parent gate → dashboard */}
-      <button
-        className="insights-map-btn"
-        onClick={handleInsightsClick}
-        title="Parent Dashboard"
-        aria-label="Parent Dashboard"
-      >
-        <img src="/assets/gear1.png" alt="" style={{ width: 24, height: 24 }} draggable={false} />
-      </button>
+      {/* Demo educator banner */}
+      <div className="demo-banner">
+        <span className="demo-banner__text">Tap a gear node to start a word!</span>
+      </div>
 
-      {/* DEV UNLOCK TOGGLE */}
+      {/* DEV CONTROLS — horizontal row at top center */}
       {import.meta.env.DEV && (
-        <button
-          className={`dev-unlock-btn ${devUnlock ? "dev-unlock-btn--active" : ""}`}
-          onClick={toggleDevUnlock}
-          title={`Dev Unlock: ${devUnlock ? "ON" : "OFF"} — [ ] to cycle quests`}
-        >
-          🔓 Dev {devUnlock ? "ON" : "OFF"}
-        </button>
-      )}
-
-      {/* DEV: Hide/Show Nodes toggle */}
-      {import.meta.env.DEV && (
-        <button
-          className={`dev-unlock-btn ${devHideNodes ? "dev-unlock-btn--active" : ""}`}
-          onClick={() => setDevHideNodes((h) => !h)}
-          style={{ bottom: "40px", top: "auto" }}
-          title="Toggle node visibility for layout work"
-        >
-          {devHideNodes ? "👁 Show Nodes" : "🙈 Hide Nodes"}
-        </button>
-      )}
-
-      {/* DEBUG LABEL */}
-      {import.meta.env.DEV && (
-        <div className="dev-debug-label">
-          ActiveQuest: {quest.patternType.toUpperCase()} ({quest.id})<br />
-          ActiveTrack: {quest.title}
+        <div className="dev-controls-bar">
+          <button
+            className={`dev-unlock-btn ${devUnlock ? "dev-unlock-btn--active" : ""}`}
+            onClick={toggleDevUnlock}
+            title={`Dev Unlock: ${devUnlock ? "ON" : "OFF"}`}
+          >
+            🔓 {devUnlock ? "ON" : "OFF"}
+          </button>
+          <button
+            className={`dev-unlock-btn ${devHideNodes ? "dev-unlock-btn--active" : ""}`}
+            onClick={() => setDevHideNodes((h) => !h)}
+            title="Toggle node visibility"
+          >
+            {devHideNodes ? "👁 Nodes" : "🙈 Nodes"}
+          </button>
+          <button
+            className="dev-unlock-btn"
+            onClick={onRestartQuest}
+            title="Reset current quest"
+          >
+            🔄 Quest
+          </button>
+          <button
+            className="dev-unlock-btn"
+            style={{ color: "#ff6b6b" }}
+            onClick={onDevResetAll}
+            title="Reset ALL progress"
+          >
+            💣 Reset
+          </button>
+          <button
+            className="dev-unlock-btn"
+            style={{ color: "#4FC3F7" }}
+            onClick={onEnterDiscoveryRoom}
+            title="Jump to Discovery Room"
+          >
+            🔬 Discovery
+          </button>
+          <button
+            className="dev-unlock-btn"
+            style={{ color: "#FFD700" }}
+            onClick={onEnterTrophyRoom}
+            title="Jump to Trophy Room"
+          >
+            🏆 Trophy
+          </button>
         </div>
       )}
 

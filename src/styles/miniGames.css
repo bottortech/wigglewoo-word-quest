@@ -1,0 +1,1001 @@
+/* =============================================
+   miniGames.css — Discovery Room mini-games
+   =============================================
+   Shared styles for all 3 game types + session
+   orchestrator. Themed via CSS vars + classes.
+   ============================================= */
+
+/* ---- Overlay — sits on top of Discovery Room ---- */
+
+.mg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mg-overlay-in 0.4s ease-out;
+}
+
+@keyframes mg-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mg-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: none;
+}
+
+.mg-overlay__panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+@keyframes mg-panel-pop {
+  from { transform: scale(0.9) translateY(20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ---- Session wrapper (inside the panel) ---- */
+
+.mg-session {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mg-back-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mg-step-dots {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+}
+
+.mg-step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: background 0.3s;
+}
+
+.mg-step-dot--active {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+.mg-step-dot--done {
+  background: #66BB6A;
+  box-shadow: 0 0 4px rgba(102, 187, 106, 0.4);
+}
+
+/* ---- Shared game container ---- */
+
+.mg-game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(40px, 8vh, 60px) clamp(12px, 3vw, 24px) clamp(12px, 2vh, 20px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Subtle top gradient for header readability */
+.mg-game::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---- Header ---- */
+
+.mg-header {
+  text-align: center;
+  margin-bottom: clamp(8px, 2vh, 16px);
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.45);
+  padding: clamp(6px, 1.2vh, 10px) clamp(16px, 4vw, 28px);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.mg-header__title {
+  margin: 0;
+  font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: clamp(18px, min(4vw, 5vh), 28px);
+  font-weight: 800;
+  color: #fff;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.mg-header__subtitle {
+  margin: 4px 0 0;
+  font-size: clamp(11px, min(2vw, 3vh), 15px);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Progress badge ---- */
+
+.mg-progress {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 10px;
+  z-index: 10;
+}
+
+/* =============================================
+   RHYME POP
+   ============================================= */
+
+.mg-rhyme-field {
+  flex: 1;
+  width: 100%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Game board — glass panel matching title style */
+.mg-play-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 18px;
+  padding: clamp(10px, 2vh, 18px) clamp(12px, 2.5vw, 20px);
+}
+
+/* 3x3 grid */
+.mg-play-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: clamp(6px, 1.2vw, 12px);
+}
+
+.mg-grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(56px, min(12vw, 14vh), 86px);
+  min-height: clamp(56px, min(12vw, 14vh), 86px);
+}
+
+/* Grid-based rhyme object */
+.mg-rhyme-object--grid {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(56px, min(12vw, 14vh), 86px);
+  height: clamp(56px, min(12vw, 14vh), 86px);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(14px, min(2.5vw, 3.5vh), 20px);
+  font-weight: 800;
+  color: #1a237e;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.7), rgba(150,210,255,0.4));
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15), inset 0 -2px 6px rgba(0, 0, 0, 0.05);
+  animation: mg-float-grid 3s ease-in-out infinite;
+  transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mg-rhyme-object--grid:active {
+  transform: scale(0.9);
+}
+
+.mg-rhyme-object--wobble-grid {
+  animation: mg-wobble-grid 0.5s ease-in-out !important;
+}
+
+.mg-rhyme-object__word {
+  pointer-events: none;
+}
+
+/* Image-based objects (e.g. butterflies) */
+.mg-rhyme-object--grid.mg-rhyme-object--has-image {
+  background: none;
+  border: none;
+  box-shadow: none;
+  width: clamp(76px, min(17vw, 19vh), 108px);
+  height: clamp(76px, min(17vw, 19vh), 108px);
+}
+
+.mg-rhyme-object__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: brightness(0.55) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.mg-rhyme-object--has-image .mg-rhyme-object__word {
+  position: relative;
+  z-index: 2;
+  font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: clamp(18px, min(3.8vw, 4.5vh), 26px);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Ocean bubble style */
+.mg-rhyme-object--bubble {
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.8), rgba(100,200,255,0.3));
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Volcano lava rock style */
+.mg-rhyme-object--lava-rock {
+  background: radial-gradient(circle at 40% 35%, #ff8a65, #bf360c);
+  color: #fff;
+  border: 2px solid rgba(255, 100, 0, 0.4);
+}
+
+/* Pop effect (grid) */
+.mg-rhyme-pop-effect--grid {
+  font-size: 28px;
+  animation: mg-pop-burst 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes mg-pop-burst {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* Gentle float — stays within grid cell */
+@keyframes mg-float-grid {
+  0%, 100% { transform: translateY(0); }
+  33%      { transform: translate(2px, -4px); }
+  66%      { transform: translate(-2px, -2px); }
+}
+
+@keyframes mg-wobble-grid {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25%      { transform: translateX(-6px) rotate(-4deg); }
+  75%      { transform: translateX(6px) rotate(4deg); }
+}
+
+/* =============================================
+   LETTER BUILDER
+   ============================================= */
+
+.mg-build-display {
+  display: flex;
+  gap: clamp(6px, 1.5vw, 12px);
+  justify-content: center;
+  margin-bottom: clamp(10px, 2vh, 20px);
+  z-index: 10;
+}
+
+.mg-build-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, min(8vw, 10vh), 64px);
+  height: clamp(40px, min(8vw, 10vh), 64px);
+  border: 3px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(22px, min(5vw, 7vh), 36px);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s;
+}
+
+.mg-build-slot--filled {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.8);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  animation: mg-slot-fill 0.3s ease-out;
+}
+
+.mg-build-display--complete .mg-build-slot {
+  border-color: #66BB6A;
+  color: #66BB6A;
+  background: rgba(102, 187, 106, 0.15);
+}
+
+@keyframes mg-slot-fill {
+  0%   { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.mg-builder-field {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  z-index: 5;
+}
+
+.mg-carrier {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  animation: mg-swim 4s ease-in-out infinite;
+}
+
+.mg-carrier:active {
+  transform: scale(0.9);
+}
+
+.mg-carrier--shake {
+  animation: mg-wobble 0.4s ease-in-out;
+}
+
+.mg-carrier__emoji {
+  font-size: clamp(20px, min(4vw, 5vh), 30px);
+  pointer-events: none;
+}
+
+.mg-carrier__image {
+  width: clamp(32px, min(6vw, 7vh), 48px);
+  height: clamp(32px, min(6vw, 7vh), 48px);
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.mg-carrier__letter {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(18px, min(3.5vw, 5vh), 28px);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+@keyframes mg-swim {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25%      { transform: translateX(5px) translateY(-4px); }
+  50%      { transform: translateX(-3px) translateY(3px); }
+  75%      { transform: translateX(4px) translateY(-2px); }
+}
+
+/* =============================================
+   VOWEL BUILDER (missing vowel)
+   ============================================= */
+
+.mg-vowel-word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 16px);
+  margin-bottom: clamp(12px, 3vh, 24px);
+  z-index: 10;
+  transition: transform 0.3s;
+}
+
+.mg-vowel-word--correct {
+  animation: mg-vowel-celebrate 0.5s ease-out;
+}
+
+@keyframes mg-vowel-celebrate {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.mg-vowel-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(50px, min(12vw, 14vh), 80px);
+  height: clamp(50px, min(12vw, 14vh), 80px);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(28px, min(7vw, 9vh), 48px);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.mg-vowel-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(50px, min(12vw, 14vh), 80px);
+  height: clamp(50px, min(12vw, 14vh), 80px);
+  border-radius: 14px;
+  background: rgba(255, 215, 0, 0.12);
+  border: 3px dashed rgba(255, 215, 0, 0.5);
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(28px, min(7vw, 9vh), 48px);
+  font-weight: 900;
+  color: rgba(255, 215, 0, 0.6);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+  animation: mg-vowel-pulse 2s ease-in-out infinite;
+}
+
+.mg-vowel-blank--filled {
+  border-style: solid;
+  border-color: #66BB6A;
+  background: rgba(102, 187, 106, 0.2);
+  color: #66BB6A;
+  animation: none;
+}
+
+@keyframes mg-vowel-pulse {
+  0%, 100% { border-color: rgba(255, 215, 0, 0.5); }
+  50%      { border-color: rgba(255, 215, 0, 0.8); }
+}
+
+.mg-vowel-success {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(20px, min(5vw, 6vh), 32px);
+  font-weight: 800;
+  color: #66BB6A;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: mg-slot-fill 0.3s ease-out;
+  z-index: 10;
+  margin-bottom: clamp(8px, 2vh, 16px);
+}
+
+.mg-vowel-choices {
+  display: flex;
+  gap: clamp(8px, 2vw, 14px);
+  justify-content: center;
+  z-index: 10;
+}
+
+.mg-vowel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(42px, min(9vw, 11vh), 64px);
+  height: clamp(42px, min(9vw, 11vh), 64px);
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(20px, min(4.5vw, 6vh), 32px);
+  font-weight: 900;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mg-vowel-btn:hover {
+  border-color: var(--accent, rgba(255, 255, 255, 0.6));
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.08);
+}
+
+.mg-vowel-btn:active {
+  transform: scale(0.95);
+}
+
+.mg-vowel-btn--wrong {
+  animation: mg-wobble 0.4s ease-in-out;
+  border-color: #ef5350;
+  background: rgba(239, 83, 80, 0.2);
+}
+
+/* =============================================
+   WORD SORT
+   ============================================= */
+
+.mg-sort-current {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: clamp(12px, 3vh, 24px);
+  z-index: 10;
+}
+
+.mg-sort-word {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mg-sort-word--selected {
+  border-color: var(--accent, #fff);
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.mg-sort-word--wrong {
+  animation: mg-wobble 0.4s ease-in-out;
+  border-color: #ef5350;
+}
+
+.mg-sort-word__emoji {
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.mg-sort-word__image {
+  width: clamp(28px, min(5vw, 6vh), 40px);
+  height: clamp(28px, min(5vw, 6vh), 40px);
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+.mg-sort-word__text {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(18px, min(4vw, 5vh), 28px);
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.mg-sort-complete {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(20px, 4vw, 30px);
+  font-weight: 800;
+  color: #66BB6A;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mg-sort-bins {
+  display: flex;
+  gap: clamp(8px, 2vw, 16px);
+  justify-content: center;
+  flex-wrap: wrap;
+  z-index: 10;
+}
+
+.mg-sort-bin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: clamp(100px, min(25vw, 28vh), 150px);
+  height: clamp(100px, min(25vw, 28vh), 150px);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mg-sort-bin:hover {
+  filter: brightness(1.15);
+}
+
+.mg-sort-bin:active {
+  transform: scale(0.93);
+}
+
+.mg-sort-bin__emoji {
+  font-size: clamp(40px, min(9vw, 10vh), 60px);
+  pointer-events: none;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
+}
+
+.mg-sort-bin__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+}
+
+.mg-sort-bin__label {
+  position: relative;
+  z-index: 2;
+  font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: clamp(20px, min(4.5vw, 6vh), 30px);
+  font-weight: 900;
+  color: #fff;
+  pointer-events: none;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.7),
+    0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.mg-sort-bin__count {
+  position: relative;
+  z-index: 2;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* =============================================
+   FACT REVEAL (between games)
+   ============================================= */
+
+.mg-fact-reveal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  cursor: pointer;
+  animation: step-fade-in 0.3s ease-out;
+}
+
+.mg-fact-reveal__card {
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: clamp(20px, 4vh, 32px) clamp(20px, 4vw, 36px);
+  max-width: 420px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: mg-card-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes mg-card-pop {
+  0%   { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.mg-fact-reveal__star {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.mg-fact-reveal__title {
+  margin: 0 0 8px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(18px, 4vw, 26px);
+  font-weight: 800;
+  color: #ffd700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mg-fact-reveal__text {
+  margin: 0 0 12px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(13px, min(2.5vw, 3.5vh), 18px);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+}
+
+.mg-fact-reveal__hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+}
+
+/* =============================================
+   SESSION COMPLETE
+   ============================================= */
+
+.mg-complete {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.mg-complete__content {
+  text-align: center;
+  animation: mg-card-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mg-complete__emoji {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.mg-complete__title {
+  margin: 0;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(24px, 5vw, 36px);
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.mg-complete__sub {
+  margin: 8px 0 0;
+  font-size: clamp(13px, 2.5vw, 18px);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+/* =============================================
+   FEEDBACK OVERLAY
+   ============================================= */
+
+.mg-feedback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 16px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-weight: 700;
+  pointer-events: none;
+  animation: mg-feedback-pop 0.8s ease-out forwards;
+}
+
+.mg-feedback--success {
+  background: rgba(102, 187, 106, 0.9);
+  color: #fff;
+}
+
+.mg-feedback--error {
+  background: rgba(239, 83, 80, 0.8);
+  color: #fff;
+}
+
+.mg-feedback__emoji { font-size: 20px; }
+.mg-feedback__text { font-size: 14px; }
+
+@keyframes mg-feedback-pop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  40%  { transform: translate(-50%, -50%) scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -60%); }
+}
+
+/* Reuse from game.css */
+@keyframes step-fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* =============================================
+   SOUND POP — listen & match word game
+   ============================================= */
+
+.mg-soundpop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Onset prompt — large CA _ display */
+.mg-soundpop-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 1vw, 8px);
+  margin: clamp(12px, 3vh, 24px) 0 clamp(16px, 3vh, 28px);
+}
+
+.mg-soundpop-prompt__onset {
+  font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: clamp(36px, min(9vw, 12vh), 56px);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 4px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.mg-soundpop-prompt__blank {
+  font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: clamp(36px, min(9vw, 12vh), 56px);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 4px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  min-width: clamp(30px, 6vw, 44px);
+  text-align: center;
+  border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.mg-soundpop-prompt__blank--filled {
+  color: #66BB6A;
+  border-color: #66BB6A;
+}
+
+/* Letter choice row */
+.mg-soundpop-letters {
+  display: flex;
+  gap: clamp(10px, 2.5vw, 18px);
+  justify-content: center;
+}
+
+/* Individual letter choice — large themed bubble with letter inside */
+.mg-soundpop-letter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(80px, min(20vw, 22vh), 120px);
+  height: clamp(80px, min(20vw, 22vh), 120px);
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  animation: mg-soundpop-float 3s ease-in-out infinite;
+}
+
+.mg-soundpop-letter:nth-child(2) { animation-delay: 0.3s; }
+.mg-soundpop-letter:nth-child(3) { animation-delay: 0.6s; }
+.mg-soundpop-letter:nth-child(4) { animation-delay: 0.9s; }
+
+@keyframes mg-soundpop-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+.mg-soundpop-letter:active {
+  transform: scale(0.9);
+}
+
+/* Themed image IS the button — full size, fully visible */
+.mg-soundpop-letter__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.35));
+}
+
+/* Letter text — centered on the object */
+.mg-soundpop-letter__text {
+  position: relative;
+  z-index: 2;
+  font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: clamp(28px, min(7vw, 9vh), 42px);
+  font-weight: 900;
+  color: #fff;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.7),
+    0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Correct — green glow */
+.mg-soundpop-letter--correct {
+  filter: brightness(1.2);
+}
+.mg-soundpop-letter--correct::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 3px solid rgba(76, 175, 80, 0.8);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+  animation: mg-soundpop-correct 0.4s ease-out;
+}
+
+@keyframes mg-soundpop-correct {
+  0%   { transform: scale(0.9); opacity: 0; }
+  50%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Wrong — shake */
+.mg-soundpop-letter--wrong {
+  animation: mg-soundpop-shake 0.4s ease-out;
+}
+
+@keyframes mg-soundpop-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+
+/* Vowel highlight reveal — after correct answer */
+.mg-soundpop-reveal {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mg-soundpop-reveal-in 0.3s ease-out;
+}
+
+@keyframes mg-soundpop-reveal-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.mg-soundpop-highlight {
+  font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: clamp(40px, min(10vw, 14vh), 64px);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 6px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mg-soundpop-highlight__vowel {
+  color: #FFD54F;
+  text-shadow:
+    0 0 12px rgba(255, 213, 79, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}

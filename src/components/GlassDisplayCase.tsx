@@ -12,12 +12,13 @@ import silhouetteImg from "../assets/silhouette-trophy.png";
 import type { PatternType } from "../game/types";
 import "../styles/trophy-showcase.css";
 
-// Pattern type to champion label
+// Pattern type to champion label (user-facing tier names)
 const CHAMPION_LABELS: Record<PatternType, string> = {
-  cvc: "CVC",
-  cvcc: "CVCC",
-  cvvc: "CVVC",
-  ccvc: "CCVC",
+  cvc: "Sound Builders",
+  cvcc: "Blending Power",
+  "magic-e": "Magic E",
+  cvvc: "Vowel Teams",
+  advanced: "Advanced Reading",
 };
 
 interface GlassDisplayCaseProps {

@@ -576,8 +576,8 @@
    ========================================== */
 .gear-node {
   position: relative;
-  width: 24px;
-  height: 24px;
+  width: 38px;
+  height: 38px;
   border: none;
   background: radial-gradient(circle at 30% 30%, #fff8e6 0%, #f5d89b 70%);
   border: 2px solid #b8860b;
@@ -913,24 +913,6 @@
 @media (max-width: 600px) {
   /* NO overlay repositioning — mobile uses same bounds as desktop
      for proportional scale-down behavior */
-
-  .gear-node {
-    width: 38px;
-    height: 38px;
-  }
-
-  .gear-node__content {
-    font-size: 12px;
-  }
-
-  .gear-node--completed .gear-node__content {
-    font-size: 16px;
-  }
-
-  .gear-node__glow {
-    width: 55px;
-    height: 55px;
-  }
 
   .map-wigglewoo__img {
     width: 60px;
@@ -1575,6 +1557,104 @@
   line-height: 1.5;
 }
 
+/* ---- WARDROBE MAP BUTTON ---- */
+.wardrobe-map-btn {
+  position: absolute;
+  bottom: 4px;
+  left: calc(3% + 35px);
+  transform: translateX(-50%);
+  z-index: 50;
+  width: 74px;
+  height: 74px;
+  padding: 6px;
+  background: radial-gradient(circle at 40% 35%, rgba(60, 45, 90, 0.95), rgba(30, 20, 50, 0.95));
+  border: 3px solid rgba(180, 140, 255, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(140, 80, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.wardrobe-map-btn:hover {
+  transform: translateX(-50%) scale(1.12);
+  border-color: rgba(180, 140, 255, 0.8);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(140, 80, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.wardrobe-map-btn:active {
+  transform: translateX(-50%) scale(1.05);
+}
+
+.wardrobe-map-btn__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+}
+
+/* Pulse when new skin available */
+.wardrobe-map-btn--new {
+  animation: wardrobe-pulse 1.5s ease-in-out infinite;
+  border-color: rgba(255, 215, 0, 0.7);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(255, 215, 0, 0.3);
+}
+
+@keyframes wardrobe-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); box-shadow: 0 3px 10px rgba(0,0,0,0.5), 0 0 16px rgba(255,215,0,0.3); }
+  50%      { transform: translateX(-50%) scale(1.08); box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 0 24px rgba(255,215,0,0.5); }
+}
+
+.wardrobe-map-btn__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 8px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(255, 68, 68, 0.4);
+  animation: badge-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badge-pop {
+  0%   { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+/* ---- DEV CONTROLS BAR ---- */
+.dev-controls-bar {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.dev-controls-bar .dev-unlock-btn {
+  position: static;
+  opacity: 0.7;
+}
+
 /* Trophy transition styles → see trophy-transition.css */
 
 
@@ -1619,6 +1699,37 @@
   15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
   75%  { opacity: 1; }
   100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+}
+
+/* Demo educator banner — top center, above the map */
+.demo-banner {
+  position: absolute;
+  top: clamp(4px, 1.2vh, 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  pointer-events: none;
+}
+
+.demo-banner__text {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(11px, 1.6vw, 15px);
+  font-weight: 700;
+  padding: clamp(4px, 0.8vh, 8px) clamp(12px, 2vw, 20px);
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  animation: demo-banner-fade 6s ease-out forwards;
+}
+
+@keyframes demo-banner-fade {
+  0%   { opacity: 0; transform: translateY(-6px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .trophy-node--shaking {
@@ -1882,5 +1993,27 @@
   font-size: 12px;
   font-weight: 600;
   color: #795548;
+}
+
+/* ==========================================
+   DESKTOP — scale up map elements
+   ========================================== */
+@media (min-width: 1200px) {
+  .gear-node {
+    width: 44px;
+    height: 44px;
+  }
+
+  .gear-node__content {
+    font-size: 15px;
+  }
+
+  .gear-node--completed .gear-node__content {
+    font-size: 20px;
+  }
+
+  .word-quest-box {
+    width: 140px;
+  }
 }
 

@@ -47,6 +47,56 @@ const WORD_EMOJI_FALLBACK: Record<string, string> = {
   // Short E (nodes 9-16)
   pet: "🐾", ten: "🔟", beg: "🙏", peg: "🪝",
   set: "📐", get: "🎁", men: "👨", vet: "👨‍⚕️",
+
+  // Blends (placement test + future tiers)
+  hand: "✋", stop: "🛑", flag: "🚩", lamp: "💡", drum: "🥁",
+  frog: "🐸", snap: "🫰", milk: "🥛", desk: "🪑",
+
+  // Magic E
+  cape: "🦸", kite: "🪁", cone: "🍦", cube: "🧊",
+  cake: "🎂", bike: "🚲", bone: "🦴", home: "🏠",
+  lake: "🏞️", gate: "🚪", maze: "🌀", wave: "🌊",
+  name: "📛", tape: "📼", cave: "🦇", rose: "🌹",
+  nose: "👃", rope: "🪢", hole: "🕳️", pole: "🏗️",
+  cute: "🥰", mule: "🫏", tune: "🎵", dune: "🏜️",
+  rule: "📏", huge: "🐘", fuse: "💥", ride: "🎠",
+  hide: "🙈", time: "⏰", line: "📏", five: "5️⃣",
+  dice: "🎲", mice: "🐭", fire: "🔥", wide: "↔️",
+  note: "📝", hope: "🌈", joke: "😂", vote: "🗳️",
+
+  // Vowel teams (placement test + future tiers)
+  boat: "⛵", rain: "🌧️", team: "👥", seed: "🌱", coat: "🧥",
+  road: "🛣️", tail: "🦊", bead: "📿", goat: "🐐",
+
+  // Advanced Reading
+  bird: "🐦", car: "🚗", jar: "🏺", star: "⭐",
+  farm: "🌾", corn: "🌽", fork: "🍴", park: "🏞️",
+  horn: "📯", barn: "🏚️", fern: "🌿", turn: "↩️",
+  girl: "👧", burn: "🔥", dirt: "🟤", curl: "💇",
+  surf: "🏄", shark: "🦈", storm: "⛈️", shirt: "👕",
+  nurse: "👩‍⚕️", sunset: "🌅", basket: "🧺", rabbit: "🐇",
+  kitten: "🐱", mitten: "🧤", magnet: "🧲", picnic: "🧺",
+  insect: "🐛", napkin: "🧻", puppet: "🎭", fossil: "🦕",
+  cactus: "🌵", garden: "🌻", corner: "📐", sister: "👩",
+  butter: "🧈", market: "🏪", winter: "❄️", dinner: "🍽️",
+  hammer: "🔨", doctor: "👨‍⚕️", number: "🔢", pencil: "✏️",
+  tunnel: "🚇", blanket: "🛏️", pumpkin: "🎃", kitchen: "🍳",
+
+  // Advanced Reading (multisyllable + compound + longer)
+  rocket: "🚀", pocket: "👖", jacket: "🧥",
+  helmet: "⛑️", muffin: "🧁", cupcake: "🧁", hotdog: "🌭",
+  bathtub: "🛁", bedtime: "🛏️", fishpond: "🐟", catnap: "😴",
+  hilltop: "⛰️", anthill: "🐜", fishbowl: "🐟", laptop: "💻",
+  cobweb: "🕸️", zigzag: "〰️", pigtail: "🎀",
+  sandbox: "🏖️", teacup: "☕", snowman: "⛄", plastic: "♻️", trumpet: "🎺",
+  chicken: "🐔", kingdom: "👑",
+  dentist: "🦷", contest: "🏆", catfish: "🐟", dolphin: "🐬",
+  frisbee: "🥏", penguin: "🐧", monster: "👾",
+  button: "🔘", cotton: "☁️", lemon: "🍋", melon: "🍈",
+  rainbow: "🌈", pancake: "🥞", backpack: "🎒", popcorn: "🍿",
+  jellyfish: "🪼", drumstick: "🥁", sandwich: "🥪", football: "🏈",
+  windmill: "🌀", notebook: "📓", goldfish: "🐠", doghouse: "🏠",
+  mushroom: "🍄", starfish: "⭐", snowflake: "❄️", lunchbox: "🍱",
 };
 
 interface WordImageProps {

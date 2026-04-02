@@ -17,6 +17,7 @@ import { WORDS_PER_QUEST } from "./types";
 const STORAGE_KEY = "wigglewoo-cvc-progress";
 const GLOBAL_KEY = "wigglewoo-global-progress";
 const TROPHY_KEY = "wigglewoo-trophy-progress";
+const DISCOVERY_KEY = "wigglewoo-discovery-all";
 
 /** Persisted progress for a single quest */
 export interface QuestProgress {
@@ -32,6 +33,14 @@ export interface TrophyProgress {
   /** Whether the trophy room after node 8 has been completed */
   trophyRoomComplete: boolean;
   /** Quest ID this trophy belongs to */
+  questId: string;
+}
+
+/** Discovery room progress */
+export interface DiscoveryProgress {
+  /** Whether the discovery room after node 16 has been completed */
+  discoveryRoomComplete: boolean;
+  /** Quest ID this discovery belongs to */
   questId: string;
 }
 
@@ -149,10 +158,11 @@ export function getNodeStates(progress: QuestProgress): NodeState[] {
 }
 
 /**
- * Check if a node is tappable. Only ACTIVE nodes.
+ * Check if a node is tappable. Active and completed nodes are playable
+ * (allows replaying completed words for demo/practice).
  */
 export function isNodeTappable(state: NodeState): boolean {
-  return state === "active";
+  return state === "active" || state === "completed";
 }
 
 // ---- Trophy Room Progress ----
@@ -212,13 +222,59 @@ export function resetTrophyProgress(questId: string): void {
   saveTrophyProgress({ questId, trophyRoomComplete: false });
 }
 
+// ---- Discovery Room Progress ----
+
+/** Load all discovery progress */
+function loadAllDiscoveryProgress(): Record<string, DiscoveryProgress> {
+  try {
+    const raw = localStorage.getItem(DISCOVERY_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* corrupted */ }
+  return {};
+}
+
+function saveAllDiscoveryProgress(data: Record<string, DiscoveryProgress>): void {
+  try {
+    localStorage.setItem(DISCOVERY_KEY, JSON.stringify(data));
+  } catch { /* fail silently */ }
+}
+
+/** Load discovery progress for a quest */
+export function loadDiscoveryProgress(questId: string): DiscoveryProgress {
+  const all = loadAllDiscoveryProgress();
+  return all[questId] ?? { discoveryRoomComplete: false, questId };
+}
+
+/** Save discovery progress */
+export function saveDiscoveryProgress(progress: DiscoveryProgress): void {
+  const all = loadAllDiscoveryProgress();
+  all[progress.questId] = progress;
+  saveAllDiscoveryProgress(all);
+}
+
+/** Mark discovery room as complete */
+export function completeDiscoveryRoom(questId: string): DiscoveryProgress {
+  const progress: DiscoveryProgress = {
+    questId,
+    discoveryRoomComplete: true,
+  };
+  saveDiscoveryProgress(progress);
+  return progress;
+}
+
+/** Reset discovery progress (for quest restart) */
+export function resetDiscoveryProgress(questId: string): void {
+  saveDiscoveryProgress({ questId, discoveryRoomComplete: false });
+}
+
 /**
- * Check if a specific quest is FULLY complete (all nodes + trophy).
+ * Check if a specific quest is FULLY complete (all nodes + trophy + discovery).
  */
 export function isQuestFullyComplete(questId: string): boolean {
   const qp = loadQuestProgress(questId);
   const tp = loadTrophyProgress(questId);
-  return qp.questComplete && tp.trophyRoomComplete;
+  const dp = loadDiscoveryProgress(questId);
+  return qp.questComplete && tp.trophyRoomComplete && dp.discoveryRoomComplete;
 }
 
 /**
@@ -230,29 +286,49 @@ export function areAllQuestsComplete(questIds: string[]): boolean {
 
 /**
  * Check if player should go to trophy room.
- * Returns true after all 16 nodes are complete and trophy hasn't been collected.
+ * Returns true after first 8 nodes are complete and trophy hasn't been collected.
  */
-export function shouldShowTrophyRoom(progress: QuestProgress): boolean {
-  return progress.questComplete;
+export function shouldShowTrophyRoom(progress: QuestProgress, trophyProgress: TrophyProgress): boolean {
+  return progress.currentWordIndex >= 8 && !trophyProgress.trophyRoomComplete;
 }
 
 /**
  * Get trophy node state based on progress.
- * Trophy unlocks only after all 16 nodes are completed.
+ * Trophy unlocks after first 8 nodes are completed (midpoint reward).
  */
 export function getTrophyNodeState(
   questProgress: QuestProgress,
   trophyProgress: TrophyProgress
 ): NodeState {
-  // Trophy node is locked until all 16 nodes are complete
-  if (!questProgress.questComplete) {
+  // Trophy node is locked until first 8 nodes are complete
+  if (questProgress.currentWordIndex < 8) {
     return "locked";
   }
-  // Trophy node is active if quest complete but trophy not collected
+  // Trophy node is active if 8+ nodes done but trophy not collected
   if (!trophyProgress.trophyRoomComplete) {
     return "active";
   }
   // Trophy collected
+  return "completed";
+}
+
+/**
+ * Get discovery room node state based on progress.
+ * Discovery room unlocks after all 16 nodes are completed (final reward).
+ */
+export function getDiscoveryNodeState(
+  questProgress: QuestProgress,
+  discoveryProgress: DiscoveryProgress
+): NodeState {
+  // Discovery node is locked until all 16 nodes are complete
+  if (!questProgress.questComplete) {
+    return "locked";
+  }
+  // Discovery node is active if quest complete but discovery not done
+  if (!discoveryProgress.discoveryRoomComplete) {
+    return "active";
+  }
+  // Discovery room completed
   return "completed";
 }
 
@@ -372,6 +448,24 @@ export function markEnvironmentVisited(envId: string): void {
   localStorage.setItem(ENV_VISITED_KEY, JSON.stringify(visited));
 }
 
+/**
+ * Migration: auto-complete discovery rooms for players who had
+ * fully-complete quests under the old system (nodes + trophy only).
+ * Prevents "un-completing" quests that unlock CVCC/CVVC.
+ */
+export function migrateOldCompletedQuests(allQuestIds: string[]): void {
+  for (const questId of allQuestIds) {
+    const qp = loadQuestProgress(questId);
+    const tp = loadTrophyProgress(questId);
+    const dp = loadDiscoveryProgress(questId);
+    // Old system: quest was fully complete if nodes + trophy done
+    // New system also requires discovery. Auto-grant it.
+    if (qp.questComplete && tp.trophyRoomComplete && !dp.discoveryRoomComplete) {
+      completeDiscoveryRoom(questId);
+    }
+  }
+}
+
 export function countEarnedTrophies(): number {
   const all = loadAllTrophyProgress();
   return Object.values(all).filter(tp => tp.trophyRoomComplete).length;
@@ -427,49 +521,3 @@ export function recordFactDiscovery(roomId: string): void {
   saveFactProgress(data);
 }
 
-// =============================================
-// STICKER TRACKING — individual sticker rewards
-// =============================================
-const STICKER_KEY = "ww_stickers";
-
-/** Load all sticker data: { roomId: { factId: stickerValue } } */
-export function loadStickers(): Record<string, Record<string, number>> {
-  try {
-    return JSON.parse(localStorage.getItem(STICKER_KEY) || "{}");
-  } catch { return {}; }
-}
-
-/** Save sticker data */
-function saveStickers(data: Record<string, Record<string, number>>): void {
-  localStorage.setItem(STICKER_KEY, JSON.stringify(data));
-}
-
-/** Award a sticker for a specific fact in a room */
-export function awardSticker(roomId: string, factId: string, value: 1 | 2): void {
-  const data = loadStickers();
-  if (!data[roomId]) data[roomId] = {};
-  // Only upgrade, never downgrade (if they got 2, keep 2)
-  const current = data[roomId][factId] ?? 0;
-  if (value > current) {
-    data[roomId][factId] = value;
-  }
-  saveStickers(data);
-}
-
-/** Get sticker value for a specific fact (0 = not earned, 1 = learned, 2 = powered up) */
-export function getStickerValue(roomId: string, factId: string): number {
-  const data = loadStickers();
-  return data[roomId]?.[factId] ?? 0;
-}
-
-/** Get total sticker count across all rooms (unique facts discovered) */
-export function getTotalStickerCount(): number {
-  const data = loadStickers();
-  let total = 0;
-  for (const room of Object.values(data)) {
-    for (const val of Object.values(room)) {
-      if (val > 0) total++;
-    }
-  }
-  return total;
-}

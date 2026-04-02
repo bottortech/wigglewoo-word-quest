@@ -85,12 +85,13 @@ function createCardPairs(words: string[]): Card[] {
   return shuffleArray(cards);
 }
 
-// Pattern type to display label
+// Pattern type to display label (user-facing tier names)
 const PATTERN_LABELS: Record<PatternType, string> = {
-  cvc: "CVC",
-  cvcc: "CVCC",
-  cvvc: "CVVC",
-  ccvc: "CCVC",
+  cvc: "Sound Builders",
+  cvcc: "Blending Power",
+  "magic-e": "Magic E",
+  cvvc: "Vowel Teams",
+  advanced: "Advanced Reading",
 };
 
 // Vowel ID to display name

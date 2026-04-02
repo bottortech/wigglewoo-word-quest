@@ -1,64 +1,35 @@
 // =============================================
-// GameScreen.tsx — CVC word-building screen
+// GameScreen.tsx — 2-Step CVC word-learning screen
 // Wigglewoo CVC Quest
 // =============================================
-// GAME RULES (all enforced here + state.ts):
-//   ✓ Drag-and-drop only (no tap-to-place)
-//   ✓ Only correct letters snap into matching slot
-//   ✓ Incorrect drops snap back — no sound, no X, no penalty
-//   ✓ Letters can be removed/replaced by dragging out
-//   ✓ Hint escalation: 1st=nothing, 2nd=point, 3rd=point+phoneme
-//   ✓ Unlimited attempts, no fail state
-//   ✓ Word complete → lock → celebration → auto-advance
-//   ✓ No "Next" button — advancement is automatic
-//   ✓ No score, timer, lives, penalties, or leaderboard
-//   ✓ Word label is HIDDEN — kids solve from image only
+// Step 1: BUILD — image + tap-to-place letters (phoneme per tap)
+// Step 2: REVEAL — completed word large + WiggleWoo + blend audio
+//
+// Flow: build → reveal → next word (continuous)
+// No drag-and-drop. No fill-in-blank. No hint system for nodes 1-8.
 // =============================================
 
-import React, { useReducer, useCallback, useMemo, useEffect, useState, useRef } from "react";
-
-import CelebrationOverlay from "../components/CelebrationOverlay";
-import WordSlot from "../components/WordSlot";
+import React, { useCallback, useMemo, useEffect, useState, useRef } from "react";
 import WordImage from "../components/WordImage";
+import type { Quest, CvcWord, LetterTile } from "../game/types";
+import { FIRST_HALF_WORDS } from "../game/types";
 
-import type {
-  SlotPosition,
-  CvcWord,
-  Quest,
-  LetterTile,
-} from "../game/types";
-
-import { getWordSentence } from "../game/wordData";
-
-import {
-  gameReducer,
-  initGameState,
-  isDropValid,
-} from "../game/state";
-
-import { getHintAction } from "../game/triggers";
-import { useGameDrag } from "../game/useGameDrag";
+import { buildLetterBank } from "../game/state";
+import { getCelebrationTypeForWord } from "../game/triggers";
 import {
   recordCorrectPlacement,
-  recordIncorrectPlacement,
   recordNodeComplete,
   recordTimeSpent,
 } from "../game/analytics";
-
-import {
-  recordWordCompletion,
-  recordIncorrectDrop,
-} from "../game/learningAnalytics";
+import { recordWordCompletion } from "../game/learningAnalytics";
 import { questIdToVowelId } from "../game/wordData";
-
 import {
   playLetterSound,
   playSuccessPhrase,
   playPromptPhrase,
-  playProgressionPhrase,
-  playRetryPhrase,
 } from "../audio/SoundEffects";
-import helperImg from "../assets/wigglewoo_helper_transparent.png";
+import helperImgDefault from "../assets/wigglewoo_helper_transparent.png";
+import { getActiveSkinAssets } from "../game/skins";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import machine1 from "../assets/machine1.png";
 import machine2 from "../assets/machine2.png";
@@ -69,22 +40,63 @@ import gear2 from "../assets/gear2.png";
 import gear3 from "../assets/gear3.png";
 import pipe1 from "../assets/pipe1.png";
 import pipe2 from "../assets/pipe2.png";
+import { saveNodeRating, type WordRating } from "../game/progression";
 import "../styles/game.css";
 import "../styles/questmap.css";
 import "../styles/home.css";
 
 // =============================================
-// SESSION STREAK — persists across GameScreen remounts
+// SESSION STREAK — persists across remounts
 // =============================================
 let sessionStreak = 0;
 
-import { saveNodeRating, type WordRating } from "../game/progression";
+// =============================================
+// Speaker icon — SVG component matching WiggleWoo style
+// =============================================
+const SpeakerIcon: React.FC<{ active: boolean }> = ({ active }) => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="speaker-icon-svg"
+  >
+    {/* Speaker body */}
+    <path
+      d="M3 9v6h4l5 5V4L7 9H3z"
+      fill={active ? "#6C63FF" : "#5A5A7A"}
+      stroke={active ? "#4B44CC" : "#3E3E5C"}
+      strokeWidth="1.2"
+      strokeLinejoin="round"
+    />
+    {/* Sound waves — only visible when active */}
+    {active && (
+      <>
+        <path
+          d="M16.5 7.5a5.5 5.5 0 010 9"
+          stroke="#6C63FF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className="speaker-wave speaker-wave--outer"
+        />
+        <path
+          d="M14 10a2.5 2.5 0 010 4"
+          stroke="#6C63FF"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className="speaker-wave speaker-wave--inner"
+        />
+      </>
+    )}
+    {/* Subtle dot when idle */}
+    {!active && (
+      <circle cx="16" cy="12" r="1.5" fill="#5A5A7A" opacity="0.5" />
+    )}
+  </svg>
+);
 
-function computeWordRating(hintLevel: number): WordRating {
-  if (hintLevel === 0) return "perfect";
-  if (hintLevel <= 2) return "clean";
-  return "assisted";
-}
+type GameStep = "build" | "reveal";
 
 interface GameScreenProps {
   quest: Quest;
@@ -100,28 +112,56 @@ const GameScreen: React.FC<GameScreenProps> = ({
   onGoHome,
 }) => {
   const currentWord: CvcWord = quest.words[currentWordIndex];
-  const wordLength = currentWord.letters.length; // 3, 4, or 5
-  
-  // CSS class for responsive scaling based on word length
+  const wordLength = currentWord.letters.length;
   const wordLengthClass = `word-length-${wordLength}`;
 
-  // Track when WiggleWoo should nod (on correct letter placement)
-  const [helperNodding, setHelperNodding] = useState(false);
+  // Skin-aware WiggleWoo
+  const skinAssets = useMemo(() => getActiveSkinAssets(), []);
+  const helperImg = skinAssets.helperImg || helperImgDefault;
 
-  // Track incorrect drops for mastery analytics
-  const incorrectDropCount = useRef(0);
+  // Should we use distractors? Only for nodes 9-16 (index >= 8)
+  const useDistractors = currentWordIndex >= FIRST_HALF_WORDS;
 
-  // Play "Let's build a word" on first mount
-  const hasPlayedPrompt = useRef(false);
-  useEffect(() => {
-    if (!hasPlayedPrompt.current) {
-      hasPlayedPrompt.current = true;
-      setTimeout(() => playPromptPhrase(), 400);
+  // Build the letter bank — strip distractors for early nodes
+  const letterBank: LetterTile[] = useMemo(() => {
+    const wordForBank: CvcWord = useDistractors
+      ? currentWord
+      : { ...currentWord, distractors: [] };
+    return buildLetterBank(wordForBank);
+  }, [currentWord, useDistractors]);
+
+  // ---- Step state ----
+  const [step, setStep] = useState<GameStep>("build");
+  const [filledSlots, setFilledSlots] = useState<(string | null)[]>(
+    () => Array(wordLength).fill(null)
+  );
+  const [usedTileIds, setUsedTileIds] = useState<Set<string>>(new Set());
+  const [incorrectCount, setIncorrectCount] = useState(0);
+  const nodeStartTime = useRef(Date.now());
+
+  // ---- Speaker / audio replay state ----
+  const [audioActive, setAudioActive] = useState(false);
+  const audioTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const handleSpeakerTap = useCallback(() => {
+    // Replay the appropriate audio for the current step
+    if (step === "build") {
+      playPromptPhrase();
+    } else if (step === "reveal") {
+      playSuccessPhrase();
     }
+    // Show active state briefly
+    setAudioActive(true);
+    if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
+    audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
+  }, [step]);
+
+  // Clear audio timeout on unmount
+  useEffect(() => {
+    return () => { if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current); };
   }, []);
 
-  // Analytics: track time spent on this node
-  const nodeStartTime = useRef(Date.now());
+  // Analytics time tracking
   useEffect(() => {
     nodeStartTime.current = Date.now();
     return () => {
@@ -130,376 +170,225 @@ const GameScreen: React.FC<GameScreenProps> = ({
     };
   }, [quest.id, quest.patternType, currentWordIndex]);
 
-  // =============================================
-  // STATE — single reducer for all game logic
-  // =============================================
-  const [game, dispatch] = useReducer(
-    gameReducer,
-    { questId: quest.id, wordIndex: currentWordIndex, word: currentWord },
-    (init) => initGameState(init.questId, init.wordIndex, init.word)
-  );
-
+  // Play prompt on first mount + flash speaker
+  const hasPlayedPrompt = useRef(false);
   useEffect(() => {
-    dispatch({
-      type: "RESET_WORD",
-      questId: quest.id,
-      wordIndex: currentWordIndex,
-      word: currentWord,
-    });
-  }, [quest.id, currentWordIndex, currentWord]);
-
-  // =============================================
-  // DRAG — custom hook with pointer capture
-  // =============================================
-  const {
-    drag,
-    hoveredSlot,
-    snappingBack,
-    dragTransform,
-    slotRefs,
-    containerRef,
-    beginDrag,
-    onPointerMove,
-    onPointerUp,
-    onPointerCancel,
-    triggerSnapBack,
-    clearDrag,
-  } = useGameDrag();
-
-  // =============================================
-  // DERIVED DATA
-  // =============================================
-  const hintAction = useMemo(() => getHintAction(game.hint), [game.hint]);
-
-  const tilesInSlots = useMemo(() => {
-    const set = new Set<string>();
-    game.slots.forEach((s) => { if (s.tileId) set.add(s.tileId); });
-    return set;
-  }, [game.slots]);
-
-  const tileById = useMemo(() => {
-    const map = new Map<string, LetterTile>();
-    game.letterBank.forEach((t) => map.set(t.id, t));
-    return map;
-  }, [game.letterBank]);
-
-  // =============================================
-  // DRAG START — from bank or from a filled slot
-  // =============================================
-  const handleTilePointerDown = useCallback(
-    (e: React.PointerEvent, tile: LetterTile, origin: "bank" | SlotPosition) => {
-      if (game.wordComplete) return;
-      if (typeof origin === "number" && game.slots[origin].locked) return;
-      if (typeof origin === "number") {
-        dispatch({ type: "REMOVE_LETTER", slotIndex: origin });
-      }
-      // Play letter phoneme sound on pick up
-      playLetterSound(tile.letter);
-      beginDrag(tile.id, tile.letter, origin, e);
-    },
-    [game.wordComplete, game.slots, beginDrag]
-  );
-
-  // =============================================
-  // DROP — validate, place, or snap back
-  // =============================================
-  const handleContainerPointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      const outcome = onPointerUp(e);
-      if (outcome.kind === "no-drag") return;
-
-      if (outcome.kind === "on-slot") {
-        const { slotIndex, tileId, letter } = outcome;
-        if (game.slots[slotIndex]?.locked) {
-          triggerSnapBack();
-          return;
-        }
-        const valid = isDropValid(letter, slotIndex, currentWord.letters);
-        if (valid) {
-          dispatch({ type: "PLACE_LETTER", slotIndex, tileId, letter });
-          clearDrag();
-          recordCorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
-          // Trigger WiggleWoo nod animation
-          setHelperNodding(true);
-          setTimeout(() => setHelperNodding(false), 500);
-        } else {
-          dispatch({ type: "INVALID_DROP" });
-          triggerSnapBack();
-          recordIncorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
-          incorrectDropCount.current++;
-          recordIncorrectDrop(currentWord.word, quest.id, questIdToVowelId(quest.id));
-          // Play "Try it again" on wrong drop
-          playRetryPhrase();
-        }
-      } else {
-        triggerSnapBack();
-      }
-    },
-    [onPointerUp, game.slots, currentWord.letters, triggerSnapBack, clearDrag]
-  );
-
-  // =============================================
-  // CELEBRATION → AUTO-ADVANCE
-  // =============================================
-  // ALL words (including mid-quest) go back to map
-  // so the player sees WW move to the next node.
-  const handleCelebrationDone = useCallback(() => {
-    const celebType = game.celebration.type;
-    // Record node completion in analytics
-    recordNodeComplete(quest.id, quest.patternType, currentWordIndex);
-    // Play next-word phrase
-    playProgressionPhrase();
-    // Navigate immediately — no delay, no flash of gameplay
-    if (celebType === "quest-complete") {
-      onNavigate("quest-summary");
-    } else {
-      onNavigate("quest-map");
+    if (!hasPlayedPrompt.current) {
+      hasPlayedPrompt.current = true;
+      setTimeout(() => {
+        playPromptPhrase();
+        setAudioActive(true);
+        if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
+        audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
+      }, 400);
     }
-  }, [game.celebration.type, onNavigate]);
+  }, []);
 
-  // =============================================
-  // WORD STREAK
-  // =============================================
-  const [streakToast, setStreakToast] = useState<string | null>(null);
-  const [streakDisplay, setStreakDisplay] = useState(sessionStreak);
-  const [, setLastRating] = useState<WordRating | null>(null);
+  // ---- Step 1: Tap-to-place ----
+  const nextEmptySlot = useMemo(() => {
+    return filledSlots.findIndex((s) => s === null);
+  }, [filledSlots]);
+
+  const handleTileTap = useCallback((tile: LetterTile) => {
+    if (step !== "build") return;
+    const slotIdx = filledSlots.findIndex((s) => s === null);
+    if (slotIdx === -1) return;
+
+    // Play phoneme sound
+    playLetterSound(tile.letter);
+
+    // Check if correct for this slot
+    const correct = tile.letter.toLowerCase() === currentWord.letters[slotIdx].toLowerCase();
+
+    if (correct) {
+      const newSlots = [...filledSlots];
+      newSlots[slotIdx] = tile.letter;
+      setFilledSlots(newSlots);
+      setUsedTileIds((prev) => new Set(prev).add(tile.id));
+      recordCorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
+
+      // Check if word is now complete
+      const allFilled = newSlots.every((s) => s !== null);
+      if (allFilled) {
+        // Word complete! Transition to reveal after a brief pause
+        setTimeout(() => {
+          setStep("reveal");
+        }, 400);
+      }
+    } else {
+      // Wrong letter — subtle shake feedback, no penalty
+      setIncorrectCount((c) => c + 1);
+    }
+  }, [step, filledSlots, currentWord, quest.id, quest.patternType, currentWordIndex]);
+
+  // ---- Step 2: Word Reveal — auto-advance after 2.5s ----
+  const revealTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    if (game.celebration.isActive) {
-      // Play word complete phrase
+    if (step === "reveal") {
+      // Play success chime
       playSuccessPhrase();
 
-      // Record mastery analytics
+      // Record analytics
       const elapsed = Date.now() - nodeStartTime.current;
       recordWordCompletion(
         currentWord.word,
         quest.id,
         questIdToVowelId(quest.id),
-        incorrectDropCount.current,
+        incorrectCount,
         elapsed,
       );
-      incorrectDropCount.current = 0;
 
-      // Record per-word rating
-      const rating = computeWordRating(game.hint.level);
-      setLastRating(rating);
+      // Record rating
+      const rating: WordRating = incorrectCount === 0 ? "perfect" : incorrectCount <= 2 ? "clean" : "assisted";
       saveNodeRating(quest.id, currentWordIndex, rating);
-      console.log(
-        `[WordRating] ${quest.id} node ${currentWordIndex + 1}: ${rating} (hint level ${game.hint.level})`
-      );
 
-      // Streak: only perfect solves increment
+      // Streak
       if (rating === "perfect") {
         sessionStreak++;
       } else {
         sessionStreak = 0;
       }
-      setStreakDisplay(sessionStreak);
 
-      // Milestone toasts
-      if (sessionStreak === 3 || sessionStreak === 5 || (sessionStreak > 5 && sessionStreak % 5 === 0)) {
-        setStreakToast(`\uD83D\uDD25 ${sessionStreak} Word Streak!`);
-        const t = setTimeout(() => setStreakToast(null), 2500);
-        return () => clearTimeout(t);
-      }
+      // Record node completion
+      recordNodeComplete(quest.id, quest.patternType, currentWordIndex);
+
+      // Auto-advance to next word after a brief pause (let the reveal breathe)
+      revealTimerRef.current = setTimeout(() => {
+        handleAdvance();
+      }, 2500);
+
+      return () => { if (revealTimerRef.current) clearTimeout(revealTimerRef.current); };
     }
-  }, [game.celebration.isActive]);
+  }, [step]);
 
-
-  // =============================================
-  // START OVER — reset current word
-  // =============================================
-  const handleStartOver = useCallback(() => {
-    if (game.wordComplete) return;
-    dispatch({ type: "RESET_SLOTS" });
-  }, [game.wordComplete]);
-
-  // =============================================
-  // TILE RENDERER (bank tiles + slot tiles)
-  // =============================================
-  const renderTile = (tile: LetterTile, origin: "bank" | SlotPosition) => {
-    const isBeingDragged = drag?.tileId === tile.id;
-    const isInSlot = typeof origin === "number";
-
-    let style: React.CSSProperties = { touchAction: "none" };
-    if (isBeingDragged && snappingBack) {
-      style = {
-        transform: "translate(0, 0) scale(1)",
-        transition: "transform 220ms ease-out",
-        zIndex: 200,
-        position: "relative",
-        touchAction: "none",
-      };
-    } else if (isBeingDragged) {
-      style = {
-        transform: dragTransform,
-        zIndex: 200,
-        position: "relative",
-        touchAction: "none",
-      };
+  const handleAdvance = useCallback(() => {
+    if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
+    const celebType = getCelebrationTypeForWord(currentWordIndex);
+    if (celebType === "quest-complete") {
+      onNavigate("quest-summary");
+    } else {
+      onNavigate("quest-map");
     }
+  }, [currentWordIndex, onNavigate]);
 
-    return (
-      <div
-        key={tile.id}
-        className={[
-          "letter-tile",
-          isBeingDragged && !snappingBack ? "letter-tile--dragging" : "",
-          isInSlot ? "letter-tile--in-slot" : "",
-        ].filter(Boolean).join(" ")}
-        style={style}
-        onPointerDown={(e) => handleTilePointerDown(e, tile, origin)}
-        data-tile-id={tile.id}
-      >
-        {tile.letter.toUpperCase()}
-      </div>
-    );
-  };
+  const handleRevealTap = useCallback(() => {
+    if (step !== "reveal") return;
+    handleAdvance();
+  }, [step, handleAdvance]);
+
+  // Available tiles (not yet used)
+  const availableTiles = letterBank.filter((t) => !usedTileIds.has(t.id));
 
   // =============================================
-  // JSX — machine-world themed layout
+  // JSX
   // =============================================
   return (
     <div className="machine-world">
-      {/* ---- Blue rounded frame (play area) ---- */}
+      {/* Blue rounded frame */}
       <div className="map-window">
         <div className="game-shell-panel" />
 
-        <div
-          ref={containerRef as React.RefObject<HTMLDivElement>}
-          className="game-screen"
-          style={{
-            touchAction: "none",
-            zIndex: 2,
-          }}
-          onPointerMove={onPointerMove}
-          onPointerUp={handleContainerPointerUp}
-          onPointerCancel={onPointerCancel}
-        >
-        {/* TOP BAR — progress + start over */}
-        <div className="game-top-bar">
-          <div className="progress-indicator">
-            ⭐ {currentWordIndex + 1} / {quest.words.length}
-          </div>
-          <button
-            className="start-over-btn"
-            onClick={handleStartOver}
-            disabled={game.wordComplete}
-          >
-            ↩ Start Over
-          </button>
-        </div>
-
-        {/* MACHINE VIEWPORT — centers content vertically */}
-        <div className="machine-viewport">
-          {/* PLAY AREA — WW on left, game center, space on right */}
-          <div className="game-play-area">
-          {/* WIGGLEWOO HELPER */}
-          <div className="wigglewoo-helper">
-            <img
-              src={helperImg}
-              alt="Wigglewoo helper"
-              className={`wigglewoo-helper__img${
-                hintAction.shouldPoint ? " wigglewoo-helper__img--pointing" : ""
-              }${helperNodding ? " wigglewoo-helper__img--nod" : ""}`}
-              draggable={false}
-            />
-            {hintAction.shouldReplayPhoneme && (
-              <div className="phoneme-indicator">🔊</div>
-            )}
+        <div className="game-screen" style={{ touchAction: "none", zIndex: 2 }}>
+          {/* TOP BAR */}
+          <div className="game-top-bar">
+            <div className="progress-indicator">
+              ⭐ {currentWordIndex + 1} / {quest.words.length}
+            </div>
+            <button
+              className={`speaker-btn ${audioActive ? "speaker-btn--active" : ""}`}
+              onClick={handleSpeakerTap}
+              aria-label="Replay audio"
+            >
+              <SpeakerIcon active={audioActive} />
+            </button>
           </div>
 
-          {/* CENTER COLUMN — image, slots, bank */}
-          <div className={`game-center-column ${wordLengthClass}`}>
-            {/* TARGET IMAGE — no word label! */}
-            <div className="target-image-area">
-              <WordImage imageKey={currentWord.imageKey} size={wordLength <= 3 ? 80 : wordLength === 4 ? 70 : 60} />
-            </div>
+          {/* MACHINE VIEWPORT */}
+          <div className="machine-viewport">
+            <div className="game-play-area">
+              <div className={`game-center-column ${wordLengthClass}`}>
 
-            {/* SENTENCE WITH BLANK — context-rich learning sentence */}
-            <div className="sentence-display">
-              <span className="sentence-display__text">
-                {(() => {
-                  const sentence = getWordSentence(currentWord.word);
-                  const parts = sentence.split("___");
-                  return (
-                    <>
-                      {parts[0]}
-                      <span className={`sentence-display__blank ${game.wordComplete ? "sentence-display__blank--filled" : ""}`}>
-                        {game.wordComplete ? currentWord.word : "___"}
-                      </span>
-                      {parts[1] || ""}
-                    </>
-                  );
-                })()}
-              </span>
-            </div>
+                {/* ========== STEP 1: BUILD ========== */}
+                {step === "build" && (
+                  <>
+                    {/* Target image */}
+                    <div className="target-image-area">
+                      <WordImage imageKey={currentWord.imageKey} size={wordLength <= 3 ? 110 : 85} />
+                    </div>
 
-            {/* WORD SLOTS — dynamic based on word length */}
-            <div className="word-slots-row">
-              {currentWord.letters.map((_, i) => {
-                const slot = game.slots[i];
-                const slotTile = slot?.tileId ? tileById.get(slot.tileId) : null;
-                return (
-                  <div key={i} className="word-slot-wrapper">
-                    <WordSlot
-                      ref={(el) => { slotRefs.current[i] = el; }}
-                      slotIndex={i as SlotPosition}
-                      state={slot || { tileId: null, locked: false }}
-                      isHovered={hoveredSlot === i}
-                      isHintTarget={
-                        hintAction.shouldPoint && hintAction.targetSlot === i
-                      }
-                    />
-                    {slotTile && !slot?.locked && drag?.tileId !== slotTile.id && (
-                      <div className="slot-tile-overlay">
-                        {renderTile(slotTile, i as SlotPosition)}
-                      </div>
-                    )}
+                    {/* Word slots */}
+                    <div className="word-slots-row">
+                      {currentWord.letters.map((_, i) => {
+                        const filled = filledSlots[i];
+                        const isNext = i === nextEmptySlot;
+                        return (
+                          <div
+                            key={i}
+                            className={[
+                              "word-slot",
+                              filled ? "word-slot--filled" : "",
+                              isNext ? "word-slot--hovered" : "",
+                            ].filter(Boolean).join(" ")}
+                          >
+                            {filled && (
+                              <span className="word-slot__letter">
+                                {filled.toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Letter bank — tap to place */}
+                    <div className="letter-bank">
+                      {availableTiles.map((tile) => (
+                        <div
+                          key={tile.id}
+                          className="letter-tile"
+                          onClick={() => handleTileTap(tile)}
+                          style={{ cursor: "pointer", touchAction: "manipulation" }}
+                        >
+                          {tile.letter.toUpperCase()}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* ========== STEP 2: WORD REVEAL ========== */}
+                {step === "reveal" && (
+                  <div className="step-reveal" onClick={handleRevealTap}>
+                    {/* Sparkle stars */}
+                    <span className="step-reveal__star step-reveal__star--1">✦</span>
+                    <span className="step-reveal__star step-reveal__star--2">✦</span>
+                    <span className="step-reveal__star step-reveal__star--3">✦</span>
+                    <span className="step-reveal__star step-reveal__star--4">✦</span>
+                    <span className="step-reveal__star step-reveal__star--5">✦</span>
+
+                    {/* Image (centered, larger) */}
+                    <div className="step-reveal__image">
+                      <WordImage imageKey={currentWord.imageKey} size={120} />
+                    </div>
+
+                    {/* Word (center, primary focus) */}
+                    <div className="step-reveal__word">
+                      {currentWord.word.toUpperCase()}
+                    </div>
+
+                    <div className="step-reveal__hint">Tap to continue</div>
                   </div>
-                );
-              })}
-            </div>
+                )}
 
-            {/* LETTER BANK */}
-            <div className="letter-bank">
-              {game.letterBank.map((tile) => {
-                if (tilesInSlots.has(tile.id) && drag?.tileId !== tile.id) {
-                  return null;
-                }
-                return renderTile(tile, "bank");
-              })}
+              </div>
             </div>
           </div>
         </div>
-        </div>
-
-        {/* STREAK INDICATOR */}
-        {streakDisplay > 0 && (
-          <div className="streak-indicator">🔥 {streakDisplay}</div>
-        )}
-
-        {/* STREAK TOAST */}
-        {streakToast && (
-          <div className="streak-toast" key={streakToast}>{streakToast}</div>
-        )}
-
-        {/* CELEBRATION OVERLAY */}
-        {game.celebration.isActive && game.celebration.type && (
-          <CelebrationOverlay
-            type={game.celebration.type}
-            onComplete={handleCelebrationDone}
-            wordsComplete={currentWordIndex + 1}
-            totalWords={quest.words.length}
-          />
-        )}
-      </div>
       </div>
       {/* end map-window */}
 
-      {/* ==== OUTER UI — outside the blue frame ==== */}
-
-      {/* Background decorative gears */}
+      {/* ==== OUTER UI — machine frame decorations ==== */}
       <img src={gear2} alt="" className="bg-gear bg-gear-1" draggable={false} />
       <img src={gear3} alt="" className="bg-gear bg-gear-2" draggable={false} />
       <img src={gear2} alt="" className="bg-gear bg-gear-3" draggable={false} />
@@ -509,13 +398,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
       <img src={gear3} alt="" className="bg-gear bg-gear-7" draggable={false} />
       <img src={gear2} alt="" className="bg-gear bg-gear-8" draggable={false} />
 
-      {/* Left machine + gear + pipe */}
       <img src={machine2} alt="" className="home-machine home-machine-left" draggable={false} />
       <img src={gear1} alt="" className="home-gear home-gear-left" draggable={false} />
       <img src={pipe1} alt="" className="home-pipe home-pipe-left" draggable={false} />
       <img src={pipe2} alt="" className="home-pipe home-pipe-bottom" draggable={false} />
 
-      {/* Right machine with gauge + needle */}
       <div className="home-machine-right-wrap">
         <img src={machine1} alt="" className="home-machine home-machine-right" draggable={false} />
         <img src={gaugeImg} alt="" className="home-gauge-face" draggable={false} />
@@ -524,19 +411,17 @@ const GameScreen: React.FC<GameScreenProps> = ({
         </div>
       </div>
 
-      {/* TITLE BADGE — top-left, clickable home button */}
-      {!game.celebration.isActive && (
-        <img
-          src={badgeLogo}
-          alt="WiggleWoo's Word Quest - Go Home"
-          className="title-badge title-badge--clickable"
-          draggable={false}
-          onClick={onGoHome}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
-        />
-      )}
+      {/* Title badge — home button */}
+      <img
+        src={badgeLogo}
+        alt="WiggleWoo's Word Quest - Go Home"
+        className="title-badge title-badge--clickable"
+        draggable={false}
+        onClick={onGoHome}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
+      />
 
       {/* Pipe strips + corner bolts */}
       <div className="machine-world-pipes-top" />

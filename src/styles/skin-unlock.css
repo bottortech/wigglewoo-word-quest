@@ -1,0 +1,231 @@
+/* =============================================
+   skin-unlock.css — Skin unlock celebration
+   =============================================
+   Tight centered stack: Character → Title → Subtitle → Button
+   Mobile-first, rewarding moment.
+   ============================================= */
+
+.skin-unlock {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 45%, #2a1a4a, #0e0820);
+  animation: skin-unlock-fade-in 0.4s ease-out;
+  overflow: hidden;
+}
+
+@keyframes skin-unlock-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ---- Confetti ---- */
+
+.skin-unlock__confetti-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.5s ease;
+}
+
+.skin-unlock__confetti-wrap--fading {
+  opacity: 0;
+}
+
+.skin-unlock__confetti {
+  position: absolute;
+  top: -12px;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  animation: skin-confetti-fall var(--fall-dur, 1s) ease-out var(--delay, 0s) forwards;
+}
+.skin-unlock__confetti--circle { border-radius: 50%; }
+.skin-unlock__confetti--square { border-radius: 2px; }
+.skin-unlock__confetti--rect { width: 6px; height: 14px; border-radius: 2px; }
+
+@keyframes skin-confetti-fall {
+  0%   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(calc(100vh + 20px)) rotate(var(--spin, 360deg)) scale(0.6); }
+}
+
+/* ---- Centered content stack ---- */
+
+.skin-unlock__stack {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4px, 1vh, 10px);
+}
+
+/* ---- Sparkle ring / spotlight behind character ---- */
+
+.skin-unlock__sparkle-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(180px, 45vw, 300px);
+  height: clamp(180px, 45vw, 300px);
+  transform: translate(-50%, -58%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 215, 0, 0.18) 0%,
+    rgba(180, 140, 255, 0.12) 35%,
+    rgba(140, 80, 255, 0.05) 60%,
+    transparent 75%
+  );
+  box-shadow:
+    0 0 80px rgba(255, 215, 0, 0.2),
+    0 0 140px rgba(180, 140, 255, 0.1);
+  z-index: 0;
+  animation: sparkle-ring-pulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sparkle-ring-pulse {
+  0%, 100% { transform: translate(-50%, -58%) scale(1); opacity: 0.8; }
+  50%      { transform: translate(-50%, -58%) scale(1.08); opacity: 1; }
+}
+
+/* ---- Character ---- */
+
+.skin-unlock__character {
+  position: relative;
+  z-index: 1;
+  animation: skin-char-entrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes skin-char-entrance {
+  0%   { opacity: 0; transform: scale(0.3) translateY(50px) rotate(-10deg); }
+  50%  { opacity: 1; transform: scale(1.12) translateY(-12px) rotate(3deg); }
+  70%  { transform: scale(0.96) translateY(4px) rotate(-1deg); }
+  100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+}
+
+.skin-unlock__character-img {
+  width: clamp(120px, min(30vw, 35vh), 200px);
+  height: auto;
+  filter:
+    drop-shadow(0 0 30px rgba(255, 215, 0, 0.35))
+    drop-shadow(0 0 60px rgba(180, 140, 255, 0.2))
+    drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
+  animation: skin-char-entrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             skin-char-float 2s ease-in-out 0.8s infinite;
+}
+
+@keyframes skin-char-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* ---- Text — tight group ---- */
+
+.skin-unlock__title {
+  margin: 0;
+  font-family: "Nunito", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-size: clamp(22px, min(5.5vw, 7vh), 40px);
+  font-weight: 900;
+  color: #ffd700;
+  text-align: center;
+  text-shadow:
+    0 0 20px rgba(255, 215, 0, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  animation: skin-title-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+}
+
+@keyframes skin-title-pop {
+  0%   { opacity: 0; transform: scale(0.5) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.skin-unlock__skin-name {
+  margin: 0;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(13px, min(3vw, 4vh), 20px);
+  font-weight: 600;
+  color: #c8b0ff;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  animation: skin-name-slide 0.4s ease-out 0.5s both;
+}
+
+@keyframes skin-name-slide {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Buttons — connected to text ---- */
+
+.skin-unlock__buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.5vh, 14px);
+  margin-top: clamp(4px, 1vh, 10px);
+  animation: skin-btns-enter 0.4s ease-out forwards;
+}
+
+@keyframes skin-btns-enter {
+  0%   { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.skin-unlock__btn {
+  border: none;
+  border-radius: 30px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.skin-unlock__btn:active {
+  transform: scale(0.95);
+}
+
+.skin-unlock__btn--primary {
+  padding: clamp(14px, 2.5vh, 18px) clamp(40px, 10vw, 56px);
+  font-size: clamp(17px, min(4vw, 5vh), 22px);
+  background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 6px 20px rgba(255, 152, 0, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  animation: skin-btn-pulse 2.5s ease-in-out 0.5s infinite;
+}
+
+@keyframes skin-btn-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+.skin-unlock__btn--primary:hover {
+  transform: scale(1.06);
+  box-shadow: 0 8px 28px rgba(255, 152, 0, 0.6), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  animation: none;
+}
+
+.skin-unlock__btn--secondary {
+  padding: clamp(10px, 1.5vh, 12px) clamp(28px, 7vw, 40px);
+  font-size: clamp(13px, min(2.5vw, 3.5vh), 16px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #bbb;
+  font-weight: 600;
+}
+
+.skin-unlock__btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}

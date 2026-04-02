@@ -15,21 +15,20 @@ export const AUTO_ADVANCE_DELAY = 300;
 
 /**
  * Determine celebration type for a completed word.
- * 
+ *
  * Special cases:
- * - Node 8 (index 7): "level-complete" - player goes to Trophy Room
- * - Node 16 (index 15): "quest-complete" - quest is fully done
+ * - Node 8 (index 7): "level-complete" — player returns to map, trophy node active
+ * - Node 16 (index 15): "quest-complete" — triggers discovery room entry
  * - All other nodes: "level-complete"
  */
 export function getCelebrationTypeForWord(
   completedWordIndex: number
 ): CelebrationType {
-  // Node 16 (index 15): All nodes done, player goes to map → trophy room
-  // Show level-complete (not quest-complete) since trophy is the real finale
+  // Node 16 (index 15): All nodes done → discovery room
   if (completedWordIndex >= WORDS_PER_QUEST - 1) {
-    return "level-complete";
+    return "quest-complete";
   }
-  
+
   return "level-complete";
 }
 

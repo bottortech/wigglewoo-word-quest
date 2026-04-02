@@ -169,6 +169,17 @@ export function playNewChallengePhrase(): void {
   if (NEW_CHALLENGE_PHRASE) playPhrase(NEW_CHALLENGE_PHRASE);
 }
 
+/** Pronounce a word clearly using Web Speech API */
+export function playWordSound(word: string): void {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.rate = document.documentElement.classList.contains("slow-phoneme") ? 0.65 : 0.8;
+  utterance.pitch = 1.1;
+  utterance.volume = 0.85;
+  window.speechSynthesis.speak(utterance);
+}
+
 export function stopAllSfx(): void {
   if (letterAudio) { letterAudio.pause(); letterAudio.currentTime = 0; }
   if (phraseAudio) { phraseAudio.pause(); phraseAudio.currentTime = 0; }
