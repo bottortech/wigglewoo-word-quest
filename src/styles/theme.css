@@ -269,23 +269,6 @@
     0 2px 6px var(--ww-shadow);
 }
 
-/* ---- Mobile: scale whole scene to fill width ---- */
-@media (max-width: 1024px) {
-  .quest-stage {
-    /* Override contain → cover: scale by width so no side gaps */
-    align-items: flex-start;
-  }
-  .machine-world {
-    /* Keep 3:2 ratio and frame composition intact.
-       Width-based scaling: 100% width means the frame fills
-       the screen width. On portrait phones the bottom may
-       extend below the viewport — that's fine, overflow is
-       hidden by the stage. */
-    width: 100%;
-    max-height: none;
-  }
-}
-
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   .machine-world::before,

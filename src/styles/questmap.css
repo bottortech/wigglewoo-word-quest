@@ -2017,26 +2017,3 @@
   }
 }
 
-/* ==========================================
-   MOBILE — smaller nodes inside original frame
-   ========================================== */
-@media (max-width: 1024px) {
-  .gear-node {
-    width: 24px;
-    height: 24px;
-  }
-
-  .gear-node__content {
-    font-size: 9px;
-  }
-
-  .gear-node--completed .gear-node__content {
-    font-size: 12px;
-  }
-
-  .gear-node__glow {
-    width: 36px;
-    height: 36px;
-  }
-}
-
