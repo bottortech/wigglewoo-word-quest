@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Analytics } from '@vercel/analytics/react'
 import './index.css'
 import './styles/accessibility.css'
 import { loadSettings, applySettingsToDOM } from './game/settings'
@@ -12,5 +13,6 @@ applySettingsToDOM(loadSettings());
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
+    <Analytics />
   </StrictMode>,
 )
