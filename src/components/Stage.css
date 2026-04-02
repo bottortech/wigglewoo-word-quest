@@ -12,6 +12,9 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
+  /* Match machine-world background so no gutters are visible
+     if Chrome renders sub-pixel gaps around the game frame */
+  background: #7ec8e3;
 }
 
 /* The stage itself: always full viewport */
