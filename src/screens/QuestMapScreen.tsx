@@ -333,7 +333,6 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   onDevResetAll,
   arrivedFromWord,
 }) => {
-  void onOpenWardrobe; void hasNewSkin; // hidden in demo mode
   const progress = useMemo(() => loadQuestProgress(quest.id), [quest.id]);
   const trophyProgress = useMemo(() => loadTrophyProgress(quest.id), [quest.id]);
   const discoveryProgress = useMemo(() => loadDiscoveryProgress(quest.id), [quest.id]);
@@ -1031,7 +1030,21 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         />
       </div>
 
-      {/* WARDROBE — hidden in demo mode */}
+      {/* WARDROBE — skin selector button */}
+      <button
+        className={`wardrobe-map-btn ${hasNewSkin ? "wardrobe-map-btn--new" : ""}`}
+        onClick={onOpenWardrobe}
+        aria-label="Open Wardrobe"
+        title="Change WiggleWoo's outfit"
+      >
+        <img
+          src={skinAssets.heroImg || heroImg}
+          alt="Equipped WiggleWoo"
+          className="wardrobe-map-btn__img"
+          draggable={false}
+        />
+        {hasNewSkin && <span className="wardrobe-map-btn__badge">NEW</span>}
+      </button>
 
       {/* WORD QUEST BOX — right side */}
       <div className="word-quest-box">
