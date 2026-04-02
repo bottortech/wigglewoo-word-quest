@@ -907,11 +907,16 @@
 @media (max-width: 1024px) {
   .game-center-column {
     justify-content: center;
-    gap: clamp(6px, 1.5vh, 14px);
+    gap: clamp(8px, 2vh, 16px);
     padding-top: env(safe-area-inset-top, 0px);
   }
   .target-image-area {
-    margin-bottom: clamp(4px, 1.2vh, 10px);
+    transform: scale(0.75);
+    transform-origin: center bottom;
+    margin-bottom: clamp(2px, 0.8vh, 6px);
+  }
+  .word-slots-row {
+    margin-bottom: clamp(4px, 1vh, 10px);
   }
 }
 
