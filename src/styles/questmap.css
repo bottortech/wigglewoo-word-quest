@@ -1564,8 +1564,8 @@
   left: calc(3% + 35px);
   transform: translateX(-50%);
   z-index: 50;
-  width: 74px;
-  height: 74px;
+  width: calc(50px + 24px * var(--u, 1));
+  height: calc(50px + 24px * var(--u, 1));
   padding: 6px;
   background: radial-gradient(circle at 40% 35%, rgba(60, 45, 90, 0.95), rgba(30, 20, 50, 0.95));
   border: 3px solid rgba(180, 140, 255, 0.5);
@@ -2047,6 +2047,7 @@
    DESKTOP — scale up map elements
    ========================================== */
 @media (min-width: 1200px) {
+  /* Gear nodes */
   .gear-node {
     width: 44px;
     height: 44px;
@@ -2060,8 +2061,38 @@
     font-size: 20px;
   }
 
+  /* 1. Logo — larger, aligned with left column */
+  .title-badge {
+    max-width: calc(90px + 34px * var(--u, 1));
+    left: 3.5%;
+    margin-bottom: 16px;
+  }
+
+  /* 2. Trophy showcase — 16px more space below logo */
+  .trophy-showcase {
+    margin-top: 176px;
+  }
+
+  /* 3. Wardrobe — directly under trophy showcase */
+  .wardrobe-map-btn {
+    width: calc(60px + 30px * var(--u, 1));
+    height: calc(60px + 30px * var(--u, 1));
+    left: calc(3.5% + 70px);
+    bottom: auto;
+    top: 68%;
+  }
+
+  /* 4. Quest panel — wider, aligned horizontally with trophy */
   .word-quest-box {
-    width: 140px;
+    width: 160px;
+    top: 22%;
+  }
+
+  /* 5. Discovery room cards — ~25% larger */
+  .discovery-preview {
+    width: clamp(98px, 12vw, 138px);
+    height: clamp(98px, 12vw, 138px);
+    border-radius: 16px;
   }
 }
 
