@@ -35,14 +35,16 @@ const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay 
       audio.volume = 0.8;
       audio.playbackRate = settings.slowPhoneme ? 0.75 : 1.0;
       setPlaying(true);
-      audio.play().catch(() => setPlaying(false));
+      audio.play().catch(() => {
+        setPlaying(false);
+        speakText(text);
+      });
       audio.onended = () => setPlaying(false);
       audio.onerror = () => {
-        // Fallback to Web Speech if audio file missing
+        setPlaying(false);
         speakText(text);
       };
     } else {
-      // Fallback: Web Speech API
       speakText(text);
     }
   }, [audioSrc, text, playing, settings.slowPhoneme]);
@@ -72,9 +74,9 @@ const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay 
     setPlaying(false);
   }, []);
 
-  // Autoplay on mount if enabled
+  // Autoplay on mount when autoPlay prop is true
   useEffect(() => {
-    if (autoPlay && settings.factNarrationAutoPlay) {
+    if (autoPlay) {
       const timer = setTimeout(() => play(), 300);
       return () => clearTimeout(timer);
     }

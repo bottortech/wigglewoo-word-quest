@@ -256,18 +256,18 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     // Only fact-panel props trigger the discovery flow
     if (!prop.factPanel) return;
 
-    // Check daily cap
-    if (isDailyFactCapReached(environmentId)) {
+    // Check daily cap (skip in dev)
+    if (!import.meta.env.DEV && isDailyFactCapReached(environmentId)) {
       setShowDailyCap(true);
       return;
     }
 
-    // Every 4th fact → PictureMatch challenge before learning
-    if ((factsDiscoveredThisSession + 1) % 4 === 0) {
+    // Every 4th fact → PictureMatch challenge before learning (skip in dev)
+    if (!import.meta.env.DEV && (factsDiscoveredThisSession + 1) % 4 === 0) {
       setChoiceTarget(prop);
       setShowPictureMatch(true);
     } else {
-      // Learn fact directly — no choice modal
+      // Learn fact directly
       learnFactForProp(prop);
     }
   }, [environmentId, factsDiscoveredThisSession, learnFactForProp]);
@@ -278,14 +278,18 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     setActiveHotspot(hotspot);
   }, []);
 
-  // Volcano eruption handler
+  // Volcano eruption handler — 2.5s cycle then full reset
   const handleErupt = useCallback(() => {
     if (erupting) return;
     setErupting(true);
     setQuaking(true);
     if (eruptTimerRef.current) clearTimeout(eruptTimerRef.current);
-    setTimeout(() => setQuaking(false), 500);
-    // Eruption holds — does not reset
+    // Quake ends after 400ms, eruption visuals continue
+    setTimeout(() => setQuaking(false), 400);
+    // Full reset after 2.5s
+    eruptTimerRef.current = setTimeout(() => {
+      setErupting(false);
+    }, 2500);
   }, [erupting]);
 
   if (!env) {
@@ -326,7 +330,9 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
 
       // Dynamic image source swaps
       let imgSrc = prop.src;
-      if (isVolcanoImage && erupting) {
+      if (isEruptButton && erupting) {
+        imgSrc = "/assets/discovery rooms/rumble-peak-volcano/erupt-button-green.png";
+      } else if (isVolcanoImage && erupting) {
         imgSrc = "/assets/discovery rooms/rumble-peak-volcano/erupt-volcano.png";
       } else if (isFlower && flowerStage > 0) {
         imgSrc = `/assets/discovery rooms/greenhouse-domes/flower-stage-${flowerStage}.png`;
@@ -560,8 +566,8 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       {/* Hint text */}
       <div className="explore-hint">Tap objects to discover facts!</div>
 
-      {/* Daily cap modal */}
-      {showDailyCap && (
+      {/* Daily cap modal — hidden in dev or when VITE_DISABLE_COMPLETION_MODAL is set */}
+      {!import.meta.env.DEV && !import.meta.env.VITE_DISABLE_COMPLETION_MODAL && showDailyCap && (
         <DailyCapModal onClose={() => setShowDailyCap(false)} />
       )}
 
