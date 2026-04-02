@@ -2018,17 +2018,9 @@
 }
 
 /* ==========================================
-   MOBILE — tighter insets, smaller nodes
+   MOBILE — smaller nodes inside original frame
    ========================================== */
 @media (max-width: 1024px) {
-  .map-window {
-    top: 12%;
-    bottom: 8%;
-    left: 4%;
-    right: 4%;
-    border-radius: 24px;
-  }
-
   .gear-node {
     width: 24px;
     height: 24px;
