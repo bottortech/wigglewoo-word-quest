@@ -1639,20 +1639,47 @@
 }
 
 /* ---- DEV CONTROLS BAR ---- */
-.dev-controls-bar {
+.dev-toggle-btn {
   position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 8px;
+  left: 8px;
+  z-index: 201;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.dev-toggle-btn:hover {
+  opacity: 1;
+}
+
+.dev-controls-bar--bottom {
+  position: absolute;
+  bottom: 38px;
+  left: 8px;
   z-index: 200;
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  gap: 4px;
   pointer-events: auto;
 }
 
-.dev-controls-bar .dev-unlock-btn {
+.dev-controls-bar--bottom .dev-unlock-btn {
   position: static;
-  opacity: 0.7;
+  opacity: 0.85;
+  font-size: 11px;
+  padding: 3px 8px;
 }
 
 /* Trophy transition styles → see trophy-transition.css */
@@ -2036,5 +2063,80 @@
   .word-quest-box {
     width: 140px;
   }
+}
+
+/* ==========================================
+   DISCOVERY ROOM PREVIEW ROW — reward shelf
+   ========================================== */
+.discovery-preview-row {
+  position: absolute;
+  top: clamp(2px, 1vh, 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 18px;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.discovery-preview {
+  position: relative;
+  width: clamp(58px, 7.5vw, 85px);
+  height: clamp(58px, 7.5vw, 85px);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.15);
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.discovery-preview__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Locked state */
+.discovery-preview--locked {
+  filter: brightness(0.55) saturate(0.5);
+  border-color: rgba(100, 100, 100, 0.4);
+}
+
+.discovery-preview--locked:hover {
+  filter: brightness(0.65) saturate(0.6);
+  transform: scale(1.04);
+}
+
+.discovery-preview__lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(14px, 2vw, 20px);
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+}
+
+/* Unlocked state */
+.discovery-preview--unlocked {
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow:
+    0 0 10px rgba(255, 215, 0, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.discovery-preview--unlocked:hover {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 16px rgba(255, 215, 0, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.25);
 }
 

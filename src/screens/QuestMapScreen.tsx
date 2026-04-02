@@ -33,6 +33,7 @@ import WaterAmbientLayer from "../components/WaterAmbientLayer";
 import IslandLayer from "../components/IslandLayer";
 import SkyLayer from "../components/SkyLayer";
 import { playNewChallengePhrase } from "../audio/SoundEffects";
+import { isEnvironmentUnlocked } from "../game/exploreData";
 import "../styles/game.css";
 import "../styles/home.css";
 import "../styles/questmap.css";
@@ -94,6 +95,15 @@ const TROPHY_POSITION = { x: 52, y: 46 };
 
 // Discovery room node position — after node 16 (86, 48), slightly offset
 const DISCOVERY_POSITION = { x: 92, y: 32 };
+
+// Discovery room preview — images for the top-of-screen reward shelf
+const DISCOVERY_ROOM_PREVIEWS: { envId: string; image: string; label: string }[] = [
+  { envId: "valcano", image: "/assets/valcano.png", label: "Rumble Peak" },
+  { envId: "castle-island", image: "/assets/castle-island.png", label: "Stonewall Castle" },
+  { envId: "small-coastal-village", image: "/assets/small-coastal-village.png", label: "Coral Cove" },
+  { envId: "industrial-tech-city", image: "/assets/industrial-tech-city.png", label: "Geartown" },
+  { envId: "glass-dome", image: "/assets/glass-dome.png", label: "Greenhouse" },
+];
 
 // Quest type definitions for Word Quest Box
 // 5 tiers in order: CVC → Blending → Magic E → Vowel Teams → Advanced
@@ -491,6 +501,8 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   // Dev: hide nodes to see board layout clearly
   const [devHideNodes, setDevHideNodes] = useState(false);
+  // Dev: collapse dev controls (default hidden for clean preview)
+  const [devShowControls, setDevShowControls] = useState(false);
 
   // Keyboard shortcuts: [ and ] to cycle quest types in DEV
   useEffect(() => {
@@ -962,6 +974,37 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       <span className="machine-bolt machine-bolt--bl" />
       <span className="machine-bolt machine-bolt--br" />
 
+      {/* DISCOVERY ROOM PREVIEW ROW — reward shelf above the map */}
+      <div className="discovery-preview-row">
+        {DISCOVERY_ROOM_PREVIEWS.map((room) => {
+          const unlocked = isEnvironmentUnlocked(room.envId);
+          return (
+            <button
+              key={room.envId}
+              className={`discovery-preview ${unlocked ? "discovery-preview--unlocked" : "discovery-preview--locked"}`}
+              onClick={() => {
+                if (unlocked && onExplore) {
+                  onExplore(room.envId);
+                } else if (!unlocked) {
+                  setLockedToast("🔒 Complete all 16 quests to unlock this Discovery Room");
+                  if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
+                  shakeTimerRef.current = setTimeout(() => setLockedToast(null), 1800);
+                }
+              }}
+              aria-label={unlocked ? `Explore ${room.label}` : `${room.label} — locked`}
+            >
+              <img
+                src={room.image}
+                alt={room.label}
+                className="discovery-preview__img"
+                draggable={false}
+              />
+              {!unlocked && <span className="discovery-preview__lock">🔒</span>}
+            </button>
+          );
+        })}
+      </div>
+
       {/* TITLE BADGE — top-left, clickable home button */}
       <img
         src={badgeLogo}
@@ -1062,55 +1105,66 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         <span className="demo-banner__text">Tap a gear node to start a word!</span>
       </div>
 
-      {/* DEV CONTROLS — horizontal row at top center */}
+      {/* DEV CONTROLS — collapsible, hidden by default */}
       {import.meta.env.DEV && (
-        <div className="dev-controls-bar">
+        <>
           <button
-            className={`dev-unlock-btn ${devUnlock ? "dev-unlock-btn--active" : ""}`}
-            onClick={toggleDevUnlock}
-            title={`Dev Unlock: ${devUnlock ? "ON" : "OFF"}`}
+            className="dev-toggle-btn"
+            onClick={() => setDevShowControls((s) => !s)}
+            title="Toggle dev controls"
           >
-            🔓 {devUnlock ? "ON" : "OFF"}
+            {devShowControls ? "✕" : "⚙"}
           </button>
-          <button
-            className={`dev-unlock-btn ${devHideNodes ? "dev-unlock-btn--active" : ""}`}
-            onClick={() => setDevHideNodes((h) => !h)}
-            title="Toggle node visibility"
-          >
-            {devHideNodes ? "👁 Nodes" : "🙈 Nodes"}
-          </button>
-          <button
-            className="dev-unlock-btn"
-            onClick={onRestartQuest}
-            title="Reset current quest"
-          >
-            🔄 Quest
-          </button>
-          <button
-            className="dev-unlock-btn"
-            style={{ color: "#ff6b6b" }}
-            onClick={onDevResetAll}
-            title="Reset ALL progress"
-          >
-            💣 Reset
-          </button>
-          <button
-            className="dev-unlock-btn"
-            style={{ color: "#4FC3F7" }}
-            onClick={onEnterDiscoveryRoom}
-            title="Jump to Discovery Room"
-          >
-            🔬 Discovery
-          </button>
-          <button
-            className="dev-unlock-btn"
-            style={{ color: "#FFD700" }}
-            onClick={onEnterTrophyRoom}
-            title="Jump to Trophy Room"
-          >
-            🏆 Trophy
-          </button>
-        </div>
+          {devShowControls && (
+            <div className="dev-controls-bar dev-controls-bar--bottom">
+              <button
+                className={`dev-unlock-btn ${devUnlock ? "dev-unlock-btn--active" : ""}`}
+                onClick={toggleDevUnlock}
+                title={`Dev Unlock: ${devUnlock ? "ON" : "OFF"}`}
+              >
+                🔓 {devUnlock ? "ON" : "OFF"}
+              </button>
+              <button
+                className={`dev-unlock-btn ${devHideNodes ? "dev-unlock-btn--active" : ""}`}
+                onClick={() => setDevHideNodes((h) => !h)}
+                title="Toggle node visibility"
+              >
+                {devHideNodes ? "👁 Nodes" : "🙈 Nodes"}
+              </button>
+              <button
+                className="dev-unlock-btn"
+                onClick={onRestartQuest}
+                title="Reset current quest"
+              >
+                🔄 Quest
+              </button>
+              <button
+                className="dev-unlock-btn"
+                style={{ color: "#ff6b6b" }}
+                onClick={onDevResetAll}
+                title="Reset ALL progress"
+              >
+                💣 Reset
+              </button>
+              <button
+                className="dev-unlock-btn"
+                style={{ color: "#4FC3F7" }}
+                onClick={onEnterDiscoveryRoom}
+                title="Jump to Discovery Room"
+              >
+                🔬 Discovery
+              </button>
+              <button
+                className="dev-unlock-btn"
+                style={{ color: "#FFD700" }}
+                onClick={onEnterTrophyRoom}
+                title="Jump to Trophy Room"
+              >
+                🏆 Trophy
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* LOCKED NODE TOAST */}
