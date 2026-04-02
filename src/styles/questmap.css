@@ -2018,15 +2018,33 @@
 }
 
 /* ==========================================
-   PORTRAIT MOBILE — tighter insets, fill screen
+   MOBILE — tighter insets, smaller nodes
    ========================================== */
-@media (orientation: portrait) and (max-width: 1024px) {
+@media (max-width: 1024px) {
   .map-window {
     top: 12%;
     bottom: 8%;
     left: 4%;
     right: 4%;
     border-radius: 24px;
+  }
+
+  .gear-node {
+    width: 24px;
+    height: 24px;
+  }
+
+  .gear-node__content {
+    font-size: 9px;
+  }
+
+  .gear-node--completed .gear-node__content {
+    font-size: 12px;
+  }
+
+  .gear-node__glow {
+    width: 36px;
+    height: 36px;
   }
 }
 
