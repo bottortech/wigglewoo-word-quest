@@ -10,18 +10,14 @@
 /* Outer wrapper fills viewport */
 .stage-wrapper {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   overflow: hidden;
 }
 
 /* The stage itself: always full viewport */
 .stage {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   /* Base scaling unit: updated by JS ResizeObserver */
   --u: 1;
