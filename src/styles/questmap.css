@@ -1996,6 +1996,27 @@
 }
 
 /* ==========================================
+   MOBILE — smaller nodes, larger tap target
+   ========================================== */
+@media (max-width: 1024px) {
+  .gear-node-wrapper {
+    /* Invisible tap padding — keeps hit area easy to tap */
+    padding: 10px;
+    margin: -10px;
+  }
+  .gear-node {
+    transform: scale(0.72);
+  }
+  .gear-node:hover:not(:disabled) {
+    transform: scale(0.80);
+  }
+  .gear-node__glow {
+    width: 58px;
+    height: 58px;
+  }
+}
+
+/* ==========================================
    DESKTOP — scale up map elements
    ========================================== */
 @media (min-width: 1200px) {
