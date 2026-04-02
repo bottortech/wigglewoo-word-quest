@@ -28,8 +28,6 @@ import {
   playSuccessPhrase,
   playPromptPhrase,
 } from "../audio/SoundEffects";
-import helperImgDefault from "../assets/wigglewoo_helper_transparent.png";
-import { getActiveSkinAssets } from "../game/skins";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import machine1 from "../assets/machine1.png";
 import machine2 from "../assets/machine2.png";
@@ -114,10 +112,6 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const currentWord: CvcWord = quest.words[currentWordIndex];
   const wordLength = currentWord.letters.length;
   const wordLengthClass = `word-length-${wordLength}`;
-
-  // Skin-aware WiggleWoo
-  const skinAssets = useMemo(() => getActiveSkinAssets(), []);
-  const helperImg = skinAssets.helperImg || helperImgDefault;
 
   // Should we use distractors? Only for nodes 9-16 (index >= 8)
   const useDistractors = currentWordIndex >= FIRST_HALF_WORDS;
