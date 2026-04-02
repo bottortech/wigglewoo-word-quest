@@ -308,7 +308,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
                   <>
                     {/* Target image */}
                     <div className="target-image-area">
-                      <WordImage imageKey={currentWord.imageKey} size={wordLength <= 3 ? 110 : 85} />
+                      <WordImage imageKey={currentWord.imageKey} size={wordLength <= 3 ? 100 : 85} />
                     </div>
 
                     {/* Word slots */}
@@ -363,7 +363,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
                     {/* Image (centered, larger) */}
                     <div className="step-reveal__image">
-                      <WordImage imageKey={currentWord.imageKey} size={120} />
+                      <WordImage imageKey={currentWord.imageKey} size={96} />
                     </div>
 
                     {/* Word (center, primary focus) */}

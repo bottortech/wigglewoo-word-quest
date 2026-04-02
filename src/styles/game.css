@@ -580,13 +580,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(40px, min(7vw, 12vh), 72px);
-  height: clamp(40px, min(7vw, 12vh), 72px);
+  width: clamp(34px, min(6vw, 9vh), 60px);
+  height: clamp(34px, min(6vw, 9vh), 60px);
   border: clamp(2px, 0.4vw, 3px) solid var(--ww-brown);
   border-radius: var(--ww-radius-sm);
   background: linear-gradient(to bottom, #fff 0%, #f5f0e5 100%);
   font-family: inherit;
-  font-size: clamp(22px, min(4vw, 7vh), 38px);
+  font-size: clamp(18px, min(3.4vw, 5.5vh), 30px);
   font-weight: 800;
   color: var(--ww-text);
   user-select: none;
