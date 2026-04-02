@@ -269,6 +269,13 @@
     0 2px 6px var(--ww-shadow);
 }
 
+/* ---- Mobile: width-based scaling, no height constraint ---- */
+@media (max-width: 1024px) {
+  .machine-world {
+    max-height: none;
+  }
+}
+
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   .machine-world::before,
