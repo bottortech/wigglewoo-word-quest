@@ -2,8 +2,8 @@
 // placementTest.ts — Placement test data, scoring,
 // and persistence for WiggleWoo's Word Quest
 // =============================================
-// 5-tier placement: 3 words per tier, 15 total.
-// Pass = 2/3 correct. Fail = stop and place here.
+// 5-tier placement: 2 words per tier, 10 total.
+// Pass = 1/2 correct. Fail = stop and place here.
 // Tier sequence: CVC → Blending → Magic E → Vowel Teams → Advanced
 // =============================================
 
@@ -30,11 +30,11 @@ export const TIER_DEFAULT_QUEST: Record<PlacementTier, string> = {
 
 // ---- Constants ----
 
-export const QUESTIONS_PER_TIER = 3;
-export const PASS_THRESHOLD = 2; // must get ≥2 of 3 correct to pass
+export const QUESTIONS_PER_TIER = 2;
+export const PASS_THRESHOLD = 1; // must get ≥1 of 2 correct to pass
 export const MAX_ATTEMPTS = 3;   // wrong taps before auto-skip
 
-// ---- Test word set (3 per tier, 15 total) ----
+// ---- Test word set (2 per tier, 10 total) ----
 
 export type WordTier = "cvc" | "blend" | "magic-e" | "vowel-team" | "advanced";
 
@@ -56,32 +56,27 @@ export const WORD_TIER_TO_PLACEMENT: Record<WordTier, PlacementTier> = {
   "advanced": "ADVANCED",
 };
 
-// 15 placement words: 3 per tier (in progression order)
+// 10 placement words: 2 per tier (progressive difficulty)
 export const PLACEMENT_WORDS: PlacementWord[] = [
-  // Tier 1: CVC (3 words)
-  { word: "cat", letters: ["c", "a", "t"], distractors: ["d", "r"], imageKey: "cat", tier: "cvc" },
-  { word: "dog", letters: ["d", "o", "g"], distractors: ["p", "b"], imageKey: "dog", tier: "cvc" },
-  { word: "map", letters: ["m", "a", "p"], distractors: ["t", "n"], imageKey: "map", tier: "cvc" },
+  // Q1-2: Sound Builders — very easy, confidence builders
+  { word: "cat", letters: ["c", "a", "t"], distractors: ["d"], imageKey: "cat", tier: "cvc" },
+  { word: "dog", letters: ["d", "o", "g"], distractors: ["p"], imageKey: "dog", tier: "cvc" },
 
-  // Tier 2: Blending Power (3 words)
+  // Q3-4: Blending Power — easy, 4-letter words
   { word: "hand", letters: ["h", "a", "n", "d"], distractors: ["t", "r"], imageKey: "hand", tier: "blend" },
-  { word: "stop", letters: ["s", "t", "o", "p"], distractors: ["l", "a"], imageKey: "stop", tier: "blend" },
-  { word: "flag", letters: ["f", "l", "a", "g"], distractors: ["r", "n"], imageKey: "flag", tier: "blend" },
+  { word: "jump", letters: ["j", "u", "m", "p"], distractors: ["s", "n"], imageKey: "jump", tier: "blend" },
 
-  // Tier 3: Magic E (3 words)
-  { word: "cape", letters: ["c", "a", "p", "e"], distractors: ["t", "i"], imageKey: "cape", tier: "magic-e" },
+  // Q5-6: Magic E — moderate, silent e pattern
+  { word: "cake", letters: ["c", "a", "k", "e"], distractors: ["t", "i"], imageKey: "cake", tier: "magic-e" },
   { word: "kite", letters: ["k", "i", "t", "e"], distractors: ["n", "o"], imageKey: "kite", tier: "magic-e" },
-  { word: "cone", letters: ["c", "o", "n", "e"], distractors: ["t", "a"], imageKey: "cone", tier: "magic-e" },
 
-  // Tier 4: Vowel Teams (3 words)
+  // Q7-8: Vowel Teams — moderate-hard
   { word: "boat", letters: ["b", "o", "a", "t"], distractors: ["r", "e"], imageKey: "boat", tier: "vowel-team" },
   { word: "rain", letters: ["r", "a", "i", "n"], distractors: ["s", "o"], imageKey: "rain", tier: "vowel-team" },
-  { word: "team", letters: ["t", "e", "a", "m"], distractors: ["n", "i"], imageKey: "team", tier: "vowel-team" },
 
-  // Tier 5: Advanced (multisyllable + compound)
+  // Q9-10: Advanced — hard, multisyllable
   { word: "sunset", letters: ["s", "u", "n", "s", "e", "t"], distractors: ["r", "a"], imageKey: "sunset", tier: "advanced" },
-  { word: "basket", letters: ["b", "a", "s", "k", "e", "t"], distractors: ["r", "n"], imageKey: "basket", tier: "advanced" },
-  { word: "cupcake", letters: ["c", "u", "p", "c", "a", "k", "e"], distractors: ["t", "n"], imageKey: "cupcake", tier: "advanced" },
+  { word: "rabbit", letters: ["r", "a", "b", "b", "i", "t"], distractors: ["n", "s"], imageKey: "rabbit", tier: "advanced" },
 ];
 
 // ---- Scoring ----

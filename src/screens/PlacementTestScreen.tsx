@@ -11,6 +11,8 @@ import React, { useState, useCallback, useMemo, useEffect } from "react";
 import WordImage from "../components/WordImage";
 import {
   PLACEMENT_WORDS,
+  QUESTIONS_PER_TIER,
+  PASS_THRESHOLD,
   MAX_ATTEMPTS,
   scorePlacement,
   savePlacementResult,
@@ -94,15 +96,15 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
       }, 500);
     };
 
-    // Check if we just finished a tier (every 3 words)
+    // Check if we just finished a tier (every 2 words)
     const wordNum = wordIndex + 1; // 1-indexed
-    if (wordNum % 3 === 0) {
+    if (wordNum % QUESTIONS_PER_TIER === 0) {
       // Count correct for the tier we just finished
       const tierJustFinished = currentWord.tier;
       const tierResults = newResults.filter((r) => r.tier === tierJustFinished);
       const tierCorrect = tierResults.filter((r) => r.correct).length;
 
-      if (tierCorrect < 2) {
+      if (tierCorrect < PASS_THRESHOLD) {
         // FAILED this tier — stop immediately, assign placement here
         finishTest(newResults);
         return;
@@ -113,12 +115,8 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
       // All words done — passed all tiers
       finishTest(newResults);
     } else {
-      // Next word with brief transition
-      setTransitioning(true);
-      setTimeout(() => {
-        setWordIndex((i) => i + 1);
-        setTransitioning(false);
-      }, 400);
+      // Instant transition to next word (no delay)
+      setWordIndex((i) => i + 1);
     }
   }, [currentWord, results, wordIndex, totalQuestions, onComplete]);
 
@@ -141,7 +139,7 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
       // Check if word complete
       const allFilled = newSlots.every((s) => s !== null);
       if (allFilled) {
-        setTimeout(() => advanceWord(true, totalAttempts + 1), 500);
+        setTimeout(() => advanceWord(true, totalAttempts + 1), 200);
       }
     } else {
       const newWrong = wrongCount + 1;
@@ -149,7 +147,7 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
 
       if (newWrong >= MAX_ATTEMPTS) {
         // Max attempts reached — mark as failed, auto-advance
-        setTimeout(() => advanceWord(false, totalAttempts + 1), 400);
+        setTimeout(() => advanceWord(false, totalAttempts + 1), 200);
       }
     }
   }, [currentWord, nextSlot, filledSlots, wrongCount, totalAttempts, transitioning, advanceWord]);
