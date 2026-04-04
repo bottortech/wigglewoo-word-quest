@@ -549,16 +549,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0;
   flex: 1 1 auto;
   min-height: 0;
   max-height: 100%;
   overflow: visible;
-  padding: clamp(2px, 1vh, 8px) 0;
+  padding: 0;
 }
 
-/* --- Target image area (machine viewport) --- */
+/* --- Build group: image + slots + bank as one tight unit --- */
+.build-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* --- Target image area --- */
 .target-image-area {
   display: flex;
   flex-direction: column;
@@ -566,7 +575,7 @@
   gap: 0;
   padding: 0;
   flex-shrink: 0;
-  margin-bottom: clamp(2px, 1vh, 8px);
+  margin-bottom: 0;
 }
 
 /* ==========================================
@@ -593,7 +602,7 @@
   -webkit-user-select: none;
   touch-action: none;
   cursor: grab;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
   box-shadow:
     0 3px 6px var(--ww-shadow),
     0 1px 0 rgba(255,255,255,0.7) inset;
@@ -608,19 +617,20 @@
   50% { transform: scale(1.015); }
 }
 
-/* Hover / tap — small pop with soft glow */
+/* Hover / tap — quick pop with glow */
 .letter-tile:hover {
-  transform: scale(1.08);
+  transform: scale(1.12);
   box-shadow:
     0 6px 12px rgba(62,39,35,0.25),
-    0 0 8px rgba(255, 193, 7, 0.3),
+    0 0 10px rgba(255, 193, 7, 0.35),
     0 1px 0 rgba(255,255,255,0.7) inset;
-  animation: none; /* Stop breathing on hover */
+  animation: none;
 }
 
 .letter-tile:active {
   cursor: grabbing;
-  transform: scale(1.05);
+  transform: scale(0.92);
+  transition: transform 0.05s ease;
 }
 
 /* Dragging — lift shadow with slight tilt */
@@ -634,6 +644,36 @@
   pointer-events: none;
   transform: scale(1.1) rotate(-2deg);
   animation: none;
+}
+
+/* Hinted — glow green after 2 wrong attempts */
+.letter-tile--hinted {
+  border-color: #4CAF50;
+  background: linear-gradient(to bottom, #E8F5E9 0%, #C8E6C9 100%);
+  box-shadow:
+    0 0 16px rgba(76, 175, 80, 0.5),
+    0 3px 6px var(--ww-shadow);
+  animation: hint-glow 1s ease-in-out infinite;
+}
+
+@keyframes hint-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(76, 175, 80, 0.5), 0 3px 6px var(--ww-shadow); }
+  50% { box-shadow: 0 0 24px rgba(76, 175, 80, 0.7), 0 3px 6px var(--ww-shadow); }
+}
+
+/* Wrong tap shake */
+.letter-tile--wrong-shake {
+  animation: tile-wrong-shake 0.35s ease-out;
+  border-color: #ef5350;
+}
+
+@keyframes tile-wrong-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(5px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
 }
 
 .letter-tile--in-slot {
@@ -703,10 +743,19 @@
 
 .word-slot--hovered {
   border-color: var(--ww-gold);
-  background: rgba(255,215,0,0.12);
-  transform: scale(1.06);
-  box-shadow: 0 0 10px rgba(255,215,0,0.25);
-  animation: none;
+  border-width: 3px;
+  border-style: solid;
+  background: rgba(255,215,0,0.15);
+  transform: scale(1.1);
+  box-shadow:
+    0 0 14px rgba(255,215,0,0.35),
+    inset 0 0 8px rgba(255,215,0,0.1);
+  animation: active-slot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes active-slot-pulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(255,215,0,0.35), inset 0 0 8px rgba(255,215,0,0.1); }
+  50% { box-shadow: 0 0 20px rgba(255,215,0,0.5), inset 0 0 12px rgba(255,215,0,0.15); }
 }
 
 .word-slot--hint {
@@ -753,8 +802,8 @@
   display: flex;
   gap: clamp(4px, 1vw, 10px);
   justify-content: center;
-  padding: clamp(2px, 0.6vh, 6px) 0;
-  margin-bottom: clamp(2px, 0.8vh, 10px);
+  padding: 0;
+  margin: 0;
 }
 
 .letter-bank {
@@ -762,8 +811,8 @@
   gap: clamp(5px, 1.2vw, 10px);
   justify-content: center;
   flex-wrap: nowrap; /* CRITICAL: Never wrap to second row */
-  padding: clamp(6px, 1.5vh, 12px) clamp(10px, 2vw, 16px);
-  min-height: clamp(44px, 8vh, 64px);
+  padding: clamp(4px, 1vh, 8px) clamp(10px, 2vw, 16px);
+  min-height: clamp(40px, 7vh, 56px);
   background: rgba(255,255,255,0.75);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -891,6 +940,15 @@
   .game-play-area {
     max-width: 680px;
   }
+  .letter-tile {
+    width: clamp(44px, min(5.5vw, 10vh), 68px);
+    height: clamp(44px, min(5.5vw, 10vh), 68px);
+    font-size: clamp(22px, min(3vw, 6vh), 34px);
+  }
+  .word-slot {
+    width: clamp(52px, min(6.5vw, 13vh), 82px);
+    height: clamp(52px, min(6.5vw, 13vh), 82px);
+  }
   .step-reveal__word {
     font-size: clamp(56px, 8vw, 110px);
     letter-spacing: 10px;
@@ -906,17 +964,14 @@
    ========================================== */
 @media (max-width: 1024px) {
   .game-center-column {
-    justify-content: center;
-    gap: clamp(8px, 2vh, 16px);
     padding-top: env(safe-area-inset-top, 0px);
+  }
+  .build-group {
+    gap: 4px;
   }
   .target-image-area {
     transform: scale(0.75);
     transform-origin: center bottom;
-    margin-bottom: clamp(2px, 0.8vh, 6px);
-  }
-  .word-slots-row {
-    margin-bottom: clamp(4px, 1vh, 10px);
   }
 }
 
@@ -994,7 +1049,8 @@
   justify-content: center;
   gap: clamp(8px, 2vh, 18px);
   width: 100%;
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   cursor: pointer;
   animation: step-fade-in 0.4s ease-out;
   overflow: hidden;

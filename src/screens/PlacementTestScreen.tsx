@@ -29,8 +29,9 @@ interface PlacementTestScreenProps {
 
 const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
   onComplete,
-  onSkip,
+  onSkip: _onSkip,
 }) => {
+  void _onSkip; // kept in props interface for future use
   const [phase, setPhase] = useState<"intro" | "test" | "done">("intro");
   const [wordIndex, setWordIndex] = useState(0);
   const [filledSlots, setFilledSlots] = useState<(string | null)[]>([]);
@@ -38,7 +39,6 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
   const [wrongCount, setWrongCount] = useState(0);
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [results, setResults] = useState<WordResult[]>([]);
-  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
 
   const currentWord: PlacementWord | undefined = PLACEMENT_WORDS[wordIndex];
@@ -157,6 +157,52 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
   // Available tiles (not yet used)
   const availableTiles = tileBank.filter((t) => !usedTileIds.has(t.id));
 
+  // Guidance level: heavy (word 0), medium (word 1), none (word 2+)
+  const guidanceLevel = wordIndex === 0 ? "heavy" : wordIndex === 1 ? "medium" : "none";
+
+  // TTS for first word guidance
+  const hasTTSPlayed = React.useRef(false);
+  useEffect(() => {
+    if (phase === "test" && wordIndex === 0 && !hasTTSPlayed.current) {
+      hasTTSPlayed.current = true;
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance("Let's build a word! Tap the letter that makes the right sound.");
+        u.rate = 0.85;
+        u.pitch = 1.1;
+        u.volume = 0.85;
+        window.speechSynthesis.speak(u);
+      }
+    }
+  }, [phase, wordIndex]);
+
+  // Per-slot TTS prompt for first word
+  const lastSpokenSlot = React.useRef(-1);
+  useEffect(() => {
+    if (phase !== "test" || wordIndex !== 0 || !currentWord || nextSlot === -1) return;
+    if (nextSlot === lastSpokenSlot.current) return;
+    lastSpokenSlot.current = nextSlot;
+    const letter = currentWord.letters[nextSlot];
+    const phonemeMap: Record<string, string> = {
+      c: "kuh", a: "ah", t: "tuh", d: "duh", o: "aw", g: "guh",
+      s: "sss", m: "mmm", p: "puh", b: "buh", h: "huh", n: "nnn",
+      i: "ih", e: "eh", u: "uh", r: "rrr", l: "lll", f: "fff",
+    };
+    const phoneme = phonemeMap[letter.toLowerCase()] || letter;
+    const delay = nextSlot === 0 ? 1500 : 600;
+    const timer = setTimeout(() => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(`Tap the letter that makes the ${phoneme} sound.`);
+        u.rate = 0.85;
+        u.pitch = 1.1;
+        u.volume = 0.85;
+        window.speechSynthesis.speak(u);
+      }
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [phase, wordIndex, nextSlot, currentWord]);
+
   // ---- INTRO PHASE ----
   if (phase === "intro") {
     return (
@@ -181,28 +227,6 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
           >
             Let's Go!
           </button>
-          <button
-            className="placement-intro__skip-btn"
-            onClick={() => setShowSkipConfirm(true)}
-          >
-            Start from the beginning instead
-          </button>
-
-          {showSkipConfirm && (
-            <div className="placement-confirm-overlay" onClick={() => setShowSkipConfirm(false)}>
-              <div className="placement-confirm" onClick={(e) => e.stopPropagation()}>
-                <p>Skip the placement test and start at Tier 1, Node 1?</p>
-                <div className="placement-confirm__btns">
-                  <button className="placement-confirm__yes" onClick={onSkip}>
-                    Yes, start from beginning
-                  </button>
-                  <button className="placement-confirm__no" onClick={() => setShowSkipConfirm(false)}>
-                    Take the test
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -248,6 +272,7 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
           {currentWord.letters.map((_, i) => {
             const filled = filledSlots[i];
             const isNext = i === nextSlot;
+            const isGuided = isNext && guidanceLevel !== "none";
             return (
               <div
                 key={i}
@@ -255,12 +280,16 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
                   "placement-slot",
                   filled ? "placement-slot--filled" : "",
                   isNext ? "placement-slot--next" : "",
+                  isGuided ? "placement-slot--guided" : "",
                 ].filter(Boolean).join(" ")}
               >
                 {filled && (
                   <span className="placement-slot__letter">
                     {filled.toUpperCase()}
                   </span>
+                )}
+                {isGuided && !filled && (
+                  <span className="placement-slot__arrow">▼</span>
                 )}
               </div>
             );
@@ -281,15 +310,30 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
 
         {/* Letter tiles */}
         <div className="placement-tiles">
-          {availableTiles.map((tile) => (
-            <button
-              key={tile.id}
-              className="placement-tile"
-              onClick={() => handleTileTap(tile.id, tile.letter)}
-            >
-              {tile.letter.toUpperCase()}
-            </button>
-          ))}
+          {availableTiles.map((tile) => {
+            const isCorrectForSlot = nextSlot >= 0 && currentWord &&
+              tile.letter.toLowerCase() === currentWord.letters[nextSlot].toLowerCase();
+            // Heavy: highlight correct, dim wrong from start
+            // Medium: hint after 1 wrong attempt
+            const showHint =
+              (guidanceLevel === "heavy" && isCorrectForSlot) ||
+              (guidanceLevel === "medium" && wrongCount >= 1 && isCorrectForSlot);
+            const isDimmed =
+              (guidanceLevel === "heavy" && !isCorrectForSlot && wrongCount >= 1);
+            return (
+              <button
+                key={tile.id}
+                className={[
+                  "placement-tile",
+                  showHint ? "placement-tile--hinted" : "",
+                  isDimmed ? "placement-tile--dimmed" : "",
+                ].filter(Boolean).join(" ")}
+                onClick={() => handleTileTap(tile.id, tile.letter)}
+              >
+                {tile.letter.toUpperCase()}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

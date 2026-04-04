@@ -1,10 +1,9 @@
 // =============================================
-// CelebrationOverlay.tsx — Upgraded celebration
+// CelebrationOverlay.tsx — Word completion celebration
 // WiggleWoo's Word Quest
 // =============================================
-// Full-screen overlay with golden background,
-// standing→jumping WiggleWoo animation,
-// star progress panel, and Next Word button.
+// Auto-timed celebration: heading → word → WiggleWoo → progress
+// Auto-advances after 2.8s. Tap anywhere to skip.
 // =============================================
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -18,8 +17,9 @@ export type CelebrationType = "level-complete" | "quest-complete";
 interface CelebrationOverlayProps {
   type: CelebrationType;
   onComplete: () => void;
-  wordsComplete?: number;  // how many words done so far
-  totalWords?: number;     // total words in quest (16)
+  wordsComplete?: number;
+  totalWords?: number;
+  word?: string;
 }
 
 const BANNER_TEXT: Record<CelebrationType, string> = {
@@ -32,7 +32,6 @@ const SUB_TEXT: Record<CelebrationType, string> = {
   "quest-complete": "You finished all the words!",
 };
 
-// Confetti colors matching brand
 const CONFETTI_COLORS = ["teal", "orange", "gold", "pink", "green", "purple", "red"];
 const CONFETTI_SHAPES = ["circle", "square", "rect"];
 
@@ -63,16 +62,18 @@ function makeConfetti(count: number): ConfettiPiece[] {
   return pieces;
 }
 
+const AUTO_ADVANCE_MS = 2800;
+
 export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
   type,
   onComplete,
   wordsComplete = 1,
   totalWords = 16,
+  word,
 }) => {
-  const [visible, setVisible] = useState(true);
   const [showProgress, setShowProgress] = useState(false);
-  const [showButton, setShowButton] = useState(false);
   const [confettiActive, setConfettiActive] = useState(true);
+  const [fading, setFading] = useState(false);
 
   const confetti = useMemo(
     () => makeConfetti(type === "quest-complete" ? 50 : 40),
@@ -80,48 +81,44 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
   );
 
   useEffect(() => {
-    // Animation timeline
-    // 0ms: Jumping pose appears with bounce animation
-    // 400ms: Star progress panel slides in
-    // 700ms: Next Word button fades in
-    // 1200ms: Confetti fades out
-
-    const t1 = setTimeout(() => setShowProgress(true), 400);
-    const t2 = setTimeout(() => setShowButton(true), 700);
-    const t3 = setTimeout(() => setConfettiActive(false), 1200);
+    // Timeline
+    const t1 = setTimeout(() => setShowProgress(true), 500);
+    const t2 = setTimeout(() => setConfettiActive(false), 1200);
+    const t3 = setTimeout(() => {
+      setFading(true);
+      setTimeout(onComplete, 300);
+    }, AUTO_ADVANCE_MS);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, []);
+  }, [onComplete]);
 
-  const handleNext = () => {
-    setVisible(false);
-    onComplete();
+  const handleTap = () => {
+    if (fading) return;
+    setFading(true);
+    setTimeout(onComplete, 200);
   };
 
-  if (!visible) return null;
-
   return (
-    <div className="celeb" aria-hidden="true">
-      {/* Golden background image */}
-      <img
-        className="celeb__bg"
-        src={celebBg}
-        alt=""
-        draggable={false}
-      />
+    <div
+      className={`celeb ${fading ? "celeb--fading" : ""}`}
+      onClick={handleTap}
+      aria-hidden="true"
+    >
+      {/* Golden background */}
+      <img className="celeb__bg" src={celebBg} alt="" draggable={false} />
 
-      {/* Spinning gears — low opacity background decoration */}
+      {/* Spinning gears */}
       <img className="celeb__gear celeb__gear--1" src={gear1} alt="" draggable={false} />
       <img className="celeb__gear celeb__gear--2" src={gear1} alt="" draggable={false} />
       <img className="celeb__gear celeb__gear--3" src={gear1} alt="" draggable={false} />
       <img className="celeb__gear celeb__gear--4" src={gear1} alt="" draggable={false} />
 
-      {/* Confetti burst — plays once then fades */}
-      <div className={`confetti-container ${!confettiActive ? 'confetti-container--fading' : ''}`}>
+      {/* Confetti */}
+      <div className={`confetti-container ${!confettiActive ? "confetti-container--fading" : ""}`}>
         {confetti.map((c) => (
           <span
             key={c.id}
@@ -136,27 +133,20 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
         ))}
       </div>
 
-      {/* Light bulb glows */}
-      <div className="celeb__bulbs">
-        <div className="celeb__bulb celeb__bulb--1" />
-        <div className="celeb__bulb celeb__bulb--2" />
-        <div className="celeb__bulb celeb__bulb--3" />
-        <div className="celeb__bulb celeb__bulb--4" />
-        <div className="celeb__bulb celeb__bulb--5" />
-      </div>
-
-      {/* TOP: Headline */}
+      {/* Heading */}
       <div className={`celeb__headline ${type}`}>
         {BANNER_TEXT[type]}
       </div>
       <div className="celeb__sub">{SUB_TEXT[type]}</div>
 
-      {/* CENTER: WiggleWoo jumping with bounce animation */}
-      <div className="celeb__character-zone">
-        {/* Shadow under feet — pulses with bounce */}
-        <div className="celeb__shadow celeb__shadow--bouncing" />
+      {/* THE WORD — main focus */}
+      {word && (
+        <div className="celeb__word">{word.toUpperCase()}</div>
+      )}
 
-        {/* Jumping pose with bounce animation */}
+      {/* WiggleWoo — smaller, below the word */}
+      <div className="celeb__character-zone celeb__character-zone--compact">
+        <div className="celeb__shadow celeb__shadow--bouncing" />
         <img
           className="celeb__ww celeb__ww--bounce"
           src={jumpingImg}
@@ -165,24 +155,14 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
         />
       </div>
 
-      {/* BOTTOM: Star progress + Next button */}
+      {/* Progress — bottom of screen */}
       <div className="celeb__bottom">
-        {/* Star progress panel */}
-        <div className={`celeb__progress ${showProgress ? 'celeb__progress--visible' : ''}`}>
-          <span className={`celeb__star-icon ${showProgress ? 'celeb__star-icon--pop' : ''}`}>⭐</span>
+        <div className={`celeb__progress ${showProgress ? "celeb__progress--visible" : ""}`}>
+          <span className={`celeb__star-icon ${showProgress ? "celeb__star-icon--pop" : ""}`}>⭐</span>
           <span className="celeb__progress-text">
-            +1 Star &nbsp;•&nbsp; Progress: {wordsComplete}/{totalWords} Words Complete
+            +1 Star &nbsp;•&nbsp; {wordsComplete}/{totalWords} Words
           </span>
         </div>
-
-        {/* Next Word button */}
-        <button
-          className={`celeb__next-btn ${showButton ? 'celeb__next-btn--visible' : ''}`}
-          onClick={handleNext}
-          style={{ pointerEvents: showButton ? 'auto' : 'none' }}
-        >
-          {type === "quest-complete" ? "Continue ➜" : "Continue the Quest ➜"}
-        </button>
       </div>
     </div>
   );

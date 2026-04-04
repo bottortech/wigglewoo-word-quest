@@ -26,6 +26,9 @@ export interface LetterTile {
   category: LetterCategory;
 }
 
+/** Word gameplay mode */
+export type WordMode = "image" | "decode";
+
 /** A single CVC word challenge (supports 3-5 letters) */
 export interface CvcWord {
   /** The target word, e.g. "cat" */
@@ -36,6 +39,8 @@ export interface CvcWord {
   letters: string[];
   /** Extra distractor letters (0–2) */
   distractors: string[];
+  /** Gameplay mode: "image" = with picture, "decode" = no picture (Challenge Mode) */
+  mode?: WordMode;
 }
 
 /** Supported word pattern types */

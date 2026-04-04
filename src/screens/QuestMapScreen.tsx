@@ -37,6 +37,8 @@ import { isEnvironmentUnlocked } from "../game/exploreData";
 import "../styles/game.css";
 import "../styles/home.css";
 import "../styles/questmap.css";
+import "../styles/challenge-mode.css";
+import { isChallengeUnlocked } from "../game/progression";
 
 // ---- ErrorBoundary (safety net) ----
 interface EBProps { children: React.ReactNode }
@@ -1105,6 +1107,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                     <span className="word-quest-box__vowel-letter">{track.vowel}</span>
                     <span className="word-quest-box__vowel-label">{track.label}</span>
                     {!isUnlocked && <span className="word-quest-box__lock">🔒</span>}
+                    {isUnlocked && isChallengeUnlocked(track.id) && (
+                      <span className="challenge-star-badge" title="Challenge Mode available">⭐</span>
+                    )}
                   </button>
                 );
               })}

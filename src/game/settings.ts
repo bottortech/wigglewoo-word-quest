@@ -12,6 +12,7 @@ export interface AppSettings {
   dyslexiaFont: boolean;
   slowPhoneme: boolean;
   colorBlindMode: boolean;
+  reducedMotion: boolean;
   factNarration: boolean;       // auto-play narration on fact panel open
   factNarrationAutoPlay: boolean;
   version: number;
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   dyslexiaFont: false,
   slowPhoneme: false,
   colorBlindMode: false,
+  reducedMotion: false,
   factNarration: true,
   factNarrationAutoPlay: false,
   version: 1,
@@ -52,4 +54,5 @@ export function applySettingsToDOM(settings: AppSettings): void {
   root.classList.toggle("dyslexia-font", settings.dyslexiaFont);
   root.classList.toggle("color-blind-mode", settings.colorBlindMode);
   root.classList.toggle("slow-phoneme", settings.slowPhoneme);
+  root.classList.toggle("reduced-motion", settings.reducedMotion);
 }

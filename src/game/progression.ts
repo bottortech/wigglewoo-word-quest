@@ -521,3 +521,55 @@ export function recordFactDiscovery(roomId: string): void {
   saveFactProgress(data);
 }
 
+/** Check if player has ≥75% accuracy over last 8 words in a quest.
+ *  "perfect" and "clean" count as accurate, "assisted" does not. */
+export function hasHighAccuracy(questId: string, minWords = 8): boolean {
+  const ratings = loadNodeRatings(questId);
+  const entries = Object.entries(ratings);
+  if (entries.length < minWords) return false;
+  // Take the last `minWords` by node index
+  const sorted = entries
+    .map(([idx, r]) => ({ idx: Number(idx), r }))
+    .sort((a, b) => b.idx - a.idx)
+    .slice(0, minWords);
+  const accurate = sorted.filter((e) => e.r === "perfect" || e.r === "clean").length;
+  return accurate / sorted.length >= 0.75;
+}
+
+// =============================================
+// CHALLENGE MODE — track unlocked quests
+// =============================================
+const CHALLENGE_MODE_KEY = "ww_challenge_mode";
+
+function loadChallengeData(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(CHALLENGE_MODE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return {};
+}
+
+function saveChallengeData(data: Record<string, boolean>): void {
+  try {
+    localStorage.setItem(CHALLENGE_MODE_KEY, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
+
+/** Check if Challenge Mode is unlocked for a quest */
+export function isChallengeUnlocked(questId: string): boolean {
+  return loadChallengeData()[questId] === true;
+}
+
+/** Unlock Challenge Mode for a quest */
+export function unlockChallengeMode(questId: string): void {
+  const data = loadChallengeData();
+  data[questId] = true;
+  saveChallengeData(data);
+}
+
+/** Get all quest IDs with Challenge Mode unlocked */
+export function getChallengeUnlockedQuests(): string[] {
+  const data = loadChallengeData();
+  return Object.keys(data).filter((k) => data[k]);
+}
+

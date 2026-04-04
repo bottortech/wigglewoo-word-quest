@@ -22,12 +22,13 @@ import {
   recordTimeSpent,
 } from "../game/analytics";
 import { recordWordCompletion } from "../game/learningAnalytics";
-import { questIdToVowelId } from "../game/wordData";
+import { questIdToVowelId, getLetterCategory } from "../game/wordData";
 import {
   playLetterSound,
   playSuccessPhrase,
   playPromptPhrase,
 } from "../audio/SoundEffects";
+import CelebrationOverlay from "../components/CelebrationOverlay";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import machine1 from "../assets/machine1.png";
 import machine2 from "../assets/machine2.png";
@@ -94,7 +95,7 @@ const SpeakerIcon: React.FC<{ active: boolean }> = ({ active }) => (
   </svg>
 );
 
-type GameStep = "build" | "reveal";
+type GameStep = "build" | "celebrate";
 
 interface GameScreenProps {
   quest: Quest;
@@ -129,9 +130,34 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const [filledSlots, setFilledSlots] = useState<(string | null)[]>(
     () => Array(wordLength).fill(null)
   );
-  const [usedTileIds, setUsedTileIds] = useState<Set<string>>(new Set());
+  const [usedTileIds] = useState<Set<string>>(new Set());
   const [incorrectCount, setIncorrectCount] = useState(0);
+  const [slotAttempts, setSlotAttempts] = useState(0); // wrong attempts on current slot
+  const [shakingTileId, setShakingTileId] = useState<string | null>(null);
   const nodeStartTime = useRef(Date.now());
+
+  // Build per-slot letter choices: correct letter + 1-2 distractors
+  const slotChoices: LetterTile[] = useMemo(() => {
+    const slotIdx = filledSlots.findIndex((s) => s === null);
+    if (slotIdx === -1) return [];
+    const correctLetter = currentWord.letters[slotIdx];
+    // Pick 1-2 distractors from the word's distractor list or other letters
+    const distractors = currentWord.distractors.length > 0
+      ? currentWord.distractors.slice(0, 2)
+      : currentWord.letters.filter((l, i) => i !== slotIdx && l !== correctLetter).slice(0, 1);
+    const choices = [correctLetter, ...distractors];
+    // Shuffle
+    const tiles: LetterTile[] = choices.map((letter, i) => ({
+      id: `choice-${slotIdx}-${i}-${letter}`,
+      letter,
+      category: getLetterCategory(letter),
+    }));
+    for (let i = tiles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    }
+    return tiles;
+  }, [filledSlots, currentWord]);
 
   // ---- Speaker / audio replay state ----
   const [audioActive, setAudioActive] = useState(false);
@@ -141,8 +167,6 @@ const GameScreen: React.FC<GameScreenProps> = ({
     // Replay the appropriate audio for the current step
     if (step === "build") {
       playPromptPhrase();
-    } else if (step === "reveal") {
-      playSuccessPhrase();
     }
     // Show active state briefly
     setAudioActive(true);
@@ -184,7 +208,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
   }, [filledSlots]);
 
   const handleTileTap = useCallback((tile: LetterTile) => {
-    if (step !== "build") return;
+    if (step !== "build" || shakingTileId) return;
     const slotIdx = filledSlots.findIndex((s) => s === null);
     if (slotIdx === -1) return;
 
@@ -198,28 +222,26 @@ const GameScreen: React.FC<GameScreenProps> = ({
       const newSlots = [...filledSlots];
       newSlots[slotIdx] = tile.letter;
       setFilledSlots(newSlots);
-      setUsedTileIds((prev) => new Set(prev).add(tile.id));
+      setSlotAttempts(0); // reset for next slot
       recordCorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
 
       // Check if word is now complete
       const allFilled = newSlots.every((s) => s !== null);
       if (allFilled) {
-        // Word complete! Transition to reveal after a brief pause
-        setTimeout(() => {
-          setStep("reveal");
-        }, 400);
+        setStep("celebrate");
       }
     } else {
-      // Wrong letter — subtle shake feedback, no penalty
+      // Wrong letter — shake tile, count attempt
       setIncorrectCount((c) => c + 1);
+      setSlotAttempts((a) => a + 1);
+      setShakingTileId(tile.id);
+      setTimeout(() => setShakingTileId(null), 400);
     }
-  }, [step, filledSlots, currentWord, quest.id, quest.patternType, currentWordIndex]);
+  }, [step, filledSlots, currentWord, quest.id, quest.patternType, currentWordIndex, shakingTileId]);
 
-  // ---- Step 2: Word Reveal — auto-advance after 2.5s ----
-  const revealTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
+  // ---- Step 2: Celebration ----
   useEffect(() => {
-    if (step === "reveal") {
+    if (step === "celebrate") {
       // Play success chime
       playSuccessPhrase();
 
@@ -246,18 +268,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
       // Record node completion
       recordNodeComplete(quest.id, quest.patternType, currentWordIndex);
-
-      // Auto-advance to next word after a brief pause (let the reveal breathe)
-      revealTimerRef.current = setTimeout(() => {
-        handleAdvance();
-      }, 2500);
-
-      return () => { if (revealTimerRef.current) clearTimeout(revealTimerRef.current); };
     }
   }, [step]);
 
-  const handleAdvance = useCallback(() => {
-    if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
+  // ---- Celebration complete → navigate ----
+  const handleCelebrationComplete = useCallback(() => {
     const celebType = getCelebrationTypeForWord(currentWordIndex);
     if (celebType === "quest-complete") {
       onNavigate("quest-summary");
@@ -266,13 +281,9 @@ const GameScreen: React.FC<GameScreenProps> = ({
     }
   }, [currentWordIndex, onNavigate]);
 
-  const handleRevealTap = useCallback(() => {
-    if (step !== "reveal") return;
-    handleAdvance();
-  }, [step, handleAdvance]);
-
   // Available tiles (not yet used)
-  const availableTiles = letterBank.filter((t) => !usedTileIds.has(t.id));
+  // Letter bank filtered by used tiles (kept for future use)
+  void letterBank; void usedTileIds;
 
   // =============================================
   // JSX
@@ -305,10 +316,10 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
                 {/* ========== STEP 1: BUILD ========== */}
                 {step === "build" && (
-                  <>
+                  <div className="build-group">
                     {/* Target image */}
                     <div className="target-image-area">
-                      <WordImage imageKey={currentWord.imageKey} size={wordLength <= 3 ? 100 : 85} />
+                      <WordImage imageKey={currentWord.imageKey} size={wordLength <= 3 ? 115 : 96} />
                     </div>
 
                     {/* Word slots */}
@@ -335,49 +346,47 @@ const GameScreen: React.FC<GameScreenProps> = ({
                       })}
                     </div>
 
-                    {/* Letter bank — tap to place */}
+                    {/* Letter bank — reduced choices per slot */}
                     <div className="letter-bank">
-                      {availableTiles.map((tile) => (
-                        <div
-                          key={tile.id}
-                          className="letter-tile"
-                          onClick={() => handleTileTap(tile)}
-                          style={{ cursor: "pointer", touchAction: "manipulation" }}
-                        >
-                          {tile.letter.toUpperCase()}
-                        </div>
-                      ))}
+                      {slotChoices.map((tile) => {
+                        const slotIdx = filledSlots.findIndex((s) => s === null);
+                        const isCorrect = slotIdx >= 0 && tile.letter.toLowerCase() === currentWord.letters[slotIdx].toLowerCase();
+                        const showHint = slotAttempts >= 2 && isCorrect;
+                        const isShaking = shakingTileId === tile.id;
+                        return (
+                          <div
+                            key={tile.id}
+                            className={[
+                              "letter-tile",
+                              showHint ? "letter-tile--hinted" : "",
+                              isShaking ? "letter-tile--wrong-shake" : "",
+                            ].filter(Boolean).join(" ")}
+                            onClick={() => handleTileTap(tile)}
+                            style={{ cursor: "pointer", touchAction: "manipulation" }}
+                          >
+                            {tile.letter.toUpperCase()}
+                          </div>
+                        );
+                      })}
                     </div>
-                  </>
-                )}
-
-                {/* ========== STEP 2: WORD REVEAL ========== */}
-                {step === "reveal" && (
-                  <div className="step-reveal" onClick={handleRevealTap}>
-                    {/* Sparkle stars */}
-                    <span className="step-reveal__star step-reveal__star--1">✦</span>
-                    <span className="step-reveal__star step-reveal__star--2">✦</span>
-                    <span className="step-reveal__star step-reveal__star--3">✦</span>
-                    <span className="step-reveal__star step-reveal__star--4">✦</span>
-                    <span className="step-reveal__star step-reveal__star--5">✦</span>
-
-                    {/* Image (centered, larger) */}
-                    <div className="step-reveal__image">
-                      <WordImage imageKey={currentWord.imageKey} size={96} />
-                    </div>
-
-                    {/* Word (center, primary focus) */}
-                    <div className="step-reveal__word">
-                      {currentWord.word.toUpperCase()}
-                    </div>
-
-                    <div className="step-reveal__hint">Tap to continue</div>
                   </div>
                 )}
+
 
               </div>
             </div>
           </div>
+
+          {/* ========== STEP 2: CELEBRATION ========== */}
+          {step === "celebrate" && (
+            <CelebrationOverlay
+              type={getCelebrationTypeForWord(currentWordIndex)}
+              onComplete={handleCelebrationComplete}
+              wordsComplete={currentWordIndex + 1}
+              totalWords={quest.words.length}
+              word={currentWord.word}
+            />
+          )}
         </div>
       </div>
       {/* end map-window */}

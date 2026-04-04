@@ -1,0 +1,166 @@
+/* =============================================
+   challenge-mode.css — Challenge Mode UI
+   WiggleWoo's Word Quest
+   ============================================= */
+
+/* Unlock overlay — fullscreen celebration */
+.challenge-unlock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  animation: challenge-overlay-in 0.3s ease-out;
+  transition: opacity 0.3s ease-out;
+}
+
+.challenge-unlock-overlay--fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes challenge-overlay-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Card */
+.challenge-unlock__card {
+  text-align: center;
+  padding: clamp(20px, 4vh, 40px) clamp(24px, 5vw, 48px);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  border: 3px solid rgba(255, 215, 0, 0.5);
+  box-shadow:
+    0 0 40px rgba(255, 215, 0, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: challenge-card-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes challenge-card-pop {
+  0%   { opacity: 0; transform: scale(0.6); }
+  60%  { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.challenge-unlock__icon {
+  font-size: clamp(40px, 8vw, 64px);
+  margin-bottom: 8px;
+  animation: challenge-icon-bounce 0.6s ease-out 0.2s both;
+}
+
+@keyframes challenge-icon-bounce {
+  0%   { transform: scale(0) rotate(-20deg); }
+  60%  { transform: scale(1.2) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.challenge-unlock__title {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(20px, 4vw, 32px);
+  font-weight: 900;
+  color: #FFD54F;
+  margin: 0 0 6px 0;
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.challenge-unlock__subtitle {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(14px, 2.5vw, 20px);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 4px 0;
+}
+
+.challenge-unlock__quest {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(11px, 1.8vw, 14px);
+  font-weight: 600;
+  color: rgba(255, 215, 0, 0.6);
+  margin: 8px 0 0 0;
+}
+
+/* Star particles — scattered around the card */
+.challenge-unlock__star {
+  position: absolute;
+  font-size: clamp(16px, 3vw, 28px);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.challenge-unlock__star--1 {
+  top: 15%; left: 10%;
+  animation: challenge-star 1s ease-out 0.1s both;
+}
+.challenge-unlock__star--2 {
+  top: 10%; right: 12%;
+  animation: challenge-star 1s ease-out 0.3s both;
+}
+.challenge-unlock__star--3 {
+  top: 55%; left: 8%;
+  animation: challenge-star 1s ease-out 0.2s both;
+}
+.challenge-unlock__star--4 {
+  top: 50%; right: 10%;
+  animation: challenge-star 1s ease-out 0.4s both;
+  font-size: clamp(12px, 2vw, 20px);
+}
+.challenge-unlock__star--5 {
+  top: 25%; left: 50%;
+  animation: challenge-star 1s ease-out 0.15s both;
+  font-size: clamp(12px, 2vw, 20px);
+}
+.challenge-unlock__star--6 {
+  top: 70%; left: 50%;
+  animation: challenge-star 1s ease-out 0.35s both;
+}
+
+@keyframes challenge-star {
+  0%   { opacity: 0; transform: scale(0) rotate(0deg); }
+  40%  { opacity: 1; transform: scale(1.4) rotate(20deg); }
+  100% { opacity: 0; transform: scale(0.5) rotate(40deg) translateY(-16px); }
+}
+
+/* ==========================================
+   Challenge Mode toggle button (quest map)
+   ========================================== */
+.challenge-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.1);
+  color: #FFD54F;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challenge-mode-toggle:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.6);
+}
+
+.challenge-mode-toggle--active {
+  background: rgba(255, 215, 0, 0.25);
+  border-color: #FFD54F;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+.challenge-mode-toggle__star {
+  font-size: 13px;
+}
+
+/* Star badge on quest vowel buttons (unlocked challenge) */
+.challenge-star-badge {
+  font-size: 10px;
+  margin-left: auto;
+}

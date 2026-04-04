@@ -44,6 +44,9 @@ import {
   completeDiscoveryRoom,
   resetDiscoveryProgress,
   migrateOldCompletedQuests,
+  isChallengeUnlocked,
+  unlockChallengeMode,
+  hasHighAccuracy,
 } from "./game/progression";
 import { unlockSkinForEnvironment, initDefaultSkinPaths } from "./game/skins";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, CVVC_QUEST_IDS } from "./game/questIds";
@@ -55,6 +58,7 @@ import { backgroundMusic } from "./audio/BackgroundMusic";
 import { recordTrophyEarned } from "./game/analytics";
 import trophyTransitionImg from "./assets/trophy.png";
 import "./styles/trophy-transition.css";
+import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
 import PlacementTestScreen from "./screens/PlacementTestScreen";
 import {
   isPlacementComplete,
@@ -101,25 +105,17 @@ export default function App() {
   // Resolve initial quest synchronously for CVC, null if chunk not loaded
   const resolvedInitial = getQuestById(globalProg.activeQuestId) ?? null;
 
-  // Demo mode: seed all tiers unlocked and skip placement/home on first visit
+  // DEV: force placement to re-run so guided onboarding is testable
   useEffect(() => {
-    if (!isPlacementComplete()) {
-      // Auto-complete placement with all tiers unlocked
-      savePlacementResult({
-        level: "advanced",
-        assignedTier: "CVC",
-        startingNode: 0,
-        unlockedTiers: ["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"],
-        wordResults: [],
-        tierSummaries: [],
-        completedAt: Date.now(),
-      });
-      localStorage.setItem(
-        "ww_placement_tiers",
-        JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
-      );
+    if (import.meta.env.DEV) {
+      const hasTestedPlacement = localStorage.getItem("ww_placement_dev_tested");
+      if (!hasTestedPlacement) {
+        resetPlacement();
+        console.log("[Dev] Cleared placement data for testing. Will not clear again this session.");
+        localStorage.setItem("ww_placement_dev_tested", "true");
+      }
     }
-    // Ensure all tiers are always unlocked for demo
+    // Ensure all tiers are unlocked (for demo/tester access)
     const tiers = localStorage.getItem("ww_placement_tiers");
     if (!tiers || !tiers.includes("ADVANCED")) {
       localStorage.setItem(
@@ -127,10 +123,11 @@ export default function App() {
         JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
       );
     }
+    console.log("[App] placement data:", localStorage.getItem("ww_placement"));
   }, []);
 
-  // Always start on the quest map (skip placement + home screen)
-  const [route, setRoute] = useState<Route>("map");
+  // Start on Play Now screen
+  const [route, setRoute] = useState<Route>("home");
   const [activeQuest, setActiveQuest] = useState<Quest | null>(resolvedInitial);
   const [wordIndex, setWordIndex] = useState<number>(0);
 
@@ -149,11 +146,14 @@ export default function App() {
   // null = no animation (fresh load), number = animate from that node
   const [arrivedFromWord, setArrivedFromWord] = useState<number | null>(null);
 
-  // ---- Home Screen → Node Screen ----
+  // ---- Home Screen → Placement or Map ----
   const handlePlay = useCallback(() => {
-    // Ensure music starts on user interaction (Play button)
     backgroundMusic.play();
-    setRoute("map");
+    if (isPlacementComplete()) {
+      setRoute("map");
+    } else {
+      setRoute("placement");
+    }
   }, []);
 
   // ---- Go Home (from badge click) ----
@@ -165,8 +165,11 @@ export default function App() {
   // ---- Placement Test Complete ----
   const handlePlacementComplete = useCallback((result: PlacementResult) => {
     // Result is already saved to localStorage by the screen.
-    // Apply tier unlocks by saving override flags.
-    localStorage.setItem("ww_placement_tiers", JSON.stringify(result.unlockedTiers));
+    // Ensure all tiers stay unlocked for demo regardless of placement score.
+    localStorage.setItem(
+      "ww_placement_tiers",
+      JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
+    );
 
     // If placement assigns a starting node > 0, mark earlier nodes as completed
     if (result.startingNode > 0) {
@@ -189,7 +192,7 @@ export default function App() {
       });
     }
 
-    setRoute("home");
+    setRoute("map");
   }, []);
 
   // ---- Placement Test Skip → start at beginning ----
@@ -245,11 +248,15 @@ export default function App() {
         // Level done → advance, go back to map with animation signal
         advanceWord(progress);
         setArrivedFromWord(completedWordIndex);
+        // Check challenge unlock after each word
+        setTimeout(checkChallengeUnlock, 300);
         setRoute("map");
         setMapRevision((r) => r + 1);
       } else {
         // quest-summary: last word (node 16) done → discovery room
         advanceWord(progress);
+        // Quest complete — check challenge unlock
+        setTimeout(checkChallengeUnlock, 300);
         const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
         if (envId) {
           markEnvironmentVisited(envId);
@@ -373,6 +380,24 @@ export default function App() {
     setRoute("map");
   }, []);
 
+  // ---- Challenge Mode unlock ----
+  const [showChallengeUnlock, setShowChallengeUnlock] = useState(false);
+
+  /** Check if Challenge Mode should unlock for the active quest */
+  const checkChallengeUnlock = useCallback(() => {
+    if (!activeQuest) return;
+    if (isChallengeUnlocked(activeQuest.id)) return; // already unlocked
+    const progress = loadQuestProgress(activeQuest.id);
+    // Trigger 1: quest complete (all 16 words)
+    const questDone = progress.questComplete;
+    // Trigger 2: 75% accuracy over last 8 words
+    const highAccuracy = hasHighAccuracy(activeQuest.id, 8);
+    if (questDone || highAccuracy) {
+      unlockChallengeMode(activeQuest.id);
+      setShowChallengeUnlock(true);
+    }
+  }, [activeQuest?.id]);
+
   // ---- Discovery Room (post-node-16 reward) ----
   const [unlockedSkinId, setUnlockedSkinId] = useState<string | null>(null);
   const [hasNewSkin, setHasNewSkin] = useState(false); // drives wardrobe button pulse
@@ -467,6 +492,7 @@ export default function App() {
           <PlayNowScreen onPlay={handlePlay} />
         </ScreenGate>
       )}
+
 
       {route === "map" && (
         <ScreenGate>
@@ -574,6 +600,13 @@ export default function App() {
         onClose={handleCloseWardrobe}
         onSkinChanged={handleSkinChanged}
       />
+
+      {showChallengeUnlock && activeQuest && (
+        <ChallengeModeUnlock
+          questTitle={activeQuest.title}
+          onDismiss={() => setShowChallengeUnlock(false)}
+        />
+      )}
 
       {unlockedSkinId && (
         <SkinUnlockCelebration

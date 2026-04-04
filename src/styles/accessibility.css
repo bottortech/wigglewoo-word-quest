@@ -80,3 +80,24 @@ html.color-blind-mode .insights-mastery-bar__seg--support { background: #FF5722;
 html.slow-phoneme {
   /* marker class only — actual speed change in audio code */
 }
+
+/* ---- Reduced Motion ---- */
+/* Disables all animations, transitions, and movement */
+html.reduced-motion *,
+html.reduced-motion *::before,
+html.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Also respect OS-level prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  html:not(.reduced-motion) *,
+  html:not(.reduced-motion) *::before,
+  html:not(.reduced-motion) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

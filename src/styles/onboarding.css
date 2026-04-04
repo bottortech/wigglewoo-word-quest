@@ -1,0 +1,240 @@
+/* =============================================
+   onboarding.css — First-time guided intro
+   WiggleWoo's Word Quest
+   ============================================= */
+
+.onboarding {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #E3F2FD 0%, #BBDEFB 40%, #90CAF9 100%);
+  animation: onboard-fade-in 0.5s ease-out;
+}
+
+@keyframes onboard-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.onboarding__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+}
+
+/* Instruction text */
+.onboarding__instruction {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(16px, 3.5vw, 24px);
+  font-weight: 700;
+  color: #1565C0;
+  text-align: center;
+  line-height: 1.4;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  animation: onboard-text-in 0.4s ease-out;
+}
+
+@keyframes onboard-text-in {
+  0% { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Image */
+.onboarding__image {
+  margin: 4px 0;
+}
+
+/* Word slots */
+.onboarding__slots {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.onboarding__slot {
+  width: clamp(50px, 10vw, 70px);
+  height: clamp(50px, 10vw, 70px);
+  border: 3px dashed #90CAF9;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(24px, 5vw, 36px);
+  font-weight: 800;
+  color: #1565C0;
+  transition: all 0.2s ease;
+}
+
+.onboarding__slot--active {
+  border-color: #FFD54F;
+  border-style: solid;
+  border-width: 3px;
+  background: rgba(255, 215, 0, 0.15);
+  transform: scale(1.08);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.4);
+  animation: onboard-slot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes onboard-slot-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(255, 215, 0, 0.4); }
+  50% { box-shadow: 0 0 24px rgba(255, 215, 0, 0.6); }
+}
+
+.onboarding__slot--filled {
+  border-style: solid;
+  border-color: #4DB6AC;
+  background: rgba(77, 182, 172, 0.1);
+  animation: onboard-slot-pop 0.3s ease-out;
+}
+
+@keyframes onboard-slot-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Letter choices */
+.onboarding__choices {
+  display: flex;
+  gap: 14px;
+  margin: 8px 0;
+}
+
+.onboarding__tile {
+  width: clamp(52px, 10vw, 72px);
+  height: clamp(52px, 10vw, 72px);
+  border: 3px solid #5D4037;
+  border-radius: 12px;
+  background: linear-gradient(to bottom, #fff 0%, #f5f0e5 100%);
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(22px, 5vw, 34px);
+  font-weight: 800;
+  color: #3E2723;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.onboarding__tile:hover {
+  transform: scale(1.08);
+}
+
+.onboarding__tile:active {
+  transform: scale(0.92);
+}
+
+/* Hinted — glow green after 2 wrong */
+.onboarding__tile--hinted {
+  border-color: #4CAF50;
+  background: linear-gradient(to bottom, #E8F5E9 0%, #C8E6C9 100%);
+  box-shadow: 0 0 18px rgba(76, 175, 80, 0.6);
+  animation: onboard-hint-glow 1s ease-in-out infinite;
+  transform: scale(1.05);
+}
+
+@keyframes onboard-hint-glow {
+  0%, 100% { box-shadow: 0 0 18px rgba(76, 175, 80, 0.6); }
+  50% { box-shadow: 0 0 28px rgba(76, 175, 80, 0.8); }
+}
+
+/* Dimmed wrong choices when hint is active */
+.onboarding__tile--dimmed {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Wrong tap shake */
+.onboarding__tile--shake {
+  animation: onboard-tile-shake 0.35s ease-out;
+  border-color: #ef5350;
+}
+
+@keyframes onboard-tile-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(5px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(3px); }
+}
+
+/* Done state */
+.onboarding__done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.onboarding__word-reveal {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(48px, 12vw, 80px);
+  font-weight: 900;
+  color: #4DB6AC;
+  letter-spacing: 8px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 24px rgba(77, 182, 172, 0.4);
+  animation: onboard-word-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes onboard-word-pop {
+  0% { opacity: 0; transform: scale(0.5); }
+  60% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.onboarding__continue {
+  padding: 12px 36px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(16px, 3vw, 22px);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+  transition: transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.onboarding__continue:hover {
+  transform: scale(1.05);
+}
+
+.onboarding__continue:active {
+  transform: scale(0.95);
+}
+
+/* Skip button */
+.onboarding__skip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.15);
+  color: rgba(0, 0, 0, 0.5);
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.onboarding__skip:hover {
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.7);
+}

@@ -21,28 +21,28 @@ export const QUEST_CVCC_SHORT_A: Quest = {
   patternType: "cvcc",
   words: [
     // Nodes 1-4: no distractors
-    { word: "hand", imageKey: "hand", letters: ["h", "a", "n", "d"], distractors: [] },
-    { word: "lamp", imageKey: "lamp", letters: ["l", "a", "m", "p"], distractors: [] },
-    { word: "camp", imageKey: "camp", letters: ["c", "a", "m", "p"], distractors: [] },
-    { word: "fast", imageKey: "fast", letters: ["f", "a", "s", "t"], distractors: [] },
+    { word: "hand", imageKey: "hand", letters: ["h", "a", "n", "d"], distractors: [], mode: "image" },
+    { word: "lamp", imageKey: "lamp", letters: ["l", "a", "m", "p"], distractors: [], mode: "image" },
+    { word: "camp", imageKey: "camp", letters: ["c", "a", "m", "p"], distractors: [], mode: "image" },
+    { word: "fast", imageKey: "fast", letters: ["f", "a", "s", "t"], distractors: [], mode: "decode" },
     // Nodes 5-6: +1 distractor
-    { word: "last", imageKey: "last", letters: ["l", "a", "s", "t"], distractors: ["n"] },
-    { word: "band", imageKey: "band", letters: ["b", "a", "n", "d"], distractors: ["g"] },
+    { word: "last", imageKey: "last", letters: ["l", "a", "s", "t"], distractors: ["n"], mode: "decode" },
+    { word: "band", imageKey: "band", letters: ["b", "a", "n", "d"], distractors: ["g"], mode: "image" },
     // Nodes 7-8: +2 distractors
-    { word: "sand", imageKey: "sand", letters: ["s", "a", "n", "d"], distractors: ["g", "o"] },
-    { word: "land", imageKey: "land", letters: ["l", "a", "n", "d"], distractors: ["p", "o"] },
+    { word: "sand", imageKey: "sand", letters: ["s", "a", "n", "d"], distractors: ["g", "o"], mode: "image" },
+    { word: "land", imageKey: "land", letters: ["l", "a", "n", "d"], distractors: ["p", "o"], mode: "image" },
     // === NODES 9-16 (after Trophy Room) ===
     // Nodes 9-12: no distractors
-    { word: "damp", imageKey: "damp", letters: ["d", "a", "m", "p"], distractors: [] },
-    { word: "mask", imageKey: "mask", letters: ["m", "a", "s", "k"], distractors: [] },
-    { word: "task", imageKey: "task", letters: ["t", "a", "s", "k"], distractors: [] },
-    { word: "mast", imageKey: "mast", letters: ["m", "a", "s", "t"], distractors: [] },
+    { word: "damp", imageKey: "damp", letters: ["d", "a", "m", "p"], distractors: [], mode: "decode" },
+    { word: "mask", imageKey: "mask", letters: ["m", "a", "s", "k"], distractors: [], mode: "image" },
+    { word: "task", imageKey: "task", letters: ["t", "a", "s", "k"], distractors: [], mode: "decode" },
+    { word: "mast", imageKey: "mast", letters: ["m", "a", "s", "t"], distractors: [], mode: "decode" },
     // Nodes 13-14: +1 distractor
-    { word: "pant", imageKey: "pant", letters: ["p", "a", "n", "t"], distractors: ["g"] },
-    { word: "rant", imageKey: "rant", letters: ["r", "a", "n", "t"], distractors: ["b"] },
+    { word: "pant", imageKey: "pant", letters: ["p", "a", "n", "t"], distractors: ["g"], mode: "decode" },
+    { word: "rant", imageKey: "rant", letters: ["r", "a", "n", "t"], distractors: ["b"], mode: "decode" },
     // Nodes 15-16: +2 distractors
-    { word: "gift", imageKey: "gift", letters: ["g", "i", "f", "t"], distractors: ["n", "e"] },
-    { word: "raft", imageKey: "raft", letters: ["r", "a", "f", "t"], distractors: ["l", "u"] },
+    { word: "gift", imageKey: "gift", letters: ["g", "i", "f", "t"], distractors: ["n", "e"], mode: "image" },
+    { word: "raft", imageKey: "raft", letters: ["r", "a", "f", "t"], distractors: ["l", "u"], mode: "image" },
   ],
 };
 
@@ -53,28 +53,28 @@ export const QUEST_CVCC_SHORT_I: Quest = {
   patternType: "cvcc",
   words: [
     // Nodes 1-4: no distractors
-    { word: "milk", imageKey: "milk", letters: ["m", "i", "l", "k"], distractors: [] },
-    { word: "ring", imageKey: "ring", letters: ["r", "i", "n", "g"], distractors: [] },
-    { word: "sing", imageKey: "sing", letters: ["s", "i", "n", "g"], distractors: [] },
-    { word: "wind", imageKey: "wind", letters: ["w", "i", "n", "d"], distractors: [] },
+    { word: "milk", imageKey: "milk", letters: ["m", "i", "l", "k"], distractors: [], mode: "image" },
+    { word: "ring", imageKey: "ring", letters: ["r", "i", "n", "g"], distractors: [], mode: "image" },
+    { word: "sing", imageKey: "sing", letters: ["s", "i", "n", "g"], distractors: [], mode: "decode" },
+    { word: "wind", imageKey: "wind", letters: ["w", "i", "n", "d"], distractors: [], mode: "image" },
     // Nodes 5-6: +1 distractor
-    { word: "silk", imageKey: "silk", letters: ["s", "i", "l", "k"], distractors: ["n"] },
-    { word: "gift", imageKey: "gift", letters: ["g", "i", "f", "t"], distractors: ["n"] },
+    { word: "silk", imageKey: "silk", letters: ["s", "i", "l", "k"], distractors: ["n"], mode: "image" },
+    { word: "gift", imageKey: "gift", letters: ["g", "i", "f", "t"], distractors: ["n"], mode: "image" },
     // Nodes 7-8: +2 distractors
-    { word: "lift", imageKey: "lift", letters: ["l", "i", "f", "t"], distractors: ["n", "a"] },
-    { word: "fist", imageKey: "fist", letters: ["f", "i", "s", "t"], distractors: ["n", "a"] },
+    { word: "lift", imageKey: "lift", letters: ["l", "i", "f", "t"], distractors: ["n", "a"], mode: "decode" },
+    { word: "fist", imageKey: "fist", letters: ["f", "i", "s", "t"], distractors: ["n", "a"], mode: "image" },
     // === NODES 9-16 (after Trophy Room) ===
     // Nodes 9-12: no distractors
-    { word: "list", imageKey: "list", letters: ["l", "i", "s", "t"], distractors: [] },
-    { word: "mint", imageKey: "mint", letters: ["m", "i", "n", "t"], distractors: [] },
-    { word: "hint", imageKey: "hint", letters: ["h", "i", "n", "t"], distractors: [] },
-    { word: "king", imageKey: "king", letters: ["k", "i", "n", "g"], distractors: [] },
+    { word: "list", imageKey: "list", letters: ["l", "i", "s", "t"], distractors: [], mode: "decode" },
+    { word: "mint", imageKey: "mint", letters: ["m", "i", "n", "t"], distractors: [], mode: "image" },
+    { word: "hint", imageKey: "hint", letters: ["h", "i", "n", "t"], distractors: [], mode: "decode" },
+    { word: "king", imageKey: "king", letters: ["k", "i", "n", "g"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
-    { word: "limp", imageKey: "limp", letters: ["l", "i", "m", "p"], distractors: ["k"] },
-    { word: "risk", imageKey: "risk", letters: ["r", "i", "s", "k"], distractors: ["n"] },
+    { word: "limp", imageKey: "limp", letters: ["l", "i", "m", "p"], distractors: ["k"], mode: "decode" },
+    { word: "risk", imageKey: "risk", letters: ["r", "i", "s", "k"], distractors: ["n"], mode: "decode" },
     // Nodes 15-16: +2 distractors
-    { word: "film", imageKey: "film", letters: ["f", "i", "l", "m"], distractors: ["t", "o"] },
-    { word: "tilt", imageKey: "tilt", letters: ["t", "i", "l", "t"], distractors: ["s", "a"] },
+    { word: "film", imageKey: "film", letters: ["f", "i", "l", "m"], distractors: ["t", "o"], mode: "image" },
+    { word: "tilt", imageKey: "tilt", letters: ["t", "i", "l", "t"], distractors: ["s", "a"], mode: "decode" },
   ],
 };
 
@@ -85,28 +85,28 @@ export const QUEST_CVCC_SHORT_O: Quest = {
   patternType: "cvcc",
   words: [
     // Nodes 1-4: no distractors
-    { word: "pond", imageKey: "pond", letters: ["p", "o", "n", "d"], distractors: [] },
-    { word: "rock", imageKey: "rock", letters: ["r", "o", "c", "k"], distractors: [] },
-    { word: "sock", imageKey: "sock", letters: ["s", "o", "c", "k"], distractors: [] },
-    { word: "lock", imageKey: "lock", letters: ["l", "o", "c", "k"], distractors: [] },
+    { word: "pond", imageKey: "pond", letters: ["p", "o", "n", "d"], distractors: [], mode: "image" },
+    { word: "rock", imageKey: "rock", letters: ["r", "o", "c", "k"], distractors: [], mode: "image" },
+    { word: "sock", imageKey: "sock", letters: ["s", "o", "c", "k"], distractors: [], mode: "image" },
+    { word: "lock", imageKey: "lock", letters: ["l", "o", "c", "k"], distractors: [], mode: "image" },
     // Nodes 5-6: +1 distractor
-    { word: "lost", imageKey: "lost", letters: ["l", "o", "s", "t"], distractors: ["n"] },
-    { word: "long", imageKey: "long", letters: ["l", "o", "n", "g"], distractors: ["t"] },
+    { word: "lost", imageKey: "lost", letters: ["l", "o", "s", "t"], distractors: ["n"], mode: "decode" },
+    { word: "long", imageKey: "long", letters: ["l", "o", "n", "g"], distractors: ["t"], mode: "decode" },
     // Nodes 7-8: +2 distractors
-    { word: "song", imageKey: "song", letters: ["s", "o", "n", "g"], distractors: ["t", "a"] },
-    { word: "soft", imageKey: "soft", letters: ["s", "o", "f", "t"], distractors: ["n", "i"] },
+    { word: "song", imageKey: "song", letters: ["s", "o", "n", "g"], distractors: ["t", "a"], mode: "image" },
+    { word: "soft", imageKey: "soft", letters: ["s", "o", "f", "t"], distractors: ["n", "i"], mode: "decode" },
     // === NODES 9-16 (after Trophy Room) ===
     // Nodes 9-12: no distractors
-    { word: "bond", imageKey: "bond", letters: ["b", "o", "n", "d"], distractors: [] },
-    { word: "fond", imageKey: "fond", letters: ["f", "o", "n", "d"], distractors: [] },
-    { word: "cost", imageKey: "cost", letters: ["c", "o", "s", "t"], distractors: [] },
-    { word: "dock", imageKey: "dock", letters: ["d", "o", "c", "k"], distractors: [] },
+    { word: "bond", imageKey: "bond", letters: ["b", "o", "n", "d"], distractors: [], mode: "decode" },
+    { word: "fond", imageKey: "fond", letters: ["f", "o", "n", "d"], distractors: [], mode: "decode" },
+    { word: "cost", imageKey: "cost", letters: ["c", "o", "s", "t"], distractors: [], mode: "decode" },
+    { word: "dock", imageKey: "dock", letters: ["d", "o", "c", "k"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
-    { word: "gong", imageKey: "gong", letters: ["g", "o", "n", "g"], distractors: ["t"] },
-    { word: "romp", imageKey: "romp", letters: ["r", "o", "m", "p"], distractors: ["s"] },
+    { word: "gong", imageKey: "gong", letters: ["g", "o", "n", "g"], distractors: ["t"], mode: "decode" },
+    { word: "romp", imageKey: "romp", letters: ["r", "o", "m", "p"], distractors: ["s"], mode: "decode" },
     // Nodes 15-16: +2 distractors
-    { word: "loft", imageKey: "loft", letters: ["l", "o", "f", "t"], distractors: ["n", "i"] },
-    { word: "mock", imageKey: "mock", letters: ["m", "o", "c", "k"], distractors: ["l", "e"] },
+    { word: "loft", imageKey: "loft", letters: ["l", "o", "f", "t"], distractors: ["n", "i"], mode: "decode" },
+    { word: "mock", imageKey: "mock", letters: ["m", "o", "c", "k"], distractors: ["l", "e"], mode: "decode" },
   ],
 };
 
@@ -117,28 +117,28 @@ export const QUEST_CVCC_SHORT_U: Quest = {
   patternType: "cvcc",
   words: [
     // Nodes 1-4: no distractors
-    { word: "dust", imageKey: "dust", letters: ["d", "u", "s", "t"], distractors: [] },
-    { word: "must", imageKey: "must", letters: ["m", "u", "s", "t"], distractors: [] },
-    { word: "jump", imageKey: "jump", letters: ["j", "u", "m", "p"], distractors: [] },
-    { word: "pump", imageKey: "pump", letters: ["p", "u", "m", "p"], distractors: [] },
+    { word: "dust", imageKey: "dust", letters: ["d", "u", "s", "t"], distractors: [], mode: "image" },
+    { word: "must", imageKey: "must", letters: ["m", "u", "s", "t"], distractors: [], mode: "decode" },
+    { word: "jump", imageKey: "jump", letters: ["j", "u", "m", "p"], distractors: [], mode: "image" },
+    { word: "pump", imageKey: "pump", letters: ["p", "u", "m", "p"], distractors: [], mode: "image" },
     // Nodes 5-6: +1 distractor
-    { word: "bump", imageKey: "bump", letters: ["b", "u", "m", "p"], distractors: ["t"] },
-    { word: "dump", imageKey: "dump", letters: ["d", "u", "m", "p"], distractors: ["g"] },
+    { word: "bump", imageKey: "bump", letters: ["b", "u", "m", "p"], distractors: ["t"], mode: "image" },
+    { word: "dump", imageKey: "dump", letters: ["d", "u", "m", "p"], distractors: ["g"], mode: "image" },
     // Nodes 7-8: +2 distractors
-    { word: "gust", imageKey: "gust", letters: ["g", "u", "s", "t"], distractors: ["n", "a"] },
-    { word: "rust", imageKey: "rust", letters: ["r", "u", "s", "t"], distractors: ["n", "a"] },
+    { word: "gust", imageKey: "gust", letters: ["g", "u", "s", "t"], distractors: ["n", "a"], mode: "decode" },
+    { word: "rust", imageKey: "rust", letters: ["r", "u", "s", "t"], distractors: ["n", "a"], mode: "image" },
     // === NODES 9-16 (after Trophy Room) ===
     // Nodes 9-12: no distractors
-    { word: "bulk", imageKey: "bulk", letters: ["b", "u", "l", "k"], distractors: [] },
-    { word: "hulk", imageKey: "hulk", letters: ["h", "u", "l", "k"], distractors: [] },
-    { word: "bunk", imageKey: "bunk", letters: ["b", "u", "n", "k"], distractors: [] },
-    { word: "dunk", imageKey: "dunk", letters: ["d", "u", "n", "k"], distractors: [] },
+    { word: "bulk", imageKey: "bulk", letters: ["b", "u", "l", "k"], distractors: [], mode: "decode" },
+    { word: "hulk", imageKey: "hulk", letters: ["h", "u", "l", "k"], distractors: [], mode: "decode" },
+    { word: "bunk", imageKey: "bunk", letters: ["b", "u", "n", "k"], distractors: [], mode: "image" },
+    { word: "dunk", imageKey: "dunk", letters: ["d", "u", "n", "k"], distractors: [], mode: "decode" },
     // Nodes 13-14: +1 distractor
-    { word: "lung", imageKey: "lung", letters: ["l", "u", "n", "g"], distractors: ["d"] },
-    { word: "hung", imageKey: "hung", letters: ["h", "u", "n", "g"], distractors: ["t"] },
+    { word: "lung", imageKey: "lung", letters: ["l", "u", "n", "g"], distractors: ["d"], mode: "image" },
+    { word: "hung", imageKey: "hung", letters: ["h", "u", "n", "g"], distractors: ["t"], mode: "decode" },
     // Nodes 15-16: +2 distractors
-    { word: "dusk", imageKey: "dusk", letters: ["d", "u", "s", "k"], distractors: ["n", "o"] },
-    { word: "must", imageKey: "must", letters: ["m", "u", "s", "t"], distractors: ["n", "a"] },
+    { word: "dusk", imageKey: "dusk", letters: ["d", "u", "s", "k"], distractors: ["n", "o"], mode: "decode" },
+    { word: "must", imageKey: "must", letters: ["m", "u", "s", "t"], distractors: ["n", "a"], mode: "decode" },
   ],
 };
 
@@ -149,28 +149,28 @@ export const QUEST_CVCC_SHORT_E: Quest = {
   patternType: "cvcc",
   words: [
     // Nodes 1-4: no distractors
-    { word: "belt", imageKey: "belt", letters: ["b", "e", "l", "t"], distractors: [] },
-    { word: "best", imageKey: "best", letters: ["b", "e", "s", "t"], distractors: [] },
-    { word: "test", imageKey: "test", letters: ["t", "e", "s", "t"], distractors: [] },
-    { word: "nest", imageKey: "nest", letters: ["n", "e", "s", "t"], distractors: [] },
+    { word: "belt", imageKey: "belt", letters: ["b", "e", "l", "t"], distractors: [], mode: "image" },
+    { word: "best", imageKey: "best", letters: ["b", "e", "s", "t"], distractors: [], mode: "decode" },
+    { word: "test", imageKey: "test", letters: ["t", "e", "s", "t"], distractors: [], mode: "image" },
+    { word: "nest", imageKey: "nest", letters: ["n", "e", "s", "t"], distractors: [], mode: "image" },
     // Nodes 5-6: +1 distractor
-    { word: "melt", imageKey: "melt", letters: ["m", "e", "l", "t"], distractors: ["n"] },
-    { word: "felt", imageKey: "felt", letters: ["f", "e", "l", "t"], distractors: ["n"] },
+    { word: "melt", imageKey: "melt", letters: ["m", "e", "l", "t"], distractors: ["n"], mode: "image" },
+    { word: "felt", imageKey: "felt", letters: ["f", "e", "l", "t"], distractors: ["n"], mode: "decode" },
     // Nodes 7-8: +2 distractors
-    { word: "desk", imageKey: "desk", letters: ["d", "e", "s", "k"], distractors: ["n", "a"] },
-    { word: "west", imageKey: "west", letters: ["w", "e", "s", "t"], distractors: ["p", "u"] },
+    { word: "desk", imageKey: "desk", letters: ["d", "e", "s", "k"], distractors: ["n", "a"], mode: "image" },
+    { word: "west", imageKey: "west", letters: ["w", "e", "s", "t"], distractors: ["p", "u"], mode: "image" },
     // === NODES 9-16 (after Trophy Room) ===
     // Nodes 9-12: no distractors
-    { word: "bend", imageKey: "bend", letters: ["b", "e", "n", "d"], distractors: [] },
-    { word: "lend", imageKey: "lend", letters: ["l", "e", "n", "d"], distractors: [] },
-    { word: "mend", imageKey: "mend", letters: ["m", "e", "n", "d"], distractors: [] },
-    { word: "send", imageKey: "send", letters: ["s", "e", "n", "d"], distractors: [] },
+    { word: "bend", imageKey: "bend", letters: ["b", "e", "n", "d"], distractors: [], mode: "decode" },
+    { word: "lend", imageKey: "lend", letters: ["l", "e", "n", "d"], distractors: [], mode: "decode" },
+    { word: "mend", imageKey: "mend", letters: ["m", "e", "n", "d"], distractors: [], mode: "decode" },
+    { word: "send", imageKey: "send", letters: ["s", "e", "n", "d"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
-    { word: "help", imageKey: "help", letters: ["h", "e", "l", "p"], distractors: ["t"] },
-    { word: "yelp", imageKey: "yelp", letters: ["y", "e", "l", "p"], distractors: ["n"] },
+    { word: "help", imageKey: "help", letters: ["h", "e", "l", "p"], distractors: ["t"], mode: "image" },
+    { word: "yelp", imageKey: "yelp", letters: ["y", "e", "l", "p"], distractors: ["n"], mode: "image" },
     // Nodes 15-16: +2 distractors
-    { word: "pest", imageKey: "pest", letters: ["p", "e", "s", "t"], distractors: ["r", "i"] },
-    { word: "vent", imageKey: "vent", letters: ["v", "e", "n", "t"], distractors: ["s", "o"] },
+    { word: "pest", imageKey: "pest", letters: ["p", "e", "s", "t"], distractors: ["r", "i"], mode: "image" },
+    { word: "vent", imageKey: "vent", letters: ["v", "e", "n", "t"], distractors: ["s", "o"], mode: "image" },
   ],
 };
 
