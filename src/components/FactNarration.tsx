@@ -37,40 +37,20 @@ const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay 
       setPlaying(true);
       audio.play().catch(() => {
         setPlaying(false);
-        speakText(text);
       });
       audio.onended = () => setPlaying(false);
       audio.onerror = () => {
         setPlaying(false);
-        speakText(text);
       };
-    } else {
-      speakText(text);
     }
+    // TTS fallback disabled — will be replaced with voice actor recordings
   }, [audioSrc, text, playing, settings.slowPhoneme]);
-
-  const speakText = useCallback((t: string) => {
-    if (!("speechSynthesis" in window)) {
-      setPlaying(false);
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(t);
-    utterance.rate = settings.slowPhoneme ? 0.7 : 0.85;
-    utterance.pitch = 1.1;
-    utterance.volume = 0.8;
-    utterance.onend = () => setPlaying(false);
-    utterance.onerror = () => setPlaying(false);
-    setPlaying(true);
-    window.speechSynthesis.speak(utterance);
-  }, [settings.slowPhoneme]);
 
   const stop = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    window.speechSynthesis?.cancel();
     setPlaying(false);
   }, []);
 

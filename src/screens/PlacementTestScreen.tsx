@@ -159,47 +159,7 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
   const guidanceLevel = wordIndex === 0 ? "heavy" : wordIndex === 1 ? "medium" : "none";
 
   // TTS for first word guidance
-  const hasTTSPlayed = React.useRef(false);
-  useEffect(() => {
-    if (phase === "test" && wordIndex === 0 && !hasTTSPlayed.current) {
-      hasTTSPlayed.current = true;
-      if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance("Let's build a word! Tap the letter that makes the right sound.");
-        u.rate = 0.85;
-        u.pitch = 1.1;
-        u.volume = 0.85;
-        window.speechSynthesis.speak(u);
-      }
-    }
-  }, [phase, wordIndex]);
-
-  // Per-slot TTS prompt for first word
-  const lastSpokenSlot = React.useRef(-1);
-  useEffect(() => {
-    if (phase !== "test" || wordIndex !== 0 || !currentWord || nextSlot === -1) return;
-    if (nextSlot === lastSpokenSlot.current) return;
-    lastSpokenSlot.current = nextSlot;
-    const letter = currentWord.letters[nextSlot];
-    const phonemeMap: Record<string, string> = {
-      c: "kuh", a: "ah", t: "tuh", d: "duh", o: "aw", g: "guh",
-      s: "sss", m: "mmm", p: "puh", b: "buh", h: "huh", n: "nnn",
-      i: "ih", e: "eh", u: "uh", r: "rrr", l: "lll", f: "fff",
-    };
-    const phoneme = phonemeMap[letter.toLowerCase()] || letter;
-    const delay = nextSlot === 0 ? 1500 : 600;
-    const timer = setTimeout(() => {
-      if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(`Tap the letter that makes the ${phoneme} sound.`);
-        u.rate = 0.85;
-        u.pitch = 1.1;
-        u.volume = 0.85;
-        window.speechSynthesis.speak(u);
-      }
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [phase, wordIndex, nextSlot, currentWord]);
+  // TTS disabled — will be replaced with voice actor recordings
 
   // ---- INTRO PHASE ----
   if (phase === "intro") {

@@ -30,14 +30,9 @@ const SLOT_DISTRACTORS: string[][] = [
 
 type OnboardingStep = "intro" | "build" | "done";
 
-function speak(text: string) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.85;
-  u.pitch = 1.1;
-  u.volume = 0.85;
-  window.speechSynthesis.speak(u);
+// TTS disabled — will be replaced with voice actor recordings
+function speak(_text: string) {
+  // No-op
 }
 
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
@@ -122,7 +117,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   useEffect(() => {
     return () => {
       if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
-      window.speechSynthesis?.cancel();
+      // cleanup (no TTS to cancel)
     };
   }, []);
 
