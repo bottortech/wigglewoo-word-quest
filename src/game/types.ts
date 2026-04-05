@@ -49,12 +49,48 @@ export type PatternType = "cvc" | "cvcc" | "magic-e" | "cvvc" | "advanced";
 /** Which patterns are currently playable (images/audio ready) */
 export const ENABLED_PATTERNS: PatternType[] = ["cvc"];
 
-/** A quest = 16 words played in sequence (8 before trophy, 8 after) */
+/** A single subtrack within a tier quest (e.g., "Short A" within CVC) */
+export interface Subtrack {
+  id: string;           // e.g., "short-a", "long-a"
+  label: string;        // e.g., "Short A", "Long A"
+  vowel: string;        // e.g., "A", "AI"
+  words: CvcWord[];     // 16 words (image + decode mixed)
+}
+
+/** A tier quest = multiple ordered subtracks played in sequence */
+export interface TierQuest {
+  id: string;           // e.g., "quest-cvc", "quest-cvvc"
+  title: string;        // e.g., "Sound Builders", "Vowel Teams"
+  patternType: PatternType;
+  subtracks: Subtrack[];  // 5 ordered subtracks
+}
+
+/** Progress within a tier quest */
+export interface TierProgress {
+  questId: string;
+  currentSubtrackIndex: number;   // 0-4
+  currentWordIndex: number;       // within active subtrack
+  subtrackComplete: boolean[];    // per-subtrack completion
+  questComplete: boolean;         // all subtracks done
+}
+
+/** Legacy quest format — used by placement test and GameScreen */
 export interface Quest {
   id: string;
   title: string;
   patternType: PatternType;
   words: CvcWord[];
+}
+
+/** Convert a subtrack to a legacy Quest for GameScreen compatibility */
+export function subtrackToQuest(tierQuest: TierQuest, subtrackIndex: number): Quest {
+  const sub = tierQuest.subtracks[subtrackIndex];
+  return {
+    id: `${tierQuest.id}-${sub.id}`,
+    title: `${tierQuest.title}: ${sub.label}`,
+    patternType: tierQuest.patternType,
+    words: sub.words,
+  };
 }
 
 /** Node states on the Quest Map (matches wireframe) */

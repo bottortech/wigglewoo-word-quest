@@ -287,24 +287,21 @@ export function areAllQuestsComplete(questIds: string[]): boolean {
 
 /**
  * Check if player should go to trophy room.
- * Triggers at midpoint of current mode's word count.
+ * Triggers after node 8 (fixed position).
  */
-export function shouldShowTrophyRoom(progress: QuestProgress, trophyProgress: TrophyProgress, wordCount = WORDS_PER_QUEST): boolean {
-  const midpoint = Math.floor(wordCount / 2);
-  return progress.currentWordIndex >= midpoint && !trophyProgress.trophyRoomComplete;
+export function shouldShowTrophyRoom(progress: QuestProgress, trophyProgress: TrophyProgress): boolean {
+  return progress.currentWordIndex >= 8 && !trophyProgress.trophyRoomComplete;
 }
 
 /**
  * Get trophy node state based on progress.
- * Trophy unlocks at midpoint of current mode's word count.
+ * Trophy unlocks after node 8 (fixed position between node 8 and 9).
  */
 export function getTrophyNodeState(
   questProgress: QuestProgress,
-  trophyProgress: TrophyProgress,
-  wordCount = WORDS_PER_QUEST
+  trophyProgress: TrophyProgress
 ): NodeState {
-  const midpoint = Math.floor(wordCount / 2);
-  if (questProgress.currentWordIndex < midpoint) {
+  if (questProgress.currentWordIndex < 8) {
     return "locked";
   }
   if (!trophyProgress.trophyRoomComplete) {

@@ -16,11 +16,10 @@ import {
   hasTrophyUnlockBeenSeen,
   markTrophyUnlockSeen,
   loadNodeRatings,
-  hasHighAccuracy,
 } from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
-import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS } from "../game/questIds";
-import { loadCvccQuests, loadCvvcQuests, loadMagicEQuests, loadAdvancedQuests } from "../game/wordData";
+import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS, ADVANCED_QUEST_IDS } from "../game/questIds";
+import { loadCvccQuests, loadCvvcQuests, loadMagicEQuests, loadAdvancedQuests, areAllImageWordsComplete } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import trophyIcon from "../assets/trophy.png";
@@ -106,6 +105,16 @@ const DISCOVERY_ROOM_PREVIEWS: { envId: string; image: string; label: string }[]
   { envId: "industrial-tech-city", image: "/assets/industrial-tech-city.png", label: "Geartown" },
   { envId: "glass-dome", image: "/assets/glass-dome.png", label: "Greenhouse" },
 ];
+
+// Get all quest IDs in the same tier as a given quest
+function getTierQuestIds(questId: string): readonly string[] {
+  if (CVC_QUEST_IDS.includes(questId as typeof CVC_QUEST_IDS[number])) return CVC_QUEST_IDS;
+  if (CVCC_QUEST_IDS.includes(questId as typeof CVCC_QUEST_IDS[number])) return CVCC_QUEST_IDS;
+  if (MAGIC_E_QUEST_IDS.includes(questId as typeof MAGIC_E_QUEST_IDS[number])) return MAGIC_E_QUEST_IDS;
+  if (CVVC_QUEST_IDS.includes(questId as typeof CVVC_QUEST_IDS[number])) return CVVC_QUEST_IDS;
+  if (ADVANCED_QUEST_IDS.includes(questId as typeof ADVANCED_QUEST_IDS[number])) return ADVANCED_QUEST_IDS;
+  return [questId];
+}
 
 // Quest type definitions for Word Quest Box
 // 5 tiers in order: CVC → Blending → Magic E → Vowel Teams → Advanced
@@ -351,13 +360,12 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   );
   const wordCount = quest.words.length;
 
-  // Check if decode nodes are unlocked (all image words done OR 75% accuracy)
+  // Check if decode nodes are unlocked
+  // Requires ALL image words across ALL quests in this tier to be complete
+  const tierQuestIds = useMemo(() => getTierQuestIds(quest.id), [quest.id]);
   const decodeUnlocked = useMemo(() => {
-    // All image words completed?
-    if (progress.currentWordIndex >= imageWordCount) return true;
-    // 75% accuracy across image words?
-    return hasHighAccuracy(quest.id, Math.min(imageWordCount, 8));
-  }, [progress.currentWordIndex, imageWordCount, quest.id]);
+    return areAllImageWordsComplete(tierQuestIds);
+  }, [tierQuestIds, progress.currentWordIndex]);
 
   // Detect decode unlock moment — show modal once per quest
   const [decodeJustUnlocked, setDecodeJustUnlocked] = useState(false);
@@ -394,7 +402,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   // Trophy node state — midpoint of IMAGE words only
   const trophyNodeState = useMemo(() =>
-    getTrophyNodeState(progress, trophyProgress, imageWordCount),
+    getTrophyNodeState(progress, trophyProgress),
     [progress, trophyProgress, imageWordCount]
   );
 
@@ -714,71 +722,46 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   };
 
   // ---- WW positioning ----
-  // Special values: 'trophy' = at trophy node, 'discovery' = at discovery node
-  const initialWwLevel = useMemo(() => {
-    if (discoveryNodeState === "active") {
-      return 'discovery' as const;
+  // RESTING POSITION: always derived from real progress, never from animation state
+  const wwRestingNode: number | 'trophy' | 'discovery' = useMemo(() => {
+    if (discoveryNodeState === "active" || discoveryNodeState === "completed") {
+      return 'discovery';
     }
     if (trophyNodeState === "active") {
-      return 'trophy' as const;
+      return 'trophy';
     }
-    // Clamp to valid node range
-    const idx = Math.min(progress.currentWordIndex, wordCount - 1);
-    return Math.max(0, idx);
-  }, []);
+    return Math.max(0, Math.min(progress.currentWordIndex, wordCount - 1));
+  }, [discoveryNodeState, trophyNodeState, progress.currentWordIndex, wordCount]);
 
-  // Always start from the correct node — arrivedFromWord is only for animation origin
-  const [wwLevel, setWwLevel] = useState<number | 'trophy' | 'discovery'>(initialWwLevel);
+  // ANIMATION: temporary override that resolves back to resting position
+  const [wwAnimOverride, setWwAnimOverride] = useState<number | 'trophy' | 'discovery' | null>(null);
   const [wwAnimating, setWwAnimating] = useState(false);
   const animTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    const trophyMidpoint = Math.floor(imageWordCount / 2);
-    const lastImageIndex = imageWordCount - 1;
-    const clampedCurrent = Math.min(progress.currentWordIndex, wordCount - 1);
+    // Only animate when arrivedFromWord is set (just completed a word)
+    if (arrivedFromWord === null) {
+      setWwAnimOverride(null);
+      setWwAnimating(false);
+      return;
+    }
 
-    // Case 1: Arrived from trophy midpoint node, trophy is active → animate to trophy
-    if (arrivedFromWord === trophyMidpoint - 1 && trophyNodeState === "active") {
-      setWwLevel(arrivedFromWord);
-      setWwAnimating(false);
-      animTimerRef.current = setTimeout(() => {
-        setWwAnimating(true);
-        setWwLevel('trophy');
-      }, 80);
-    }
-    // Case 2: Arrived from last image word, discovery is active → animate to discovery
-    else if (arrivedFromWord === lastImageIndex && discoveryNodeState === "active") {
-      setWwLevel(arrivedFromWord);
-      setWwAnimating(false);
-      animTimerRef.current = setTimeout(() => {
-        setWwAnimating(true);
-        setWwLevel('discovery');
-      }, 80);
-    }
-    // Case 3: Normal node-to-node movement
-    else if (arrivedFromWord !== null && arrivedFromWord !== clampedCurrent) {
-      setWwLevel(Math.max(0, arrivedFromWord));
-      setWwAnimating(false);
-      animTimerRef.current = setTimeout(() => {
-        setWwAnimating(true);
-        setWwLevel(clampedCurrent);
-      }, 80);
-    }
-    // Case 4: Fresh load — snap to current position
-    else if (arrivedFromWord === null) {
-      if (discoveryNodeState === "active") {
-        setWwLevel('discovery');
-      } else if (trophyNodeState === "active") {
-        setWwLevel('trophy');
-      } else {
-        setWwLevel(clampedCurrent);
-      }
-    }
+    // Start at the old node, then animate to the resting node
+    setWwAnimOverride(Math.max(0, arrivedFromWord));
+    setWwAnimating(false);
+
+    animTimerRef.current = setTimeout(() => {
+      setWwAnimating(true);
+      setWwAnimOverride(null); // clear override → snaps to resting position
+    }, 80);
 
     return () => { if (animTimerRef.current) clearTimeout(animTimerRef.current); };
-  }, [arrivedFromWord, progress.currentWordIndex, trophyNodeState, discoveryNodeState, trophyProgress.trophyRoomComplete, imageWordCount, wordCount]);
+  }, [arrivedFromWord, wwRestingNode]);
 
-  // Calculate WW position based on active node
+  // FINAL POSITION: animation override if active, otherwise resting position
+  const wwLevel = wwAnimOverride !== null ? wwAnimOverride : wwRestingNode;
+
+  // Calculate WW coordinates from node index
   const wwPosition = useMemo(() => {
     if (wwLevel === 'discovery') {
       return {
@@ -794,13 +777,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         transform: 'translateX(-50%)',
       };
     }
-    // Clamp to valid node positions
     const maxIdx = Math.min(wordCount, NODE_POSITIONS.length) - 1;
     const nodeIdx = Math.max(0, Math.min(wwLevel, maxIdx));
     const pos = NODE_POSITIONS[nodeIdx];
-    if (!pos) {
-      return { left: '50%', top: '50%', transform: 'translateX(-50%)' };
-    }
     return {
       left: `${pos.x}%`,
       top: `calc(${pos.y}% - 70px)`,

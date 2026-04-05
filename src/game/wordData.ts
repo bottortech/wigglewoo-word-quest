@@ -224,6 +224,19 @@ export function getNextQuest(currentQuestId: string): Quest | null {
   return questRegistry.get(nextId) ?? null;
 }
 
+/** Check if all image words are complete across all quests in a list */
+export function areAllImageWordsComplete(questIds: readonly string[]): boolean {
+  for (const qid of questIds) {
+    const quest = questRegistry.get(qid);
+    if (!quest) continue;
+    const imageCount = quest.words.filter(w => (w.mode ?? "image") === "image").length;
+    const progress = JSON.parse(localStorage.getItem("wigglewoo-cvc-progress") || '{"quests":{}}');
+    const qp = progress.quests[qid];
+    if (!qp || qp.currentWordIndex < imageCount) return false;
+  }
+  return true;
+}
+
 /** Filter out pending words (no image yet). Returns playable words only. */
 export function filterPlayableWords(quest: Quest): Quest {
   return {
