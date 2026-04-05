@@ -112,11 +112,11 @@ export function saveQuestProgress(progress: QuestProgress): void {
  * Node 16 (index 15 → nextIndex 16): Quest is fully complete,
  * player proceeds to Trophy Room as final reward.
  */
-export function advanceWord(progress: QuestProgress): QuestProgress {
+export function advanceWord(progress: QuestProgress, wordCount = WORDS_PER_QUEST): QuestProgress {
   const nextIndex = progress.currentWordIndex + 1;
 
-  // Node 16 complete (nextIndex = 16): Quest is FULLY complete
-  if (nextIndex >= WORDS_PER_QUEST) {
+  // All words in current mode complete
+  if (nextIndex >= wordCount) {
     const updated: QuestProgress = {
       ...progress,
       currentWordIndex: nextIndex,
@@ -126,7 +126,7 @@ export function advanceWord(progress: QuestProgress): QuestProgress {
     return updated;
   }
 
-  // Normal progression (nodes 1-16, no mid-quest gate)
+  // Normal progression
   const updated: QuestProgress = {
     ...progress,
     currentWordIndex: nextIndex,
@@ -139,11 +139,12 @@ export function advanceWord(progress: QuestProgress): QuestProgress {
 // ---- Node state derivation ----
 
 /**
- * Compute the 8 node states for a quest's map display.
+ * Compute node states for a quest's map display.
+ * wordCount = number of words in the current mode (not always 16).
  */
-export function getNodeStates(progress: QuestProgress): NodeState[] {
+export function getNodeStates(progress: QuestProgress, wordCount = WORDS_PER_QUEST): NodeState[] {
   const states: NodeState[] = [];
-  for (let i = 0; i < WORDS_PER_QUEST; i++) {
+  for (let i = 0; i < wordCount; i++) {
     if (progress.questComplete) {
       states.push("completed");
     } else if (i < progress.currentWordIndex) {
@@ -286,49 +287,46 @@ export function areAllQuestsComplete(questIds: string[]): boolean {
 
 /**
  * Check if player should go to trophy room.
- * Returns true after first 8 nodes are complete and trophy hasn't been collected.
+ * Triggers at midpoint of current mode's word count.
  */
-export function shouldShowTrophyRoom(progress: QuestProgress, trophyProgress: TrophyProgress): boolean {
-  return progress.currentWordIndex >= 8 && !trophyProgress.trophyRoomComplete;
+export function shouldShowTrophyRoom(progress: QuestProgress, trophyProgress: TrophyProgress, wordCount = WORDS_PER_QUEST): boolean {
+  const midpoint = Math.floor(wordCount / 2);
+  return progress.currentWordIndex >= midpoint && !trophyProgress.trophyRoomComplete;
 }
 
 /**
  * Get trophy node state based on progress.
- * Trophy unlocks after first 8 nodes are completed (midpoint reward).
+ * Trophy unlocks at midpoint of current mode's word count.
  */
 export function getTrophyNodeState(
   questProgress: QuestProgress,
-  trophyProgress: TrophyProgress
+  trophyProgress: TrophyProgress,
+  wordCount = WORDS_PER_QUEST
 ): NodeState {
-  // Trophy node is locked until first 8 nodes are complete
-  if (questProgress.currentWordIndex < 8) {
+  const midpoint = Math.floor(wordCount / 2);
+  if (questProgress.currentWordIndex < midpoint) {
     return "locked";
   }
-  // Trophy node is active if 8+ nodes done but trophy not collected
   if (!trophyProgress.trophyRoomComplete) {
     return "active";
   }
-  // Trophy collected
   return "completed";
 }
 
 /**
  * Get discovery room node state based on progress.
- * Discovery room unlocks after all 16 nodes are completed (final reward).
+ * Discovery room unlocks after Mode 1 (image words) is completed.
  */
 export function getDiscoveryNodeState(
   questProgress: QuestProgress,
   discoveryProgress: DiscoveryProgress
 ): NodeState {
-  // Discovery node is locked until all 16 nodes are complete
   if (!questProgress.questComplete) {
     return "locked";
   }
-  // Discovery node is active if quest complete but discovery not done
   if (!discoveryProgress.discoveryRoomComplete) {
     return "active";
   }
-  // Discovery room completed
   return "completed";
 }
 

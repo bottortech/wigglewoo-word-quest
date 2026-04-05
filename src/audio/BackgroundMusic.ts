@@ -18,7 +18,7 @@ class BackgroundMusicManager {
   private pendingPlay = false;
 
   // Volume: low so it sits behind letter sounds and phrases
-  private readonly VOLUME = 0.35;
+  private readonly VOLUME = 0.18;
 
   private constructor() {
     // Singleton — use getInstance()

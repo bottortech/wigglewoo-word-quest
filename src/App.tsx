@@ -27,6 +27,8 @@ import {
   loadCvvcQuests,
   loadMagicEQuests,
   loadAdvancedQuests,
+  getImageWords,
+  getDecodeWords,
 } from "./game/wordData";
 import { DEFAULT_QUEST_ID } from "./game/questIds";
 import { QUEST_ENVIRONMENT_MAP } from "./game/exploreData";
@@ -130,6 +132,8 @@ export default function App() {
   const [route, setRoute] = useState<Route>("home");
   const [activeQuest, setActiveQuest] = useState<Quest | null>(resolvedInitial);
   const [wordIndex, setWordIndex] = useState<number>(0);
+  // All 16 words passed to screens — decode gating handled in QuestMapScreen
+  void getImageWords; void getDecodeWords;
 
   // If saved quest is from an unloaded chunk (CVCC/CVVC), load it
   useEffect(() => {
@@ -253,7 +257,7 @@ export default function App() {
         setRoute("map");
         setMapRevision((r) => r + 1);
       } else {
-        // quest-summary: last word (node 16) done → discovery room
+        // quest-summary: last word done → discovery room
         advanceWord(progress);
         // Quest complete — check challenge unlock
         setTimeout(checkChallengeUnlock, 300);

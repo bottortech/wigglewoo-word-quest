@@ -12,7 +12,6 @@
 import React, { useCallback, useMemo, useEffect, useState, useRef } from "react";
 import WordImage from "../components/WordImage";
 import type { Quest, CvcWord, LetterTile } from "../game/types";
-import { FIRST_HALF_WORDS } from "../game/types";
 
 import { buildLetterBank } from "../game/state";
 import { getCelebrationTypeForWord } from "../game/triggers";
@@ -22,7 +21,7 @@ import {
   recordTimeSpent,
 } from "../game/analytics";
 import { recordWordCompletion } from "../game/learningAnalytics";
-import { questIdToVowelId, getLetterCategory } from "../game/wordData";
+import { questIdToVowelId } from "../game/wordData";
 import {
   playLetterSound,
   playSuccessPhrase,
@@ -114,50 +113,27 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const wordLength = currentWord.letters.length;
   const wordLengthClass = `word-length-${wordLength}`;
 
-  // Should we use distractors? Only for nodes 9-16 (index >= 8)
-  const useDistractors = currentWordIndex >= FIRST_HALF_WORDS;
-
-  // Build the letter bank — strip distractors for early nodes
+  // Build the full letter bank — all correct letters + phonetic distractors
   const letterBank: LetterTile[] = useMemo(() => {
-    const wordForBank: CvcWord = useDistractors
-      ? currentWord
-      : { ...currentWord, distractors: [] };
-    return buildLetterBank(wordForBank);
-  }, [currentWord, useDistractors]);
+    return buildLetterBank(currentWord, quest.patternType);
+  }, [currentWord, quest.patternType]);
 
   // ---- Step state ----
   const [step, setStep] = useState<GameStep>("build");
   const [filledSlots, setFilledSlots] = useState<(string | null)[]>(
     () => Array(wordLength).fill(null)
   );
-  const [usedTileIds] = useState<Set<string>>(new Set());
+  const [usedTileIds, setUsedTileIds] = useState<Set<string>>(new Set());
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [slotAttempts, setSlotAttempts] = useState(0); // wrong attempts on current slot
   const [shakingTileId, setShakingTileId] = useState<string | null>(null);
   const nodeStartTime = useRef(Date.now());
 
-  // Build per-slot letter choices: correct letter + 1-2 distractors
-  const slotChoices: LetterTile[] = useMemo(() => {
-    const slotIdx = filledSlots.findIndex((s) => s === null);
-    if (slotIdx === -1) return [];
-    const correctLetter = currentWord.letters[slotIdx];
-    // Pick 1-2 distractors from the word's distractor list or other letters
-    const distractors = currentWord.distractors.length > 0
-      ? currentWord.distractors.slice(0, 2)
-      : currentWord.letters.filter((l, i) => i !== slotIdx && l !== correctLetter).slice(0, 1);
-    const choices = [correctLetter, ...distractors];
-    // Shuffle
-    const tiles: LetterTile[] = choices.map((letter, i) => ({
-      id: `choice-${slotIdx}-${i}-${letter}`,
-      letter,
-      category: getLetterCategory(letter),
-    }));
-    for (let i = tiles.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
-    }
-    return tiles;
-  }, [filledSlots, currentWord]);
+  // Available tiles (not yet placed)
+  const availableTiles = useMemo(() =>
+    letterBank.filter((t) => !usedTileIds.has(t.id)),
+    [letterBank, usedTileIds]
+  );
 
   // ---- Speaker / audio replay state ----
   const [audioActive, setAudioActive] = useState(false);
@@ -198,7 +174,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
         setAudioActive(true);
         if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
         audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
-      }, 400);
+      }, 1200);
     }
   }, []);
 
@@ -222,6 +198,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
       const newSlots = [...filledSlots];
       newSlots[slotIdx] = tile.letter;
       setFilledSlots(newSlots);
+      setUsedTileIds((prev) => new Set(prev).add(tile.id));
       setSlotAttempts(0); // reset for next slot
       recordCorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
 
@@ -273,7 +250,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
   // ---- Celebration complete → navigate ----
   const handleCelebrationComplete = useCallback(() => {
-    const celebType = getCelebrationTypeForWord(currentWordIndex);
+    const celebType = getCelebrationTypeForWord(currentWordIndex, quest.words.length);
     if (celebType === "quest-complete") {
       onNavigate("quest-summary");
     } else {
@@ -281,9 +258,6 @@ const GameScreen: React.FC<GameScreenProps> = ({
     }
   }, [currentWordIndex, onNavigate]);
 
-  // Available tiles (not yet used)
-  // Letter bank filtered by used tiles (kept for future use)
-  void letterBank; void usedTileIds;
 
   // =============================================
   // JSX
@@ -348,9 +322,9 @@ const GameScreen: React.FC<GameScreenProps> = ({
                       })}
                     </div>
 
-                    {/* Letter bank — reduced choices per slot */}
+                    {/* Letter bank — full word letters + distractors */}
                     <div className="letter-bank">
-                      {slotChoices.map((tile) => {
+                      {availableTiles.map((tile) => {
                         const slotIdx = filledSlots.findIndex((s) => s === null);
                         const isCorrect = slotIdx >= 0 && tile.letter.toLowerCase() === currentWord.letters[slotIdx].toLowerCase();
                         const showHint = slotAttempts >= 2 && isCorrect;
@@ -382,7 +356,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
           {/* ========== STEP 2: CELEBRATION ========== */}
           {step === "celebrate" && (
             <CelebrationOverlay
-              type={getCelebrationTypeForWord(currentWordIndex)}
+              type={getCelebrationTypeForWord(currentWordIndex, quest.words.length)}
               onComplete={handleCelebrationComplete}
               wordsComplete={currentWordIndex + 1}
               totalWords={quest.words.length}

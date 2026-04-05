@@ -44,10 +44,10 @@ export const QUEST_SHORT_A: Quest = {
     { word: "pan", imageKey: "pan", letters: ["p", "a", "n"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
     { word: "can", imageKey: "can", letters: ["c", "a", "n"], distractors: ["t"], mode: "image" },
-    { word: "nap", imageKey: "nap", letters: ["n", "a", "p"], distractors: ["d"], mode: "decode" },
+    { word: "nap", imageKey: "nap", letters: ["n", "a", "p"], distractors: ["d"], mode: "image" },
     // Nodes 15-16: +2 distractors
     { word: "tag", imageKey: "tag", letters: ["t", "a", "g"], distractors: ["p", "u"], mode: "image" },
-    { word: "sad", imageKey: "sad", letters: ["s", "a", "d"], distractors: ["m", "e"], mode: "decode" },
+    { word: "sad", imageKey: "sad", letters: ["s", "a", "d"], distractors: ["m", "e"], mode: "image" },
   ],
 };
 
@@ -61,25 +61,25 @@ export const QUEST_SHORT_I: Quest = {
     { word: "pig", imageKey: "pig", letters: ["p", "i", "g"], distractors: [], mode: "image" },
     { word: "pin", imageKey: "pin", letters: ["p", "i", "n"], distractors: [], mode: "image" },
     { word: "dig", imageKey: "dig", letters: ["d", "i", "g"], distractors: [], mode: "image" },
-    { word: "sit", imageKey: "sit", letters: ["s", "i", "t"], distractors: [], mode: "decode" },
+    { word: "sit", imageKey: "sit", letters: ["s", "i", "t"], distractors: [], mode: "image" },
     // Nodes 5-6: +1 distractor
     { word: "lid", imageKey: "lid", letters: ["l", "i", "d"], distractors: ["n"], mode: "image" },
     { word: "wig", imageKey: "wig", letters: ["w", "i", "g"], distractors: ["b"], mode: "image" },
     // Nodes 7-8: +2 distractors
-    { word: "rip", imageKey: "rip", letters: ["r", "i", "p"], distractors: ["n", "a"], mode: "decode" },
-    { word: "mix", imageKey: "mix", letters: ["m", "i", "x"], distractors: ["t", "a"], mode: "decode" },
+    { word: "rip", imageKey: "rip", letters: ["r", "i", "p"], distractors: ["n", "a"], mode: "image" },
+    { word: "mix", imageKey: "mix", letters: ["m", "i", "x"], distractors: ["t", "a"], mode: "image" },
     // === NODES 9-16 (after Trophy Room) ===
     // Nodes 9-12: no distractors
     { word: "zip", imageKey: "zip", letters: ["z", "i", "p"], distractors: [], mode: "image" },
     { word: "bib", imageKey: "bib", letters: ["b", "i", "b"], distractors: [], mode: "image" },
     { word: "kit", imageKey: "kit", letters: ["k", "i", "t"], distractors: [], mode: "image" },
-    { word: "hit", imageKey: "hit", letters: ["h", "i", "t"], distractors: [], mode: "decode" },
+    { word: "hit", imageKey: "hit", letters: ["h", "i", "t"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
-    { word: "dip", imageKey: "dip", letters: ["d", "i", "p"], distractors: ["s"], mode: "decode" },
-    { word: "win", imageKey: "win", letters: ["w", "i", "n"], distractors: ["b"], mode: "decode" },
+    { word: "dip", imageKey: "dip", letters: ["d", "i", "p"], distractors: ["s"], mode: "image" },
+    { word: "win", imageKey: "win", letters: ["w", "i", "n"], distractors: ["b"], mode: "image" },
     // Nodes 15-16: +2 distractors
-    { word: "fin", imageKey: "fin", letters: ["f", "i", "n"], distractors: ["g", "o"], mode: "decode" },
-    { word: "sip", imageKey: "sip", letters: ["s", "i", "p"], distractors: ["m", "a"], mode: "decode" },
+    { word: "fin", imageKey: "fin", letters: ["f", "i", "n"], distractors: ["g", "o"], mode: "image" },
+    { word: "sip", imageKey: "sip", letters: ["s", "i", "p"], distractors: ["m", "a"], mode: "image" },
   ],
 };
 
@@ -107,11 +107,11 @@ export const QUEST_SHORT_O: Quest = {
     { word: "cop", imageKey: "cop", letters: ["c", "o", "p"], distractors: [], mode: "image" },
     { word: "dot", imageKey: "dot", letters: ["d", "o", "t"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
-    { word: "jog", imageKey: "jog", letters: ["j", "o", "g"], distractors: ["n"], mode: "decode" },
-    { word: "rot", imageKey: "rot", letters: ["r", "o", "t"], distractors: ["n"], mode: "decode" },
+    { word: "jog", imageKey: "jog", letters: ["j", "o", "g"], distractors: ["n"], mode: "image" },
+    { word: "rot", imageKey: "rot", letters: ["r", "o", "t"], distractors: ["n"], mode: "image" },
     // Nodes 15-16: +2 distractors
     { word: "pot", imageKey: "pot", letters: ["p", "o", "t"], distractors: ["g", "i"], mode: "image" },
-    { word: "sob", imageKey: "sob", letters: ["s", "o", "b"], distractors: ["n", "a"], mode: "decode" },
+    { word: "sob", imageKey: "sob", letters: ["s", "o", "b"], distractors: ["n", "a"], mode: "image" },
   ],
 };
 
@@ -137,10 +137,10 @@ export const QUEST_SHORT_U: Quest = {
     { word: "gum", imageKey: "gum", letters: ["g", "u", "m"], distractors: [], mode: "image" },
     { word: "nut", imageKey: "nut", letters: ["n", "u", "t"], distractors: [], mode: "image" },
     { word: "hug", imageKey: "hug", letters: ["h", "u", "g"], distractors: [], mode: "image" },
-    { word: "dug", imageKey: "dug", letters: ["d", "u", "g"], distractors: [], mode: "decode" },
+    { word: "dug", imageKey: "dug", letters: ["d", "u", "g"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
     { word: "pup", imageKey: "pup", letters: ["p", "u", "p"], distractors: ["n"], mode: "image" },
-    { word: "cut", imageKey: "cut", letters: ["c", "u", "t"], distractors: ["n"], mode: "decode" },
+    { word: "cut", imageKey: "cut", letters: ["c", "u", "t"], distractors: ["n"], mode: "image" },
     // Nodes 15-16: +2 distractors
     { word: "jug", imageKey: "jug", letters: ["j", "u", "g"], distractors: ["n", "a"], mode: "image" },
     { word: "fun", imageKey: "fun", letters: ["f", "u", "n"], distractors: ["t", "o"], mode: "image" },
@@ -169,10 +169,10 @@ export const QUEST_SHORT_E: Quest = {
     { word: "pet", imageKey: "pet", letters: ["p", "e", "t"], distractors: [], mode: "image" },
     { word: "ten", imageKey: "ten", letters: ["t", "e", "n"], distractors: [], mode: "image" },
     { word: "web", imageKey: "web", letters: ["w", "e", "b"], distractors: [], mode: "image" },
-    { word: "beg", imageKey: "beg", letters: ["b", "e", "g"], distractors: [], mode: "decode" },
+    { word: "beg", imageKey: "beg", letters: ["b", "e", "g"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
     { word: "ref", imageKey: "ref", letters: ["r", "e", "f"], distractors: ["m"], mode: "image" },
-    { word: "fed", imageKey: "fed", letters: ["f", "e", "d"], distractors: ["n"], mode: "decode" },
+    { word: "fed", imageKey: "fed", letters: ["f", "e", "d"], distractors: ["n"], mode: "image" },
     // Nodes 15-16: +2 distractors
     { word: "gem", imageKey: "gem", letters: ["g", "e", "m"], distractors: ["t", "a"], mode: "image" },
     { word: "vet", imageKey: "vet", letters: ["v", "e", "t"], distractors: ["p", "u"], mode: "image" },

@@ -98,14 +98,83 @@ export { initialHint };
 
 let _tileIdCounter = 0;
 
-export function buildLetterBank(word: CvcWord): LetterTile[] {
+// Phonetically similar letter pairs for intelligent distractors
+const PHONETIC_PAIRS: Record<string, string[]> = {
+  b: ["p", "d"],  p: ["b", "t"],  d: ["t", "b"],  t: ["d", "p"],
+  c: ["k", "g"],  k: ["c", "g"],  g: ["c", "k"],
+  f: ["v", "s"],  v: ["f", "b"],  s: ["z", "f"],  z: ["s"],
+  m: ["n"],  n: ["m"],  l: ["r"],  r: ["l"],
+  a: ["e", "u"],  e: ["a", "i"],  i: ["e"],  o: ["u", "a"],  u: ["o"],
+  w: ["v"],  j: ["g"],  h: [""],  x: ["s"],  q: ["k"],  y: ["i"],
+};
+
+/** Pick phonetically similar distractors for a word */
+function pickPhoneticDistractors(wordLetters: string[], count: number): string[] {
+  const used = new Set(wordLetters.map(l => l.toLowerCase()));
+  const candidates: string[] = [];
+
+  // Gather phonetically similar letters for each letter in the word
+  for (const letter of wordLetters) {
+    const similar = PHONETIC_PAIRS[letter.toLowerCase()] || [];
+    for (const s of similar) {
+      if (s && !used.has(s) && !candidates.includes(s)) {
+        candidates.push(s);
+      }
+    }
+  }
+
+  // If not enough phonetic matches, fill with common letters
+  const fallbacks = "rstlnmaeiou".split("");
+  for (const fb of fallbacks) {
+    if (candidates.length >= count * 2) break;
+    if (!used.has(fb) && !candidates.includes(fb)) {
+      candidates.push(fb);
+    }
+  }
+
+  // Shuffle and pick
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+
+  return candidates.slice(0, count);
+}
+
+/** Distractor count by pattern type */
+const DISTRACTORS_BY_TIER: Record<string, number> = {
+  cvc: 2,
+  cvcc: 2,
+  "magic-e": 2,
+  cvvc: 3,
+  advanced: 3,
+};
+
+/**
+ * Build a full letter bank for a word.
+ * Shows all correct letters + phonetic distractors, shuffled.
+ * Letters disappear from bank as they are placed.
+ */
+export function buildLetterBank(word: CvcWord, patternType?: string): LetterTile[] {
   _tileIdCounter = 0;
-  const allLetters = [...word.letters, ...word.distractors];
+
+  // Determine distractor count from tier
+  const distractorCount = patternType
+    ? (DISTRACTORS_BY_TIER[patternType] ?? 2)
+    : (word.distractors.length || 2);
+
+  // Use word's explicit distractors if available, otherwise generate phonetic ones
+  const distractors = word.distractors.length > 0
+    ? word.distractors.slice(0, distractorCount)
+    : pickPhoneticDistractors(word.letters, distractorCount);
+
+  const allLetters = [...word.letters, ...distractors];
   const tiles: LetterTile[] = allLetters.map((letter) => ({
     id: `tile-${_tileIdCounter++}`,
     letter,
     category: getLetterCategory(letter),
   }));
+
   // Fisher-Yates shuffle
   for (let i = tiles.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

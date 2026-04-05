@@ -22,10 +22,11 @@ export const AUTO_ADVANCE_DELAY = 300;
  * - All other nodes: "level-complete"
  */
 export function getCelebrationTypeForWord(
-  completedWordIndex: number
+  completedWordIndex: number,
+  wordCount = WORDS_PER_QUEST
 ): CelebrationType {
-  // Node 16 (index 15): All nodes done → discovery room
-  if (completedWordIndex >= WORDS_PER_QUEST - 1) {
+  // Last word in current mode → quest complete
+  if (completedWordIndex >= wordCount - 1) {
     return "quest-complete";
   }
 

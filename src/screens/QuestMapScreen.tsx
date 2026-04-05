@@ -12,11 +12,11 @@ import {
   loadTrophyProgress,
   getTrophyNodeState,
   loadDiscoveryProgress,
-  getDiscoveryNodeState,
   areAllQuestsComplete,
   hasTrophyUnlockBeenSeen,
   markTrophyUnlockSeen,
   loadNodeRatings,
+  hasHighAccuracy,
 } from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS } from "../game/questIds";
@@ -315,7 +315,9 @@ interface QuestMapScreenProps {
   hasNewSkin?: boolean;
   onDevResetAll?: () => void;
   arrivedFromWord: number | null;
-  trophyJustEarned?: boolean; // true when coming from trophy-transition → triggers snap animation
+  trophyJustEarned?: boolean;
+  challengeMode?: boolean;
+  onToggleChallengeMode?: () => void;
 }
 
 const QuestMapInner: React.FC<QuestMapScreenProps> = ({
@@ -334,37 +336,92 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   hasNewSkin,
   onDevResetAll,
   arrivedFromWord,
+  challengeMode: _challengeMode,
+  onToggleChallengeMode: _onToggleChallengeMode,
 }) => {
+  void _challengeMode; void _onToggleChallengeMode;
   const progress = useMemo(() => loadQuestProgress(quest.id), [quest.id]);
   const trophyProgress = useMemo(() => loadTrophyProgress(quest.id), [quest.id]);
   const discoveryProgress = useMemo(() => loadDiscoveryProgress(quest.id), [quest.id]);
 
+  // Count image vs decode words
+  const imageWordCount = useMemo(() =>
+    quest.words.filter(w => (w.mode ?? "image") === "image").length,
+    [quest.words]
+  );
+  const wordCount = quest.words.length;
+
+  // Check if decode nodes are unlocked (all image words done OR 75% accuracy)
+  const decodeUnlocked = useMemo(() => {
+    // All image words completed?
+    if (progress.currentWordIndex >= imageWordCount) return true;
+    // 75% accuracy across image words?
+    return hasHighAccuracy(quest.id, Math.min(imageWordCount, 8));
+  }, [progress.currentWordIndex, imageWordCount, quest.id]);
+
+  // Detect decode unlock moment — show modal once per quest
+  const [decodeJustUnlocked, setDecodeJustUnlocked] = useState(false);
+  const [showDecodeModal, setShowDecodeModal] = useState(false);
+  const decodeSeenKey = `ww_decode_seen_${quest.id}`;
+  const prevDecodeUnlocked = useRef(decodeUnlocked);
+  useEffect(() => {
+    if (decodeUnlocked && !prevDecodeUnlocked.current) {
+      const alreadySeen = localStorage.getItem(decodeSeenKey) === "true";
+      if (!alreadySeen) {
+        setDecodeJustUnlocked(true);
+        setShowDecodeModal(true);
+        localStorage.setItem(decodeSeenKey, "true");
+        // Glow fades after 3s
+        const timer = setTimeout(() => setDecodeJustUnlocked(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevDecodeUnlocked.current = decodeUnlocked;
+  }, [decodeUnlocked, decodeSeenKey]);
+
+  const handleDecodeStart = useCallback(() => {
+    setShowDecodeModal(false);
+    // Jump to first decode node
+    onStartLevel(imageWordCount);
+  }, [imageWordCount, onStartLevel]);
+
+  const handleDecodeStayOnMap = useCallback(() => {
+    setShowDecodeModal(false);
+  }, []);
+
   // Quest fully done — nodes, path, trophy, discovery, WiggleWoo all hidden
   const questFullyDone = progress.questComplete && trophyProgress.trophyRoomComplete && discoveryProgress.discoveryRoomComplete;
 
-  // Trophy node state
+  // Trophy node state — midpoint of IMAGE words only
   const trophyNodeState = useMemo(() =>
-    getTrophyNodeState(progress, trophyProgress),
-    [progress, trophyProgress]
+    getTrophyNodeState(progress, trophyProgress, imageWordCount),
+    [progress, trophyProgress, imageWordCount]
   );
 
-  // Discovery room node state
-  const discoveryNodeState = useMemo(() =>
-    getDiscoveryNodeState(progress, discoveryProgress),
-    [progress, discoveryProgress]
-  );
+  // Discovery room node state — triggers after image words complete
+  const discoveryNodeState = useMemo(() => {
+    const imageComplete = progress.currentWordIndex >= imageWordCount;
+    if (!imageComplete) return "locked" as NodeState;
+    if (!discoveryProgress.discoveryRoomComplete) return "active" as NodeState;
+    return "completed" as NodeState;
+  }, [progress.currentWordIndex, imageWordCount, discoveryProgress]);
 
   // Skin-aware WiggleWoo hero image
   const skinAssets = useMemo(() => getActiveSkinAssets(), []);
 
   // Per-node performance ratings
   const nodeRatings = useMemo(() => loadNodeRatings(quest.id), [quest.id]);
-  
-  // Generate states for all 16 nodes — linear progression, no mid-quest gate
+
+  // Generate states for all nodes — image nodes progress normally, decode nodes gated
   const nodeStates: NodeState[] = useMemo(() => {
     const states: NodeState[] = [];
-    for (let i = 0; i < 16; i++) {
-      if (progress.questComplete) {
+    for (let i = 0; i < wordCount; i++) {
+      const isDecodeNode = i >= imageWordCount;
+
+      if (isDecodeNode && !decodeUnlocked) {
+        // Decode node locked until mastery
+        states.push("locked");
+      } else if (progress.questComplete) {
         states.push("completed");
       } else if (i < progress.currentWordIndex) {
         states.push("completed");
@@ -375,7 +432,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       }
     }
     return states;
-  }, [progress.questComplete, progress.currentWordIndex]);
+  }, [progress.questComplete, progress.currentWordIndex, wordCount]);
 
   // Find active node index (could be a regular node OR trophy is active)
   const activeNodeIndex = useMemo(() => {
@@ -665,56 +722,63 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     if (trophyNodeState === "active") {
       return 'trophy' as const;
     }
-    return progress.currentWordIndex;
+    // Clamp to valid node range
+    const idx = Math.min(progress.currentWordIndex, wordCount - 1);
+    return Math.max(0, idx);
   }, []);
 
-  const [wwLevel, setWwLevel] = useState<number | 'trophy' | 'discovery'>(
-    arrivedFromWord !== null ? arrivedFromWord : initialWwLevel
-  );
+  // Always start from the correct node — arrivedFromWord is only for animation origin
+  const [wwLevel, setWwLevel] = useState<number | 'trophy' | 'discovery'>(initialWwLevel);
   const [wwAnimating, setWwAnimating] = useState(false);
   const animTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    // Case 1: Arrived from node 8 (index 7), trophy is active → animate to trophy
-    if (arrivedFromWord === 7 && trophyNodeState === "active") {
-      setWwLevel(7); // Start at node 8
-      setWwAnimating(false);
-      animTimerRef.current = setTimeout(() => {
-        setWwAnimating(true);
-        setWwLevel('trophy'); // Slide to trophy
-      }, 80);
-    }
-    // Case 2: Arrived from node 16 (index 15), discovery is active → animate to discovery
-    else if (arrivedFromWord === 15 && discoveryNodeState === "active") {
-      setWwLevel(15); // Start at node 16
-      setWwAnimating(false);
-      animTimerRef.current = setTimeout(() => {
-        setWwAnimating(true);
-        setWwLevel('discovery'); // Slide to discovery node
-      }, 80);
-    }
-    // Case 3: Normal node-to-node movement
-    else if (arrivedFromWord !== null && arrivedFromWord !== progress.currentWordIndex) {
+    const trophyMidpoint = Math.floor(imageWordCount / 2);
+    const lastImageIndex = imageWordCount - 1;
+    const clampedCurrent = Math.min(progress.currentWordIndex, wordCount - 1);
+
+    // Case 1: Arrived from trophy midpoint node, trophy is active → animate to trophy
+    if (arrivedFromWord === trophyMidpoint - 1 && trophyNodeState === "active") {
       setWwLevel(arrivedFromWord);
       setWwAnimating(false);
       animTimerRef.current = setTimeout(() => {
         setWwAnimating(true);
-        setWwLevel(progress.currentWordIndex);
+        setWwLevel('trophy');
       }, 80);
     }
-    // Case 4: Discovery is active but no animation needed (fresh load)
-    else if (discoveryNodeState === "active" && arrivedFromWord === null) {
-      setWwLevel('discovery');
+    // Case 2: Arrived from last image word, discovery is active → animate to discovery
+    else if (arrivedFromWord === lastImageIndex && discoveryNodeState === "active") {
+      setWwLevel(arrivedFromWord);
+      setWwAnimating(false);
+      animTimerRef.current = setTimeout(() => {
+        setWwAnimating(true);
+        setWwLevel('discovery');
+      }, 80);
     }
-    // Case 5: Trophy is active but no animation needed (fresh load)
-    else if (trophyNodeState === "active" && arrivedFromWord === null) {
-      setWwLevel('trophy');
+    // Case 3: Normal node-to-node movement
+    else if (arrivedFromWord !== null && arrivedFromWord !== clampedCurrent) {
+      setWwLevel(Math.max(0, arrivedFromWord));
+      setWwAnimating(false);
+      animTimerRef.current = setTimeout(() => {
+        setWwAnimating(true);
+        setWwLevel(clampedCurrent);
+      }, 80);
+    }
+    // Case 4: Fresh load — snap to current position
+    else if (arrivedFromWord === null) {
+      if (discoveryNodeState === "active") {
+        setWwLevel('discovery');
+      } else if (trophyNodeState === "active") {
+        setWwLevel('trophy');
+      } else {
+        setWwLevel(clampedCurrent);
+      }
     }
 
     return () => { if (animTimerRef.current) clearTimeout(animTimerRef.current); };
-  }, [arrivedFromWord, progress.currentWordIndex, trophyNodeState, discoveryNodeState, trophyProgress.trophyRoomComplete]);
+  }, [arrivedFromWord, progress.currentWordIndex, trophyNodeState, discoveryNodeState, trophyProgress.trophyRoomComplete, imageWordCount, wordCount]);
 
-  // Calculate WW position based on active node (horizontal layout)
+  // Calculate WW position based on active node
   const wwPosition = useMemo(() => {
     if (wwLevel === 'discovery') {
       return {
@@ -730,15 +794,19 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         transform: 'translateX(-50%)',
       };
     }
-    // Normal node positioning
-    const nodeIdx = Math.min(wwLevel, NODE_POSITIONS.length - 1);
+    // Clamp to valid node positions
+    const maxIdx = Math.min(wordCount, NODE_POSITIONS.length) - 1;
+    const nodeIdx = Math.max(0, Math.min(wwLevel, maxIdx));
     const pos = NODE_POSITIONS[nodeIdx];
+    if (!pos) {
+      return { left: '50%', top: '50%', transform: 'translateX(-50%)' };
+    }
     return {
       left: `${pos.x}%`,
       top: `calc(${pos.y}% - 70px)`,
       transform: 'translateX(-50%)',
     };
-  }, [wwLevel]);
+  }, [wwLevel, wordCount]);
 
   // Generate SVG path for the glowing learning line (horizontal flow)
   const pathD = useMemo(() => {
@@ -827,23 +895,37 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         </svg>
 
         {/* 16 Gear Nodes */}
-        {NODE_POSITIONS.map((pos, i) => {
+        {NODE_POSITIONS.slice(0, wordCount).map((pos, i) => {
           const state = nodeStates[i];
-          const tappable = isNodeTappable(state);
+          const isDecodeNode = i >= imageWordCount;
+          const isDecodeLocked = isDecodeNode && !decodeUnlocked;
+          const tappable = isNodeTappable(state) && !isDecodeLocked;
           return (
             <div
               key={i}
-              className={`gear-node-wrapper${shakingNodeIndex === i ? ' gear-node-wrapper--shaking' : ''}${nextTargetNode === i ? ' gear-node-wrapper--next-target' : ''}${state === 'completed' && nodeRatings[i] ? ` rating-${nodeRatings[i]}` : ''}`}
+              className={[
+                'gear-node-wrapper',
+                shakingNodeIndex === i ? 'gear-node-wrapper--shaking' : '',
+                nextTargetNode === i ? 'gear-node-wrapper--next-target' : '',
+                state === 'completed' && nodeRatings[i] ? `rating-${nodeRatings[i]}` : '',
+                isDecodeNode ? 'gear-node-wrapper--decode' : '',
+                isDecodeLocked ? 'gear-node-wrapper--decode-locked' : '',
+                isDecodeNode && decodeJustUnlocked && !isDecodeLocked ? 'gear-node-wrapper--decode-unlocking' : '',
+              ].filter(Boolean).join(' ')}
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
               }}
             >
               <GearNode
-                state={state}
+                state={isDecodeLocked ? "locked" : state}
                 number={i + 1}
                 onClick={() => {
-                  if (tappable) {
+                  if (isDecodeLocked) {
+                    setLockedToast("🔒 Complete the picture words first to unlock challenge words");
+                    if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
+                    shakeTimerRef.current = setTimeout(() => setLockedToast(null), 1800);
+                  } else if (tappable) {
                     onStartLevel(i);
                   } else if (state === 'locked') {
                     handleLockedTap(i);
@@ -851,6 +933,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                 }}
                 disabled={false}
               />
+              {isDecodeLocked && <span className="decode-lock-icon">🔒</span>}
             </div>
           );
         })}
@@ -1180,6 +1263,22 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
               >
                 🏆 Trophy
               </button>
+              <button
+                className="dev-unlock-btn"
+                style={{ color: "#CE93D8" }}
+                onClick={() => {
+                  // Skip to after all image words to trigger decode unlock
+                  const prog = { questId: quest.id, currentWordIndex: imageWordCount, questComplete: false };
+                  import("../game/progression").then(m => {
+                    m.saveQuestProgress(prog);
+                    localStorage.removeItem(decodeSeenKey);
+                    window.location.reload();
+                  });
+                }}
+                title="Skip to decode unlock"
+              >
+                🔓 Decode
+              </button>
             </div>
           )}
         </>
@@ -1208,6 +1307,26 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           questType={unlockModalType}
           onClose={() => setShowUnlockModal(false)}
         />
+      )}
+
+      {/* DECODE UNLOCK MODAL */}
+      {showDecodeModal && (
+        <div className="decode-unlock-overlay" onClick={handleDecodeStayOnMap}>
+          <div className="decode-unlock-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="decode-unlock-modal__icon">⭐</div>
+            <h2 className="decode-unlock-modal__title">Challenge Mode Unlocked!</h2>
+            <p className="decode-unlock-modal__subtitle">You can now play without pictures</p>
+            <p className="decode-unlock-modal__desc">You're ready to decode words on your own</p>
+            <div className="decode-unlock-modal__buttons">
+              <button className="decode-unlock-modal__btn decode-unlock-modal__btn--primary" onClick={handleDecodeStart}>
+                Start Challenge
+              </button>
+              <button className="decode-unlock-modal__btn decode-unlock-modal__btn--secondary" onClick={handleDecodeStayOnMap}>
+                Stay on Map
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* PARENT GATE — guard for Learning Insights */}
