@@ -28,7 +28,7 @@ export const QUEST_MAGIC_E_A: Quest = {
     { word: "cape", imageKey: "cape", letters: ["c", "a", "p", "e"], distractors: ["n"], mode: "image" },
     { word: "gate", imageKey: "gate", letters: ["g", "a", "t", "e"], distractors: ["n"], mode: "pending" },
     // Nodes 7-8: +2 distractors
-    { word: "maze", imageKey: "maze", letters: ["m", "a", "z", "e"], distractors: ["n", "o"], mode: "pending" },
+    { word: "maze", imageKey: "maze", letters: ["m", "a", "z", "e"], distractors: ["n", "o"], mode: "image" },
     { word: "wave", imageKey: "wave", letters: ["w", "a", "v", "e"], distractors: ["t", "o"], mode: "pending" },
     // === NODES 9-16 (after Trophy Room) ===
     { word: "tape", imageKey: "tape", letters: ["t", "a", "p", "e"], distractors: [], mode: "pending" },
@@ -37,7 +37,7 @@ export const QUEST_MAGIC_E_A: Quest = {
     { word: "bake", imageKey: "bake", letters: ["b", "a", "k", "e"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
     { word: "safe", imageKey: "safe", letters: ["s", "a", "f", "e"], distractors: ["n"], mode: "pending" },
-    { word: "game", imageKey: "game", letters: ["g", "a", "m", "e"], distractors: ["t"], mode: "pending" },
+    { word: "game", imageKey: "game", letters: ["g", "a", "m", "e"], distractors: ["t"], mode: "image" },
     // Nodes 15-16: +2 distractors
     { word: "face", imageKey: "face", letters: ["f", "a", "c", "e"], distractors: ["k", "o"], mode: "decode" },
     { word: "race", imageKey: "race", letters: ["r", "a", "c", "e"], distractors: ["n", "u"], mode: "pending" },
@@ -54,7 +54,7 @@ export const QUEST_MAGIC_E_I: Quest = {
     { word: "time", imageKey: "time", letters: ["t", "i", "m", "e"], distractors: [], mode: "decode" },
     { word: "line", imageKey: "line", letters: ["l", "i", "n", "e"], distractors: [], mode: "pending" },
     { word: "five", imageKey: "five", letters: ["f", "i", "v", "e"], distractors: [], mode: "image" },
-    { word: "kite", imageKey: "kite", letters: ["k", "i", "t", "e"], distractors: ["n"], mode: "pending" },
+    { word: "kite", imageKey: "kite", letters: ["k", "i", "t", "e"], distractors: ["n"], mode: "image" },
     { word: "nine", imageKey: "nine", letters: ["n", "i", "n", "e"], distractors: ["t"], mode: "pending" },
     { word: "pine", imageKey: "pine", letters: ["p", "i", "n", "e"], distractors: ["t", "a"], mode: "pending" },
     { word: "hide", imageKey: "hide", letters: ["h", "i", "d", "e"], distractors: ["t", "a"], mode: "pending" },
@@ -76,7 +76,7 @@ export const QUEST_MAGIC_E_O: Quest = {
   title: "Magic E: Long O",
   patternType: "magic-e",
   words: [
-    { word: "home", imageKey: "home", letters: ["h", "o", "m", "e"], distractors: [], mode: "pending" },
+    { word: "home", imageKey: "home", letters: ["h", "o", "m", "e"], distractors: [], mode: "image" },
     { word: "rope", imageKey: "rope", letters: ["r", "o", "p", "e"], distractors: [], mode: "pending" },
     { word: "nose", imageKey: "nose", letters: ["n", "o", "s", "e"], distractors: [], mode: "pending" },
     { word: "bone", imageKey: "bone", letters: ["b", "o", "n", "e"], distractors: [], mode: "image" },
@@ -132,7 +132,7 @@ export const QUEST_MAGIC_E_MIXED: Quest = {
     { word: "hope", imageKey: "hope", letters: ["h", "o", "p", "e"], distractors: [], mode: "decode" },
     { word: "bite", imageKey: "bite", letters: ["b", "i", "t", "e"], distractors: [], mode: "decode" },
     { word: "mile", imageKey: "mile", letters: ["m", "i", "l", "e"], distractors: [], mode: "pending" },
-    { word: "hike", imageKey: "hike", letters: ["h", "i", "k", "e"], distractors: ["n"], mode: "pending" },
+    { word: "hike", imageKey: "hike", letters: ["h", "i", "k", "e"], distractors: ["n"], mode: "image" },
     { word: "cure", imageKey: "cure", letters: ["c", "u", "r", "e"], distractors: ["t"], mode: "decode" },
     { word: "mute", imageKey: "mute", letters: ["m", "u", "t", "e"], distractors: ["n", "a"], mode: "decode" },
     { word: "tone", imageKey: "tone", letters: ["t", "o", "n", "e"], distractors: ["d", "i"], mode: "decode" },

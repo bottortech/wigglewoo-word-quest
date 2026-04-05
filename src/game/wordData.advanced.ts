@@ -47,7 +47,7 @@ export const QUEST_ADV_ER_IR_UR: Quest = {
   patternType: "advanced",
   words: [
     { word: "cupcake", imageKey: "cupcake", letters: ["c", "u", "p", "c", "a", "k", "e"], distractors: [], mode: "pending" },
-    { word: "hotdog", imageKey: "hotdog", letters: ["h", "o", "t", "d", "o", "g"], distractors: [], mode: "pending" },
+    { word: "hotdog", imageKey: "hotdog", letters: ["h", "o", "t", "d", "o", "g"], distractors: [], mode: "image" },
     { word: "bathtub", imageKey: "bathtub", letters: ["b", "a", "t", "h", "t", "u", "b"], distractors: [], mode: "pending" },
     { word: "doghouse", imageKey: "doghouse", letters: ["d", "o", "g", "h", "o", "u", "s", "e"], distractors: [], mode: "pending" },
     { word: "bedtime", imageKey: "bedtime", letters: ["b", "e", "d", "t", "i", "m", "e"], distractors: ["n"], mode: "decode" },
@@ -61,7 +61,7 @@ export const QUEST_ADV_ER_IR_UR: Quest = {
     { word: "zigzag", imageKey: "zigzag", letters: ["z", "i", "g", "z", "a", "g"], distractors: [], mode: "decode" },
     { word: "pigtail", imageKey: "pigtail", letters: ["p", "i", "g", "t", "a", "i", "l"], distractors: ["n"], mode: "pending" },
     { word: "sandbox", imageKey: "sandbox", letters: ["s", "a", "n", "d", "b", "o", "x"], distractors: ["t"], mode: "pending" },
-    { word: "teacup", imageKey: "teacup", letters: ["t", "e", "a", "c", "u", "p"], distractors: ["n"], mode: "pending" },
+    { word: "teacup", imageKey: "teacup", letters: ["t", "e", "a", "c", "u", "p"], distractors: ["n"], mode: "image" },
     { word: "pigpen", imageKey: "pigpen", letters: ["p", "i", "g", "p", "e", "n"], distractors: ["t", "o"], mode: "pending" },
   ],
 };
@@ -82,7 +82,7 @@ export const QUEST_ADV_BOSSY_R_MIX: Quest = {
     { word: "chicken", imageKey: "chicken", letters: ["c", "h", "i", "c", "k", "e", "n"], distractors: ["s", "o"], mode: "pending" },
     // Nodes 9-16
     { word: "kingdom", imageKey: "kingdom", letters: ["k", "i", "n", "g", "d", "o", "m"], distractors: [], mode: "decode" },
-    { word: "dentist", imageKey: "dentist", letters: ["d", "e", "n", "t", "i", "s", "t"], distractors: [], mode: "pending" },
+    { word: "dentist", imageKey: "dentist", letters: ["d", "e", "n", "t", "i", "s", "t"], distractors: [], mode: "image" },
     { word: "contest", imageKey: "contest", letters: ["c", "o", "n", "t", "e", "s", "t"], distractors: [], mode: "decode" },
     { word: "catfish", imageKey: "catfish", letters: ["c", "a", "t", "f", "i", "s", "h"], distractors: [], mode: "pending" },
     { word: "dolphin", imageKey: "dolphin", letters: ["d", "o", "l", "p", "h", "i", "n"], distractors: ["t"], mode: "pending" },
@@ -98,7 +98,7 @@ export const QUEST_ADV_2SYL_CLOSED: Quest = {
   title: "Longer Words",
   patternType: "advanced",
   words: [
-    { word: "garden", imageKey: "garden", letters: ["g", "a", "r", "d", "e", "n"], distractors: [], mode: "pending" },
+    { word: "garden", imageKey: "garden", letters: ["g", "a", "r", "d", "e", "n"], distractors: [], mode: "image" },
     { word: "winter", imageKey: "winter", letters: ["w", "i", "n", "t", "e", "r"], distractors: [], mode: "pending" },
     { word: "dinner", imageKey: "dinner", letters: ["d", "i", "n", "n", "e", "r"], distractors: [], mode: "decode" },
     { word: "hammer", imageKey: "hammer", letters: ["h", "a", "m", "m", "e", "r"], distractors: [], mode: "pending" },
@@ -113,7 +113,7 @@ export const QUEST_ADV_2SYL_CLOSED: Quest = {
     { word: "tunnel", imageKey: "tunnel", letters: ["t", "u", "n", "n", "e", "l"], distractors: [], mode: "decode" },
     { word: "button", imageKey: "button", letters: ["b", "u", "t", "t", "o", "n"], distractors: ["s"], mode: "pending" },
     { word: "cotton", imageKey: "cotton", letters: ["c", "o", "t", "t", "o", "n"], distractors: ["s"], mode: "decode" },
-    { word: "lemon", imageKey: "lemon", letters: ["l", "e", "m", "o", "n"], distractors: ["t", "i"], mode: "pending" },
+    { word: "lemon", imageKey: "lemon", letters: ["l", "e", "m", "o", "n"], distractors: ["t", "i"], mode: "image" },
     { word: "melon", imageKey: "melon", letters: ["m", "e", "l", "o", "n"], distractors: ["t", "i"], mode: "pending" },
   ],
 };
@@ -131,7 +131,7 @@ export const QUEST_ADV_MIXED_MASTERY: Quest = {
     { word: "popcorn", imageKey: "popcorn", letters: ["p", "o", "p", "c", "o", "r", "n"], distractors: ["t"], mode: "pending" },
     { word: "sandwich", imageKey: "sandwich", letters: ["s", "a", "n", "d", "w", "i", "c", "h"], distractors: ["t"], mode: "pending" },
     { word: "football", imageKey: "football", letters: ["f", "o", "o", "t", "b", "a", "l", "l"], distractors: ["n", "i"], mode: "pending" },
-    { word: "notebook", imageKey: "notebook", letters: ["n", "o", "t", "e", "b", "o", "o", "k"], distractors: ["s", "i"], mode: "pending" },
+    { word: "notebook", imageKey: "notebook", letters: ["n", "o", "t", "e", "b", "o", "o", "k"], distractors: ["s", "i"], mode: "image" },
     // Nodes 9-16
     { word: "jellyfish", imageKey: "jellyfish", letters: ["j", "e", "l", "l", "y", "f", "i", "s", "h"], distractors: [], mode: "image" },
     { word: "drumstick", imageKey: "drumstick", letters: ["d", "r", "u", "m", "s", "t", "i", "c", "k"], distractors: [], mode: "pending" },

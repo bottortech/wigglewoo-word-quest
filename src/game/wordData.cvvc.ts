@@ -23,7 +23,7 @@ export const QUEST_CVVC_LONG_A: Quest = {
     // Nodes 1-4: no distractors
     { word: "rain", imageKey: "rain", letters: ["r", "a", "i", "n"], distractors: [], mode: "image" },
     { word: "tail", imageKey: "tail", letters: ["t", "a", "i", "l"], distractors: [], mode: "pending" },
-    { word: "mail", imageKey: "mail", letters: ["m", "a", "i", "l"], distractors: [], mode: "pending" },
+    { word: "mail", imageKey: "mail", letters: ["m", "a", "i", "l"], distractors: [], mode: "image" },
     { word: "sail", imageKey: "sail", letters: ["s", "a", "i", "l"], distractors: [], mode: "pending" },
     // Nodes 5-6: +1 distractor
     { word: "pail", imageKey: "pail", letters: ["p", "a", "i", "l"], distractors: ["t"], mode: "pending" },
@@ -53,7 +53,7 @@ export const QUEST_CVVC_LONG_E: Quest = {
   patternType: "cvvc",
   words: [
     // Nodes 1-4: no distractors
-    { word: "seed", imageKey: "seed", letters: ["s", "e", "e", "d"], distractors: [], mode: "pending" },
+    { word: "seed", imageKey: "seed", letters: ["s", "e", "e", "d"], distractors: [], mode: "image" },
     { word: "feed", imageKey: "feed", letters: ["f", "e", "e", "d"], distractors: [], mode: "pending" },
     { word: "feel", imageKey: "feel", letters: ["f", "e", "e", "l"], distractors: [], mode: "decode" },
     { word: "deep", imageKey: "deep", letters: ["d", "e", "e", "p"], distractors: [], mode: "pending" },
@@ -86,14 +86,14 @@ export const QUEST_CVVC_LONG_O: Quest = {
   words: [
     // Nodes 1-4: no distractors
     { word: "boat", imageKey: "boat", letters: ["b", "o", "a", "t"], distractors: [], mode: "image" },
-    { word: "coat", imageKey: "coat", letters: ["c", "o", "a", "t"], distractors: [], mode: "pending" },
+    { word: "coat", imageKey: "coat", letters: ["c", "o", "a", "t"], distractors: [], mode: "image" },
     { word: "road", imageKey: "road", letters: ["r", "o", "a", "d"], distractors: [], mode: "pending" },
     { word: "goat", imageKey: "goat", letters: ["g", "o", "a", "t"], distractors: [], mode: "image" },
     // Nodes 5-6: +1 distractor
     { word: "toad", imageKey: "toad", letters: ["t", "o", "a", "d"], distractors: ["n"], mode: "pending" },
     { word: "load", imageKey: "load", letters: ["l", "o", "a", "d"], distractors: ["s"], mode: "decode" },
     // Nodes 7-8: +2 distractors
-    { word: "soap", imageKey: "soap", letters: ["s", "o", "a", "p"], distractors: ["t", "i"], mode: "pending" },
+    { word: "soap", imageKey: "soap", letters: ["s", "o", "a", "p"], distractors: ["t", "i"], mode: "image" },
     { word: "foam", imageKey: "foam", letters: ["f", "o", "a", "m"], distractors: ["d", "e"], mode: "pending" },
     // === NODES 9-16 (after Trophy Room) ===
     // Nodes 9-12: no distractors

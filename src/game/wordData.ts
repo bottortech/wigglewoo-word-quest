@@ -224,6 +224,14 @@ export function getNextQuest(currentQuestId: string): Quest | null {
   return questRegistry.get(nextId) ?? null;
 }
 
+/** Filter out pending words (no image yet). Returns playable words only. */
+export function filterPlayableWords(quest: Quest): Quest {
+  return {
+    ...quest,
+    words: quest.words.filter((w) => (w.mode ?? "image") !== "pending"),
+  };
+}
+
 /** Filter a quest's words by mode. Returns a new Quest with only matching words. */
 export function getQuestByMode(quest: Quest, mode: "image" | "decode"): Quest {
   return {

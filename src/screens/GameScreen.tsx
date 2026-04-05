@@ -317,10 +317,12 @@ const GameScreen: React.FC<GameScreenProps> = ({
                 {/* ========== STEP 1: BUILD ========== */}
                 {step === "build" && (
                   <div className="build-group">
-                    {/* Target image */}
-                    <div className="target-image-area">
-                      <WordImage imageKey={currentWord.imageKey} size={wordLength <= 3 ? 115 : 96} />
-                    </div>
+                    {/* Target image — only for "image" mode words */}
+                    {(currentWord.mode ?? "image") === "image" && (
+                      <div className="target-image-area">
+                        <WordImage imageKey={currentWord.imageKey} size={wordLength <= 3 ? 115 : 96} />
+                      </div>
+                    )}
 
                     {/* Word slots */}
                     <div className="word-slots-row">
