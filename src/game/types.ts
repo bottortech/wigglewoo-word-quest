@@ -27,7 +27,7 @@ export interface LetterTile {
 }
 
 /** Word gameplay mode */
-export type WordMode = "image" | "decode";
+export type WordMode = "image" | "decode" | "pending";
 
 /** A single CVC word challenge (supports 3-5 letters) */
 export interface CvcWord {

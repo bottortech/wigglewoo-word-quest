@@ -104,7 +104,7 @@ export const QUEST_SHORT_O: Quest = {
     // Nodes 9-12: no distractors
     { word: "cot", imageKey: "cot", letters: ["c", "o", "t"], distractors: [], mode: "image" },
     { word: "fox", imageKey: "fox", letters: ["f", "o", "x"], distractors: [], mode: "image" },
-    { word: "cob", imageKey: "cob", letters: ["c", "o", "b"], distractors: [], mode: "decode" },
+    { word: "cop", imageKey: "cop", letters: ["c", "o", "p"], distractors: [], mode: "image" },
     { word: "dot", imageKey: "dot", letters: ["d", "o", "t"], distractors: [], mode: "image" },
     // Nodes 13-14: +1 distractor
     { word: "jog", imageKey: "jog", letters: ["j", "o", "g"], distractors: ["n"], mode: "decode" },

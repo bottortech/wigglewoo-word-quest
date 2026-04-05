@@ -102,7 +102,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: calc(-10px * var(--uv));
+  justify-content: center;
+  flex: 1;
+  margin-top: calc(-20px * var(--uv));
   gap: 0;
 }
 
@@ -214,7 +216,7 @@
   justify-content: center;
   gap: calc(12px * var(--u));
   margin-top: calc(-8px * var(--uv));
-  transform: translateX(10%) translateY(-20%);
+  transform: translateX(10%) translateY(-18%);
   position: relative;
 }
 
@@ -226,12 +228,33 @@
   display: grid;
   grid-template-columns: repeat(3, calc(72px * var(--u)));
   grid-template-rows: repeat(2, calc(82px * var(--uv)));
-  gap: calc(5px * var(--u));
+  gap: 32px;
   justify-content: center;
   position: relative;
   z-index: 10;
   margin-top: 0;
   transform: translateX(-9%);
+}
+
+/* Progressive grid sizes per tier */
+.trophy-room__card-grid--pairs-3 {
+  grid-template-columns: repeat(3, calc(72px * var(--u)));
+  grid-template-rows: repeat(2, calc(82px * var(--uv)));
+}
+
+.trophy-room__card-grid--pairs-4 {
+  grid-template-columns: repeat(4, calc(62px * var(--u)));
+  grid-template-rows: repeat(2, calc(74px * var(--uv)));
+}
+
+.trophy-room__card-grid--pairs-5 {
+  grid-template-columns: repeat(5, calc(54px * var(--u)));
+  grid-template-rows: repeat(2, calc(66px * var(--uv)));
+}
+
+.trophy-room__card-grid--pairs-6 {
+  grid-template-columns: repeat(4, calc(54px * var(--u)));
+  grid-template-rows: repeat(3, calc(62px * var(--uv)));
 }
 
 /* ==========================================
@@ -380,6 +403,13 @@
   color: #5D4037;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
   letter-spacing: calc(1px * var(--u));
+}
+
+.flip-card__image {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 /* Matched state */
@@ -751,6 +781,50 @@
 
 /* Landscape adjustments now handled automatically by --u scaling.
    Only layout-specific overrides remain here. */
+@media (max-width: 1024px) {
+  .trophy-room__card-grid {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .trophy-room__card-grid {
+    gap: 18px;
+  }
+}
+
+/* Mobile: vertical positioning — trophy top, grid middle, button bottom */
+@media (max-width: 1024px) {
+  /* Trophy: up toward the logo */
+  .trophy-room__trophy-area {
+    transform: translateY(-58px);
+  }
+
+  /* Grid: up with the trophy, maintain gap */
+  .trophy-room__cards-row {
+    transform: translateX(10%) translateY(calc(-18% - 22px));
+  }
+
+  /* Card spacing */
+  .trophy-room__card-grid {
+    gap: 22px;
+  }
+
+  /* Button: anchored to bottom with breathing room */
+  .trophy-room__continue-wrap {
+    position: absolute;
+    bottom: -22px;
+    left: 53%;
+    transform: translateX(-50%);
+    margin: 0;
+    z-index: 20;
+  }
+
+  .trophy-room__continue-btn img {
+    width: calc(140px * var(--u));
+  }
+}
+
 @media (max-height: 500px) {
   .trophy-room {
     justify-content: flex-start;

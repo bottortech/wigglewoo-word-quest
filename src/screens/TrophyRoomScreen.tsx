@@ -33,6 +33,7 @@ interface TrophyRoomScreenProps {
 interface Card {
   id: string;
   word: string;
+  type: "word" | "image";   // word card shows text, image card shows picture
   isFlipped: boolean;
   isMatched: boolean;
   rotation: number; // -4 to +4 degrees
@@ -53,30 +54,40 @@ function getRandomRotation(): number {
   return Math.random() * 8 - 4;
 }
 
-// Select 3 random unique words from the word bank
-function selectRandomWords(vowelId: VowelId): string[] {
+// Number of pairs per pattern type
+const PAIRS_PER_TIER: Record<PatternType, number> = {
+  cvc: 3,
+  cvcc: 4,
+  "magic-e": 5,
+  cvvc: 5,
+  advanced: 6,
+};
+
+// Select random unique words from the word bank
+function selectRandomWords(vowelId: VowelId, count: number): string[] {
   const wordPool = CVC_WORD_BANK[vowelId] || [];
-  if (wordPool.length < 3) {
-    // Fallback to shortA if not enough words
-    return shuffleArray(CVC_WORD_BANK.shortA).slice(0, 3).map(w => w.word);
+  if (wordPool.length < count) {
+    return shuffleArray(CVC_WORD_BANK.shortA).slice(0, count).map(w => w.word);
   }
-  return shuffleArray(wordPool).slice(0, 3).map(w => w.word);
+  return shuffleArray(wordPool).slice(0, count).map(w => w.word);
 }
 
-// Create card pairs from words
+// Create word-to-image card pairs: one "word" card + one "image" card per word
 function createCardPairs(words: string[]): Card[] {
   const cards: Card[] = [];
   words.forEach((word, idx) => {
     cards.push({
-      id: `${word}-a-${idx}`,
+      id: `${word}-word-${idx}`,
       word,
+      type: "word",
       isFlipped: false,
       isMatched: false,
       rotation: getRandomRotation(),
     });
     cards.push({
-      id: `${word}-b-${idx}`,
+      id: `${word}-img-${idx}`,
       word,
+      type: "image",
       isFlipped: false,
       isMatched: false,
       rotation: getRandomRotation(),
@@ -110,11 +121,12 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
   onExit,
   viewOnly = false,
 }) => {
-  // Initialize cards
+  // Initialize cards — pair count scales with tier
+  const pairCount = PAIRS_PER_TIER[quest.patternType] || 3;
   const initialCards = useMemo(() => {
-    const words = selectRandomWords(vowelId);
+    const words = selectRandomWords(vowelId, pairCount);
     return createCardPairs(words);
-  }, [vowelId]);
+  }, [vowelId, pairCount]);
 
   const [cards, setCards] = useState<Card[]>(initialCards);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
@@ -146,7 +158,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
 
   // Check for win condition
   useEffect(() => {
-    if (matchCount === 3 && !showCelebration) {
+    if (matchCount === pairCount && !showCelebration) {
       // All pairs matched!
       playSuccessPhrase();
       setTimeout(() => {
@@ -303,7 +315,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
         {/* Card grid (3x2) + WiggleWoo side by side — hidden in view-only */}
         {!viewOnly && (
         <div className="trophy-room__cards-row">
-          <div className="trophy-room__card-grid">
+          <div className={`trophy-room__card-grid trophy-room__card-grid--pairs-${pairCount}`}>
           {cards.map((card) => (
             <div
               key={card.id}
@@ -316,7 +328,27 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
                   <span className="flip-card__icon">⚙️</span>
                 </div>
                 <div className="flip-card__back">
-                  <span className="flip-card__word">{card.word.toUpperCase()}</span>
+                  {card.type === "word" ? (
+                    <span className="flip-card__word">{card.word.toUpperCase()}</span>
+                  ) : (
+                    <img
+                      className="flip-card__image"
+                      src={`/assets/words/${card.word}.png`}
+                      alt={card.word}
+                      draggable={false}
+                      onError={(e) => {
+                        // Fallback to word text if image missing
+                        (e.target as HTMLImageElement).style.display = "none";
+                        const parent = (e.target as HTMLImageElement).parentElement;
+                        if (parent) {
+                          const span = document.createElement("span");
+                          span.className = "flip-card__word";
+                          span.textContent = card.word.toUpperCase();
+                          parent.appendChild(span);
+                        }
+                      }}
+                    />
+                  )}
                 </div>
               </div>
               {card.isMatched && (

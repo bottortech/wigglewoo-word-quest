@@ -31,7 +31,7 @@ const WORD_EMOJI_FALLBACK: Record<string, string> = {
   dog: "🐶", hop: "🐇", pot: "🍲", log: "🪵",
   box: "📦", mop: "🧹", cot: "🛏️", fox: "🦊",
   // Short O (nodes 9-16)
-  cob: "🌽", dot: "⚫", jog: "🏃", rot: "🍂",
+  cob: "🌽", cop: "👮", dot: "⚫", jog: "🏃", rot: "🍂",
   top: "🔝", sob: "😭", pop: "🎈", nod: "👍",
   
   // Short U (nodes 1-8)
