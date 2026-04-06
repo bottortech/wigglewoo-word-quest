@@ -117,7 +117,7 @@ export function playLetterSound(letter: string): void {
   audio.pause();
   audio.currentTime = 0;
   audio.src = src;
-  audio.volume = 0.65;
+  audio.volume = 0.30;
   audio.playbackRate = document.documentElement.classList.contains("slow-phoneme") ? 0.7 : 1.0;
   audio.play().catch(() => {});
 }
@@ -128,7 +128,7 @@ function playPhrase(src: string): void {
   audio.pause();
   audio.currentTime = 0;
   audio.src = src;
-  audio.volume = 0.75;
+  audio.volume = 0.35;
   audio.play().catch(() => {});
 }
 
