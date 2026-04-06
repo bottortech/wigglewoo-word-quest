@@ -32,12 +32,14 @@ import WaterAmbientLayer from "../components/WaterAmbientLayer";
 import IslandLayer from "../components/IslandLayer";
 import SkyLayer from "../components/SkyLayer";
 import { playNewChallengePhrase } from "../audio/SoundEffects";
-import { isEnvironmentUnlocked } from "../game/exploreData";
+// UGC BUILD: discovery preview hidden
+// import { isEnvironmentUnlocked } from "../game/exploreData";
 import "../styles/game.css";
 import "../styles/home.css";
 import "../styles/questmap.css";
 import "../styles/challenge-mode.css";
-import { isChallengeUnlocked } from "../game/progression";
+// UGC BUILD: challenge mode hidden
+// import { isChallengeUnlocked } from "../game/progression";
 
 // ---- ErrorBoundary (safety net) ----
 interface EBProps { children: React.ReactNode }
@@ -97,14 +99,7 @@ const TROPHY_POSITION = { x: 52, y: 46 };
 // Discovery room node position — after node 16 (86, 48), slightly offset
 const DISCOVERY_POSITION = { x: 92, y: 32 };
 
-// Discovery room preview — images for the top-of-screen reward shelf
-const DISCOVERY_ROOM_PREVIEWS: { envId: string; image: string; label: string }[] = [
-  { envId: "valcano", image: "/assets/valcano.png", label: "Rumble Peak" },
-  { envId: "castle-island", image: "/assets/castle-island.png", label: "Stonewall Castle" },
-  { envId: "small-coastal-village", image: "/assets/small-coastal-village.png", label: "Coral Cove" },
-  { envId: "industrial-tech-city", image: "/assets/industrial-tech-city.png", label: "Geartown" },
-  { envId: "glass-dome", image: "/assets/glass-dome.png", label: "Greenhouse" },
-];
+// UGC BUILD: Discovery room preview hidden
 
 // Get all quest IDs in the same tier as a given quest
 function getTierQuestIds(questId: string): readonly string[] {
@@ -369,7 +364,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   // Detect decode unlock moment — show modal once per quest
   const [decodeJustUnlocked, setDecodeJustUnlocked] = useState(false);
-  const [showDecodeModal, setShowDecodeModal] = useState(false);
+  const [showDecodeModal, setShowDecodeModal] = useState(false); void showDecodeModal;
   const decodeSeenKey = `ww_decode_seen_${quest.id}`;
   const prevDecodeUnlocked = useRef(decodeUnlocked);
   useEffect(() => {
@@ -389,13 +384,12 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   const handleDecodeStart = useCallback(() => {
     setShowDecodeModal(false);
-    // Jump to first decode node
     onStartLevel(imageWordCount);
-  }, [imageWordCount, onStartLevel]);
+  }, [imageWordCount, onStartLevel]); void handleDecodeStart;
 
   const handleDecodeStayOnMap = useCallback(() => {
     setShowDecodeModal(false);
-  }, []);
+  }, []); void handleDecodeStayOnMap;
 
   // Quest fully done — nodes, path, trophy, discovery, WiggleWoo all hidden
   const questFullyDone = progress.questComplete && trophyProgress.trophyRoomComplete && discoveryProgress.discoveryRoomComplete;
@@ -544,9 +538,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   const [selectedQuestType, setSelectedQuestType] = useState<QuestType>(
     () => questTypeFromPattern(quest.patternType)
   );
-  const [questBoxView, setQuestBoxView] = useState<"types" | "vowels">("vowels");
-  const [showUnlockModal, setShowUnlockModal] = useState(false);
-  const [unlockModalType, setUnlockModalType] = useState<QuestType | null>(null);
+  const [questBoxView, setQuestBoxView] = useState<"types" | "vowels">("vowels"); void questBoxView; void setQuestBoxView;
+  const [showUnlockModal, setShowUnlockModal] = useState(false); void showUnlockModal;
+  const [unlockModalType, setUnlockModalType] = useState<QuestType | null>(null); void unlockModalType; void setUnlockModalType;
   const activeVowelId = quest.id;
 
   // =============================================
@@ -595,7 +589,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       unlocked: devUnlock ? true : type.unlocked,
     })),
     [devUnlock]
-  );
+  ); void effectiveQuestTypes;
 
   // Pre-load quest chunks when prerequisites are met
   useEffect(() => {
@@ -713,13 +707,11 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   const handleBackToTypes = () => {
     setQuestBoxView("types");
-  };
+  }; void handleBackToTypes;
 
   const isVowelUnlocked = (_questId: string): boolean => {
-    // All vowel tracks within a quest type are freely selectable.
-    // Players can jump between any Short A/E/I/O/U at will.
     return true;
-  };
+  }; void isVowelUnlocked;
 
   // ---- WW positioning ----
   // RESTING POSITION: always derived from real progress, never from animation state
@@ -873,10 +865,10 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           />
         </svg>
 
-        {/* 16 Gear Nodes */}
-        {NODE_POSITIONS.slice(0, wordCount).map((pos, i) => {
+        {/* UGC BUILD: Only image nodes shown */}
+        {NODE_POSITIONS.slice(0, imageWordCount).map((pos, i) => {
           const state = nodeStates[i];
-          const isDecodeNode = i >= imageWordCount;
+          const isDecodeNode = false;
           const isDecodeLocked = isDecodeNode && !decodeUnlocked;
           const tappable = isNodeTappable(state) && !isDecodeLocked;
           return (
@@ -1037,36 +1029,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       <span className="machine-bolt machine-bolt--bl" />
       <span className="machine-bolt machine-bolt--br" />
 
-      {/* DISCOVERY ROOM PREVIEW ROW — reward shelf above the map */}
-      <div className="discovery-preview-row">
-        {DISCOVERY_ROOM_PREVIEWS.map((room) => {
-          const unlocked = isEnvironmentUnlocked(room.envId);
-          return (
-            <button
-              key={room.envId}
-              className={`discovery-preview ${unlocked ? "discovery-preview--unlocked" : "discovery-preview--locked"}`}
-              onClick={() => {
-                if (unlocked && onExplore) {
-                  onExplore(room.envId);
-                } else if (!unlocked) {
-                  setLockedToast("🔒 Complete all 16 quests to unlock this Discovery Room");
-                  if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
-                  shakeTimerRef.current = setTimeout(() => setLockedToast(null), 1800);
-                }
-              }}
-              aria-label={unlocked ? `Explore ${room.label}` : `${room.label} — locked`}
-            >
-              <img
-                src={room.image}
-                alt={room.label}
-                className="discovery-preview__img"
-                draggable={false}
-              />
-              {!unlocked && <span className="discovery-preview__lock">🔒</span>}
-            </button>
-          );
-        })}
-      </div>
+      {/* UGC BUILD: Discovery room preview hidden — volcano accessible through normal progression */}
 
       {/* TITLE BADGE — top-left, clickable home button */}
       <img
@@ -1111,79 +1074,35 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       </button>
 
       {/* WORD QUEST BOX — right side */}
+      {/* UGC BUILD: CVC vowels only, no tier switching */}
       <div className="word-quest-box">
         <div className="word-quest-box__header">
-          {questBoxView === "vowels" && (
-            <button
-              className="word-quest-box__back-btn"
-              onClick={handleBackToTypes}
-              aria-label="Back to quest types"
-            >
-              ←
-            </button>
-          )}
-          <span className="word-quest-box__title">
-            {questBoxView === "types" ? "Quest Type" : `${effectiveQuestTypes.find(t => t.id === selectedQuestType)?.label ?? selectedQuestType} Quests`}
-          </span>
+          <span className="word-quest-box__title">Sound Builders</span>
         </div>
+        {/* UGC BUILD: CVC vowels only */}
         <div className="word-quest-box__content">
-          {questBoxView === "types" ? (
-            <div className="word-quest-box__types">
-              {effectiveQuestTypes.map((type) => (
+          <div className="word-quest-box__vowels">
+            {QUEST_CATALOG["CVC"].tracks.map((track) => {
+              const isActive = activeVowelId === track.id;
+              const isUnlocked = true; // all CVC vowels available
+              return (
                 <button
-                  key={type.id}
-                  className={`word-quest-box__type-btn ${
-                    selectedQuestType === type.id ? "word-quest-box__type-btn--active" : ""
-                  } ${!type.unlocked ? "word-quest-box__type-btn--locked" : ""}`}
-                  onClick={() => {
-                    if (type.unlocked) {
-                      handleQuestTypeSelect(type.id);
-                    } else {
-                      setUnlockModalType(type.id);
-                      setShowUnlockModal(true);
-                    }
-                  }}
+                  key={track.id}
+                  className={`word-quest-box__vowel-btn ${
+                    isActive ? "word-quest-box__vowel-btn--active" : ""
+                  }`}
+                  onClick={() => isUnlocked && handleVowelSelect(track.id)}
                 >
-                  {type.label}
-                  {!type.unlocked && <span className="word-quest-box__lock">🔒</span>}
-                  {!type.unlocked && type.unlockHint && (
-                    <span className="word-quest-box__tooltip">{type.unlockHint}</span>
-                  )}
+                  <span className="word-quest-box__vowel-letter">{track.vowel}</span>
+                  <span className="word-quest-box__vowel-label">{track.label}</span>
                 </button>
-              ))}
-            </div>
-          ) : (
-            <div className="word-quest-box__vowels">
-              {QUEST_CATALOG[selectedQuestType].tracks.map((track) => {
-                const isActive = activeVowelId === track.id;
-                const isUnlocked = devUnlock || isVowelUnlocked(track.id);
-                return (
-                  <button
-                    key={track.id}
-                    className={`word-quest-box__vowel-btn ${
-                      isActive ? "word-quest-box__vowel-btn--active" : ""
-                    } ${!isUnlocked ? "word-quest-box__vowel-btn--locked" : ""}`}
-                    onClick={() => isUnlocked && handleVowelSelect(track.id)}
-                    disabled={!isUnlocked}
-                  >
-                    <span className="word-quest-box__vowel-letter">{track.vowel}</span>
-                    <span className="word-quest-box__vowel-label">{track.label}</span>
-                    {!isUnlocked && <span className="word-quest-box__lock">🔒</span>}
-                    {isUnlocked && isChallengeUnlocked(track.id) && (
-                      <span className="challenge-star-badge" title="Challenge Mode available">⭐</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Demo educator banner */}
-      <div className="demo-banner">
-        <span className="demo-banner__text">Tap a gear node to start a word!</span>
-      </div>
+      {/* UGC BUILD: No demo banner */}
 
       {/* DEV CONTROLS — collapsible, hidden by default */}
       {import.meta.env.DEV && (
@@ -1288,25 +1207,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         />
       )}
 
-      {/* DECODE UNLOCK MODAL */}
-      {showDecodeModal && (
-        <div className="decode-unlock-overlay" onClick={handleDecodeStayOnMap}>
-          <div className="decode-unlock-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="decode-unlock-modal__icon">⭐</div>
-            <h2 className="decode-unlock-modal__title">Challenge Mode Unlocked!</h2>
-            <p className="decode-unlock-modal__subtitle">You can now play without pictures</p>
-            <p className="decode-unlock-modal__desc">You're ready to decode words on your own</p>
-            <div className="decode-unlock-modal__buttons">
-              <button className="decode-unlock-modal__btn decode-unlock-modal__btn--primary" onClick={handleDecodeStart}>
-                Start Challenge
-              </button>
-              <button className="decode-unlock-modal__btn decode-unlock-modal__btn--secondary" onClick={handleDecodeStayOnMap}>
-                Stay on Map
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* UGC BUILD: Decode modal hidden */}
 
       {/* PARENT GATE — guard for Learning Insights */}
       {showParentGate && (

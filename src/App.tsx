@@ -60,7 +60,8 @@ import { backgroundMusic } from "./audio/BackgroundMusic";
 import { recordTrophyEarned } from "./game/analytics";
 import trophyTransitionImg from "./assets/trophy.png";
 import "./styles/trophy-transition.css";
-import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
+// UGC BUILD: challenge mode hidden
+// import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
 import PlacementTestScreen from "./screens/PlacementTestScreen";
 import {
   isPlacementComplete,
@@ -107,25 +108,21 @@ export default function App() {
   // Resolve initial quest synchronously for CVC, null if chunk not loaded
   const resolvedInitial = getQuestById(globalProg.activeQuestId) ?? null;
 
-  // DEV: force placement to re-run so guided onboarding is testable
+  // UGC BUILD: auto-complete placement, lock to CVC only
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      const hasTestedPlacement = localStorage.getItem("ww_placement_dev_tested");
-      if (!hasTestedPlacement) {
-        resetPlacement();
-        console.log("[Dev] Cleared placement data for testing. Will not clear again this session.");
-        localStorage.setItem("ww_placement_dev_tested", "true");
-      }
+    if (!isPlacementComplete()) {
+      savePlacementResult({
+        level: "beginner",
+        assignedTier: "CVC",
+        startingNode: 0,
+        unlockedTiers: ["CVC"],
+        wordResults: [],
+        tierSummaries: [],
+        completedAt: Date.now(),
+      });
     }
-    // Ensure all tiers are unlocked (for demo/tester access)
-    const tiers = localStorage.getItem("ww_placement_tiers");
-    if (!tiers || !tiers.includes("ADVANCED")) {
-      localStorage.setItem(
-        "ww_placement_tiers",
-        JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
-      );
-    }
-    console.log("[App] placement data:", localStorage.getItem("ww_placement"));
+    // Only CVC unlocked for UGC build
+    localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
   }, []);
 
   // Start on Play Now screen
@@ -153,11 +150,8 @@ export default function App() {
   // ---- Home Screen → Placement or Map ----
   const handlePlay = useCallback(() => {
     backgroundMusic.play();
-    if (isPlacementComplete()) {
-      setRoute("map");
-    } else {
-      setRoute("placement");
-    }
+    // UGC BUILD: always go straight to map
+    setRoute("map");
   }, []);
 
   // ---- Go Home (from badge click) ----
@@ -385,7 +379,7 @@ export default function App() {
   }, []);
 
   // ---- Challenge Mode unlock ----
-  const [showChallengeUnlock, setShowChallengeUnlock] = useState(false);
+  const [showChallengeUnlock, setShowChallengeUnlock] = useState(false); void showChallengeUnlock;
 
   /** Check if Challenge Mode should unlock for the active quest */
   const checkChallengeUnlock = useCallback(() => {
@@ -605,12 +599,7 @@ export default function App() {
         onSkinChanged={handleSkinChanged}
       />
 
-      {showChallengeUnlock && activeQuest && (
-        <ChallengeModeUnlock
-          questTitle={activeQuest.title}
-          onDismiss={() => setShowChallengeUnlock(false)}
-        />
-      )}
+      {/* UGC BUILD: Challenge mode overlay hidden */}
 
       {unlockedSkinId && (
         <SkinUnlockCelebration
