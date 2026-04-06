@@ -7,7 +7,7 @@
 // ensures only one instance ever plays.
 // =============================================
 
-import musicFile from "../music/Wigglewoo Word Quest Music Background .mp3";
+import musicFile from "../music/wigglewoo-main-theme.mp3";
 
 class BackgroundMusicManager {
   private static instance: BackgroundMusicManager | null = null;
