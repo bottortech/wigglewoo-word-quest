@@ -167,13 +167,13 @@ type QuestCatalog = Record<QuestType, {
   defaultTrackId: string;
 }>;
 
-// CVC tracks — 5 short vowels
+// CVC tracks — 5 short vowels (A → I → O → U → E progression order)
 const CVC_TRACKS: TrackDef[] = [
   { id: "quest-short-a", label: "Short A", vowel: "A" },
-  { id: "quest-short-e", label: "Short E", vowel: "E" },
   { id: "quest-short-i", label: "Short I", vowel: "I" },
   { id: "quest-short-o", label: "Short O", vowel: "O" },
   { id: "quest-short-u", label: "Short U", vowel: "U" },
+  { id: "quest-short-e", label: "Short E", vowel: "E" },
 ];
 
 // CVCC tracks — 5 short vowels (ending blends)

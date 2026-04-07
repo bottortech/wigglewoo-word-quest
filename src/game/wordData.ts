@@ -237,6 +237,63 @@ export function areAllImageWordsComplete(questIds: readonly string[]): boolean {
   return true;
 }
 
+/** Vowel progression order within each tier: A → I → O → U → E */
+const TIER_VOWEL_ORDER: Record<string, string[]> = {
+  CVC: ["quest-short-a", "quest-short-i", "quest-short-o", "quest-short-u", "quest-short-e"],
+  CVCC: ["quest-cvcc-short-a", "quest-cvcc-short-i", "quest-cvcc-short-o", "quest-cvcc-short-u", "quest-cvcc-short-e"],
+  MAGIC_E: ["quest-magic-e-a", "quest-magic-e-i", "quest-magic-e-o", "quest-magic-e-u", "quest-magic-e-mixed"],
+  CVVC: ["quest-cvvc-long-a", "quest-cvvc-long-e", "quest-cvvc-long-o", "quest-cvvc-long-u", "quest-cvvc-mixed-ea"],
+  ADVANCED: ["quest-adv-ar-or", "quest-adv-er-ir-ur", "quest-adv-bossy-r-mix", "quest-adv-2syl-closed", "quest-adv-mixed-mastery"],
+};
+
+/** Get the tier key for a quest ID */
+function getTierForQuest(questId: string): string | null {
+  for (const [tier, ids] of Object.entries(TIER_VOWEL_ORDER)) {
+    if (ids.includes(questId)) return tier;
+  }
+  return null;
+}
+
+/** Check if a quest's image words are all completed */
+export function areImageWordsComplete(questId: string): boolean {
+  const quest = questRegistry.get(questId);
+  if (!quest) return false;
+  const imageCount = quest.words.filter(w => (w.mode ?? "image") === "image").length;
+  const progress = JSON.parse(localStorage.getItem("wigglewoo-cvc-progress") || '{"quests":{}}');
+  const qp = progress.quests[questId];
+  return qp && qp.currentWordIndex >= imageCount;
+}
+
+/**
+ * Get the next quest to auto-advance to after completing image words.
+ * Returns { questId, mode } or null if no more.
+ *
+ * Image phase: A → I → O → U → E
+ * Then decode phase: A → I → O → U → E
+ */
+export function getNextAutoAdvanceQuest(currentQuestId: string): { questId: string; mode: "image" | "decode" } | null {
+  const tier = getTierForQuest(currentQuestId);
+  if (!tier) return null;
+
+  const order = TIER_VOWEL_ORDER[tier];
+  const currentIdx = order.indexOf(currentQuestId);
+  if (currentIdx < 0) return null;
+
+  // Check if next vowel in image phase exists
+  if (currentIdx < order.length - 1) {
+    return { questId: order[currentIdx + 1], mode: "image" };
+  }
+
+  // All image vowels done — check if all image words across tier are complete
+  const allImageDone = order.every(qid => areImageWordsComplete(qid));
+  if (allImageDone) {
+    // Start decode phase from first vowel
+    return { questId: order[0], mode: "decode" };
+  }
+
+  return null;
+}
+
 /** Filter out pending words (no image yet). Returns playable words only. */
 export function filterPlayableWords(quest: Quest): Quest {
   return {
