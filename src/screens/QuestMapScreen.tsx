@@ -162,13 +162,13 @@ type QuestCatalog = Record<QuestType, {
   defaultTrackId: string;
 }>;
 
-// CVC tracks — 5 short vowels
+// CVC tracks — 5 short vowels (A → I → O → U → E progression order)
 const CVC_TRACKS: TrackDef[] = [
   { id: "quest-short-a", label: "Short A", vowel: "A" },
-  { id: "quest-short-e", label: "Short E", vowel: "E" },
   { id: "quest-short-i", label: "Short I", vowel: "I" },
   { id: "quest-short-o", label: "Short O", vowel: "O" },
   { id: "quest-short-u", label: "Short U", vowel: "U" },
+  { id: "quest-short-e", label: "Short E", vowel: "E" },
 ];
 
 // CVCC tracks — 5 short vowels (ending blends)
@@ -344,6 +344,25 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   onToggleChallengeMode: _onToggleChallengeMode,
 }) => {
   void _challengeMode; void _onToggleChallengeMode;
+
+  // First-time onboarding arrow — show once ever
+  // URL controls: ?onboarding=reset (force show) | ?onboarding=off (disable)
+  const [showOnboardingArrow, setShowOnboardingArrow] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("onboarding") === "off") return false;
+    if (params.get("onboarding") === "reset") {
+      localStorage.removeItem("ww_onboarding_arrow_seen");
+      return true;
+    }
+    return localStorage.getItem("ww_onboarding_arrow_seen") !== "true";
+  });
+
+  const handleOnboardingTap = useCallback(() => {
+    localStorage.setItem("ww_onboarding_arrow_seen", "true");
+    setShowOnboardingArrow(false);
+    onStartLevel(0); // Start level 1 directly
+  }, [onStartLevel]);
+
   const progress = useMemo(() => loadQuestProgress(quest.id), [quest.id]);
   const trophyProgress = useMemo(() => loadTrophyProgress(quest.id), [quest.id]);
   const discoveryProgress = useMemo(() => loadDiscoveryProgress(quest.id), [quest.id]);
@@ -1001,8 +1020,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         {/* WiggleWoo positioned near active node, trophy, or discovery */}
         {(activeNodeIndex >= 0 || trophyNodeState === "active" || discoveryNodeState === "active") && (
           <div
-            className={`map-wigglewoo ${wwAnimating ? "map-wigglewoo--moving" : ""}`}
-            style={wwPosition}
+            className={`map-wigglewoo ${wwAnimating ? "map-wigglewoo--moving" : ""} ${showOnboardingArrow ? "map-wigglewoo--onboarding" : ""}`}
+            style={{...wwPosition, cursor: showOnboardingArrow ? "pointer" : undefined}}
+            onClick={showOnboardingArrow ? handleOnboardingTap : undefined}
           >
             <img
               src={skinAssets.heroImg || heroImg}
@@ -1010,7 +1030,18 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
               className="map-wigglewoo__img"
               draggable={false}
             />
+            {showOnboardingArrow && (
+              <div className="onboarding-cue">
+                <div className="onboarding-cue__arrow">▼</div>
+                <div className="onboarding-cue__label">Tap here to start!</div>
+              </div>
+            )}
           </div>
+        )}
+
+        {/* Onboarding dim overlay — focuses attention on character */}
+        {showOnboardingArrow && (
+          <div className="onboarding-dim" onClick={handleOnboardingTap} />
         )}
 
         </>)}

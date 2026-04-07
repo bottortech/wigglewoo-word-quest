@@ -29,6 +29,8 @@ import {
   loadAdvancedQuests,
   getImageWords,
   getDecodeWords,
+  getNextAutoAdvanceQuest,
+  areImageWordsComplete,
 } from "./game/wordData";
 import { DEFAULT_QUEST_ID } from "./game/questIds";
 import { QUEST_ENVIRONMENT_MAP } from "./game/exploreData";
@@ -147,10 +149,9 @@ export default function App() {
   // null = no animation (fresh load), number = animate from that node
   const [arrivedFromWord, setArrivedFromWord] = useState<number | null>(null);
 
-  // ---- Home Screen → Placement or Map ----
+  // ---- Home Screen → Map (placement skipped for testers) ----
   const handlePlay = useCallback(() => {
     backgroundMusic.play();
-    // UGC BUILD: always go straight to map
     setRoute("map");
   }, []);
 
@@ -243,27 +244,64 @@ export default function App() {
         const updated = advanceWord(progress);
         setWordIndex(updated.currentWordIndex);
       } else if (target === "quest-map") {
-        // Level done → advance, go back to map with animation signal
+        // Level done → advance, go back to map
         advanceWord(progress);
         setArrivedFromWord(completedWordIndex);
-        // Check challenge unlock after each word
         setTimeout(checkChallengeUnlock, 300);
+
+        // Check if image words for this quest are now complete → auto-advance
+        setTimeout(() => {
+          if (areImageWordsComplete(activeQuest.id)) {
+            const next = getNextAutoAdvanceQuest(activeQuest.id);
+            if (next) {
+              ensureQuestLoaded(next.questId).then(() => {
+                const nextQuest = getQuestById(next.questId);
+                if (nextQuest) {
+                  setActiveQuest(nextQuest);
+                  saveGlobalProgress({ activeQuestId: next.questId });
+                  setArrivedFromWord(null);
+                  setWordIndex(0);
+                  setMapRevision((r) => r + 1);
+                }
+              });
+            }
+          }
+        }, 500);
+
         setRoute("map");
         setMapRevision((r) => r + 1);
       } else {
-        // quest-summary: last word done → discovery room
+        // quest-summary: last word in quest → check auto-advance or discovery
         advanceWord(progress);
-        // Quest complete — check challenge unlock
         setTimeout(checkChallengeUnlock, 300);
-        const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
-        if (envId) {
-          markEnvironmentVisited(envId);
-          setExploreEnvId(envId);
-          setRoute("discovery-room");
+
+        // Check for next vowel auto-advance
+        const next = getNextAutoAdvanceQuest(activeQuest.id);
+        if (next) {
+          // Auto-advance to next vowel group
+          ensureQuestLoaded(next.questId).then(() => {
+            const nextQuest = getQuestById(next.questId);
+            if (nextQuest) {
+              setActiveQuest(nextQuest);
+              saveGlobalProgress({ activeQuestId: next.questId });
+              setArrivedFromWord(null);
+              setWordIndex(0);
+              setMapRevision((r) => r + 1);
+              setRoute("map");
+            }
+          });
         } else {
-          setArrivedFromWord(completedWordIndex);
-          setRoute("map");
-          setMapRevision((r) => r + 1);
+          // No more vowels → discovery room
+          const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
+          if (envId) {
+            markEnvironmentVisited(envId);
+            setExploreEnvId(envId);
+            setRoute("discovery-room");
+          } else {
+            setArrivedFromWord(completedWordIndex);
+            setRoute("map");
+            setMapRevision((r) => r + 1);
+          }
         }
       }
     },
