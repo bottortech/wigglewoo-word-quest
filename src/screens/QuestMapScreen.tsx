@@ -351,9 +351,10 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   void _challengeMode; void _onToggleChallengeMode;
 
   // First-time onboarding arrow — show once ever
-  // Reset via URL: ?onboarding=reset
+  // URL controls: ?onboarding=reset (force show) | ?onboarding=off (disable)
   const [showOnboardingArrow, setShowOnboardingArrow] = useState(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.get("onboarding") === "off") return false;
     if (params.get("onboarding") === "reset") {
       localStorage.removeItem("ww_onboarding_arrow_seen");
       return true;
