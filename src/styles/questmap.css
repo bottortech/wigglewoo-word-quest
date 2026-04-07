@@ -2335,3 +2335,69 @@
   pointer-events: none;
 }
 
+/* ==========================================
+   ONBOARDING CUE — first-time arrow + label
+   ========================================== */
+
+/* Dim overlay behind everything except character */
+.onboarding-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 40;
+  cursor: pointer;
+}
+
+/* Character glow when onboarding is active */
+.map-wigglewoo--onboarding {
+  z-index: 50 !important;
+  filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.6));
+  animation: onboarding-character-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes onboarding-character-pulse {
+  0%, 100% { filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.6)); transform: translateX(-50%) scale(1); }
+  50% { filter: drop-shadow(0 0 28px rgba(255, 215, 0, 0.9)); transform: translateX(-50%) scale(1.06); }
+}
+
+/* Arrow + label container */
+.onboarding-cue {
+  position: absolute;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  z-index: 55;
+}
+
+/* Bouncing arrow */
+.onboarding-cue__arrow {
+  font-size: clamp(24px, 5vw, 36px);
+  color: #FFD54F;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+  animation: onboarding-arrow-bounce 0.8s ease-in-out infinite;
+}
+
+@keyframes onboarding-arrow-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+/* Label text */
+.onboarding-cue__label {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(12px, 2.5vw, 18px);
+  font-weight: 800;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 14px;
+  border-radius: 12px;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
