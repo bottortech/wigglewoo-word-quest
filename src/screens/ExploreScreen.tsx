@@ -16,6 +16,8 @@ import type { EnvironmentConfig, SceneProp, Hotspot, FactPanel, FactItem } from 
 import {
   isDailyFactCapReached,
   recordFactDiscovery,
+  getUnlockedFactCount,
+  getVowelForQuest,
 } from "../game/progression";
 import DailyCapModal from "../components/DailyCapModal";
 import FactNarration from "../components/FactNarration";
@@ -37,8 +39,10 @@ const FactPanelSheet: React.FC<{
   panel: FactPanel;
   onClose: () => void;
   ambientColor: string;
-}> = ({ panel, onClose }) => {
+  unlockedFactCount: number;
+}> = ({ panel, onClose, unlockedFactCount }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [lockedToast, setLockedToast] = useState<string | null>(null);
 
   return (
     <>
@@ -51,18 +55,31 @@ const FactPanelSheet: React.FC<{
         <h3 className="fact-panel__title">{panel.title}</h3>
         <div className="fact-panel__grid">
           {panel.items.map((item: FactItem) => {
+            const unlockLevel = item.unlockAt ?? 1;
+            const isLocked = unlockedFactCount < unlockLevel * 2;
             const isExpanded = expandedId === item.id;
             return (
               <div
                 key={item.id}
-                className={`fact-panel__item ${isExpanded ? "fact-panel__item--expanded" : ""}`}
-                onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                className={[
+                  "fact-panel__item",
+                  isExpanded ? "fact-panel__item--expanded" : "",
+                  isLocked ? "fact-panel__item--locked" : "",
+                ].filter(Boolean).join(" ")}
+                onClick={() => {
+                  if (isLocked) {
+                    setLockedToast("Play more quests to unlock this fact!");
+                    setTimeout(() => setLockedToast(null), 1500);
+                    return;
+                  }
+                  setExpandedId(isExpanded ? null : item.id);
+                }}
               >
                 <div className="fact-panel__item-header">
-                  <span className="fact-panel__item-emoji">{item.emoji}</span>
-                  <span className="fact-panel__item-name">{item.name}</span>
+                  <span className="fact-panel__item-emoji">{isLocked ? "🔒" : item.emoji}</span>
+                  <span className="fact-panel__item-name">{isLocked ? "???" : item.name}</span>
                 </div>
-                {isExpanded && (
+                {isExpanded && !isLocked && (
                   <>
                     <p className="fact-panel__item-fact">{item.core}</p>
                     <FactNarration text={item.core} audioSrc={item.audioSrc} autoPlay />
@@ -72,6 +89,9 @@ const FactPanelSheet: React.FC<{
             );
           })}
         </div>
+        {lockedToast && (
+          <div className="fact-panel__locked-toast">{lockedToast}</div>
+        )}
       </div>
     </>
   );
@@ -98,6 +118,10 @@ const HotspotPopup: React.FC<{
 
 const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, onBack, onComplete }) => {
   const env: EnvironmentConfig | undefined = ENVIRONMENTS[environmentId];
+
+  // Progressive fact unlocking — based on vowel quest completions
+  const vowel = questId ? getVowelForQuest(questId) : null;
+  const unlockedFactCount = vowel ? getUnlockedFactCount(vowel) : 16; // default to all unlocked if no quest context
 
   // Mini-game session state (only when entering as discovery-room reward)
   const [showMiniGames, setShowMiniGames] = useState(!!onComplete);
@@ -586,6 +610,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
           panel={activePanel}
           onClose={() => setActivePanel(null)}
           ambientColor={env.ambientColor}
+          unlockedFactCount={unlockedFactCount}
         />
       )}
 

@@ -50,8 +50,10 @@ const RhymePopGame: React.FC<RhymePopGameProps> = ({ round, theme, onComplete })
   }, [round]);
 
   const [items, setItems] = useState(initialWords);
+  const [showHints, setShowHints] = useState(false);
   const totalCorrect = round.correctWords.length;
   const completed = useRef(false);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Derive correct count from items — single source of truth, no separate counter
   const correctCount = items.filter((i) => i.isCorrect && i.popped).length;
@@ -64,6 +66,15 @@ const RhymePopGame: React.FC<RhymePopGameProps> = ({ round, theme, onComplete })
       return () => clearTimeout(t);
     }
   }, [correctCount, totalCorrect, onComplete]);
+
+  // Hint: after 5s of no taps, pulse remaining correct words
+  useEffect(() => {
+    if (completed.current) return;
+    setShowHints(false);
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => setShowHints(true), 5000);
+    return () => { if (hintTimerRef.current) clearTimeout(hintTimerRef.current); };
+  }, [correctCount]);
 
   const handleTap = useCallback((id: string) => {
     if (completed.current) return;
@@ -113,6 +124,7 @@ const RhymePopGame: React.FC<RhymePopGameProps> = ({ round, theme, onComplete })
                       `mg-rhyme-object--${cfg.objectType}`,
                       cfg.objectImage ? "mg-rhyme-object--has-image" : "",
                       item.wobbling ? "mg-rhyme-object--wobble-grid" : "",
+                      showHints && item.isCorrect && !item.popped ? "mg-rhyme-object--hint" : "",
                     ].filter(Boolean).join(" ")}
                     style={{
                       animationDelay: `${item.delay}s`,

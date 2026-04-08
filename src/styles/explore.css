@@ -609,6 +609,40 @@
   border-color: rgba(255,140,50,0.5);
 }
 
+/* Locked fact — greyed out, not interactive */
+.fact-panel__item--locked {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+  cursor: not-allowed;
+}
+
+.fact-panel__item--locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Locked toast */
+.fact-panel__locked-toast {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 16px;
+  white-space: nowrap;
+  animation: fact-toast-in 0.2s ease-out;
+}
+
+@keyframes fact-toast-in {
+  0% { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 .fact-panel__item-header {
   display: flex;
   align-items: center;

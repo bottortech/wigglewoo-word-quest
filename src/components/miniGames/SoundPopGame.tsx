@@ -28,6 +28,14 @@ const SoundPopGame: React.FC<SoundPopGameProps> = ({ round, theme, onComplete })
   const totalChallenges = round.challenges.length;
   const challenge = round.challenges[currentIndex];
 
+  // If no challenges, auto-complete
+  useEffect(() => {
+    if (totalChallenges === 0 && !completedRef.current) {
+      completedRef.current = true;
+      setTimeout(onComplete, 300);
+    }
+  }, [totalChallenges, onComplete]);
+
   // Clear wrong feedback
   useEffect(() => {
     if (!wrongLetter) return;

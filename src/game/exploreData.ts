@@ -37,6 +37,8 @@ export interface FactItem {
   easy?: string;
   /** Path to pre-recorded narration audio (e.g., "/assets/audio/facts/volcano/how-volcanoes-form.wav") */
   audioSrc?: string;
+  /** Minimum vowel quest completions needed to unlock this fact (default 1) */
+  unlockAt?: number;
 }
 
 /** A tappable panel attached to a scene prop */
@@ -80,15 +82,40 @@ export const EXPLORE_UNLOCK_ORDER: string[] = [
 ];
 
 // ---- Per-quest mapping ----
-// Fixed 1:1 mapping: quest ID → environment ID.
-// Each CVC quest track has exactly one linked discovery room.
+// Discovery rooms are universal by vowel pattern across all tiers.
+// Short A → Volcano, Short I → Castle, Short O → Coral Cove, etc.
 
 export const QUEST_ENVIRONMENT_MAP: Record<string, string> = {
+  // CVC
   "quest-short-a": "valcano",
   "quest-short-i": "castle-island",
   "quest-short-o": "small-coastal-village",
   "quest-short-u": "industrial-tech-city",
   "quest-short-e": "glass-dome",
+  // CVCC
+  "quest-cvcc-short-a": "valcano",
+  "quest-cvcc-short-i": "castle-island",
+  "quest-cvcc-short-o": "small-coastal-village",
+  "quest-cvcc-short-u": "industrial-tech-city",
+  "quest-cvcc-short-e": "glass-dome",
+  // Magic E
+  "quest-magic-e-a": "valcano",
+  "quest-magic-e-i": "castle-island",
+  "quest-magic-e-o": "small-coastal-village",
+  "quest-magic-e-u": "industrial-tech-city",
+  "quest-magic-e-mixed": "glass-dome",
+  // CVVC
+  "quest-cvvc-long-a": "valcano",
+  "quest-cvvc-long-e": "glass-dome",
+  "quest-cvvc-long-o": "small-coastal-village",
+  "quest-cvvc-long-u": "industrial-tech-city",
+  "quest-cvvc-mixed-ea": "castle-island",
+  // Advanced
+  "quest-adv-ar-or": "valcano",
+  "quest-adv-er-ir-ur": "castle-island",
+  "quest-adv-bossy-r-mix": "small-coastal-village",
+  "quest-adv-2syl-closed": "industrial-tech-city",
+  "quest-adv-mixed-mastery": "glass-dome",
 };
 
 /** Reverse lookup: environment ID → quest ID */
@@ -130,6 +157,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "⛰️",
             core: "Deep under the ground, rock gets so hot it melts! It pushes up and builds a volcano.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file90_DesignsByBee_HowVolcanosForm_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "eruption-power",
@@ -137,6 +165,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "💥",
             core: "When a volcano erupts, it can shoot ash higher than airplanes! Some eruptions are super loud.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file91_DesignsByBee_EruptionPower_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "dormant-volcanoes",
@@ -144,6 +173,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "😴",
             core: "Some volcanoes are sleeping! They haven't erupted in a long, long time — but they could wake up one day. Some have napped for hundreds of years!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file92_DesignsByBee_SleepingVolcanoes_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "volcanic-soil",
@@ -151,6 +181,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "🌱",
             core: "After a volcano erupts, the soil around it becomes super good for growing things! That's why farmers love living near volcanoes — their fruits and veggies grow really well.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file93_DesignsByBee_VolcanicSoil_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -185,6 +216,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "🌡️",
             core: "Lava is SO hot it can melt rock! Yellow lava is the hottest, and red lava is a little cooler.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file95_DesignsByBee_SuperHotLava_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "lava-types",
@@ -192,6 +224,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "🌋",
             core: "Some lava is thick and slow like honey. Other lava is runny and fast!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file96_DesignsByBee_LavaTypes_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "lava-glow",
@@ -199,6 +232,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "✨",
             core: "Lava glows because it's so hot—it makes its own light! At night, it can light up the sky.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file97_DesignsByBee_LavaGlow_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "lava-gas",
@@ -206,6 +240,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "💨",
             core: "Volcanoes let out stinky gas that smells like rotten eggs — pee-yew! They also puff out big clouds of steam, just like a giant kettle.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file98_DesignsByBee_StinkyGas_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -232,6 +267,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "\u{1F30B}",
             core: "Lava rock forms when hot lava cools fast. It has tiny holes—like a frozen sponge!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file100_DesignsByBee_LavaRock_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "molten-lava",
@@ -239,6 +275,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "\u{1F525}",
             core: "Lava is so hot it can melt gold! The brighter it glows, the hotter it is.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file101_DesignsByBee_GlowingLava_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "crystals",
@@ -246,6 +283,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "\u{1F48E}",
             core: "Volcanoes help make sparkly crystals! Hot water underground cools down slowly and turns into shiny gems.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file102_DesignsByBee_Crystals_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "cooled-rock",
@@ -253,6 +291,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "\u{1FAA8}",
             core: "When lava hits the ocean, it cools super fast and turns into shiny black glass!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file103_DesignsByBee_CooledRock_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -272,6 +311,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "\u{1FAA8}",
             core: "The ground we walk on is called the crust — it's like the skin on an apple! It's the thinnest layer of the Earth.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file105_DesignsByBee_Crust_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "mantle",
@@ -279,6 +319,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "\u{1F525}",
             core: "Under the crust is the mantle — the thickest layer! The rock here is so hot it moves very slowly, like thick, gooey honey.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file106_DesignsByBee_Mantle_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "outer-core",
@@ -286,6 +327,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "\u{1F30A}",
             core: "Deep inside Earth, there's hot, swirly metal moving around like a giant soup!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file107_DesignsByBee_OuterCore_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "inner-core",
@@ -293,6 +335,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
             emoji: "\u2B50",
             core: "The center of Earth is super, super hot — like a giant glowing ball!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file108_DesignsByBee_InnerCore_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -367,6 +410,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1FA99}",
             core: "Long ago, people made coins by pressing pictures into metal!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file111_DesignsByBee_GoldCoins_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "gemstones",
@@ -374,6 +418,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1F48E}",
             core: "Kings and queens loved sparkly gems! People believed some gems had special powers.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file112_DesignsByBee_Gemstones_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "treasure-chests",
@@ -381,6 +426,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1F4E6}",
             core: "Treasure chests had big locks and were hidden in secret rooms! Some castles even had secret tunnels.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file113_DesignsByBee_TreasureChest_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "trade-and-barter",
@@ -388,6 +434,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u2696\uFE0F",
             core: "People used to trade things instead of money — like apples for bread!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file114_DesignsByBee_Trading_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -407,6 +454,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u2694\uFE0F",
             core: "The legend says only the true King of England could pull the magical sword from the stone. A young boy named Arthur did it \u2014 and became king!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file116_DesignsByBee_Excalibur_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "blacksmith",
@@ -414,6 +462,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1F525}",
             core: "Swords were made by heating metal in a hot fire and hammering it into shape. It took days to make just one!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file117_DesignsByBee_TheBlacksmith_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "types-of-swords",
@@ -421,6 +470,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1F5E1}\uFE0F",
             core: "Knights had different swords! Some were big and heavy, and some were so long you needed two hands!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file118_DesignsByBee_TypesOfSwords_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "knighting-ceremony",
@@ -428,6 +478,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1F451}",
             core: "A knight had a special ceremony to become a royal protector!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file119_DesignsByBee_BecomingAKnight_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -447,6 +498,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1FAB6}",
             core: "People used feathers to write! They dipped them in ink—this was called a quill.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file121_DesignsByBee_FeatherPens_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "scroll-making",
@@ -454,6 +506,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1F4DC}",
             core: "Long ago, people wrote on long rolls of paper called scrolls. Every single letter had to be written by hand — it took a really long time!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file122_DesignsByBee_ScrollMaking_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "castle-builders",
@@ -461,6 +514,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1F3F0}",
             core: "It could take 10 to 20 years to build a castle! Workers stacked heavy stones to make walls and towers.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file123_DesignsByBee_CastleBuilders_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "knight-armor",
@@ -468,6 +522,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "\u{1F6E1}\uFE0F",
             core: "A suit of armour was as heavy as a big dog! Knights had to practice moving and fighting in all that metal since they were little kids.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file124_DesignsByBee_KnightsArmor_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -487,6 +542,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "⚔️",
             core: "Boys started training to be knights at age 7. They learned step by step until they became knights!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file126_DesignsByBee_KnightTraining_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "horse-power",
@@ -494,6 +550,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "🐴",
             core: "A knight's horse was one of the strongest horses around. It carried the knight and all that heavy armor!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file127_DesignsByBee_HorsePower_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "coat-of-arms",
@@ -501,6 +558,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "🛡️",
             core: "Every knight had a special shield design called a coat of arms. It helped people tell who was who during battles when everyone wore helmets!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file128_DesignsByBee_CoatOfArms_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "knights-code",
@@ -508,6 +566,7 @@ const CASTLE_ENV: EnvironmentConfig = {
             emoji: "📜",
             core: "Knights had special rules — always be brave, honest, and kind. They promised to help people!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file129_DesignsByBee_KnightsCode_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -568,6 +627,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F41A}",
             core: "Giant clams can grow over 1 metre wide! Some live for over 100 years.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file132_DesignsByBee_GiantClams_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "pearls",
@@ -575,6 +635,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F48E}",
             core: "When a grain of sand gets inside a clam, the clam wraps it in smooth layers. Over time, it becomes a pearl!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file133_DesignsByBee_MakingPearls_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "shell-homes",
@@ -582,6 +643,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F3E0}",
             core: "A clam's shell is like its house! It adds new layers as it grows — just like tree rings.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file134_DesignsByBee_ShellHomes_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "filter-feeders",
@@ -589,6 +651,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F30A}",
             core: "Clams suck in water to catch tiny food. One clam can clean a whole bathtub of water each day!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file135_DesignsByBee_HowClamsEat_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -608,6 +671,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1FAB8}",
             core: "Coral reefs are like underwater rainforests! Even though they're small, they are home to so many fish and sea creatures.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file136_DesignsByBee_CoralReefs_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "village-life",
@@ -615,6 +679,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F3D6}\uFE0F",
             core: "People have lived by the sea for thousands of years! They built homes near the water to catch fish and explore the ocean.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file137_DesignsByBee_SeasideLiving_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "tides",
@@ -622,6 +687,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F30A}",
             core: "The moon pulls the ocean water up and down each day. When the water goes out, you can find little sea creatures!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file138_DesignsByBee_OceanTides_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "sea-creatures",
@@ -629,6 +695,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F42C}",
             core: "The ocean is full of amazing animals! There are many we still haven't discovered yet.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file139_DesignsByBee_SeaCreatures_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -648,6 +715,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{2764}\uFE0F",
             core: "Octopuses have three hearts! And guess what — their blood is blue, not red! How cool is that?",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file141_DesignsByBee_ThreeHearts_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "camouflage",
@@ -655,6 +723,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F3A8}",
             core: "Octopuses can change their color in less than a second! They hide by looking like rocks or coral.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file142_DesignsByBee_MasterOfDisguise_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "smart-creatures",
@@ -662,6 +731,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F9E0}",
             core: "Octopuses are super smart! They can solve puzzles and even open jars all by themselves.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file143_DesignsByBee_SuperSmart_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "eight-arms",
@@ -669,6 +739,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F419}",
             core: "An octopus has eight arms with suckers! It can feel and taste with them.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file144_DesignsByBee_EightArms_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -688,6 +759,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1FAB8}",
             core: "Coral looks like rock, but it's alive! It's made of lots of tiny animals.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file146_DesignsByBee_LivingCoral_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "coral-archways",
@@ -695,6 +767,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F309}",
             core: "Ocean waves slowly carve holes through coral walls and make cool archways! Fish love swimming through them like underwater doorways.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file147_DesignsByBee_NaturalArchways_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "reef-colours",
@@ -702,6 +775,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F308}",
             core: "Coral has tiny helpers that give it color. When they leave, it turns white!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file148_DesignsByBee_ReefColours_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "reef-life",
@@ -709,6 +783,7 @@ const VILLAGE_ENV: EnvironmentConfig = {
             emoji: "\u{1F420}",
             core: "Coral reefs are like busy underwater cities! So many fish and crabs live there.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file149_DesignsByBee_ReefLife_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -755,6 +830,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "\u2699\uFE0F",
             core: "When one gear turns, it makes another gear turn too — like teamwork!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file152_DesignsByBee_HowGearsWork_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "gear-ratios",
@@ -762,6 +838,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "\u{1F504}",
             core: "Some gears spin fast, and some spin slow — it depends on their size!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file153_DesignsByBee_BigAndSmallGears_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "simple-machines",
@@ -769,6 +846,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "\u{1F6E0}\uFE0F",
             core: "Gears help us do things that are too hard with just our hands! Ramps and levers help too.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file154_DesignsByBee_SimpleMachines_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "clockwork",
@@ -776,6 +854,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "\u{1F570}\uFE0F",
             core: "Before batteries, clocks ran on gears! You wound them up with a key to make them tick.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file155_DesignsByBee_Clockwork_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -802,6 +881,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "🔧",
             core: "Tools like wrenches and screwdrivers help your hands do things they can't do alone!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file157_DesignsByBee_HandTools_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "measuring-tools",
@@ -809,6 +889,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "📏",
             core: "Rulers help builders measure things. This helps everything fit just right!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file158_DesignsByBee_MeasuringTools_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "safety-first",
@@ -816,6 +897,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "🥽",
             core: "In a workshop, you wear goggles and gloves to stay safe! Safety gear protects you.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file159_DesignsByBee_SafetyFirst_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "right-tool",
@@ -823,6 +905,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "🛠️",
             core: "Using the right tool makes things easier! A hammer is for nails, and a saw cuts wood.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file160_DesignsByBee_TheRightTool_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -842,6 +925,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "📐",
             core: "Blueprints are like recipes that show how to build things!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file162_DesignsByBee_WhatAreBlueprints_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "why-blue",
@@ -849,6 +933,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "🔵",
             core: "Blueprints used to be blue with white lines. That's how they got their name!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file163_DesignsByBee_WhyAreTheyBlue_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "technical-drawing",
@@ -856,6 +941,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "📏",
             core: "Builders draw pictures from every side — the top, the front, and the side!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file164_DesignsByBee_DrawingPlans_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "modern-blueprints",
@@ -863,6 +949,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "💻",
             core: "Builders can look at plans and spin them around to see every side!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file165_DesignsByBee_ComputerPlans_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -882,6 +969,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "⚡",
             core: "Energy helps things move and work. Without it, nothing would go!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file167_DesignsByBee_WhatIsEnergy_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "electricity",
@@ -889,6 +977,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "🔌",
             core: "Electricity travels through wires to power things. It moves super fast!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file168_DesignsByBee_Electricity_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "batteries-and-cells",
@@ -896,6 +985,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "🔋",
             core: "Batteries store energy for later. That's how toys work without being plugged in!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file169_DesignsByBee_Batteries_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "renewable-energy",
@@ -903,6 +993,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             emoji: "☀️",
             core: "We can get energy from the sun and the wind! They never run out.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file170_DesignsByBee_EnergyFromNature_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -956,6 +1047,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F331}",
             core: "Every flower starts as a tiny seed! Inside is a baby plant ready to grow.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file173_DesignsByBee_Seed_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "photosynthesis",
@@ -963,6 +1055,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u2600\uFE0F",
             core: "Plants use sunlight to make their own food!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file174_DesignsByBee_SunlightPower_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "bloom",
@@ -970,6 +1063,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F33A}",
             core: "When flowers bloom, they open their petals. Bees and butterflies help make new seeds.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file175_DesignsByBee_Blooming_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "roots",
@@ -977,6 +1071,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1FAB4}",
             core: "Roots work like underground straws, sucking up water from the soil! Some roots stretch wider than the tree above.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file176_DesignsByBee_Roots_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -996,6 +1091,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u2600\uFE0F",
             core: "Plants help make the air we breathe! They use sunlight to make fresh oxygen.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file178_DesignsByBee_PlantPower_take2.wav",
+            unlockAt: 1,
           },
           {
             id: "carbon-dioxide",
@@ -1003,6 +1099,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F4A8}",
             core: "When you breathe out, plants use that air to grow. You help each other!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file179_DesignsByBee_BreathingTogether_take2.wav",
+            unlockAt: 3,
           },
           {
             id: "chlorophyll",
@@ -1010,6 +1107,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F33F}",
             core: "Plants are green because they catch sunlight in their leaves! It helps them make food.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file180_DesignsByBee_WhyPlantsAreGreen_take2.wav",
+            unlockAt: 5,
           },
           {
             id: "glucose",
@@ -1017,6 +1115,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F36C}",
             core: "Plants make their own food using sunlight. It helps them grow big and strong!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file181_DesignsByBee_PlantFood_take2.wav",
+            unlockAt: 7,
           },
         ],
       },
@@ -1036,6 +1135,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F331}",
             core: "When a seed gets water, it starts to grow! A root goes down, and a stem grows up.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file183_DesignsByBee_Germination_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "watering",
@@ -1043,6 +1143,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F4A7}",
             core: "Plants drink water through their roots. Some trees move a LOT of water every day!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file184_DesignsByBee_Watering_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "soil",
@@ -1050,6 +1151,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1FAB1}",
             core: "Soil is full of tiny living things! They help turn old leaves into food for plants.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file185_DesignsByBee_Soil_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "seed-travel",
@@ -1057,6 +1159,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F32C}\uFE0F",
             core: "Seeds travel in cool ways! Some fly on the wind, some float on water, and some stick to animals.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file186_DesignsByBee_SeedTravel_take2.wav",
+            unlockAt: 8,
           },
         ],
       },
@@ -1076,6 +1179,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1FAB5}",
             core: "Each ring in a tree shows one year of growth! Some trees are thousands of years old.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file188_DesignsByBee_AgeRings_take2.wav",
+            unlockAt: 2,
           },
           {
             id: "bark",
@@ -1083,6 +1187,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F332}",
             core: "Bark is like a tree's armor! It keeps the tree safe from bugs and bad weather.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file189_DesignsByBee_Bark_take2.wav",
+            unlockAt: 4,
           },
           {
             id: "sapwood",
@@ -1090,6 +1195,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F4A7}",
             core: "The wood inside a tree carries water from the roots up to the leaves — like a big straw!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file190_DesignsByBee_Sapwood_take2.wav",
+            unlockAt: 6,
           },
           {
             id: "heartwood",
@@ -1097,6 +1203,7 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             emoji: "\u{1F9E1}",
             core: "The center of a tree is strong and sturdy! It helps hold the tree up.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file191_DesignsByBee_Heartwood_take2.wav",
+            unlockAt: 8,
           },
         ],
       },

@@ -107,8 +107,9 @@ const ONSET_POOL: Record<string, string[]> = {
 
   // Short E onsets
   "be": ["bed", "beg", "bet", "ben"],
+  "de": ["den", "dew"],
   "ge": ["get", "gem", "gel"],
-  "he": ["hen", "hem"],
+  "he": ["hen", "hem", "hex"],
   "je": ["jet", "jed"],
   "le": ["leg", "let", "led"],
   "ne": ["net", "ned"],
@@ -186,14 +187,14 @@ export const THEME_CONFIGS: Record<RoomTheme, ThemeConfig> = {
     rhymePop: {
       objectType: "bubble",
       objectEmoji: "🫧",
-      objectImage: "/assets/discovery rooms/coral-cove-village/bubbles.png",
+      objectImage: "/assets/discovery rooms/coral-cove-village/single-bubble.png",
       bgClass: "mg-bg--ocean",
       popEffect: "mg-pop--bubble",
     },
     letterBuilder: {
       carrierType: "fish",
       carrierEmoji: "🐟",
-      carrierImage: "/assets/discovery rooms/coral-cove-village/school of fish 1.png",
+      carrierImage: "/assets/discovery rooms/coral-cove-village/clownfish.png",
       bgClass: "mg-bg--ocean",
       direction: "left-to-right",
     },
@@ -276,7 +277,7 @@ export const THEME_CONFIGS: Record<RoomTheme, ThemeConfig> = {
     rhymePop: {
       objectType: "gear",
       objectEmoji: "⚙️",
-      objectImage: "/assets/discovery rooms/geartown-workshop/gears-on-wall.png",
+      objectImage: "/assets/discovery rooms/geartown-workshop/single-gear.png",
       bgClass: "mg-bg--geartown",
       popEffect: "mg-pop--gear",
     },
@@ -320,10 +321,10 @@ export const THEME_CONFIGS: Record<RoomTheme, ThemeConfig> = {
     wordSort: {
       binType: "flower-pot",
       binEmoji: "🌻",
-      binImage: "/assets/discovery rooms/greenhouse-domes/oxygen-machine.png",
-      itemType: "leaf",
-      itemEmoji: "🍃",
-      itemImage: "/assets/discovery rooms/greenhouse-domes/seed-n-water.png",
+      binImage: "/assets/discovery rooms/greenhouse-domes/flower-pot.png",
+      itemType: "water-pot",
+      itemEmoji: "💧",
+      itemImage: "/assets/discovery rooms/greenhouse-domes/water-pot.png",
       bgClass: "mg-bg--greenhouse",
     },
     accentColor: "#66BB6A",
@@ -436,13 +437,13 @@ export function generateSession(roomId: string): MiniGameSession | null {
   ].sort(() => Math.random() - 0.5).slice(0, 3);
 
   // ---- 2. SoundPop — ending sound builder (onset-based) ----
-  // Pick 3 target words that have onset groups with ≥3 entries
+  // Pick 3 target words that have onset groups with ≥2 entries
   const allRoomWords = data.families.flatMap((f) => f.words);
   const validTargets = allRoomWords.filter((w) => {
     if (w.length < 3) return false;
     const onset = w.slice(0, 2);
     const group = ONSET_POOL[onset];
-    return group && group.length >= 3;
+    return group && group.length >= 2;
   });
 
   const soundPopTargets = [...validTargets]

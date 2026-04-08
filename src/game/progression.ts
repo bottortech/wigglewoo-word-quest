@@ -568,3 +568,65 @@ export function getChallengeUnlockedQuests(): string[] {
   return Object.keys(data).filter((k) => data[k]);
 }
 
+// =============================================
+// VOWEL PROGRESS — tracks quest completions per vowel pattern
+// Used for progressive fact unlocking in discovery rooms
+// =============================================
+
+/** Map quest ID to its vowel pattern */
+const QUEST_TO_VOWEL: Record<string, string> = {
+  "quest-short-a": "a", "quest-cvcc-short-a": "a", "quest-magic-e-a": "a",
+  "quest-cvvc-long-a": "a", "quest-adv-ar-or": "a",
+  "quest-short-i": "i", "quest-cvcc-short-i": "i", "quest-magic-e-i": "i",
+  "quest-cvvc-mixed-ea": "i", "quest-adv-er-ir-ur": "i",
+  "quest-short-o": "o", "quest-cvcc-short-o": "o", "quest-magic-e-o": "o",
+  "quest-cvvc-long-o": "o", "quest-adv-bossy-r-mix": "o",
+  "quest-short-u": "u", "quest-cvcc-short-u": "u", "quest-magic-e-u": "u",
+  "quest-cvvc-long-u": "u", "quest-adv-2syl-closed": "u",
+  "quest-short-e": "e", "quest-cvcc-short-e": "e", "quest-magic-e-mixed": "e",
+  "quest-cvvc-long-e": "e", "quest-adv-mixed-mastery": "e",
+};
+
+const VOWEL_PROGRESS_KEY = "ww_vowel_progress";
+
+function loadVowelProgress(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(VOWEL_PROGRESS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return {};
+}
+
+function saveVowelProgress(data: Record<string, number>): void {
+  try {
+    localStorage.setItem(VOWEL_PROGRESS_KEY, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
+
+/** Get the vowel pattern for a quest ID */
+export function getVowelForQuest(questId: string): string | null {
+  return QUEST_TO_VOWEL[questId] ?? null;
+}
+
+/** Get current progress level for a vowel (number of quest completions) */
+export function getVowelProgressLevel(vowel: string): number {
+  const data = loadVowelProgress();
+  return data[vowel] ?? 0;
+}
+
+/** Record a quest completion for its vowel pattern. Call once per quest complete. */
+export function recordVowelQuestCompletion(questId: string): void {
+  const vowel = QUEST_TO_VOWEL[questId];
+  if (!vowel) return;
+  const data = loadVowelProgress();
+  data[vowel] = (data[vowel] ?? 0) + 1;
+  saveVowelProgress(data);
+}
+
+/** Calculate how many facts should be unlocked for a vowel.
+ *  2 facts per completion, max 16. */
+export function getUnlockedFactCount(vowel: string): number {
+  const level = getVowelProgressLevel(vowel);
+  return Math.min(level * 2, 16);
+}
+

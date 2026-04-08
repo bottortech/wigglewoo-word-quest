@@ -49,6 +49,7 @@ import {
   resetDiscoveryProgress,
   migrateOldCompletedQuests,
   isChallengeUnlocked,
+  recordVowelQuestCompletion,
   unlockChallengeMode,
   hasHighAccuracy,
 } from "./game/progression";
@@ -250,9 +251,11 @@ export default function App() {
         setArrivedFromWord(completedWordIndex);
         setTimeout(checkChallengeUnlock, 300);
 
-        // Check if image words for this quest are now complete → auto-advance
+        // Check if image words for this quest are now complete → record + auto-advance
         setTimeout(() => {
           if (areImageWordsComplete(activeQuest.id)) {
+            // Record vowel completion for progressive fact unlocking
+            recordVowelQuestCompletion(activeQuest.id);
             const next = getNextAutoAdvanceQuest(activeQuest.id);
             if (next) {
               ensureQuestLoaded(next.questId).then(() => {
@@ -275,6 +278,9 @@ export default function App() {
         // quest-summary: last word in quest → check auto-advance or discovery
         advanceWord(progress);
         setTimeout(checkChallengeUnlock, 300);
+
+        // Record vowel completion for progressive fact unlocking
+        recordVowelQuestCompletion(activeQuest.id);
 
         // Check for next vowel auto-advance
         const next = getNextAutoAdvanceQuest(activeQuest.id);
