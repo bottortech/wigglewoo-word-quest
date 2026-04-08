@@ -292,13 +292,22 @@ export default function App() {
             }
           });
         } else {
-          // No more vowels → discovery room
-          const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
-          if (envId) {
-            markEnvironmentVisited(envId);
-            setExploreEnvId(envId);
-            setRoute("discovery-room");
+          // All vowels + all nodes done → check if truly all 16 complete
+          const updatedProgress = loadQuestProgress(activeQuest.id);
+          if (updatedProgress.currentWordIndex >= activeQuest.words.length) {
+            // All 16 nodes done → discovery room
+            const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
+            if (envId) {
+              markEnvironmentVisited(envId);
+              setExploreEnvId(envId);
+              setRoute("discovery-room");
+            } else {
+              setArrivedFromWord(completedWordIndex);
+              setRoute("map");
+              setMapRevision((r) => r + 1);
+            }
           } else {
+            // Not all nodes done yet → back to map
             setArrivedFromWord(completedWordIndex);
             setRoute("map");
             setMapRevision((r) => r + 1);

@@ -426,12 +426,12 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   );
 
   // Discovery room node state — triggers after image words complete
+  // Discovery room ONLY unlocks after ALL 16 nodes complete (image + decode)
   const discoveryNodeState = useMemo(() => {
-    const imageComplete = progress.currentWordIndex >= imageWordCount;
-    if (!imageComplete) return "locked" as NodeState;
+    if (progress.currentWordIndex < wordCount) return "locked" as NodeState;
     if (!discoveryProgress.discoveryRoomComplete) return "active" as NodeState;
     return "completed" as NodeState;
-  }, [progress.currentWordIndex, imageWordCount, discoveryProgress]);
+  }, [progress.currentWordIndex, wordCount, discoveryProgress]);
 
   // Skin-aware WiggleWoo hero image
   const skinAssets = useMemo(() => getActiveSkinAssets(), []);
