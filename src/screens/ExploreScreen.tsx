@@ -39,10 +39,10 @@ const FactPanelSheet: React.FC<{
   panel: FactPanel;
   onClose: () => void;
   ambientColor: string;
-  unlockedFactCount: number;
-}> = ({ panel, onClose, unlockedFactCount }) => {
+  onFactViewed?: (factId: string) => void;
+}> = ({ panel, onClose, onFactViewed }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [lockedToast, setLockedToast] = useState<string | null>(null);
+  const [lockedToast] = useState<string | null>(null);
 
   return (
     <>
@@ -55,8 +55,7 @@ const FactPanelSheet: React.FC<{
         <h3 className="fact-panel__title">{panel.title}</h3>
         <div className="fact-panel__grid">
           {panel.items.map((item: FactItem) => {
-            const unlockLevel = item.unlockAt ?? 1;
-            const isLocked = unlockedFactCount < unlockLevel * 2;
+            const isLocked = false; // All facts accessible
             const isExpanded = expandedId === item.id;
             return (
               <div
@@ -67,10 +66,8 @@ const FactPanelSheet: React.FC<{
                   isLocked ? "fact-panel__item--locked" : "",
                 ].filter(Boolean).join(" ")}
                 onClick={() => {
-                  if (isLocked) {
-                    setLockedToast("Play more quests to unlock this fact!");
-                    setTimeout(() => setLockedToast(null), 1500);
-                    return;
+                  if (!isExpanded) {
+                    onFactViewed?.(item.id);
                   }
                   setExpandedId(isExpanded ? null : item.id);
                 }}
@@ -120,19 +117,48 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const env: EnvironmentConfig | undefined = ENVIRONMENTS[environmentId];
 
   // Progressive fact unlocking — based on vowel quest completions
+  // Also count completions directly from quest progress as a safety net
   const vowel = questId ? getVowelForQuest(questId) : null;
-  const unlockedFactCount = vowel ? getUnlockedFactCount(vowel) : 16; // default to all unlocked if no quest context
+  let unlockedFactCount = vowel ? getUnlockedFactCount(vowel) : 16;
+  // If entering this room, player must have completed at least 1 quest — ensure minimum 2 facts
+  if (unlockedFactCount < 2 && questId) {
+    unlockedFactCount = 2;
+  }
 
-  // Mini-game session state (only when entering as discovery-room reward)
-  const [showMiniGames, setShowMiniGames] = useState(!!onComplete);
+  // Room completion state
+  const roomCompleteKey = `ww_room_complete_${environmentId}`;
+  const isRoomAlreadyComplete = localStorage.getItem(roomCompleteKey) === "true";
+  const [factsViewedThisVisit, setFactsViewedThisVisit] = useState<Set<string>>(new Set());
+  const [roomJustCompleted, setRoomJustCompleted] = useState(false);
+  const FACTS_REQUIRED = 2;
+  const needsCompletion = !!onComplete && !isRoomAlreadyComplete;
+
+  // Mini-game session state — show on first visit to each room
+  const miniGameSeenKey = `ww_minigames_seen_${environmentId}`;
+  const hasSeenMiniGames = localStorage.getItem(miniGameSeenKey) === "true";
+  const [showMiniGames, setShowMiniGames] = useState(!!onComplete && !hasSeenMiniGames);
   const [, setMiniGamesCompleted] = useState(false);
 
   const handleMiniGamesComplete = useCallback(() => {
     setMiniGamesCompleted(true);
     setShowMiniGames(false);
-    // Fire onComplete after mini-games done (triggers skin unlock)
-    onComplete?.();
-  }, [onComplete]);
+    localStorage.setItem(miniGameSeenKey, "true");
+    // Do NOT call onComplete here — room completes after viewing 2 facts
+  }, [miniGameSeenKey]);
+
+  // Room completion — triggers after viewing 2 facts (first visit only)
+  useEffect(() => {
+    if (!needsCompletion || roomJustCompleted) return;
+    if (factsViewedThisVisit.size >= FACTS_REQUIRED) {
+      setRoomJustCompleted(true);
+      localStorage.setItem(roomCompleteKey, "true");
+      // Brief celebration then auto-exit
+      setTimeout(() => {
+        onComplete?.();
+        onBack();
+      }, 2000);
+    }
+  }, [factsViewedThisVisit.size, needsCompletion, roomJustCompleted, roomCompleteKey, onComplete, onBack]);
 
   const handleMiniGamesBack = useCallback(() => {
     setShowMiniGames(false);
@@ -587,8 +613,37 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         ← Back
       </button>
 
+      {/* Fact counter removed */}
+
+      {/* Room completion progress (first visit only) */}
+      {needsCompletion && !roomJustCompleted && !showMiniGames && (
+        <div className="explore-room-progress">
+          <span className="explore-room-progress__text">
+            {factsViewedThisVisit.size === 0
+              ? `View ${FACTS_REQUIRED} facts to complete this room`
+              : `${factsViewedThisVisit.size} of ${FACTS_REQUIRED} facts viewed`
+            }
+          </span>
+        </div>
+      )}
+
+      {/* Room Complete overlay */}
+      {roomJustCompleted && (
+        <div className="explore-room-complete">
+          <div className="explore-room-complete__card">
+            <span className="explore-room-complete__icon">🎉</span>
+            <h2 className="explore-room-complete__title">Room Complete!</h2>
+            <p className="explore-room-complete__sub">Great exploring!</p>
+          </div>
+        </div>
+      )}
+
       {/* Hint text */}
-      <div className="explore-hint">Tap objects to discover facts!</div>
+      <div className="explore-hint">
+        {needsCompletion && !roomJustCompleted
+          ? "Tap objects and read facts to complete this room!"
+          : "Tap objects to discover facts!"}
+      </div>
 
       {/* Daily cap modal — hidden in dev or when VITE_DISABLE_COMPLETION_MODAL is set */}
       {!import.meta.env.DEV && !import.meta.env.VITE_DISABLE_COMPLETION_MODAL && showDailyCap && (
@@ -610,7 +665,13 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
           panel={activePanel}
           onClose={() => setActivePanel(null)}
           ambientColor={env.ambientColor}
-          unlockedFactCount={unlockedFactCount}
+          onFactViewed={(factId) => {
+            setFactsViewedThisVisit((prev) => {
+              const next = new Set(prev);
+              next.add(factId);
+              return next;
+            });
+          }}
         />
       )}
 

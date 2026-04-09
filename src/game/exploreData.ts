@@ -1249,10 +1249,29 @@ export const LANDMARK_POSITIONS: Record<string, { x: number; y: number; s: numbe
 
 // ---- Unlock helpers ----
 
-/** Returns the list of environment IDs the player has unlocked. */
+/** Returns the list of environment IDs the player has unlocked.
+ *  An environment unlocks when ANY quest mapped to it has all 16 nodes complete. */
 export function getUnlockedEnvironments(): string[] {
-  const trophyCount = countEarnedTrophies();
-  return EXPLORE_UNLOCK_ORDER.slice(0, trophyCount);
+  const unlocked: string[] = [];
+  for (const envId of EXPLORE_UNLOCK_ORDER) {
+    // Check all quests that map to this environment
+    const questIds = Object.entries(QUEST_ENVIRONMENT_MAP)
+      .filter(([, eId]) => eId === envId)
+      .map(([qId]) => qId);
+
+    const anyComplete = questIds.some((qId) => {
+      try {
+        const raw = localStorage.getItem("wigglewoo-cvc-progress");
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        const qp = data.quests?.[qId];
+        return qp?.questComplete === true;
+      } catch { return false; }
+    });
+
+    if (anyComplete) unlocked.push(envId);
+  }
+  return unlocked;
 }
 
 /** Check if a specific environment is unlocked. */

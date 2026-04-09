@@ -254,8 +254,6 @@ export default function App() {
         // Check if image words for this quest are now complete → record + auto-advance
         setTimeout(() => {
           if (areImageWordsComplete(activeQuest.id)) {
-            // Record vowel completion for progressive fact unlocking
-            recordVowelQuestCompletion(activeQuest.id);
             const next = getNextAutoAdvanceQuest(activeQuest.id);
             if (next) {
               ensureQuestLoaded(next.questId).then(() => {
@@ -275,49 +273,22 @@ export default function App() {
         setRoute("map");
         setMapRevision((r) => r + 1);
       } else {
-        // quest-summary: last word in quest → check auto-advance or discovery
+        // quest-summary: last word (node 16) → go to discovery room
         advanceWord(progress);
         setTimeout(checkChallengeUnlock, 300);
-
-        // Record vowel completion for progressive fact unlocking
         recordVowelQuestCompletion(activeQuest.id);
 
-        // Check for next vowel auto-advance
-        const next = getNextAutoAdvanceQuest(activeQuest.id);
-        if (next) {
-          // Auto-advance to next vowel group
-          ensureQuestLoaded(next.questId).then(() => {
-            const nextQuest = getQuestById(next.questId);
-            if (nextQuest) {
-              setActiveQuest(nextQuest);
-              saveGlobalProgress({ activeQuestId: next.questId });
-              setArrivedFromWord(null);
-              setWordIndex(0);
-              setMapRevision((r) => r + 1);
-              setRoute("map");
-            }
-          });
+        // Enter the matching discovery room
+        const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
+        if (envId) {
+          markEnvironmentVisited(envId);
+          setExploreEnvId(envId);
+          setRoute("discovery-room");
         } else {
-          // All vowels + all nodes done → check if truly all 16 complete
-          const updatedProgress = loadQuestProgress(activeQuest.id);
-          if (updatedProgress.currentWordIndex >= activeQuest.words.length) {
-            // All 16 nodes done → discovery room
-            const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
-            if (envId) {
-              markEnvironmentVisited(envId);
-              setExploreEnvId(envId);
-              setRoute("discovery-room");
-            } else {
-              setArrivedFromWord(completedWordIndex);
-              setRoute("map");
-              setMapRevision((r) => r + 1);
-            }
-          } else {
-            // Not all nodes done yet → back to map
-            setArrivedFromWord(completedWordIndex);
-            setRoute("map");
-            setMapRevision((r) => r + 1);
-          }
+          // No discovery room mapped → go to map
+          setArrivedFromWord(completedWordIndex);
+          setRoute("map");
+          setMapRevision((r) => r + 1);
         }
       }
     },
@@ -425,7 +396,7 @@ export default function App() {
     setExploreEnvId(envId);
     setTrophyJustCompleted(false);
     setRoute("explore");
-  }, []);
+  }, [activeQuest?.id]);
 
   const handleExploreBack = useCallback(() => {
     setExploreEnvId(null);
@@ -483,9 +454,28 @@ export default function App() {
   const handleDiscoveryRoomExit = useCallback(() => {
     setExploreEnvId(null);
     setArrivedFromWord(null);
+
+    // After discovery room → auto-advance to next vowel quest
+    if (activeQuest) {
+      const next = getNextAutoAdvanceQuest(activeQuest.id);
+      if (next) {
+        ensureQuestLoaded(next.questId).then(() => {
+          const nextQuest = getQuestById(next.questId);
+          if (nextQuest) {
+            setActiveQuest(nextQuest);
+            saveGlobalProgress({ activeQuestId: next.questId });
+            setWordIndex(0);
+          }
+          setMapRevision((r) => r + 1);
+          setRoute("map");
+        });
+        return;
+      }
+    }
+
     setMapRevision((r) => r + 1);
     setRoute("map");
-  }, []);
+  }, [activeQuest?.id]);
 
   // ---- Enter Discovery Room from map node ----
   const handleEnterDiscoveryRoom = useCallback(() => {
@@ -610,6 +600,7 @@ export default function App() {
             environmentId={exploreEnvId}
             questId={activeQuest.id}
             onBack={handleExploreBack}
+            onComplete={handleDiscoveryRoomComplete}
           />
         </ScreenGate>
       )}

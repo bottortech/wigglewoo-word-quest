@@ -8,8 +8,7 @@
 // All positioning is percentage-based for responsiveness.
 
 import { useMemo } from "react";
-import { LANDMARK_POSITIONS, ENVIRONMENT_QUEST_MAP } from "../game/exploreData";
-import { loadTrophyProgress } from "../game/progression";
+import { LANDMARK_POSITIONS } from "../game/exploreData";
 import "./IslandLayer.css";
 
 // ---- Static decorative items (no interaction) ----
@@ -71,18 +70,13 @@ interface IslandLayerProps {
 }
 
 const IslandLayer: React.FC<IslandLayerProps> = ({ onExplore, revision = 0, devUnlock = false, hideBadges = false }) => {
-  // Compute which landmarks are unlocked (trophy-based, or all if dev mode)
+  // Islands are decorative — discovery rooms are accessed via the quest map node
+  // Only dev mode makes them directly clickable
   const unlockedSet = useMemo(() => {
     const set = new Set<string>();
-    for (const lm of LANDMARKS) {
-      if (devUnlock) {
+    if (devUnlock) {
+      for (const lm of LANDMARKS) {
         set.add(lm.envId);
-      } else {
-        const questId = ENVIRONMENT_QUEST_MAP[lm.envId];
-        if (questId) {
-          const tp = loadTrophyProgress(questId);
-          if (tp.trophyRoomComplete) set.add(lm.envId);
-        }
       }
     }
     return set;
