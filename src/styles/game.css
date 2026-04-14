@@ -661,6 +661,13 @@
   50% { box-shadow: 0 0 24px rgba(76, 175, 80, 0.7), 0 3px 6px var(--ww-shadow); }
 }
 
+/* Subtle hint — border highlight at 3 wrong (does NOT reveal answer) */
+.letter-tile--subtle-hint {
+  border-color: #FFB74D;
+  border-width: 3px;
+  box-shadow: 0 0 8px rgba(255, 183, 77, 0.3);
+}
+
 /* Wrong tap shake */
 .letter-tile--wrong-shake {
   animation: tile-wrong-shake 0.35s ease-out;
@@ -756,6 +763,59 @@
 @keyframes active-slot-pulse {
   0%, 100% { box-shadow: 0 0 14px rgba(255,215,0,0.35), inset 0 0 8px rgba(255,215,0,0.1); }
   50% { box-shadow: 0 0 20px rgba(255,215,0,0.5), inset 0 0 12px rgba(255,215,0,0.15); }
+}
+
+/* Lockout pulse — draws attention back to slot after wrong tap */
+.word-slot--lockout-pulse {
+  animation: lockout-attention 0.8s ease-in-out;
+}
+
+@keyframes lockout-attention {
+  0%, 100% { border-color: var(--ww-gold); box-shadow: 0 0 14px rgba(255,215,0,0.35); }
+  25% { border-color: #FF8A65; box-shadow: 0 0 18px rgba(255,138,101,0.4); }
+  75% { border-color: var(--ww-gold); box-shadow: 0 0 22px rgba(255,215,0,0.5); }
+}
+
+/* Image placeholder — shown before first correct letter */
+.target-image-area--hidden {
+  opacity: 0.7;
+}
+
+.target-image-placeholder {
+  width: clamp(80px, 20vw, 115px);
+  height: clamp(80px, 20vw, 115px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(36px, 8vw, 56px);
+  font-weight: 900;
+  color: rgba(93, 64, 55, 0.3);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  border: 3px dashed rgba(93, 64, 55, 0.2);
+}
+
+/* Decode mode — phoneme segmentation display */
+.decode-segmentation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: clamp(6px, 1.5vh, 12px) 0;
+  margin-bottom: clamp(4px, 1vh, 8px);
+}
+
+.decode-segmentation__letter {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(28px, 7vw, 48px);
+  font-weight: 900;
+  color: var(--ww-teal, #4DB6AC);
+  letter-spacing: 2px;
+}
+
+.decode-segmentation__dot {
+  color: rgba(93, 64, 55, 0.3);
+  font-weight: 400;
 }
 
 .word-slot--hint {

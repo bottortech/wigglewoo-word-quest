@@ -110,23 +110,15 @@ export default function App() {
   // Resolve initial quest synchronously for CVC, null if chunk not loaded
   const resolvedInitial = getQuestById(globalProg.activeQuestId) ?? null;
 
-  // Auto-complete placement and unlock all tiers for testers
+  // Ensure all tiers are unlocked
   useEffect(() => {
-    if (!isPlacementComplete()) {
-      savePlacementResult({
-        level: "advanced",
-        assignedTier: "CVC",
-        startingNode: 0,
-        unlockedTiers: ["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"],
-        wordResults: [],
-        tierSummaries: [],
-        completedAt: Date.now(),
-      });
+    const tiers = localStorage.getItem("ww_placement_tiers");
+    if (!tiers || !tiers.includes("ADVANCED")) {
+      localStorage.setItem(
+        "ww_placement_tiers",
+        JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
+      );
     }
-    localStorage.setItem(
-      "ww_placement_tiers",
-      JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
-    );
   }, []);
 
   // Start on Play Now screen
@@ -151,10 +143,14 @@ export default function App() {
   // null = no animation (fresh load), number = animate from that node
   const [arrivedFromWord, setArrivedFromWord] = useState<number | null>(null);
 
-  // ---- Home Screen → Map (placement skipped for testers) ----
+  // ---- Home Screen → Placement or Map ----
   const handlePlay = useCallback(() => {
     backgroundMusic.play();
-    setRoute("map");
+    if (isPlacementComplete()) {
+      setRoute("map");
+    } else {
+      setRoute("placement");
+    }
   }, []);
 
   // ---- Go Home (from badge click) ----

@@ -127,6 +127,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [slotAttempts, setSlotAttempts] = useState(0); // wrong attempts on current slot
   const [shakingTileId, setShakingTileId] = useState<string | null>(null);
+  const [lockedOut, setLockedOut] = useState(false); // 0.8s lockout after wrong tap
+  const [imageRevealed, setImageRevealed] = useState(false); // delayed image reveal
   const nodeStartTime = useRef(Date.now());
 
   // Available tiles (not yet placed)
@@ -184,7 +186,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
   }, [filledSlots]);
 
   const handleTileTap = useCallback((tile: LetterTile) => {
-    if (step !== "build" || shakingTileId) return;
+    if (step !== "build" || shakingTileId || lockedOut) return;
     const slotIdx = filledSlots.findIndex((s) => s === null);
     if (slotIdx === -1) return;
 
@@ -199,22 +201,25 @@ const GameScreen: React.FC<GameScreenProps> = ({
       newSlots[slotIdx] = tile.letter;
       setFilledSlots(newSlots);
       setUsedTileIds((prev) => new Set(prev).add(tile.id));
-      setSlotAttempts(0); // reset for next slot
+      setSlotAttempts(0);
+      // Reveal image on first correct letter (image mode only)
+      if (!imageRevealed) setImageRevealed(true);
       recordCorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
 
-      // Check if word is now complete
       const allFilled = newSlots.every((s) => s !== null);
       if (allFilled) {
         setStep("celebrate");
       }
     } else {
-      // Wrong letter — shake tile, count attempt
+      // Wrong letter — shake tile, lockout for 0.8s
       setIncorrectCount((c) => c + 1);
       setSlotAttempts((a) => a + 1);
       setShakingTileId(tile.id);
-      setTimeout(() => setShakingTileId(null), 400);
+      setLockedOut(true);
+      setTimeout(() => setShakingTileId(null), 500);
+      setTimeout(() => setLockedOut(false), 800);
     }
-  }, [step, filledSlots, currentWord, quest.id, quest.patternType, currentWordIndex, shakingTileId]);
+  }, [step, filledSlots, currentWord, quest.id, quest.patternType, currentWordIndex, shakingTileId, lockedOut, imageRevealed]);
 
   // ---- Step 2: Celebration ----
   useEffect(() => {
@@ -298,6 +303,20 @@ const GameScreen: React.FC<GameScreenProps> = ({
                       </div>
                     )}
 
+                    {/* Decode mode — phoneme segmentation (disabled until voiceovers ready)
+                    {enablePhonemeMode && (currentWord.mode ?? "image") !== "image" && (
+                      <div className="decode-segmentation">
+                        {currentWord.letters.map((letter, i) => (
+                          <span key={i} className="decode-segmentation__letter">
+                            {letter.toLowerCase()}
+                            {i < currentWord.letters.length - 1 && (
+                              <span className="decode-segmentation__dot"> · </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )} */}
+
                     {/* Word slots */}
                     <div className="word-slots-row">
                       {currentWord.letters.map((_, i) => {
@@ -310,6 +329,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
                               "word-slot",
                               filled ? "word-slot--filled" : "",
                               isNext ? "word-slot--hovered" : "",
+                              isNext && lockedOut ? "word-slot--lockout-pulse" : "",
                             ].filter(Boolean).join(" ")}
                           >
                             {filled && (
@@ -327,14 +347,16 @@ const GameScreen: React.FC<GameScreenProps> = ({
                       {availableTiles.map((tile) => {
                         const slotIdx = filledSlots.findIndex((s) => s === null);
                         const isCorrect = slotIdx >= 0 && tile.letter.toLowerCase() === currentWord.letters[slotIdx].toLowerCase();
-                        const showHint = slotAttempts >= 2 && isCorrect;
+                        const showSubtleHint = slotAttempts >= 3 && slotAttempts < 5 && isCorrect;
+                        const showStrongHint = slotAttempts >= 5 && isCorrect;
                         const isShaking = shakingTileId === tile.id;
                         return (
                           <div
                             key={tile.id}
                             className={[
                               "letter-tile",
-                              showHint ? "letter-tile--hinted" : "",
+                              showSubtleHint ? "letter-tile--subtle-hint" : "",
+                              showStrongHint ? "letter-tile--hinted" : "",
                               isShaking ? "letter-tile--wrong-shake" : "",
                             ].filter(Boolean).join(" ")}
                             onClick={() => handleTileTap(tile)}
@@ -361,6 +383,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
               wordsComplete={currentWordIndex + 1}
               totalWords={quest.words.length}
               word={currentWord.word}
+              rating={incorrectCount === 0 ? "perfect" : incorrectCount <= 2 ? "clean" : "assisted"}
             />
           )}
         </div>

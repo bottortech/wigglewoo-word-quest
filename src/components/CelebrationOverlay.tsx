@@ -14,12 +14,15 @@ import gear1 from "../assets/gear1.png";
 
 export type CelebrationType = "level-complete" | "quest-complete";
 
+type WordRating = "perfect" | "clean" | "assisted";
+
 interface CelebrationOverlayProps {
   type: CelebrationType;
   onComplete: () => void;
   wordsComplete?: number;
   totalWords?: number;
   word?: string;
+  rating?: WordRating;
 }
 
 const BANNER_TEXT: Record<CelebrationType, string> = {
@@ -70,9 +73,11 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
   wordsComplete = 1,
   totalWords = 16,
   word,
+  rating = "perfect",
 }) => {
+  const isAssisted = rating === "assisted";
   const [showProgress, setShowProgress] = useState(false);
-  const [confettiActive, setConfettiActive] = useState(true);
+  const [confettiActive, setConfettiActive] = useState(!isAssisted); // no confetti for assisted
   const [fading, setFading] = useState(false);
 
   const confetti = useMemo(
@@ -135,9 +140,9 @@ export const CelebrationOverlay: React.FC<CelebrationOverlayProps> = ({
 
       {/* Heading */}
       <div className={`celeb__headline ${type}`}>
-        {BANNER_TEXT[type]}
+        {isAssisted ? "NICE TRY!" : BANNER_TEXT[type]}
       </div>
-      <div className="celeb__sub">{SUB_TEXT[type]}</div>
+      <div className="celeb__sub">{isAssisted ? "Keep practicing!" : SUB_TEXT[type]}</div>
 
       {/* THE WORD — main focus */}
       {word && (
