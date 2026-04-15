@@ -270,15 +270,9 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
         {/* Letter tiles */}
         <div className="placement-tiles">
           {availableTiles.map((tile) => {
-            const isCorrectForSlot = nextSlot >= 0 && currentWord &&
-              tile.letter.toLowerCase() === currentWord.letters[nextSlot].toLowerCase();
-            // Heavy: highlight correct, dim wrong from start
-            // Medium: hint after 1 wrong attempt
-            const showHint =
-              (guidanceLevel === "heavy" && isCorrectForSlot) ||
-              (guidanceLevel === "medium" && wrongCount >= 1 && isCorrectForSlot);
-            const isDimmed =
-              (guidanceLevel === "heavy" && !isCorrectForSlot && wrongCount >= 1);
+            // Guidance disabled — anti-guessing system handles hints
+            const showHint = false;
+            const isDimmed = false;
             return (
               <button
                 key={tile.id}
