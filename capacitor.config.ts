@@ -5,7 +5,11 @@ const config: CapacitorConfig = {
   appName: 'WiggleWoo Word Quest',
   webDir: 'dist',
   ios: {
-    minVersion: '16.0',
+    allowsLinkPreview: false,
+  },
+  server: {
+    androidScheme: 'https',
+    iosScheme: 'capacitor',
   },
 };
 

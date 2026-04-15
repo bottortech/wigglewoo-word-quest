@@ -156,7 +156,8 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
   const availableTiles = tileBank.filter((t) => !usedTileIds.has(t.id));
 
   // Guidance level: heavy (word 0), medium (word 1), none (word 2+)
-  const guidanceLevel = wordIndex === 0 ? "heavy" : wordIndex === 1 ? "medium" : "none";
+  // Guidance disabled — anti-guessing system handles hints via wrong attempt count
+  const guidanceLevel = "none";
 
   // TTS for first word guidance
   // TTS disabled — will be replaced with voice actor recordings
