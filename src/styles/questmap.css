@@ -3,12 +3,12 @@
    WiggleWoo's Word Quest
    ============================================ */
 
-/* Remove browser focus rings on game elements */
-.gear-node:focus,
-.trophy-node:focus,
-.quest-map-overlay *:focus {
-  outline: none !important;
-  box-shadow: none !important;
+/* Remove default browser focus rings (focus-visible is set in accessibility.css) */
+.gear-node:focus:not(:focus-visible),
+.trophy-node:focus:not(:focus-visible),
+.quest-map-overlay *:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
   -webkit-tap-highlight-color: transparent;
 }
 

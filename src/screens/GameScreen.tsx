@@ -351,7 +351,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
                         const showStrongHint = slotAttempts >= 5 && isCorrect;
                         const isShaking = shakingTileId === tile.id;
                         return (
-                          <div
+                          <button
                             key={tile.id}
                             className={[
                               "letter-tile",
@@ -361,9 +361,10 @@ const GameScreen: React.FC<GameScreenProps> = ({
                             ].filter(Boolean).join(" ")}
                             onClick={() => handleTileTap(tile)}
                             style={{ cursor: "pointer", touchAction: "manipulation" }}
+                            aria-label={`Letter ${tile.letter.toUpperCase()}`}
                           >
                             {tile.letter.toUpperCase()}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>

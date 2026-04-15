@@ -37,20 +37,28 @@ const PlayNowScreen: React.FC<PlayNowScreenProps> = ({ onPlay }) => {
   return (
     <GameShell showMapWorld titleBadge={false}>
       {/* ---- Play Now UI overlay ---- */}
-      <div className="home-overlay">
+      <div className="home-overlay" role="main" aria-label="Welcome screen">
         {/* Animated logo */}
         <div className="home-logo-container">
           <img
             src={badgeLogo}
-            alt="WiggleWoo's Word Quest"
+            alt=""
             className="home-logo"
             draggable={false}
           />
           <div className="home-logo-glow" />
         </div>
 
+        {/* Title — visible to screen readers, visually represented by logo */}
+        <h1 className="sr-only">WiggleWoo's Word Quest</h1>
+
         {/* Play Now button */}
-        <button className="home-play-btn" onClick={onPlay}>
+        <button
+          className="home-play-btn"
+          onClick={onPlay}
+          aria-label="Play Now — start the game"
+          autoFocus
+        >
           Play Now
         </button>
 

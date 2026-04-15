@@ -348,6 +348,12 @@
   transform: scale(0.98);
 }
 
+.flip-card:focus-visible {
+  outline: 3px solid #FFD54A;
+  outline-offset: 3px;
+  border-radius: 14px;
+}
+
 .flip-card__inner {
   position: relative;
   width: 100%;

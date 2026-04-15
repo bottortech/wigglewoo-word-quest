@@ -16,6 +16,7 @@ import TrophyRoomScreen from "./screens/TrophyRoomScreen";
 import LearningInsightsScreen from "./screens/LearningInsightsScreen";
 import ExploreScreen from "./screens/ExploreScreen";
 
+import { loadSettings } from "./game/settings";
 import OrientationGuard from "./components/OrientationOverlay";
 import Stage from "./components/Stage";
 import ScreenGate from "./components/ScreenGate";
@@ -85,14 +86,17 @@ async function ensureQuestLoaded(questId: string): Promise<void> {
 }
 
 export default function App() {
-  // Initialize background music on app mount
+  // Initialize background music on app mount (respects settings)
   useEffect(() => {
     backgroundMusic.init();
-    // Attempt to play (will queue if user hasn't interacted yet)
-    backgroundMusic.play();
+    const settings = loadSettings();
+    if (settings.backgroundMusic) {
+      backgroundMusic.play();
+    } else {
+      backgroundMusic.mute(); // mark as user-muted so tab-refocus won't resume
+    }
 
     return () => {
-      // Cleanup on unmount (rarely called in SPA)
       backgroundMusic.destroy();
     };
   }, []);
@@ -145,7 +149,7 @@ export default function App() {
 
   // ---- Home Screen → Placement or Map ----
   const handlePlay = useCallback(() => {
-    backgroundMusic.play();
+    if (loadSettings().backgroundMusic) backgroundMusic.play();
     if (isPlacementComplete()) {
       setRoute("map");
     } else {
@@ -212,7 +216,7 @@ export default function App() {
   // ---- Quest Map → Game Screen ----
   const handleStartLevel = useCallback((selectedWordIndex: number) => {
     // Ensure music is playing when starting a level
-    backgroundMusic.play();
+    if (loadSettings().backgroundMusic) backgroundMusic.play();
     setWordIndex(selectedWordIndex);
     setArrivedFromWord(null); // clear animation signal
     setTrophyJustCompleted(false);

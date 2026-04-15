@@ -15,6 +15,7 @@ export interface AppSettings {
   reducedMotion: boolean;
   factNarration: boolean;       // auto-play narration on fact panel open
   factNarrationAutoPlay: boolean;
+  backgroundMusic: boolean;     // background music on/off
   version: number;
 }
 
@@ -25,6 +26,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   reducedMotion: false,
   factNarration: true,
   factNarrationAutoPlay: false,
+  backgroundMusic: true,
   version: 1,
 };
 

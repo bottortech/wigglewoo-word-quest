@@ -595,21 +595,22 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
           const isTapped = tappedHotspotId === hotspot.id;
           const tapClass = isTapped ? `explore-hotspot--tap-${hotspot.tapAnimation}` : "";
           return (
-            <div
+            <button
               key={hotspot.id}
               className={`explore-hotspot explore-hotspot--${hotspot.idleAnimation} ${tapClass}`}
-              style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
+              style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%`, background: "none", border: "none", padding: 0 }}
               onClick={() => handleHotspotClick(hotspot)}
+              aria-label={hotspot.label}
             >
-              <div className="explore-hotspot__marker">{hotspot.emoji}</div>
+              <div className="explore-hotspot__marker" aria-hidden="true">{hotspot.emoji}</div>
               <div className="explore-hotspot__label">{hotspot.label}</div>
-            </div>
+            </button>
           );
         })}
       </div>
 
       {/* Back button */}
-      <button className="explore-back-btn" onClick={onBack}>
+      <button className="explore-back-btn" onClick={onBack} aria-label="Go back to map">
         ← Back
       </button>
 

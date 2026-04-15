@@ -165,11 +165,11 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
   // ---- INTRO PHASE ----
   if (phase === "intro") {
     return (
-      <div className="placement-screen">
+      <div className="placement-screen" role="main" aria-label="Placement test">
         <div className="placement-intro">
           <img
             src={badgeLogo}
-            alt="WiggleWoo's Word Quest"
+            alt=""
             className="placement-intro__logo"
             draggable={false}
           />
@@ -177,12 +177,19 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
             Let's find your perfect starting point!
           </h1>
           <p className="placement-intro__desc">
-            Build a few words so we can see where you should begin.
-            It's quick — just {totalQuestions} words!
+            This quick check helps us place your child at the right level.
+            They'll build a few words — it's just {totalQuestions} questions!
+          </p>
+          <p className="placement-intro__note">
+            Not every child starts at the same place, and that's perfectly
+            okay. If a word is too tricky, we'll use that to find the best
+            level to begin.
           </p>
           <button
             className="placement-intro__start-btn"
             onClick={() => setPhase("test")}
+            autoFocus
+            aria-label="Start the placement check"
           >
             Let's Go!
           </button>
@@ -194,11 +201,11 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
   // ---- DONE PHASE ----
   if (phase === "done") {
     return (
-      <div className="placement-screen">
+      <div className="placement-screen" role="main" aria-label="Placement complete">
         <div className="placement-done">
-          <span className="placement-done__emoji">🎉</span>
+          <span className="placement-done__emoji" aria-hidden="true">🎉</span>
           <h2 className="placement-done__title">All set!</h2>
-          <p className="placement-done__desc">Finding your perfect starting point...</p>
+          <p className="placement-done__desc">Starting level selected — let's begin the adventure!</p>
         </div>
       </div>
     );
@@ -255,9 +262,9 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
           })}
         </div>
 
-        {/* Wrong attempt indicator */}
+        {/* Wrong attempt indicator + reassurance */}
         {wrongCount > 0 && (
-          <div className="placement-attempts">
+          <div className="placement-attempts" aria-label={`${wrongCount} of ${MAX_ATTEMPTS} attempts used`}>
             {Array.from({ length: MAX_ATTEMPTS }).map((_, i) => (
               <span
                 key={i}
@@ -265,6 +272,11 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
               />
             ))}
           </div>
+        )}
+        {wrongCount >= 2 && (
+          <p className="placement-reassurance" aria-live="polite">
+            That's okay — we're finding the best place to start!
+          </p>
         )}
 
         {/* Letter tiles */}
@@ -282,6 +294,7 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
                   isDimmed ? "placement-tile--dimmed" : "",
                 ].filter(Boolean).join(" ")}
                 onClick={() => handleTileTap(tile.id, tile.letter)}
+                aria-label={`Letter ${tile.letter.toUpperCase()}`}
               >
                 {tile.letter.toUpperCase()}
               </button>

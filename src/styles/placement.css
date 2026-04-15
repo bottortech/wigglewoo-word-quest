@@ -58,6 +58,26 @@
   line-height: 1.4;
 }
 
+.placement-intro__note {
+  font-size: clamp(11px, 2vw, 14px);
+  font-weight: 500;
+  color: #5D4037;
+  margin: 0 0 min(16px, 2.5vh);
+  line-height: 1.5;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.placement-reassurance {
+  font-size: clamp(11px, 2vw, 13px);
+  font-weight: 600;
+  color: #6D4C41;
+  margin: 0 0 clamp(4px, 0.8vh, 8px);
+  text-align: center;
+  font-style: italic;
+  animation: placement-fade-in 0.3s ease-out;
+}
+
 .placement-intro__start-btn {
   font-family: inherit;
   font-size: clamp(15px, 3vw, 20px);
@@ -301,6 +321,16 @@
 .placement-tile:active {
   transform: scale(0.92);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.placement-tile:focus-visible {
+  outline: 3px solid #FFD54A;
+  outline-offset: 2px;
+}
+
+.placement-intro__start-btn:focus-visible {
+  outline: 3px solid #FFD54A;
+  outline-offset: 4px;
 }
 
 /* Guided: correct letter highlighted green */

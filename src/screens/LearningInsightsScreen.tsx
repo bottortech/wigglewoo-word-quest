@@ -12,6 +12,7 @@ import { resetPlacement, isPlacementComplete } from "../game/placementTest";
 import type { OverallSummary, VowelSummary, MasteryLevel } from "../game/learningAnalytics";
 import { loadSettings, updateSetting, applySettingsToDOM } from "../game/settings";
 import type { AppSettings } from "../game/settings";
+import { backgroundMusic } from "../audio/BackgroundMusic";
 import "../styles/insights.css";
 
 interface LearningInsightsScreenProps {
@@ -46,6 +47,15 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
     const updated = updateSetting(key, !settings[key]);
     setSettings(updated);
     applySettingsToDOM(updated);
+
+    // Immediately apply music toggle
+    if (key === "backgroundMusic") {
+      if (updated.backgroundMusic) {
+        backgroundMusic.unmute();
+      } else {
+        backgroundMusic.mute();
+      }
+    }
   }, [settings]);
 
   const renderMasteryBar = (vs: VowelSummary) => {
@@ -224,6 +234,22 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
         {tab === "accessibility" && (
           <div className="insights-accessibility">
             <div className="insights-toggle-list">
+              <div className="insights-toggle">
+                <div className="insights-toggle__info">
+                  <span className="insights-toggle__label">Background Music</span>
+                  <span className="insights-toggle__desc">Toggle background music on or off</span>
+                </div>
+                <button
+                  className={`insights-toggle__switch ${settings.backgroundMusic ? "insights-toggle__switch--on" : ""}`}
+                  onClick={() => handleToggle("backgroundMusic")}
+                  role="switch"
+                  aria-checked={settings.backgroundMusic}
+                  aria-label="Background Music"
+                >
+                  <span className="insights-toggle__knob" />
+                </button>
+              </div>
+
               <div className="insights-toggle">
                 <div className="insights-toggle__info">
                   <span className="insights-toggle__label">Dyslexia-Friendly Font</span>

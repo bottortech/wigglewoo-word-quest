@@ -16,6 +16,7 @@ class BackgroundMusicManager {
   private isPaused = false;
   private userHasInteracted = false;
   private pendingPlay = false;
+  private userMuted = false; // user explicitly turned music off via settings
 
   // Volume: low so it sits behind letter sounds and phrases
   private readonly VOLUME = 0.30;
@@ -100,6 +101,22 @@ class BackgroundMusicManager {
   }
 
   /**
+   * Mute — user explicitly turned music off (won't auto-resume on tab focus)
+   */
+  mute(): void {
+    this.userMuted = true;
+    this.pause();
+  }
+
+  /**
+   * Unmute — user explicitly turned music back on
+   */
+  unmute(): void {
+    this.userMuted = false;
+    this.play();
+  }
+
+  /**
    * Resume background music if it was paused
    */
   resume(): void {
@@ -156,8 +173,8 @@ class BackgroundMusicManager {
         this.isPaused = true;
       }
     } else {
-      // Tab regained focus — resume if was playing
-      if (this.isPaused && this.userHasInteracted) {
+      // Tab regained focus — resume if was playing (but not if user muted)
+      if (this.isPaused && this.userHasInteracted && !this.userMuted) {
         this.resume();
       }
     }

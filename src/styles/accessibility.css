@@ -81,6 +81,41 @@ html.slow-phoneme {
   /* marker class only — actual speed change in audio code */
 }
 
+/* ---- Global Focus-Visible Ring ---- */
+/* High-visibility gold focus ring on all interactive elements */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #FFD54A;
+  outline-offset: 3px;
+}
+
+/* Override the questmap rule that strips focus outlines */
+.gear-node:focus-visible,
+.trophy-node:focus-visible,
+.quest-map-overlay *:focus-visible {
+  outline: 3px solid #FFD54A !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px rgba(255, 213, 74, 0.25) !important;
+}
+
+/* Skip-to-content link (screen reader utility) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---- Reduced Motion ---- */
 /* Disables all animations, transitions, and movement */
 html.reduced-motion *,

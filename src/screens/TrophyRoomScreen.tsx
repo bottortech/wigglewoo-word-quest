@@ -19,6 +19,7 @@ import wigglewooTrophyRoom from "../assets/wigglewoo_trophyroom.png";
 import GlassDisplayCase from "../components/GlassDisplayCase";
 
 import { playTapCardPhrase, playMatchPhrase, playSuccessPhrase } from "../audio/SoundEffects";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 import "../styles/trophyroom.css";
 
 interface TrophyRoomScreenProps {
@@ -317,11 +318,13 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
         <div className="trophy-room__cards-row">
           <div className={`trophy-room__card-grid trophy-room__card-grid--pairs-${pairCount}`}>
           {cards.map((card) => (
-            <div
+            <button
               key={card.id}
               className={`flip-card ${card.isFlipped ? 'flip-card--flipped' : ''} ${card.isMatched ? 'flip-card--matched' : ''}`}
-              style={{ transform: `rotate(${card.rotation}deg)` }}
+              style={{ transform: `rotate(${card.rotation}deg)`, background: "none", border: "none", padding: 0 }}
               onClick={() => handleCardClick(card.id)}
+              aria-label={card.isMatched ? `${card.word} — matched` : card.isFlipped ? `Card showing ${card.word}` : "Face-down card — click to flip"}
+              disabled={card.isMatched}
             >
               <div className="flip-card__inner">
                 <div className="flip-card__front">
@@ -358,7 +361,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
                   ))}
                 </div>
               )}
-            </div>
+            </button>
           ))}
           </div>
 
@@ -418,38 +421,59 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
 
       {/* Word Archive Modal */}
       {showArchive && (
-        <div className="archive-modal-backdrop" onClick={() => setShowArchive(false)}>
-          <div className="archive-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="archive-modal__close"
-              onClick={() => setShowArchive(false)}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <h2 className="archive-modal__header">
-              {vowelLabel} Word Collection
-            </h2>
-            <div className="archive-modal__count">
-              ⭐ {masteredWords.length} Words Mastered
-            </div>
-            <div className="archive-modal__grid">
-              {masteredWords.length > 0 ? (
-                masteredWords.map((word) => (
-                  <div key={word} className="archive-modal__word">
-                    <span className="archive-modal__star">⭐</span>
-                    <span className="archive-modal__word-text">{word.toUpperCase()}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="archive-modal__empty">
-                  Complete word challenges to fill your archive!
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <ArchiveModal onClose={() => setShowArchive(false)} vowelLabel={vowelLabel} masteredWords={masteredWords} />
       )}
+    </div>
+  );
+};
+
+/** Focus-trapped archive modal */
+const ArchiveModal: React.FC<{
+  onClose: () => void;
+  vowelLabel: string;
+  masteredWords: string[];
+}> = ({ onClose, vowelLabel, masteredWords }) => {
+  const trapRef = useFocusTrap<HTMLDivElement>();
+
+  // Close on Escape
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
+
+  return (
+    <div className="archive-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Word Archive">
+      <div className="archive-modal" onClick={(e) => e.stopPropagation()} ref={trapRef}>
+        <button
+          className="archive-modal__close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ✕
+        </button>
+        <h2 className="archive-modal__header">
+          {vowelLabel} Word Collection
+        </h2>
+        <div className="archive-modal__count">
+          {masteredWords.length} Words Mastered
+        </div>
+        <div className="archive-modal__grid">
+          {masteredWords.length > 0 ? (
+            masteredWords.map((word) => (
+              <div key={word} className="archive-modal__word">
+                <span className="archive-modal__word-text">{word.toUpperCase()}</span>
+              </div>
+            ))
+          ) : (
+            <div className="archive-modal__empty">
+              Complete word challenges to fill your archive!
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
