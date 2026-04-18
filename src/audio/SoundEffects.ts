@@ -1,107 +1,101 @@
 // =============================================
-// SoundEffects.ts — Letter & phrase audio manager
+// SoundEffects.ts — Letter, word & phrase audio manager
 // WiggleWoo's Word Quest
 // =============================================
-// Plays letter-name sounds on tile tap and
-// celebratory/encouragement phrases on game events.
-// Uses a single HTMLAudioElement per channel to
-// ensure instant interruption on rapid taps.
-// Audio files are resolved via import.meta.glob
-// with { query: '?url' } so Vite returns URL strings.
+// Plays voice-over audio on game events. Files are
+// served as static assets from /assets/audio/ and
+// loaded lazily via HTMLAudioElement (no preloading).
+// One HTMLAudioElement per channel so rapid taps
+// interrupt instantly instead of stacking.
 // =============================================
 
-// Glob all .wav files as URL strings (no eager loading of file contents)
-const alphabetFiles = import.meta.glob(
-  "./Wiggle Woo Alphabet/*_1.wav",
-  { eager: true, query: "?url", import: "default" }
-) as Record<string, string>;
+const AUDIO_BASE = "/assets/audio";
 
-const phraseFiles = import.meta.glob(
-  "./Wiggle Woo Phrases/*_1.wav",
-  { eager: true, query: "?url", import: "default" }
-) as Record<string, string>;
+// ---- Phrase URL pools ----
+const phraseUrl = (slug: string) => `${AUDIO_BASE}/phrases/${slug}.m4a`;
 
-// ---- Build letter map ----
-const LETTER_SOUNDS: Record<string, string> = {};
-for (const [path, url] of Object.entries(alphabetFiles)) {
-  const match = path.match(/\/([A-Z])_1\.wav$/);
-  if (match) LETTER_SOUNDS[match[1]] = url;
-}
-
-// ---- Phrase lookup helper ----
-function findPhrase(needle: string): string {
-  for (const [path, url] of Object.entries(phraseFiles)) {
-    if (path.includes(needle)) return url;
-  }
-  return "";
-}
-
-// ---- Phrase pools ----
 const SUCCESS_PHRASES = [
-  findPhrase("Great Job"),
-  findPhrase("Amazing"),
-  findPhrase("Fantastic"),
-  findPhrase("Nice work"),
-  findPhrase("High five"),
-  findPhrase("the right word"),
-  findPhrase("Hooray"),
-  findPhrase("You did it"),
-  findPhrase("Way to Go"),
-  findPhrase("reading scientist"),
-  findPhrase("word star"),
-  findPhrase("You nailed it"),
-].filter(Boolean);
+  phraseUrl("great-job"),
+  phraseUrl("amazing"),
+  phraseUrl("fantastic"),
+  phraseUrl("nice-work"),
+  phraseUrl("high-five"),
+  phraseUrl("thats-the-right-word"),
+  phraseUrl("hooray"),
+  phraseUrl("you-did-it"),
+  phraseUrl("way-to-go"),
+  phraseUrl("youre-a-reading-scientist"),
+  phraseUrl("youre-a-word-star"),
+  phraseUrl("you-nailed-it"),
+];
 
 const ENCOURAGEMENT_PHRASES = [
-  findPhrase("Keep Going"),
-  findPhrase("build a word"),
-].filter(Boolean);
+  phraseUrl("keep-going"),
+  phraseUrl("lets-build-a-word"),
+];
 
 const PROMPT_PHRASES = [
-  findPhrase("Drag a letter"),
-  findPhrase("build a word"),
-].filter(Boolean);
+  phraseUrl("drag-a-letter"),
+  phraseUrl("lets-build-a-word"),
+];
 
-const TAP_CARD_PHRASES = [
-  findPhrase("Tap a card"),
-].filter(Boolean);
+const TAP_CARD_PHRASES = [phraseUrl("tap-a-card")];
 
 const PROGRESSION_PHRASES = [
-  findPhrase("Ready for the next"),
-  findPhrase("level up"),
-  findPhrase("try another one"),
-].filter(Boolean);
+  phraseUrl("ready-for-the-next-word"),
+  phraseUrl("lets-level-up"),
+  phraseUrl("lets-try-another-one"),
+];
 
-const NEW_CHALLENGE_PHRASE = findPhrase("new challenge");
-const MATCH_PHRASES = [findPhrase("match")].filter(Boolean);
-const EXPLORE_PHRASES = [findPhrase("explore")].filter(Boolean);
-const RETRY_PHRASES = [findPhrase("Try it again")].filter(Boolean);
+const MATCH_PHRASES = [phraseUrl("its-a-match")];
+const EXPLORE_PHRASES = [phraseUrl("lets-explore")];
+const RETRY_PHRASES = [phraseUrl("try-it-again")];
+const NEW_CHALLENGE_PHRASE = phraseUrl("time-for-a-new-challenge");
 
-// ---- Two-channel audio player ----
+// ---- Channels: one Audio element per channel for instant interrupt ----
 let letterAudio: HTMLAudioElement | null = null;
 let phraseAudio: HTMLAudioElement | null = null;
+let wordAudio: HTMLAudioElement | null = null;
+let eventAudio: HTMLAudioElement | null = null;
 
-function getLetterChannel(): HTMLAudioElement {
-  if (!letterAudio) letterAudio = new Audio();
-  return letterAudio;
+type Channel = "letter" | "phrase" | "word" | "event";
+
+function getChannel(which: Channel): HTMLAudioElement {
+  switch (which) {
+    case "letter":
+      if (!letterAudio) letterAudio = new Audio();
+      return letterAudio;
+    case "phrase":
+      if (!phraseAudio) phraseAudio = new Audio();
+      return phraseAudio;
+    case "word":
+      if (!wordAudio) wordAudio = new Audio();
+      return wordAudio;
+    case "event":
+      if (!eventAudio) eventAudio = new Audio();
+      return eventAudio;
+  }
 }
 
-function getPhraseChannel(): HTMLAudioElement {
-  if (!phraseAudio) phraseAudio = new Audio();
-  return phraseAudio;
-}
-
-function pick<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+function play(channel: Channel, src: string, volume: number): void {
+  if (!src) return;
+  const audio = getChannel(channel);
+  audio.pause();
+  audio.currentTime = 0;
+  audio.src = src;
+  audio.volume = volume;
+  audio.play().catch(() => {});
 }
 
 let lastPhraseSrc = "";
 
 function pickPhrase(pool: string[]): string {
   if (!pool.length) return "";
-  if (pool.length <= 1) return pool[0];
+  if (pool.length === 1) return pool[0];
   let choice: string;
-  do { choice = pick(pool); } while (choice === lastPhraseSrc);
+  do {
+    choice = pool[Math.floor(Math.random() * pool.length)];
+  } while (choice === lastPhraseSrc);
   lastPhraseSrc = choice;
   return choice;
 }
@@ -111,70 +105,95 @@ function pickPhrase(pool: string[]): string {
 // =============================================
 
 export function playLetterSound(letter: string): void {
-  const src = LETTER_SOUNDS[letter.toUpperCase()];
-  if (!src) return;
-  const audio = getLetterChannel();
+  const key = letter.toLowerCase();
+  if (!/^[a-z]$/.test(key)) return;
+  const audio = getChannel("letter");
   audio.pause();
   audio.currentTime = 0;
-  audio.src = src;
-  audio.volume = 0.30;
+  audio.src = `${AUDIO_BASE}/phonetics/${key}.m4a`;
+  audio.volume = 0.3;
   audio.playbackRate = document.documentElement.classList.contains("slow-phoneme") ? 0.7 : 1.0;
   audio.play().catch(() => {});
 }
 
-function playPhrase(src: string): void {
-  if (!src) return;
-  const audio = getPhraseChannel();
-  audio.pause();
-  audio.currentTime = 0;
-  audio.src = src;
-  audio.volume = 0.35;
-  audio.play().catch(() => {});
+/** Pronounce a full word. Silent fallback if the VO file is missing. */
+export function playWordSound(word: string): void {
+  const key = word.toLowerCase().trim();
+  if (!key) return;
+  play("word", `${AUDIO_BASE}/words/${key}.m4a`, 0.5);
 }
 
 export function playSuccessPhrase(): void {
-  playPhrase(pickPhrase(SUCCESS_PHRASES));
+  play("phrase", pickPhrase(SUCCESS_PHRASES), 0.35);
 }
 
 export function playEncouragementPhrase(): void {
-  playPhrase(pickPhrase(ENCOURAGEMENT_PHRASES));
+  play("phrase", pickPhrase(ENCOURAGEMENT_PHRASES), 0.35);
 }
 
 export function playPromptPhrase(): void {
-  playPhrase(pickPhrase(PROMPT_PHRASES));
+  play("phrase", pickPhrase(PROMPT_PHRASES), 0.35);
 }
 
 export function playProgressionPhrase(): void {
-  playPhrase(pickPhrase(PROGRESSION_PHRASES));
+  play("phrase", pickPhrase(PROGRESSION_PHRASES), 0.35);
 }
 
 /** "Tap a card" — trophy room entry cue */
 export function playTapCardPhrase(): void {
-  playPhrase(pickPhrase(TAP_CARD_PHRASES));
+  play("phrase", pickPhrase(TAP_CARD_PHRASES), 0.35);
 }
 
 export function playMatchPhrase(): void {
-  playPhrase(pickPhrase(MATCH_PHRASES));
+  play("phrase", pickPhrase(MATCH_PHRASES), 0.35);
 }
 
 export function playExplorePhrase(): void {
-  playPhrase(pickPhrase(EXPLORE_PHRASES));
+  play("phrase", pickPhrase(EXPLORE_PHRASES), 0.35);
 }
 
 export function playRetryPhrase(): void {
-  playPhrase(pickPhrase(RETRY_PHRASES));
+  play("phrase", pickPhrase(RETRY_PHRASES), 0.35);
 }
 
 export function playNewChallengePhrase(): void {
-  if (NEW_CHALLENGE_PHRASE) playPhrase(NEW_CHALLENGE_PHRASE);
+  play("phrase", NEW_CHALLENGE_PHRASE, 0.35);
 }
 
-/** Pronounce a word — TTS disabled, will be replaced with voice actor recordings */
-export function playWordSound(_word: string): void {
-  // No-op until voice recordings are available
+// =============================================
+// Event VOs — specific moment narrations
+// Slugs map 1:1 to files in /assets/audio/events/
+// =============================================
+
+export type EventSlug =
+  // Celebrate
+  | "celebrate-perfect" | "celebrate-assisted"
+  | "celebrate-quest-complete" | "celebrate-word-power"
+  // Wrong / feedback
+  | "wrong-gentle" | "wrong-almost" | "wrong-hint"
+  // Placement test
+  | "placement-intro" | "placement-prompt"
+  | "placement-reassure" | "placement-complete" | "placement-skip"
+  // Onboarding
+  | "onboard-intro" | "onboard-tap-gear" | "onboard-first-complete"
+  // Trophy room
+  | "trophy-flying" | "trophy-all-matched" | "trophy-return"
+  // Decode (Challenge Mode)
+  | "decode-unlock" | "decode-complete"
+  // Discovery rooms
+  | "discover-welcome" | "discover-fact-reaction"
+  | "discover-skin-unlocked" | "discover-complete"
+  // Mini-games
+  | "mini-vowel-builder" | "mini-word-sort"
+  | "mini-correct" | "mini-complete";
+
+export function playEvent(slug: EventSlug): void {
+  play("event", `${AUDIO_BASE}/events/${slug}.m4a`, 0.4);
 }
 
 export function stopAllSfx(): void {
   if (letterAudio) { letterAudio.pause(); letterAudio.currentTime = 0; }
   if (phraseAudio) { phraseAudio.pause(); phraseAudio.currentTime = 0; }
+  if (wordAudio)   { wordAudio.pause();   wordAudio.currentTime = 0; }
+  if (eventAudio)  { eventAudio.pause();  eventAudio.currentTime = 0; }
 }

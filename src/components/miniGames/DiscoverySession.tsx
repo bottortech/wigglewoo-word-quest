@@ -11,10 +11,11 @@
 // Facts are collected by exploring the room after.
 // =============================================
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import RhymePopGame from "./RhymePopGame";
 import SoundPopGame from "./SoundPopGame";
 import WordSortGame from "./WordSortGame";
+import { playEvent } from "../../audio/SoundEffects";
 import {
   generateSession,
   getThemeForRoom,
@@ -47,6 +48,12 @@ const DiscoverySession: React.FC<DiscoverySessionProps> = ({
 
   const [step, setStep] = useState<SessionStep>("rhyme-pop");
   const [gamesCompleted, setGamesCompleted] = useState(0);
+
+  // Per-game intro VOs + session-complete VO
+  useEffect(() => {
+    if (step === "word-sort") playEvent("mini-word-sort");
+    else if (step === "complete") playEvent("mini-complete");
+  }, [step]);
 
   const handleGameComplete = useCallback((currentStep: SessionStep) => {
     setGamesCompleted((c) => c + 1);

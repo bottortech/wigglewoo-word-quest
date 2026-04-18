@@ -31,7 +31,7 @@ import WaterBaseLayer from "../components/WaterBaseLayer";
 import WaterAmbientLayer from "../components/WaterAmbientLayer";
 import IslandLayer from "../components/IslandLayer";
 import SkyLayer from "../components/SkyLayer";
-import { playNewChallengePhrase } from "../audio/SoundEffects";
+import { playNewChallengePhrase, playEvent } from "../audio/SoundEffects";
 import { isEnvironmentUnlocked } from "../game/exploreData";
 import "../styles/game.css";
 import "../styles/home.css";
@@ -397,6 +397,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       if (!alreadySeen) {
         setDecodeJustUnlocked(true);
         setShowDecodeModal(true);
+        playEvent("decode-unlock");
         localStorage.setItem(decodeSeenKey, "true");
         // Glow fades after 3s
         const timer = setTimeout(() => setDecodeJustUnlocked(false), 3000);

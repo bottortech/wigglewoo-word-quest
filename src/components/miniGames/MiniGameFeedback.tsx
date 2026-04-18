@@ -4,6 +4,7 @@
 // =============================================
 
 import React, { useEffect, useState } from "react";
+import { playEvent } from "../../audio/SoundEffects";
 
 interface MiniGameFeedbackProps {
   type: "success" | "error" | null;
@@ -17,6 +18,7 @@ const MiniGameFeedback: React.FC<MiniGameFeedbackProps> = ({ type, message, onDo
   useEffect(() => {
     if (!type) { setVisible(false); return; }
     setVisible(true);
+    if (type === "success") playEvent("mini-correct");
     const t = setTimeout(() => {
       setVisible(false);
       onDone?.();

@@ -24,8 +24,9 @@ import { recordWordCompletion } from "../game/learningAnalytics";
 import { questIdToVowelId } from "../game/wordData";
 import {
   playLetterSound,
-  playSuccessPhrase,
   playPromptPhrase,
+  playWordSound,
+  playEvent,
 } from "../audio/SoundEffects";
 import CelebrationOverlay from "../components/CelebrationOverlay";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
@@ -142,15 +143,16 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const audioTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleSpeakerTap = useCallback(() => {
-    // Replay the appropriate audio for the current step
-    if (step === "build") {
+    // Replay: speak the word once its image is visible, otherwise play the prompt
+    if (step === "celebrate" || imageRevealed) {
+      playWordSound(currentWord.word);
+    } else {
       playPromptPhrase();
     }
-    // Show active state briefly
     setAudioActive(true);
     if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
     audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
-  }, [step]);
+  }, [step, imageRevealed, currentWord.word]);
 
   // Clear audio timeout on unmount
   useEffect(() => {
@@ -202,8 +204,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
       setFilledSlots(newSlots);
       setUsedTileIds((prev) => new Set(prev).add(tile.id));
       setSlotAttempts(0);
-      // Reveal image on first correct letter (image mode only)
-      if (!imageRevealed) setImageRevealed(true);
+      // Reveal image on first correct letter + speak the word so the child hears it
+      if (!imageRevealed) {
+        setImageRevealed(true);
+        setTimeout(() => playWordSound(currentWord.word), 450);
+      }
       recordCorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
 
       const allFilled = newSlots.every((s) => s !== null);
@@ -213,9 +218,14 @@ const GameScreen: React.FC<GameScreenProps> = ({
     } else {
       // Wrong letter — shake tile, lockout for 0.8s
       setIncorrectCount((c) => c + 1);
-      setSlotAttempts((a) => a + 1);
+      const nextAttempts = slotAttempts + 1;
+      setSlotAttempts(nextAttempts);
       setShakingTileId(tile.id);
       setLockedOut(true);
+      // Escalating feedback: 1st gentle, 2nd almost, 3rd+ hint
+      if (nextAttempts === 1) playEvent("wrong-gentle");
+      else if (nextAttempts === 2) playEvent("wrong-almost");
+      else playEvent("wrong-hint");
       setTimeout(() => setShakingTileId(null), 500);
       setTimeout(() => setLockedOut(false), 800);
     }
@@ -224,8 +234,15 @@ const GameScreen: React.FC<GameScreenProps> = ({
   // ---- Step 2: Celebration ----
   useEffect(() => {
     if (step === "celebrate") {
-      // Play success chime
-      playSuccessPhrase();
+      // Speak the completed word, then the rating-specific celebration VO
+      playWordSound(currentWord.word);
+      const isLastInQuest = currentWordIndex === quest.words.length - 1;
+      const celebSlug = isLastInQuest
+        ? "celebrate-quest-complete"
+        : incorrectCount === 0
+          ? "celebrate-perfect"
+          : "celebrate-assisted";
+      setTimeout(() => playEvent(celebSlug), 900);
 
       // Record analytics
       const elapsed = Date.now() - nodeStartTime.current;

@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from "react";
 import { SKIN_REGISTRY, setActiveSkin } from "../game/skins";
+import { playEvent } from "../audio/SoundEffects";
 import defaultHero from "../assets/wiggle_woo_hero_stance.png";
 import "../styles/skin-unlock.css";
 
@@ -31,6 +32,7 @@ const SkinUnlockCelebration: React.FC<SkinUnlockCelebrationProps> = ({
   const skinLabel = skin?.label ?? "New Outfit";
 
   useEffect(() => {
+    playEvent("discover-skin-unlocked");
     const btnTimer = setTimeout(() => setShowButtons(true), 1200);
     const confettiTimer = setTimeout(() => setShowConfetti(false), 3000);
     return () => {

@@ -10,7 +10,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import WordImage from "../components/WordImage";
-import { playLetterSound, playSuccessPhrase } from "../audio/SoundEffects";
+import { playLetterSound, playEvent } from "../audio/SoundEffects";
 import "../styles/onboarding.css";
 
 interface OnboardingScreenProps {
@@ -30,11 +30,6 @@ const SLOT_DISTRACTORS: string[][] = [
 
 type OnboardingStep = "intro" | "build" | "done";
 
-// TTS disabled — will be replaced with voice actor recordings
-function speak(_text: string) {
-  // No-op
-}
-
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   const [step, setStep] = useState<OnboardingStep>("intro");
   const [slotIndex, setSlotIndex] = useState(0);
@@ -47,28 +42,27 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   // Intro sequence
   useEffect(() => {
     if (step === "intro") {
-      speak("Welcome to Wiggle Woo's Word Quest! Let's learn how to build a word together.");
+      playEvent("onboard-intro");
       setInstruction("Welcome to WiggleWoo's Word Quest!");
       const t = setTimeout(() => {
         setStep("build");
         setInstruction("This is a cat. Let's spell it! Tap the letter that makes the \"k\" sound.");
-        speak("This is a cat. Let's spell it! Tap the letter that makes the kuh sound.");
       }, 3500);
       return () => clearTimeout(t);
     }
   }, [step]);
 
-  // Prompt for each slot
+  // Prompt for each slot — first slot plays the "tap a gear" VO
   useEffect(() => {
     if (step !== "build") return;
     const prompts = [
-      { text: "Tap the letter that makes the \"k\" sound.", tts: "Tap the letter that makes the kuh sound." },
-      { text: "Now tap the letter that makes the \"a\" sound.", tts: "Now tap the letter that makes the ah sound." },
-      { text: "Last one! Tap the letter that makes the \"t\" sound.", tts: "Last one! Tap the letter that makes the tuh sound." },
+      "Tap the letter that makes the \"k\" sound.",
+      "Now tap the letter that makes the \"a\" sound.",
+      "Last one! Tap the letter that makes the \"t\" sound.",
     ];
     if (slotIndex < 3) {
-      setInstruction(prompts[slotIndex].text);
-      speak(prompts[slotIndex].tts);
+      setInstruction(prompts[slotIndex]);
+      if (slotIndex === 0) playEvent("onboard-tap-gear");
     }
   }, [slotIndex, step]);
 
@@ -100,8 +94,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
         // Word complete
         setStep("done");
         setInstruction("You spelled CAT! Great job!");
-        speak("You spelled cat! Great job! Now let's explore!");
-        playSuccessPhrase();
+        playEvent("onboard-first-complete");
         doneTimerRef.current = setTimeout(onComplete, 3000);
       } else {
         setSlotIndex(nextSlot);

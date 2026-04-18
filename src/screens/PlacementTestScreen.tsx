@@ -20,7 +20,7 @@ import {
   type WordResult,
   type PlacementResult,
 } from "../game/placementTest";
-import { playLetterSound } from "../audio/SoundEffects";
+import { playLetterSound, playEvent, playWordSound } from "../audio/SoundEffects";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import "../styles/placement.css";
 
@@ -57,15 +57,34 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
     return shuffled;
   }, [wordIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset state when word changes
+  // Reset state when word changes + speak the target word
   useEffect(() => {
     if (currentWord) {
       setFilledSlots(Array(currentWord.letters.length).fill(null));
       setUsedTileIds(new Set());
       setWrongCount(0);
       setTotalAttempts(0);
+      if (phase === "test") {
+        setTimeout(() => playWordSound(currentWord.word), 300);
+      }
     }
-  }, [wordIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [wordIndex, phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Intro narration on first mount
+  useEffect(() => {
+    if (phase === "intro") playEvent("placement-intro");
+    if (phase === "done") playEvent("placement-complete");
+  }, [phase]);
+
+  // Reassurance VO after 2 wrong attempts
+  const reassurancePlayed = React.useRef(false);
+  useEffect(() => {
+    if (wrongCount === 2 && !reassurancePlayed.current) {
+      reassurancePlayed.current = true;
+      playEvent("placement-reassure");
+    }
+    if (wrongCount === 0) reassurancePlayed.current = false;
+  }, [wrongCount]);
 
   // Next empty slot index
   const nextSlot = useMemo(() => {

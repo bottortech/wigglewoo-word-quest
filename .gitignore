@@ -35,3 +35,6 @@ ios/
 # Environment
 .env
 .env.*
+
+# Audio archive (original WAVs — compressed m4a versions live in public/assets/audio/)
+audio-originals/

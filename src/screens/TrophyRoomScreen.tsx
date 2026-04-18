@@ -18,7 +18,7 @@ import continueQuestBtn from "../assets/cont_quest.png";
 import wigglewooTrophyRoom from "../assets/wigglewoo_trophyroom.png";
 import GlassDisplayCase from "../components/GlassDisplayCase";
 
-import { playTapCardPhrase, playMatchPhrase, playSuccessPhrase } from "../audio/SoundEffects";
+import { playTapCardPhrase, playMatchPhrase, playEvent } from "../audio/SoundEffects";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import "../styles/trophyroom.css";
 
@@ -161,7 +161,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
   useEffect(() => {
     if (matchCount === pairCount && !showCelebration) {
       // All pairs matched!
-      playSuccessPhrase();
+      playEvent("trophy-all-matched");
       setTimeout(() => {
         setShowCelebration(true);
       }, 400);
@@ -174,12 +174,14 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
       // Brief celebration, then fly trophy to case
       const flyTimer = setTimeout(() => {
         setTrophyFlying(true);
+        playEvent("trophy-flying");
       }, 1500);
       // Trophy lands in case after flight animation
       const landTimer = setTimeout(() => {
         setTrophyFlying(false);
         setTrophyLanded(true);
         setShowReturnBtn(true);
+        playEvent("trophy-return");
         onComplete(); // mark trophy room complete in progression
       }, 3200); // 1.5s celebration + 1.7s flight
       return () => {

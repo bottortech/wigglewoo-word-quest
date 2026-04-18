@@ -22,6 +22,7 @@ import {
 import DailyCapModal from "../components/DailyCapModal";
 import FactNarration from "../components/FactNarration";
 import PictureMatch from "../components/PictureMatch";
+import { playEvent } from "../audio/SoundEffects";
 import "../styles/explore.css";
 
 interface ExploreScreenProps {
@@ -146,12 +147,18 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     // Do NOT call onComplete here — room completes after viewing 2 facts
   }, [miniGameSeenKey]);
 
+  // Welcome VO on first mount of a room
+  useEffect(() => {
+    playEvent("discover-welcome");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Room completion — triggers after viewing 2 facts (first visit only)
   useEffect(() => {
     if (!needsCompletion || roomJustCompleted) return;
     if (factsViewedThisVisit.size >= FACTS_REQUIRED) {
       setRoomJustCompleted(true);
       localStorage.setItem(roomCompleteKey, "true");
+      playEvent("discover-complete");
       // Brief celebration then auto-exit
       setTimeout(() => {
         onComplete?.();
@@ -277,6 +284,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const learnFactForProp = useCallback((prop: SceneProp) => {
     recordFactDiscovery(environmentId);
     setFactsDiscoveredThisSession(c => c + 1);
+    playEvent("discover-fact-reaction");
 
     playObjectAnimation(prop);
     showFactForProp(prop);

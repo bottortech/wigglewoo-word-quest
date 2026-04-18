@@ -11,6 +11,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import type { ThemeConfig } from "../../game/discoveryMiniGames";
 import MiniGameHeader from "./MiniGameHeader";
+import { playEvent } from "../../audio/SoundEffects";
 
 /** Word entry for the vowel builder mini-game */
 interface VowelBuilderWord {
@@ -41,6 +42,11 @@ const VowelBuilderGame: React.FC<VowelBuilderGameProps> = ({ round, theme, onCom
   const totalWords = round.words.length;
 
   const currentWord = currentIndex < totalWords ? round.words[currentIndex] : null;
+
+  // Intro VO on first mount
+  useEffect(() => {
+    playEvent("mini-vowel-builder");
+  }, []);
 
   // Check full completion
   useEffect(() => {
