@@ -26,6 +26,7 @@ import {
   playLetterSound,
   playWordSound,
   playEvent,
+  waitForLetterDone,
 } from "../audio/SoundEffects";
 import CelebrationOverlay from "../components/CelebrationOverlay";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
@@ -228,15 +229,18 @@ const GameScreen: React.FC<GameScreenProps> = ({
   // ---- Step 2: Celebration ----
   useEffect(() => {
     if (step === "celebrate") {
-      // Speak the completed word, then the rating-specific celebration VO
-      playWordSound(currentWord.word);
+      // Wait for the final letter phoneme to finish so it isn't cut off,
+      // then speak the whole word, then the rating-specific celebration VO.
       const isLastInQuest = currentWordIndex === quest.words.length - 1;
       const celebSlug = isLastInQuest
         ? "celebrate-quest-complete"
         : incorrectCount === 0
           ? "celebrate-perfect"
           : "celebrate-assisted";
-      setTimeout(() => playEvent(celebSlug), 900);
+      waitForLetterDone().then(() => {
+        playWordSound(currentWord.word);
+        setTimeout(() => playEvent(celebSlug), 900);
+      });
 
       // Record analytics
       const elapsed = Date.now() - nodeStartTime.current;

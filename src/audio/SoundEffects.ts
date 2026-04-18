@@ -197,3 +197,29 @@ export function stopAllSfx(): void {
   if (wordAudio)   { wordAudio.pause();   wordAudio.currentTime = 0; }
   if (eventAudio)  { eventAudio.pause();  eventAudio.currentTime = 0; }
 }
+
+/**
+ * Resolves when the letter channel finishes playing (or immediately
+ * if idle). Use this before playing a word/phrase so the final
+ * phoneme isn't cut off by the next VO.
+ */
+export function waitForLetterDone(): Promise<void> {
+  const audio = letterAudio;
+  if (!audio || audio.paused || audio.ended || !audio.src) {
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      audio.removeEventListener("ended", done);
+      audio.removeEventListener("pause", done);
+      resolve();
+    };
+    audio.addEventListener("ended", done, { once: true });
+    audio.addEventListener("pause", done, { once: true });
+    // Safety: phonemes are under 1s, but guard against stalled audio.
+    setTimeout(done, 1500);
+  });
+}
