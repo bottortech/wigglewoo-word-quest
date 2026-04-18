@@ -11,7 +11,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import type { ThemeConfig } from "../../game/discoveryMiniGames";
 import MiniGameHeader from "./MiniGameHeader";
-import { playEvent } from "../../audio/SoundEffects";
+import { playEvent, playWordSound } from "../../audio/SoundEffects";
 
 /** Word entry for the vowel builder mini-game */
 interface VowelBuilderWord {
@@ -65,6 +65,7 @@ const VowelBuilderGame: React.FC<VowelBuilderGameProps> = ({ round, theme, onCom
       setSolved(true);
       setShowSuccess(true);
       setWrongVowel(null);
+      playWordSound(currentWord.word);
 
       // Brief success display, then advance to next word
       setTimeout(() => {

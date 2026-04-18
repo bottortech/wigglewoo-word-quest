@@ -18,7 +18,7 @@ import continueQuestBtn from "../assets/cont_quest.png";
 import wigglewooTrophyRoom from "../assets/wigglewoo_trophyroom.png";
 import GlassDisplayCase from "../components/GlassDisplayCase";
 
-import { playTapCardPhrase, playMatchPhrase, playEvent } from "../audio/SoundEffects";
+import { playTapCardPhrase, playMatchPhrase, playEvent, playWordSound } from "../audio/SoundEffects";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import "../styles/trophyroom.css";
 
@@ -208,22 +208,23 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
     const card = cards.find(c => c.id === cardId);
     if (!card || card.isFlipped || card.isMatched) return;
     
-    // Flip the card
-    setCards(prev => prev.map(c => 
+    // Flip the card + speak its word
+    setCards(prev => prev.map(c =>
       c.id === cardId ? { ...c, isFlipped: true } : c
     ));
-    
+    playWordSound(card.word);
+
     const newFlippedIds = [...flippedIds, cardId];
     setFlippedIds(newFlippedIds);
-    
+
     // Check for match when 2 cards are flipped
     if (newFlippedIds.length === 2) {
       setIsChecking(true);
-      
+
       const [firstId, secondId] = newFlippedIds;
       const firstCard = cards.find(c => c.id === firstId)!;
       const secondCard = cards.find(c => c.id === secondId)!;
-      
+
       if (firstCard.word === secondCard.word) {
         // Match found!
         playMatchPhrase();

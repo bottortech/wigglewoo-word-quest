@@ -13,6 +13,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import type { RhymePopRound, ThemeConfig } from "../../game/discoveryMiniGames";
 import MiniGameHeader from "./MiniGameHeader";
+import { playWordSound } from "../../audio/SoundEffects";
 
 interface RhymePopGameProps {
   round: RhymePopRound;
@@ -83,6 +84,8 @@ const RhymePopGame: React.FC<RhymePopGameProps> = ({ round, theme, onComplete })
       const item = prev.find((i) => i.id === id);
       // Guard: already popped, or not found
       if (!item || item.popped) return prev;
+
+      playWordSound(item.word);
 
       if (item.isCorrect) {
         // Pop it — this is the ONLY state change

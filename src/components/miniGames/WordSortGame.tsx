@@ -9,6 +9,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import type { WordSortRound, ThemeConfig } from "../../game/discoveryMiniGames";
 import MiniGameHeader from "./MiniGameHeader";
+import { playWordSound } from "../../audio/SoundEffects";
 
 interface WordSortGameProps {
   round: WordSortRound;
@@ -62,10 +63,12 @@ const WordSortGame: React.FC<WordSortGameProps> = ({ round, theme, onComplete })
     }
   }, [sortedCount, totalWords, onComplete]);
 
-  // Select a word from the unsorted list
+  // Select a word from the unsorted list + speak it
   const handleWordTap = useCallback((wordId: string) => {
     setSelectedWord(wordId);
-  }, []);
+    const picked = words.find((w) => w.id === wordId);
+    if (picked) playWordSound(picked.word);
+  }, [words]);
 
   // Tap a bin to place the selected word
   const handleBinTap = useCallback((pattern: string) => {

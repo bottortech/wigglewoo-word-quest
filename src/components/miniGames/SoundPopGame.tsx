@@ -10,6 +10,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import type { SoundPopRound, ThemeConfig } from "../../game/discoveryMiniGames";
 import MiniGameHeader from "./MiniGameHeader";
+import { playWordSound } from "../../audio/SoundEffects";
 
 interface SoundPopGameProps {
   round: SoundPopRound;
@@ -27,6 +28,14 @@ const SoundPopGame: React.FC<SoundPopGameProps> = ({ round, theme, onComplete })
 
   const totalChallenges = round.challenges.length;
   const challenge = round.challenges[currentIndex];
+
+  // Speak the target word each time a new challenge appears
+  useEffect(() => {
+    if (challenge) {
+      const t = setTimeout(() => playWordSound(challenge.targetWord), 250);
+      return () => clearTimeout(t);
+    }
+  }, [currentIndex, challenge]);
 
   // If no challenges, auto-complete
   useEffect(() => {
