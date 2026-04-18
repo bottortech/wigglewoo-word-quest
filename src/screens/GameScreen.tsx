@@ -24,7 +24,6 @@ import { recordWordCompletion } from "../game/learningAnalytics";
 import { questIdToVowelId } from "../game/wordData";
 import {
   playLetterSound,
-  playPromptPhrase,
   playWordSound,
   playEvent,
 } from "../audio/SoundEffects";
@@ -143,16 +142,12 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const audioTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleSpeakerTap = useCallback(() => {
-    // Replay: speak the word once its image is visible, otherwise play the prompt
-    if (step === "celebrate" || imageRevealed) {
-      playWordSound(currentWord.word);
-    } else {
-      playPromptPhrase();
-    }
+    // Replay the target word — useful at any point (mid-build or after)
+    playWordSound(currentWord.word);
     setAudioActive(true);
     if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
     audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
-  }, [step, imageRevealed, currentWord.word]);
+  }, [currentWord.word]);
 
   // Clear audio timeout on unmount
   useEffect(() => {
@@ -168,19 +163,19 @@ const GameScreen: React.FC<GameScreenProps> = ({
     };
   }, [quest.id, quest.patternType, currentWordIndex]);
 
-  // Play prompt on first mount + flash speaker
+  // Speak the target word on first mount so the child hears what to build
   const hasPlayedPrompt = useRef(false);
   useEffect(() => {
     if (!hasPlayedPrompt.current) {
       hasPlayedPrompt.current = true;
       setTimeout(() => {
-        playPromptPhrase();
+        playWordSound(currentWord.word);
         setAudioActive(true);
         if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
         audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
-      }, 1200);
+      }, 800);
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- Step 1: Tap-to-place ----
   const nextEmptySlot = useMemo(() => {
@@ -204,10 +199,9 @@ const GameScreen: React.FC<GameScreenProps> = ({
       setFilledSlots(newSlots);
       setUsedTileIds((prev) => new Set(prev).add(tile.id));
       setSlotAttempts(0);
-      // Reveal image on first correct letter + speak the word so the child hears it
+      // Reveal image on first correct letter (word already spoken on mount)
       if (!imageRevealed) {
         setImageRevealed(true);
-        setTimeout(() => playWordSound(currentWord.word), 450);
       }
       recordCorrectPlacement(quest.id, quest.patternType, currentWordIndex, currentWord.word);
 
