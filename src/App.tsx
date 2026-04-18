@@ -172,26 +172,23 @@ export default function App() {
       JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
     );
 
-    // If placement assigns a starting node > 0, mark earlier nodes as completed
-    if (result.startingNode > 0) {
-      // Use the tier's default quest from placement data
-      const targetQuestId = TIER_DEFAULT_QUEST[result.assignedTier] || "quest-short-a";
+    // Always switch the active quest to the placement's assigned tier,
+    // even when the starting node is 0 — otherwise a student placed into
+    // Magic E / Vowel Teams / etc. would drop back to Sound Builders.
+    const targetQuestId = TIER_DEFAULT_QUEST[result.assignedTier] || "quest-short-a";
 
-      // Save progress at the assigned starting node
-      saveQuestProgress({
-        questId: targetQuestId,
-        currentWordIndex: result.startingNode,
-        questComplete: false,
-      });
+    saveQuestProgress({
+      questId: targetQuestId,
+      currentWordIndex: result.startingNode,
+      questComplete: false,
+    });
 
-      // Select this quest as active
-      saveGlobalProgress({ activeQuestId: targetQuestId });
-      ensureQuestLoaded(targetQuestId).then(() => {
-        const quest = getQuestById(targetQuestId);
-        if (quest) setActiveQuest(quest);
-        setMapRevision((r) => r + 1);
-      });
-    }
+    saveGlobalProgress({ activeQuestId: targetQuestId });
+    ensureQuestLoaded(targetQuestId).then(() => {
+      const quest = getQuestById(targetQuestId);
+      if (quest) setActiveQuest(quest);
+      setMapRevision((r) => r + 1);
+    });
 
     setRoute("map");
   }, []);

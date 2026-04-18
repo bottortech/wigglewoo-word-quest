@@ -32,7 +32,7 @@ export const TIER_DEFAULT_QUEST: Record<PlacementTier, string> = {
 
 export const QUESTIONS_PER_TIER = 2;
 export const PASS_THRESHOLD = 1; // must get ≥1 of 2 correct to pass
-export const MAX_ATTEMPTS = 3;   // wrong taps before auto-skip
+export const MAX_ATTEMPTS = 2;   // wrong taps before auto-skip
 
 // ---- Test word set (2 per tier, 10 total) ----
 

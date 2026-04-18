@@ -76,15 +76,16 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
     if (phase === "done") playEvent("placement-complete");
   }, [phase]);
 
-  // Reassurance VO after 2 wrong attempts
+  // Reassurance VO fires one wrong before auto-skip so it isn't cut off
   const reassurancePlayed = React.useRef(false);
+  const reassureThreshold = Math.max(1, MAX_ATTEMPTS - 1);
   useEffect(() => {
-    if (wrongCount === 2 && !reassurancePlayed.current) {
+    if (wrongCount === reassureThreshold && !reassurancePlayed.current) {
       reassurancePlayed.current = true;
       playEvent("placement-reassure");
     }
     if (wrongCount === 0) reassurancePlayed.current = false;
-  }, [wrongCount]);
+  }, [wrongCount, reassureThreshold]);
 
   // Next empty slot index
   const nextSlot = useMemo(() => {
@@ -292,7 +293,7 @@ const PlacementTestScreen: React.FC<PlacementTestScreenProps> = ({
             ))}
           </div>
         )}
-        {wrongCount >= 2 && (
+        {wrongCount >= reassureThreshold && (
           <p className="placement-reassurance" aria-live="polite">
             That's okay — we're finding the best place to start!
           </p>
