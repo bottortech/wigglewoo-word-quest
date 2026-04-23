@@ -33,16 +33,24 @@ const TILES = ["c", "a", "t"];
 type Step = "intro" | "active" | "done";
 type Mode = "demo" | "user";
 
+const INSTRUCTIONS: Record<Step | `active-${0 | 1 | 2}`, string> = {
+  intro: "Welcome to WiggleWoo's Word Quest!",
+  "active-0": "Watch! I'll show you how to spell CAT.",
+  "active-1": "Your turn — tap the A!",
+  "active-2": "Last one — tap the T!",
+  active: "",
+  done: "You spelled CAT! Great job!",
+};
+
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   const [step, setStep] = useState<Step>("intro");
   const [slotIndex, setSlotIndex] = useState(0);
   const [filledSlots, setFilledSlots] = useState<(string | null)[]>([null, null, null]);
   const [shakingId, setShakingId] = useState<string | null>(null);
-  const [instruction, setInstruction] = useState("Welcome to WiggleWoo's Word Quest!");
 
   // Hand pointer
   const [handCoords, setHandCoords] = useState<{ x: number; y: number } | null>(null);
-  const [handVisible, setHandVisible] = useState(false);
+  const [handHidden, setHandHidden] = useState(false); // briefly true during wrong-tap recovery
   const [handTapping, setHandTapping] = useState(false);
 
   const tileRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -51,6 +59,13 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
 
   const mode: Mode = slotIndex === 0 ? "demo" : "user";
   const correctLetter = DEMO_LETTERS[slotIndex] ?? "";
+
+  // Derived — no effect needed
+  const instruction =
+    step === "active"
+      ? INSTRUCTIONS[`active-${Math.min(slotIndex, 2) as 0 | 1 | 2}`]
+      : INSTRUCTIONS[step];
+  const handVisible = step === "active" && handCoords !== null && !handHidden;
 
   // ---- Move the hand to hover just below the correct tile ----
   const moveHandToCorrect = useCallback(() => {
@@ -62,7 +77,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
       x: rect.left + rect.width / 2 - 24,
       y: rect.bottom - 8,
     });
-    setHandVisible(true);
+    setHandHidden(false);
   }, [correctLetter]);
 
   // ---- Intro: welcome VO, auto-advance ----
@@ -72,17 +87,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     const t = setTimeout(() => setStep("active"), 3000);
     return () => clearTimeout(t);
   }, [step]);
-
-  // ---- Per-slot prompt text ----
-  useEffect(() => {
-    if (step !== "active" || slotIndex > 2) return;
-    const prompts = [
-      "Watch! I'll show you how to spell CAT.",
-      "Your turn — tap the A!",
-      "Last one — tap the T!",
-    ];
-    setInstruction(prompts[slotIndex]);
-  }, [slotIndex, step]);
 
   // ---- Position the hand after every slot / step change ----
   useLayoutEffect(() => {
@@ -153,7 +157,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     } else {
       // Wrong — shake the tile, hide the hand, re-show it on the correct tile after 2s
       setShakingId(tileId);
-      setHandVisible(false);
+      setHandHidden(true);
       setTimeout(() => setShakingId(null), 400);
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
       retryTimerRef.current = setTimeout(() => {
@@ -165,8 +169,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   // ---- Done: speak the word after the final phoneme settles ----
   useEffect(() => {
     if (step !== "done") return;
-    setInstruction("You spelled CAT! Great job!");
-    setHandVisible(false);
     playEvent("onboard-first-complete");
     let cancelled = false;
     waitForLetterDone().then(() => {

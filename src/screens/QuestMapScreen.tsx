@@ -365,14 +365,16 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 }) => {
   void _challengeMode; void _onToggleChallengeMode;
 
-  // First-time onboarding arrow — show once ever
-  // URL controls: ?onboarding=reset (force show) | ?onboarding=off (disable)
+  // First-time onboarding arrow — show once ever.
+  // ?onboarding=reset/off URL flags are dev-only; stripped from production builds.
   const [showOnboardingArrow, setShowOnboardingArrow] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("onboarding") === "off") return false;
-    if (params.get("onboarding") === "reset") {
-      localStorage.removeItem("ww_onboarding_arrow_seen");
-      return true;
+    if (import.meta.env.DEV) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("onboarding") === "off") return false;
+      if (params.get("onboarding") === "reset") {
+        localStorage.removeItem("ww_onboarding_arrow_seen");
+        return true;
+      }
     }
     return localStorage.getItem("ww_onboarding_arrow_seen") !== "true";
   });

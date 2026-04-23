@@ -82,8 +82,7 @@ class BackgroundMusicManager {
 
     if (this.audio && this.audio.paused) {
       this.audio.play().catch(() => {
-        // Autoplay was blocked — will retry on user interaction
-        console.log("Background music autoplay blocked, waiting for user interaction");
+        // Autoplay was blocked — will retry on user interaction.
         this.pendingPlay = true;
       });
       this.isPaused = false;

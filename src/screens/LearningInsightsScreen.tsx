@@ -8,7 +8,6 @@
 
 import React, { useMemo, useState, useCallback } from "react";
 import { getOverallSummary, resetAnalytics } from "../game/learningAnalytics";
-import { resetPlacement, isPlacementComplete } from "../game/placementTest";
 import type { OverallSummary, VowelSummary, MasteryLevel } from "../game/learningAnalytics";
 import { loadSettings, updateSetting, applySettingsToDOM } from "../game/settings";
 import type { AppSettings } from "../game/settings";
@@ -194,22 +193,19 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
               </div>
             )}
 
-            {/* Reset Placement Test */}
+            {/* Replay Tutorial */}
             <div className="insights-reset" style={{ marginBottom: 12 }}>
               <button
                 className="insights-btn insights-btn--secondary"
                 onClick={() => {
-                  resetPlacement();
-                  localStorage.removeItem("ww_placement_tiers");
-                  // Reload to trigger placement flow
+                  localStorage.removeItem("ww_onboarding_seen");
                   window.location.reload();
                 }}
-                disabled={!isPlacementComplete()}
               >
-                Reset Placement Test
+                Replay Tutorial
               </button>
               <p style={{ fontSize: 11, color: "#8D6E63", marginTop: 4 }}>
-                Re-assess reading level and starting point
+                Show the hand-pointer demo again next time your child plays
               </p>
             </div>
 
