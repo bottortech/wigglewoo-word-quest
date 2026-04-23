@@ -70,11 +70,31 @@ function questDisplayName(questId: string): string {
 interface UnlockModalProps {
   questType: QuestType;
   onClose: () => void;
+  /** Tier isn't shipping yet — show a "Coming soon" message instead of prereqs. */
+  comingSoon?: boolean;
 }
 
-const UnlockModal: React.FC<UnlockModalProps> = ({ questType, onClose }) => {
-  const prereq = PREREQ_MAP[questType];
+const UnlockModal: React.FC<UnlockModalProps> = ({ questType, onClose, comingSoon = false }) => {
   const tierName = TIER_NAMES[questType];
+
+  if (comingSoon) {
+    return (
+      <div className="unlock-modal-overlay" onClick={onClose}>
+        <div className="unlock-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="unlock-modal__icon">✨</div>
+          <h2 className="unlock-modal__title">{tierName}</h2>
+          <p className="unlock-modal__desc">
+            Coming soon! Keep practicing your Sound Builders — more quests are on the way.
+          </p>
+          <button className="unlock-modal__btn" onClick={onClose}>
+            Got it
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const prereq = PREREQ_MAP[questType];
   const completionStatus = prereq.questIds.map((id) => ({
     id,
     label: questDisplayName(id),

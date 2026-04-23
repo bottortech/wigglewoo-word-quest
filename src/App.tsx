@@ -114,14 +114,12 @@ export default function App() {
   // Resolve initial quest synchronously for CVC, null if chunk not loaded
   const resolvedInitial = getQuestById(globalProg.activeQuestId) ?? null;
 
-  // Ensure all tiers are unlocked
+  // v1: only CVC ships. If an older session has higher tiers stored,
+  // clamp back to CVC so stale localStorage doesn't expose locked content.
   useEffect(() => {
     const tiers = localStorage.getItem("ww_placement_tiers");
-    if (!tiers || !tiers.includes("ADVANCED")) {
-      localStorage.setItem(
-        "ww_placement_tiers",
-        JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
-      );
+    if (tiers !== JSON.stringify(["CVC"])) {
+      localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
     }
   }, []);
 
@@ -165,12 +163,8 @@ export default function App() {
 
   // ---- Placement Test Complete ----
   const handlePlacementComplete = useCallback((result: PlacementResult) => {
-    // Result is already saved to localStorage by the screen.
-    // Ensure all tiers stay unlocked for demo regardless of placement score.
-    localStorage.setItem(
-      "ww_placement_tiers",
-      JSON.stringify(["CVC", "CVCC", "MAGIC_E", "CVVC", "ADVANCED"]),
-    );
+    // v1 ships CVC only — persist exactly that tier.
+    localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
 
     // Always switch the active quest to the placement's assigned tier,
     // even when the starting node is 0 — otherwise a student placed into

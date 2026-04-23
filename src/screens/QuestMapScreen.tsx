@@ -139,14 +139,29 @@ function isPlacementUnlocked(tier: string): boolean {
   }
 }
 
-function getQuestTypeLockState(): { id: QuestType; label: string; unlocked: boolean; unlockHint?: string }[] {
-  return [
+// Tiers that ship in this release. Everything else is shown as
+// "Coming soon" and locked regardless of placement / completion state.
+// Expand this set as CVCC / Magic E / Vowel Teams / Advanced ship.
+const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(["CVC"]);
+
+function isTierShipped(tier: QuestType): boolean {
+  return SHIPPED_TIERS.has(tier);
+}
+
+function getQuestTypeLockState(): { id: QuestType; label: string; unlocked: boolean; unlockHint?: string; comingSoon?: boolean }[] {
+  const raw: { id: QuestType; label: string; unlocked: boolean; unlockHint?: string }[] = [
     { id: "CVC", label: "Sound Builders", unlocked: true },
     { id: "CVCC", label: "Blending Power", unlocked: areAllQuestsComplete([...CVC_QUEST_IDS]) || isPlacementUnlocked("CVCC"), unlockHint: "Complete all Sound Builder quests to unlock" },
     { id: "MAGIC_E", label: "Magic E", unlocked: areAllQuestsComplete([...CVCC_QUEST_IDS]) || isPlacementUnlocked("MAGIC_E"), unlockHint: "Complete all Blending Power quests to unlock" },
     { id: "CVVC", label: "Vowel Teams", unlocked: areAllQuestsComplete([...MAGIC_E_QUEST_IDS]) || isPlacementUnlocked("CVVC"), unlockHint: "Complete all Magic E quests to unlock" },
     { id: "ADVANCED", label: "Advanced Reading", unlocked: areAllQuestsComplete([...CVVC_QUEST_IDS]) || isPlacementUnlocked("ADVANCED"), unlockHint: "Complete all Vowel Team quests to unlock" },
   ];
+
+  return raw.map((t) =>
+    isTierShipped(t.id)
+      ? t
+      : { ...t, unlocked: false, comingSoon: true, unlockHint: "Coming soon!" },
+  );
 }
 
 const QUEST_TYPES = getQuestTypeLockState();
@@ -617,18 +632,20 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     [devUnlock]
   );
 
-  // Pre-load quest chunks when prerequisites are met
+  // Pre-load quest chunks when prerequisites are met.
+  // Non-shipped tiers are skipped unless dev unlock is on, so v1 never
+  // pulls CVCC/Magic E/Vowel Teams/Advanced chunks into a kid's session.
   useEffect(() => {
-    if (areAllQuestsComplete([...CVC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("CVCC")) {
+    if (isTierShipped("CVCC") && (areAllQuestsComplete([...CVC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("CVCC"))) {
       loadCvccQuests();
     }
-    if (areAllQuestsComplete([...CVCC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("MAGIC_E")) {
+    if (isTierShipped("MAGIC_E") && (areAllQuestsComplete([...CVCC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("MAGIC_E"))) {
       loadMagicEQuests();
     }
-    if (areAllQuestsComplete([...MAGIC_E_QUEST_IDS]) || devUnlock || isPlacementUnlocked("CVVC")) {
+    if (isTierShipped("CVVC") && (areAllQuestsComplete([...MAGIC_E_QUEST_IDS]) || devUnlock || isPlacementUnlocked("CVVC"))) {
       loadCvvcQuests();
     }
-    if (areAllQuestsComplete([...CVVC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("ADVANCED")) {
+    if (isTierShipped("ADVANCED") && (areAllQuestsComplete([...CVVC_QUEST_IDS]) || devUnlock || isPlacementUnlocked("ADVANCED"))) {
       loadAdvancedQuests();
     }
   }, [devUnlock]);
@@ -1316,6 +1333,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       {showUnlockModal && unlockModalType && (
         <UnlockModal
           questType={unlockModalType}
+          comingSoon={!isTierShipped(unlockModalType)}
           onClose={() => setShowUnlockModal(false)}
         />
       )}

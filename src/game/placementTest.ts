@@ -2,9 +2,10 @@
 // placementTest.ts — Placement test data, scoring,
 // and persistence for WiggleWoo's Word Quest
 // =============================================
-// 5-tier placement: 2 words per tier, 10 total.
-// Pass = 1/2 correct. Fail = stop and place here.
-// Tier sequence: CVC → Blending → Magic E → Vowel Teams → Advanced
+// v1 (CVC-only): 4 CVC words. Score determines
+// starting node inside quest-short-a. Every result
+// is placed into the CVC tier — higher tiers are
+// not shipped yet.
 // =============================================
 
 // ---- Tier definitions (scalable) ----
@@ -30,8 +31,10 @@ export const TIER_DEFAULT_QUEST: Record<PlacementTier, string> = {
 
 // ---- Constants ----
 
-export const QUESTIONS_PER_TIER = 2;
-export const PASS_THRESHOLD = 1; // must get ≥1 of 2 correct to pass
+// v1 = a single 4-word CVC tier. QUESTIONS_PER_TIER matches total
+// so the mid-test tier-check only fires at the final question.
+export const QUESTIONS_PER_TIER = 4;
+export const PASS_THRESHOLD = 1;
 export const MAX_ATTEMPTS = 2;   // wrong taps before auto-skip
 
 // ---- Test word set (2 per tier, 10 total) ----
@@ -56,27 +59,13 @@ export const WORD_TIER_TO_PLACEMENT: Record<WordTier, PlacementTier> = {
   "advanced": "ADVANCED",
 };
 
-// 10 placement words: 2 per tier (progressive difficulty)
+// v1 — 4 CVC words spanning short A / O / I / U.
+// All images confirmed present under public/assets/words/.
 export const PLACEMENT_WORDS: PlacementWord[] = [
-  // Q1-2: Sound Builders — very easy, confidence builders
   { word: "cat", letters: ["c", "a", "t"], distractors: ["d"], imageKey: "cat", tier: "cvc" },
   { word: "dog", letters: ["d", "o", "g"], distractors: ["p"], imageKey: "dog", tier: "cvc" },
-
-  // Q3-4: Blending Power — easy, 4-letter words
-  { word: "hand", letters: ["h", "a", "n", "d"], distractors: ["t", "r"], imageKey: "hand", tier: "blend" },
-  { word: "jump", letters: ["j", "u", "m", "p"], distractors: ["s", "n"], imageKey: "jump", tier: "blend" },
-
-  // Q5-6: Magic E — moderate, silent e pattern
-  { word: "cake", letters: ["c", "a", "k", "e"], distractors: ["t", "i"], imageKey: "cake", tier: "magic-e" },
-  { word: "kite", letters: ["k", "i", "t", "e"], distractors: ["n", "o"], imageKey: "kite", tier: "magic-e" },
-
-  // Q7-8: Vowel Teams — moderate-hard
-  { word: "boat", letters: ["b", "o", "a", "t"], distractors: ["r", "e"], imageKey: "boat", tier: "vowel-team" },
-  { word: "rain", letters: ["r", "a", "i", "n"], distractors: ["s", "o"], imageKey: "rain", tier: "vowel-team" },
-
-  // Q9-10: Advanced — hard, multisyllable
-  { word: "sunset", letters: ["s", "u", "n", "s", "e", "t"], distractors: ["r", "a"], imageKey: "sunset", tier: "advanced" },
-  { word: "rabbit", letters: ["r", "a", "b", "b", "i", "t"], distractors: ["n", "s"], imageKey: "rabbit", tier: "advanced" },
+  { word: "pig", letters: ["p", "i", "g"], distractors: ["b"], imageKey: "pig", tier: "cvc" },
+  { word: "sun", letters: ["s", "u", "n"], distractors: ["m"], imageKey: "sun", tier: "cvc" },
 ];
 
 // ---- Scoring ----
@@ -110,88 +99,50 @@ export interface PlacementResult {
   completedAt: number;
 }
 
-/** Did the student pass a tier? (≥2 of 3 correct) */
-function didPassTier(results: WordResult[]): boolean {
-  const correct = results.filter((r) => r.correct).length;
-  return correct >= PASS_THRESHOLD;
-}
-
 /**
- * Score placement: evaluate tiers in order, stop at first failure.
+ * v1 scoring — every placement result is CVC. The correct-count maps
+ * to a starting node inside quest-short-a so strong readers skip the
+ * easiest nodes but still see every later-node gameplay feature.
  *
- * Pass tier → skip it → test next tier
- * Fail tier → place student HERE
- * Pass all → place into Advanced mid-quest
+ *   4/4 correct → node 4 (strong)
+ *   3/4 correct → node 2 (warming up)
+ *   0-2/4       → node 0 (start at the very beginning)
  */
 export function scorePlacement(results: WordResult[]): PlacementResult {
-  const tierOrder: WordTier[] = ["cvc", "blend", "magic-e", "vowel-team", "advanced"];
+  const correctCount = results.filter((r) => r.correct).length;
+  const totalCount = results.length;
 
-  // Group results by tier
-  const resultsByTier: Record<WordTier, WordResult[]> = {
-    "cvc": [],
-    "blend": [],
-    "magic-e": [],
-    "vowel-team": [],
-    "advanced": [],
+  let startingNode: number;
+  let level: PlacementLevel;
+  if (correctCount >= 4) {
+    startingNode = 4;
+    level = "early-reader";
+  } else if (correctCount >= 3) {
+    startingNode = 2;
+    level = "early-reader";
+  } else {
+    startingNode = 0;
+    level = "beginner";
+  }
+
+  const tierSummary: TierSummary = {
+    tier: "CVC",
+    correctCount,
+    totalCount,
+    passed: correctCount >= PASS_THRESHOLD,
+    failedWords: results.filter((r) => !r.correct).map((r) => r.word),
+    autoSkippedWords: results
+      .filter((r) => !r.correct && r.attempts >= MAX_ATTEMPTS)
+      .map((r) => r.word),
   };
-  for (const r of results) {
-    resultsByTier[r.tier].push(r);
-  }
-
-  // Walk tiers in order — stop at first failure
-  let failedTierIndex = -1;
-  for (let i = 0; i < tierOrder.length; i++) {
-    const tierResults = resultsByTier[tierOrder[i]];
-    if (tierResults.length === 0 || !didPassTier(tierResults)) {
-      failedTierIndex = i;
-      break;
-    }
-  }
-
-  // If no failure found, student passed everything
-  const passedAll = failedTierIndex === -1;
-  const placementIndex = passedAll ? tierOrder.length - 1 : failedTierIndex;
-  const assignedTier = PLACEMENT_TIERS[placementIndex];
-
-  // Unlock all tiers up to and including the assigned one
-  const unlockedTiers = [...PLACEMENT_TIERS.slice(0, placementIndex + 1)];
-
-  // Starting node: mid-quest if passed all, otherwise node 0
-  const startingNode = passedAll ? 4 : 0;
-
-  // Readable level label
-  const levelLabels: PlacementLevel[] = [
-    "beginner",       // CVC
-    "early-reader",   // Blending Power
-    "blender",        // Magic E
-    "magic-e-reader", // Vowel Teams
-    "intermediate",   // Advanced
-  ];
-  const level: PlacementLevel = passedAll
-    ? "advanced"
-    : levelLabels[placementIndex];
-
-  // Build per-tier summaries for analytics/debugging
-  const tierSummaries: TierSummary[] = tierOrder.map((wt, i) => {
-    const tierResults = resultsByTier[wt];
-    const correctCount = tierResults.filter((r) => r.correct).length;
-    return {
-      tier: PLACEMENT_TIERS[i],
-      correctCount,
-      totalCount: tierResults.length,
-      passed: tierResults.length > 0 && correctCount >= PASS_THRESHOLD,
-      failedWords: tierResults.filter((r) => !r.correct).map((r) => r.word),
-      autoSkippedWords: tierResults.filter((r) => !r.correct && r.attempts >= MAX_ATTEMPTS).map((r) => r.word),
-    };
-  });
 
   return {
     level,
-    assignedTier,
+    assignedTier: "CVC",
     startingNode,
-    unlockedTiers,
+    unlockedTiers: ["CVC"],
     wordResults: results,
-    tierSummaries,
+    tierSummaries: [tierSummary],
     completedAt: Date.now(),
   };
 }
