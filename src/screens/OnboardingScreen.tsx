@@ -55,7 +55,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
 
   const tileRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const demoTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const mode: Mode = slotIndex === 0 ? "demo" : "user";
   const correctLetter = DEMO_LETTERS[slotIndex] ?? "";
@@ -105,32 +104,42 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   }, [step, moveHandToCorrect]);
 
   // ---- DEMO slot (slot 0): auto-tap sequence ----
+  // One-shot guard: the demo must run exactly once when `step` becomes
+  // "active". Using `filledSlots` as a dep here self-cancels the chain
+  // (setFilledSlots triggers cleanup which clears the follow-up timers).
+  const demoRan = useRef(false);
   useEffect(() => {
-    if (step !== "active" || mode !== "demo") return;
-    if (filledSlots[slotIndex] !== null) return;
+    if (step !== "active") return;
+    if (demoRan.current) return;
+    demoRan.current = true;
 
-    // After the hand glides in (~1s) and a brief pause, run the tap animation
-    // and fill the slot. Then after another beat, hand off to user mode.
-    const tTap = setTimeout(() => {
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const schedule = (ms: number, fn: () => void) => {
+      const id = setTimeout(() => { if (!cancelled) fn(); }, ms);
+      timers.push(id);
+    };
+
+    // 1.5s: hand has glided to C, now tap + fill the slot
+    schedule(1500, () => {
       setHandTapping(true);
-      playLetterSound(correctLetter);
+      playLetterSound("c");
       setFilledSlots((prev) => {
         const next = [...prev];
-        next[slotIndex] = correctLetter;
+        next[0] = "c";
         return next;
       });
-      const tReset = setTimeout(() => setHandTapping(false), 320);
-      demoTimersRef.current.push(tReset);
-      const tAdvance = setTimeout(() => setSlotIndex(1), 1100);
-      demoTimersRef.current.push(tAdvance);
-    }, 1500);
-    demoTimersRef.current.push(tTap);
+    });
+    // 1.82s: reset the tap animation
+    schedule(1820, () => setHandTapping(false));
+    // 2.6s: hand off to the child — moves to slot 1 (A) for "your turn"
+    schedule(2600, () => setSlotIndex(1));
 
     return () => {
-      demoTimersRef.current.forEach(clearTimeout);
-      demoTimersRef.current = [];
+      cancelled = true;
+      timers.forEach(clearTimeout);
     };
-  }, [step, mode, slotIndex, filledSlots, correctLetter]);
+  }, [step]);
 
   // ---- Tile tap (user mode only) ----
   const handleTileTap = useCallback((letter: string, tileId: string) => {
@@ -181,7 +190,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   useEffect(() => {
     return () => {
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-      demoTimersRef.current.forEach(clearTimeout);
     };
   }, []);
 
