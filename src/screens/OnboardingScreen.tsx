@@ -2,134 +2,200 @@
 // OnboardingScreen.tsx — First-time guided intro
 // WiggleWoo's Word Quest
 // =============================================
-// Walks a new player through building "CAT" with
-// heavy guidance: TTS instructions, highlighted
-// correct letters, dimmed wrong ones, pulsing
-// slot indicator. Only shown once.
+// Hand-pointer demo for the word CAT.
+// Flow (mixed mode):
+//   intro (~3s welcome VO) →
+//   demo C: hand glides to C, auto-taps, phoneme, slot fills →
+//   your turn A: hand points to A, child taps →
+//   your turn T: hand points to T, child taps →
+//   done: word spoken + "Let's Go!" button
+// Wrong tap during "your turn" steps: shake tile, briefly hide
+// hand, re-show on correct tile after 2s. No skip (v1).
 // =============================================
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useLayoutEffect } from "react";
 import WordImage from "../components/WordImage";
-import { playLetterSound, playEvent } from "../audio/SoundEffects";
+import { playLetterSound, playEvent, playWordSound, waitForLetterDone } from "../audio/SoundEffects";
 import "../styles/onboarding.css";
 
 interface OnboardingScreenProps {
   onComplete: () => void;
 }
 
-// The demo word
-const DEMO_LETTERS = ["c", "a", "t"];
+const DEMO_WORD = "cat";
+const DEMO_LETTERS = ["c", "a", "t"] as const;
 const DEMO_IMAGE = "cat";
 
-// Distractors per slot (wrong choices alongside the correct one)
-const SLOT_DISTRACTORS: string[][] = [
-  ["d", "m"],   // slot 0: c + d, m
-  ["o", "i"],   // slot 1: a + o, i
-  ["p", "n"],   // slot 2: t + p, n
-];
+/** Tile bank — three letters, always in the same order so the hand's
+ *  target position stays predictable between slots. */
+const TILES = ["c", "a", "t"];
 
-type OnboardingStep = "intro" | "build" | "done";
+type Step = "intro" | "active" | "done";
+type Mode = "demo" | "user";
 
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
-  const [step, setStep] = useState<OnboardingStep>("intro");
+  const [step, setStep] = useState<Step>("intro");
   const [slotIndex, setSlotIndex] = useState(0);
   const [filledSlots, setFilledSlots] = useState<(string | null)[]>([null, null, null]);
-  const [wrongAttempts, setWrongAttempts] = useState(0);
   const [shakingId, setShakingId] = useState<string | null>(null);
   const [instruction, setInstruction] = useState("Welcome to WiggleWoo's Word Quest!");
-  const doneTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Intro sequence
+  // Hand pointer
+  const [handCoords, setHandCoords] = useState<{ x: number; y: number } | null>(null);
+  const [handVisible, setHandVisible] = useState(false);
+  const [handTapping, setHandTapping] = useState(false);
+
+  const tileRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const demoTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const mode: Mode = slotIndex === 0 ? "demo" : "user";
+  const correctLetter = DEMO_LETTERS[slotIndex] ?? "";
+
+  // ---- Move the hand to hover just below the correct tile ----
+  const moveHandToCorrect = useCallback(() => {
+    const idx = TILES.indexOf(correctLetter);
+    const el = tileRefs.current[idx];
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setHandCoords({
+      x: rect.left + rect.width / 2 - 24,
+      y: rect.bottom - 8,
+    });
+    setHandVisible(true);
+  }, [correctLetter]);
+
+  // ---- Intro: welcome VO, auto-advance ----
   useEffect(() => {
-    if (step === "intro") {
-      playEvent("onboard-intro");
-      setInstruction("Welcome to WiggleWoo's Word Quest!");
-      const t = setTimeout(() => {
-        setStep("build");
-        setInstruction("This is a cat. Let's spell it! Tap the letter that makes the \"k\" sound.");
-      }, 3500);
-      return () => clearTimeout(t);
-    }
+    if (step !== "intro") return;
+    playEvent("onboard-intro");
+    const t = setTimeout(() => setStep("active"), 3000);
+    return () => clearTimeout(t);
   }, [step]);
 
-  // Prompt for each slot — first slot plays the "tap a gear" VO
+  // ---- Per-slot prompt text ----
   useEffect(() => {
-    if (step !== "build") return;
+    if (step !== "active" || slotIndex > 2) return;
     const prompts = [
-      "Tap the letter that makes the \"k\" sound.",
-      "Now tap the letter that makes the \"a\" sound.",
-      "Last one! Tap the letter that makes the \"t\" sound.",
+      "Watch! I'll show you how to spell CAT.",
+      "Your turn — tap the A!",
+      "Last one — tap the T!",
     ];
-    if (slotIndex < 3) {
-      setInstruction(prompts[slotIndex]);
-      if (slotIndex === 0) playEvent("onboard-tap-gear");
-    }
+    setInstruction(prompts[slotIndex]);
   }, [slotIndex, step]);
 
-  // Build choices for current slot
-  const choices = slotIndex < 3 ? (() => {
-    const correct = DEMO_LETTERS[slotIndex];
-    const distractors = SLOT_DISTRACTORS[slotIndex];
-    const all = [correct, ...distractors];
-    // Simple deterministic shuffle based on slot index
-    if (slotIndex === 0) return [all[1], all[0], all[2]]; // d, c, m
-    if (slotIndex === 1) return [all[0], all[2], all[1]]; // a, i, o
-    return [all[2], all[0], all[1]]; // n, t, p
-  })() : [];
+  // ---- Position the hand after every slot / step change ----
+  useLayoutEffect(() => {
+    if (step !== "active") return;
+    // Slight delay so layout + any state-driven style changes settle
+    const t = setTimeout(moveHandToCorrect, 250);
+    return () => clearTimeout(t);
+  }, [step, slotIndex, moveHandToCorrect]);
 
+  // ---- Re-position hand on window resize ----
+  useEffect(() => {
+    if (step !== "active") return;
+    const onResize = () => moveHandToCorrect();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [step, moveHandToCorrect]);
+
+  // ---- DEMO slot (slot 0): auto-tap sequence ----
+  useEffect(() => {
+    if (step !== "active" || mode !== "demo") return;
+    if (filledSlots[slotIndex] !== null) return;
+
+    // After the hand glides in (~1s) and a brief pause, run the tap animation
+    // and fill the slot. Then after another beat, hand off to user mode.
+    const tTap = setTimeout(() => {
+      setHandTapping(true);
+      playLetterSound(correctLetter);
+      setFilledSlots((prev) => {
+        const next = [...prev];
+        next[slotIndex] = correctLetter;
+        return next;
+      });
+      const tReset = setTimeout(() => setHandTapping(false), 320);
+      demoTimersRef.current.push(tReset);
+      const tAdvance = setTimeout(() => setSlotIndex(1), 1100);
+      demoTimersRef.current.push(tAdvance);
+    }, 1500);
+    demoTimersRef.current.push(tTap);
+
+    return () => {
+      demoTimersRef.current.forEach(clearTimeout);
+      demoTimersRef.current = [];
+    };
+  }, [step, mode, slotIndex, filledSlots, correctLetter]);
+
+  // ---- Tile tap (user mode only) ----
   const handleTileTap = useCallback((letter: string, tileId: string) => {
-    if (step !== "build" || shakingId || slotIndex >= 3) return;
+    if (step !== "active" || mode !== "user" || shakingId) return;
 
     playLetterSound(letter);
-    const correct = letter.toLowerCase() === DEMO_LETTERS[slotIndex].toLowerCase();
 
-    if (correct) {
-      const newSlots = [...filledSlots];
-      newSlots[slotIndex] = letter;
-      setFilledSlots(newSlots);
-      setWrongAttempts(0);
+    if (letter === correctLetter) {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      setFilledSlots((prev) => {
+        const next = [...prev];
+        next[slotIndex] = letter;
+        return next;
+      });
 
       const nextSlot = slotIndex + 1;
       if (nextSlot >= 3) {
-        // Word complete
-        setStep("done");
-        setInstruction("You spelled CAT! Great job!");
-        playEvent("onboard-first-complete");
-        doneTimerRef.current = setTimeout(onComplete, 3000);
+        // Brief pause so the last letter phoneme isn't clobbered by the word VO
+        setTimeout(() => setStep("done"), 500);
       } else {
-        setSlotIndex(nextSlot);
+        // Hand stays visible, useLayoutEffect will re-position on the next slot
+        setTimeout(() => setSlotIndex(nextSlot), 450);
       }
     } else {
-      setWrongAttempts((a) => a + 1);
+      // Wrong — shake the tile, hide the hand, re-show it on the correct tile after 2s
       setShakingId(tileId);
+      setHandVisible(false);
       setTimeout(() => setShakingId(null), 400);
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = setTimeout(() => {
+        moveHandToCorrect();
+      }, 2000);
     }
-  }, [step, slotIndex, filledSlots, shakingId, onComplete]);
+  }, [step, mode, slotIndex, correctLetter, shakingId, moveHandToCorrect]);
 
-  // Cleanup
+  // ---- Done: speak the word after the final phoneme settles ----
+  useEffect(() => {
+    if (step !== "done") return;
+    setInstruction("You spelled CAT! Great job!");
+    setHandVisible(false);
+    playEvent("onboard-first-complete");
+    let cancelled = false;
+    waitForLetterDone().then(() => {
+      if (!cancelled) playWordSound(DEMO_WORD);
+    });
+    return () => { cancelled = true; };
+  }, [step]);
+
+  // ---- Cleanup on unmount ----
   useEffect(() => {
     return () => {
-      if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
-      // cleanup (no TTS to cancel)
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      demoTimersRef.current.forEach(clearTimeout);
     };
   }, []);
 
   return (
     <div className="onboarding">
       <div className="onboarding__content">
-        {/* Instruction text */}
         <div className="onboarding__instruction">{instruction}</div>
 
-        {/* Word image */}
         <div className="onboarding__image">
           <WordImage imageKey={DEMO_IMAGE} size={120} />
         </div>
 
-        {/* Word slots */}
         <div className="onboarding__slots">
           {DEMO_LETTERS.map((_, i) => {
             const filled = filledSlots[i];
-            const isActive = i === slotIndex && step === "build";
+            const isActive = i === slotIndex && step === "active";
             return (
               <div
                 key={i}
@@ -145,25 +211,22 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
           })}
         </div>
 
-        {/* Letter choices */}
-        {step === "build" && slotIndex < 3 && (
+        {step === "active" && (
           <div className="onboarding__choices">
-            {choices.map((letter, i) => {
-              const tileId = `onboard-${slotIndex}-${i}`;
-              const isCorrect = letter.toLowerCase() === DEMO_LETTERS[slotIndex].toLowerCase();
-              const showHint = wrongAttempts >= 2 && isCorrect;
+            {TILES.map((letter, i) => {
+              const tileId = `tile-${i}`;
               const isShaking = shakingId === tileId;
-              const isDimmed = wrongAttempts >= 2 && !isCorrect;
               return (
                 <button
                   key={tileId}
+                  ref={(el) => { tileRefs.current[i] = el; }}
                   className={[
                     "onboarding__tile",
-                    showHint ? "onboarding__tile--hinted" : "",
                     isShaking ? "onboarding__tile--shake" : "",
-                    isDimmed ? "onboarding__tile--dimmed" : "",
                   ].filter(Boolean).join(" ")}
                   onClick={() => handleTileTap(letter, tileId)}
+                  disabled={mode === "demo"}
+                  aria-label={`Letter ${letter.toUpperCase()}`}
                 >
                   {letter.toUpperCase()}
                 </button>
@@ -172,23 +235,32 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Done state */}
         {step === "done" && (
           <div className="onboarding__done">
             <div className="onboarding__word-reveal">CAT</div>
-            <button className="onboarding__continue" onClick={onComplete}>
+            <button
+              className="onboarding__continue"
+              onClick={onComplete}
+              autoFocus
+            >
               Let's Go!
             </button>
           </div>
         )}
-
-        {/* Skip button */}
-        {step !== "done" && (
-          <button className="onboarding__skip" onClick={onComplete}>
-            Skip
-          </button>
-        )}
       </div>
+
+      {/* Hand pointer — glides to the correct tile, auto-taps in demo mode */}
+      {handVisible && handCoords && (
+        <div
+          className="onboarding__hand"
+          style={{ transform: `translate(${handCoords.x}px, ${handCoords.y}px)` }}
+          aria-hidden="true"
+        >
+          <span className={`onboarding__hand-inner ${handTapping ? "onboarding__hand-inner--tapping" : ""}`}>
+            👆
+          </span>
+        </div>
+      )}
     </div>
   );
 };

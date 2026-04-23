@@ -65,17 +65,13 @@ import { recordTrophyEarned } from "./game/analytics";
 import trophyTransitionImg from "./assets/trophy.png";
 import "./styles/trophy-transition.css";
 import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
-import PlacementTestScreen from "./screens/PlacementTestScreen";
-import {
-  isPlacementComplete,
-  savePlacementResult,
-  resetPlacement,
-  TIER_DEFAULT_QUEST,
-  type PlacementResult,
-} from "./game/placementTest";
+import OnboardingScreen from "./screens/OnboardingScreen";
+import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "placement" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe";
+type Route = "home" | "onboarding" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe";
+
+const ONBOARDING_SEEN_KEY = "ww_onboarding_seen";
 
 /** Load the correct quest chunk for a given quest ID */
 async function ensureQuestLoaded(questId: string): Promise<void> {
@@ -145,13 +141,13 @@ export default function App() {
   // null = no animation (fresh load), number = animate from that node
   const [arrivedFromWord, setArrivedFromWord] = useState<number | null>(null);
 
-  // ---- Home Screen → Placement or Map ----
+  // ---- Home Screen → Onboarding (first launch) or Map ----
   const handlePlay = useCallback(() => {
     if (loadSettings().backgroundMusic) backgroundMusic.play();
-    if (isPlacementComplete()) {
+    if (localStorage.getItem(ONBOARDING_SEEN_KEY) === "true") {
       setRoute("map");
     } else {
-      setRoute("placement");
+      setRoute("onboarding");
     }
   }, []);
 
@@ -161,47 +157,12 @@ export default function App() {
     setRoute("home");
   }, []);
 
-  // ---- Placement Test Complete ----
-  const handlePlacementComplete = useCallback((result: PlacementResult) => {
+  // ---- Onboarding complete → Map (first word of first quest) ----
+  const handleOnboardingComplete = useCallback(() => {
+    localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
     // v1 ships CVC only — persist exactly that tier.
     localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
-
-    // Always switch the active quest to the placement's assigned tier,
-    // even when the starting node is 0 — otherwise a student placed into
-    // Magic E / Vowel Teams / etc. would drop back to Sound Builders.
-    const targetQuestId = TIER_DEFAULT_QUEST[result.assignedTier] || "quest-short-a";
-
-    saveQuestProgress({
-      questId: targetQuestId,
-      currentWordIndex: result.startingNode,
-      questComplete: false,
-    });
-
-    saveGlobalProgress({ activeQuestId: targetQuestId });
-    ensureQuestLoaded(targetQuestId).then(() => {
-      const quest = getQuestById(targetQuestId);
-      if (quest) setActiveQuest(quest);
-      setMapRevision((r) => r + 1);
-    });
-
     setRoute("map");
-  }, []);
-
-  // ---- Placement Test Skip → start at beginning ----
-  const handlePlacementSkip = useCallback(() => {
-    // Save a beginner result so placement isn't shown again
-    const skipResult: PlacementResult = {
-      level: "beginner",
-      assignedTier: "CVC",
-      startingNode: 0,
-      unlockedTiers: ["CVC"],
-      wordResults: [],
-      tierSummaries: [],
-      completedAt: Date.now(),
-    };
-    savePlacementResult(skipResult);
-    localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
-    setRoute("home");
   }, []);
 
   // ---- Quest Map → Game Screen ----
@@ -327,6 +288,7 @@ export default function App() {
       "ww_dev_unlock",
       "ww_placement",
       "ww_placement_tiers",
+      ONBOARDING_SEEN_KEY,
     ];
     for (const key of keysToRemove) {
       localStorage.removeItem(key);
@@ -513,11 +475,8 @@ export default function App() {
 
       <Stage>
 
-      {route === "placement" && (
-        <PlacementTestScreen
-          onComplete={handlePlacementComplete}
-          onSkip={handlePlacementSkip}
-        />
+      {route === "onboarding" && (
+        <OnboardingScreen onComplete={handleOnboardingComplete} />
       )}
 
       {route === "home" && (

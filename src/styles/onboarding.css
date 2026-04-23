@@ -135,24 +135,8 @@
   transform: scale(0.92);
 }
 
-/* Hinted — glow green after 2 wrong */
-.onboarding__tile--hinted {
-  border-color: #4CAF50;
-  background: linear-gradient(to bottom, #E8F5E9 0%, #C8E6C9 100%);
-  box-shadow: 0 0 18px rgba(76, 175, 80, 0.6);
-  animation: onboard-hint-glow 1s ease-in-out infinite;
-  transform: scale(1.05);
-}
-
-@keyframes onboard-hint-glow {
-  0%, 100% { box-shadow: 0 0 18px rgba(76, 175, 80, 0.6); }
-  50% { box-shadow: 0 0 28px rgba(76, 175, 80, 0.8); }
-}
-
-/* Dimmed wrong choices when hint is active */
-.onboarding__tile--dimmed {
-  opacity: 0.35;
-  pointer-events: none;
+.onboarding__tile[disabled] {
+  cursor: default;
 }
 
 /* Wrong tap shake */
@@ -216,25 +200,39 @@
   transform: scale(0.95);
 }
 
-/* Skip button */
-.onboarding__skip {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.15);
-  color: rgba(0, 0, 0, 0.5);
-  font-family: "Nunito", Arial, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-  -webkit-tap-highlight-color: transparent;
+/* =============================================
+   Hand pointer — glides between tiles, taps in demo mode
+   ============================================= */
+.onboarding__hand {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  pointer-events: none;
+  transition: transform 900ms cubic-bezier(0.33, 1, 0.68, 1);
+  will-change: transform;
 }
 
-.onboarding__skip:hover {
-  background: rgba(0, 0, 0, 0.25);
-  color: rgba(0, 0, 0, 0.7);
+.onboarding__hand-inner {
+  display: inline-block;
+  font-size: 52px;
+  line-height: 1;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.3));
+  transform-origin: top center;
+  animation: onboard-hand-bob 1.4s ease-in-out infinite;
+}
+
+@keyframes onboard-hand-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.onboarding__hand-inner--tapping {
+  animation: onboard-hand-tap 320ms ease-out;
+}
+
+@keyframes onboard-hand-tap {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(4px) scale(0.78); }
+  100% { transform: translateY(0) scale(1); }
 }
