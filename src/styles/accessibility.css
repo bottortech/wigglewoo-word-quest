@@ -3,8 +3,23 @@
    WiggleWoo's Word Quest
    ============================================= */
 
-/* ---- OpenDyslexic Font ---- */
-@import url('https://fonts.cdnfonts.com/css/opendyslexic');
+/* ---- OpenDyslexic Font (self-hosted — no third-party requests) ---- */
+/* SIL OFL 1.1 — see /fonts/OpenDyslexic-LICENSE.txt */
+@font-face {
+  font-family: "OpenDyslexic";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OpenDyslexic-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "OpenDyslexic";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/OpenDyslexic-Bold.woff2") format("woff2");
+}
 
 html.dyslexia-font .fact-panel__item-fact,
 html.dyslexia-font .fact-panel__item-name,

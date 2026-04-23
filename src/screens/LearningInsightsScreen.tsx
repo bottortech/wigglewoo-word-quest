@@ -223,6 +223,22 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
                 </div>
               )}
             </div>
+
+            {/* Privacy policy — required for Apple Kids Category */}
+            <div className="insights-reset" style={{ marginTop: 20 }}>
+              <a
+                href="/privacy.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="insights-btn insights-btn--secondary"
+                style={{ display: "inline-block", textDecoration: "none" }}
+              >
+                Privacy Policy
+              </a>
+              <p style={{ fontSize: 11, color: "#8D6E63", marginTop: 4 }}>
+                What data the app stores (everything stays on this device)
+              </p>
+            </div>
           </div>
         )}
 

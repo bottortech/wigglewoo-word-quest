@@ -1,0 +1,10 @@
+OpenDyslexic is licensed under the SIL Open Font License, Version 1.1.
+Copyright (c) 2012, Abbie Gonzalez (https://abbiecod.es), with
+Reserved Font Name OpenDyslexic.
+
+This font is bundled with WiggleWoo's Word Quest under the terms of
+the SIL OFL 1.1. The full license text is available at
+https://scripts.sil.org/OFL and in the OpenDyslexic project at
+https://github.com/antijingoist/opendyslexic.
+
+No modifications have been made to the font files.
