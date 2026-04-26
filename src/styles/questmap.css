@@ -1638,6 +1638,52 @@
   100% { transform: scale(1); }
 }
 
+/* ---- FOR PARENTS BUTTON ----
+   Visible in production. Opens the parent gate (3-second hold)
+   which gates Learning Insights + Privacy Policy. Required for
+   Apple Kids category submission. */
+.for-parents-btn {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 199;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 10px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #5d4037;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  opacity: 0.85;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.for-parents-btn:hover,
+.for-parents-btn:focus-visible {
+  opacity: 1;
+}
+
+.for-parents-btn:active {
+  transform: scale(0.96);
+}
+
+.for-parents-btn__wave {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.for-parents-btn__label {
+  line-height: 1;
+}
+
 /* ---- DEV CONTROLS BAR ---- */
 .dev-toggle-btn {
   position: absolute;

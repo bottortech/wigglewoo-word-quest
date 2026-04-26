@@ -722,7 +722,6 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   const handleInsightsClick = () => {
     setShowParentGate(true);
   };
-  void handleInsightsClick; // hidden in demo mode
 
   const handleParentGatePass = () => {
     setShowParentGate(false);
@@ -1235,6 +1234,18 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       <div className="demo-banner">
         <span className="demo-banner__text">Tap a gear node to start a word!</span>
       </div>
+
+      {/* For Parents — Apple Kids requires reachable privacy policy + parental gate */}
+      {!showOnboardingArrow && (
+        <button
+          className="for-parents-btn"
+          onClick={handleInsightsClick}
+          aria-label="For parents and teachers"
+        >
+          <span className="for-parents-btn__wave" aria-hidden="true">👋</span>
+          <span className="for-parents-btn__label">For Parents</span>
+        </button>
+      )}
 
       {/* DEV CONTROLS — collapsible, hidden by default */}
       {import.meta.env.DEV && (
