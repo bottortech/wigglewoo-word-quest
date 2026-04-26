@@ -1,6 +1,6 @@
 # Wigglewoo — Game Word List
 
-This file lists all current words used by the Wigglewoo Word Quest game (grouped by quest/pattern).
+This file lists all current words used by the WiggleWoo's Word Quest game (grouped by quest/pattern).
 
 ## CVC Quests
 

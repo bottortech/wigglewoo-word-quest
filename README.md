@@ -1,6 +1,6 @@
-# WiggleWoo Word Quest 🎉
+# WiggleWoo's Word Quest 🎉
 
-WiggleWoo Word Quest is an interactive phonics-based learning game designed to help children master foundational reading skills through structured word quests.
+WiggleWoo's Word Quest is an interactive phonics-based learning game designed to help children master foundational reading skills through structured word quests.
 
 Built and maintained by Bottor Technologies Inc.
 
