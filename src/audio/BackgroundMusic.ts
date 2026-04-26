@@ -2,28 +2,52 @@
 // BackgroundMusic.ts — Global background music manager
 // WiggleWoo's Word Quest
 // =============================================
-// Handles looping background music that persists
-// across screens and levels. Singleton pattern
-// ensures only one instance ever plays.
+// Singleton that owns the looping music bed across screens.
+// Two HTMLAudioElements ("a" and "b") let us crossfade between
+// the main theme and per-room themes (trophy room, discovery
+// rooms) without an audible cut.
 // =============================================
 
-import musicFile from "../music/wigglewoo-main-theme.mp3";
+import mainThemeFile from "../music/wigglewoo-main-theme.mp3";
+
+const VOLUME = 0.30;
+const CROSSFADE_MS = 600;
+const FADE_TICK_MS = 30;
+
+// Discovery room ID → theme URL. null means "no dedicated theme yet
+// — fall back to the main theme." Files live in /public/assets/audio/.
+const DISCOVERY_THEMES: Record<string, string | null> = {
+  "rumble-peak-volcano": "/assets/audio/volcano-theme.mp3",
+  "stonewall-castle": "/assets/audio/castle-theme.mp3",
+  "coral-cove-village": "/assets/audio/coral-theme.mp3",
+  "greenhouse-domes": "/assets/audio/greenhouse-theme.mp3",
+  "geartown-workshop": null,
+};
+
+const TROPHY_ROOM_THEME = "/assets/audio/trophy-room-theme.mp3";
 
 class BackgroundMusicManager {
   private static instance: BackgroundMusicManager | null = null;
-  private audio: HTMLAudioElement | null = null;
+
+  // Two audio elements so we can crossfade between tracks.
+  // "active" is whichever one is currently audible; the other
+  // is idle until the next switch.
+  private audioA: HTMLAudioElement | null = null;
+  private audioB: HTMLAudioElement | null = null;
+  private active: "a" | "b" = "a";
+
   private isInitialized = false;
-  private isPaused = false;
   private userHasInteracted = false;
   private pendingPlay = false;
-  private userMuted = false; // user explicitly turned music off via settings
+  private userMuted = false;
 
-  // Volume: low so it sits behind letter sounds and phrases
-  private readonly VOLUME = 0.30;
+  // Track of what should be playing — used so unmute/resume restores
+  // the correct theme rather than always reverting to main.
+  private currentSrc: string = mainThemeFile;
 
-  private constructor() {
-    // Singleton — use getInstance()
-  }
+  private fadeIntervalId: number | null = null;
+
+  private constructor() {}
 
   static getInstance(): BackgroundMusicManager {
     if (!BackgroundMusicManager.instance) {
@@ -32,33 +56,22 @@ class BackgroundMusicManager {
     return BackgroundMusicManager.instance;
   }
 
-  /**
-   * Initialize the audio element (call once on app mount)
-   */
   init(): void {
     if (this.isInitialized) return;
 
-    this.audio = new Audio(musicFile);
-    this.audio.loop = true;
-    this.audio.volume = this.VOLUME;
-    this.audio.preload = "auto";
+    this.audioA = this.makeElement(mainThemeFile);
+    this.audioB = this.makeElement(""); // empty until first room switch
 
-    // Handle visibility change (pause when tab loses focus)
     document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
-    // Listen for user interaction to enable autoplay
     const interactionEvents = ["click", "touchstart", "keydown"];
     const handleFirstInteraction = () => {
       this.userHasInteracted = true;
-      if (this.pendingPlay) {
-        this.play();
-      }
-      // Remove listeners after first interaction
+      if (this.pendingPlay) this.play();
       interactionEvents.forEach((event) => {
         document.removeEventListener(event, handleFirstInteraction);
       });
     };
-
     interactionEvents.forEach((event) => {
       document.addEventListener(event, handleFirstInteraction, { once: false });
     });
@@ -66,131 +79,207 @@ class BackgroundMusicManager {
     this.isInitialized = true;
   }
 
+  private makeElement(src: string): HTMLAudioElement {
+    const el = new Audio(src || undefined);
+    el.loop = true;
+    el.volume = 0;
+    el.preload = src ? "auto" : "none";
+    return el;
+  }
+
+  private getActive(): HTMLAudioElement | null {
+    return this.active === "a" ? this.audioA : this.audioB;
+  }
+
+  private getIdle(): HTMLAudioElement | null {
+    return this.active === "a" ? this.audioB : this.audioA;
+  }
+
   /**
-   * Start playing background music
-   * If user hasn't interacted yet, queues playback for after first interaction
+   * Play the currently-intended track. If no user interaction yet,
+   * queues until the first click/touch.
    */
   play(): void {
-    if (!this.audio) {
-      this.init();
-    }
+    if (!this.isInitialized) this.init();
+    if (this.userMuted) return;
 
     if (!this.userHasInteracted) {
       this.pendingPlay = true;
       return;
     }
 
-    if (this.audio && this.audio.paused) {
-      this.audio.play().catch(() => {
-        // Autoplay was blocked — will retry on user interaction.
-        this.pendingPlay = true;
-      });
-      this.isPaused = false;
+    const active = this.getActive();
+    if (!active) return;
+
+    if (!this.srcMatches(active, this.currentSrc)) {
+      active.src = this.currentSrc;
+    }
+
+    if (active.paused) {
+      active.volume = VOLUME;
+      active.play().catch(() => { this.pendingPlay = true; });
     }
   }
 
-  /**
-   * Pause background music
-   */
   pause(): void {
-    if (this.audio && !this.audio.paused) {
-      this.audio.pause();
-      this.isPaused = true;
-    }
+    const active = this.getActive();
+    if (active && !active.paused) active.pause();
   }
 
-  /**
-   * Mute — user explicitly turned music off (won't auto-resume on tab focus)
-   */
   mute(): void {
     this.userMuted = true;
     this.pause();
+    const idle = this.getIdle();
+    if (idle && !idle.paused) idle.pause();
+    this.cancelFade();
   }
 
-  /**
-   * Unmute — user explicitly turned music back on
-   */
   unmute(): void {
     this.userMuted = false;
     this.play();
   }
 
-  /**
-   * Resume background music if it was paused
-   */
   resume(): void {
-    if (this.audio && this.isPaused && this.userHasInteracted) {
-      this.audio.play().catch(() => {
-        // Ignore errors on resume
-      });
-      this.isPaused = false;
-    }
+    if (this.userMuted) return;
+    this.play();
   }
 
-  /**
-   * Stop and reset background music
-   */
   stop(): void {
-    if (this.audio) {
-      this.audio.pause();
-      this.audio.currentTime = 0;
-      this.isPaused = false;
-    }
+    if (this.audioA) { this.audioA.pause(); this.audioA.currentTime = 0; }
+    if (this.audioB) { this.audioB.pause(); this.audioB.currentTime = 0; }
+    this.cancelFade();
   }
 
-  /**
-   * Set volume (0.0 to 1.0)
-   */
-  setVolume(volume: number): void {
-    if (this.audio) {
-      this.audio.volume = Math.max(0, Math.min(1, volume));
-    }
+  setVolume(_v: number): void {
+    // Reserved — VOLUME is a fixed mix level. Kept for API compatibility.
   }
 
-  /**
-   * Get current volume
-   */
   getVolume(): number {
-    return this.audio?.volume ?? this.VOLUME;
+    return VOLUME;
   }
 
-  /**
-   * Check if music is currently playing
-   */
   isPlaying(): boolean {
-    return this.audio ? !this.audio.paused : false;
+    const active = this.getActive();
+    return active ? !active.paused : false;
   }
 
+  // =============================================
+  // Per-room theme switching
+  // =============================================
+
   /**
-   * Handle tab visibility changes
+   * Crossfade to the theme for a discovery room. Unknown or null-mapped
+   * IDs (e.g. geartown until its theme arrives) fall back to the main theme.
    */
+  playDiscoveryTheme(envId: string): void {
+    const themeSrc = DISCOVERY_THEMES[envId];
+    if (themeSrc) {
+      this.crossfadeTo(themeSrc);
+    } else {
+      this.restoreMainTheme();
+    }
+  }
+
+  /** Crossfade to the trophy ceremony theme. */
+  playTrophyTheme(): void {
+    this.crossfadeTo(TROPHY_ROOM_THEME);
+  }
+
+  /** Crossfade back to the main theme. */
+  restoreMainTheme(): void {
+    this.crossfadeTo(mainThemeFile);
+  }
+
+  private crossfadeTo(newSrc: string): void {
+    if (!this.isInitialized) this.init();
+
+    // No-op if we're already playing this exact track.
+    const active = this.getActive();
+    if (active && this.srcMatches(active, newSrc) && !active.paused) {
+      this.currentSrc = newSrc;
+      return;
+    }
+
+    this.currentSrc = newSrc;
+
+    // If muted or no user interaction yet, just remember the intent —
+    // play() will pick it up later.
+    if (this.userMuted) return;
+    if (!this.userHasInteracted) {
+      this.pendingPlay = true;
+      // Pre-load the new src on the active element so first play works.
+      if (active) active.src = newSrc;
+      return;
+    }
+
+    const idle = this.getIdle();
+    if (!active || !idle) return;
+
+    this.cancelFade();
+
+    idle.src = newSrc;
+    idle.currentTime = 0;
+    idle.volume = 0;
+    const playPromise = idle.play().catch(() => null);
+
+    const startTime = Date.now();
+    const startActiveVol = active.volume;
+
+    this.fadeIntervalId = window.setInterval(() => {
+      const t = Math.min((Date.now() - startTime) / CROSSFADE_MS, 1);
+      active.volume = startActiveVol * (1 - t);
+      idle.volume = VOLUME * t;
+
+      if (t >= 1) {
+        this.cancelFade();
+        active.pause();
+        active.currentTime = 0;
+        this.active = this.active === "a" ? "b" : "a";
+        // If autoplay was blocked, surface it for a future interaction.
+        if (playPromise === null) this.pendingPlay = true;
+      }
+    }, FADE_TICK_MS);
+  }
+
+  private cancelFade(): void {
+    if (this.fadeIntervalId !== null) {
+      clearInterval(this.fadeIntervalId);
+      this.fadeIntervalId = null;
+    }
+  }
+
+  // Audio.src returns the resolved URL, so endsWith comparison is safer
+  // than equality across bundled-asset and static-path differences.
+  private srcMatches(el: HTMLAudioElement, src: string): boolean {
+    if (!el.src) return false;
+    if (el.src === src) return true;
+    if (src.startsWith("/")) return el.src.endsWith(src);
+    // Bundled asset: Vite gives a hashed URL — compare the basename.
+    const basename = src.split("/").pop() || src;
+    return el.src.includes(basename);
+  }
+
   private handleVisibilityChange = (): void => {
     if (document.hidden) {
-      // Tab lost focus — pause music
-      if (this.audio && !this.audio.paused) {
-        this.audio.pause();
-        this.isPaused = true;
-      }
+      const active = this.getActive();
+      if (active && !active.paused) active.pause();
     } else {
-      // Tab regained focus — resume if was playing (but not if user muted)
-      if (this.isPaused && this.userHasInteracted && !this.userMuted) {
-        this.resume();
+      if (!this.userMuted && this.userHasInteracted) {
+        const active = this.getActive();
+        if (active && active.paused) active.play().catch(() => {});
       }
     }
   };
 
-  /**
-   * Cleanup (call on app unmount)
-   */
   destroy(): void {
     document.removeEventListener("visibilitychange", this.handleVisibilityChange);
     this.stop();
-    this.audio = null;
+    this.audioA = null;
+    this.audioB = null;
     this.isInitialized = false;
     BackgroundMusicManager.instance = null;
   }
 }
 
-// Export singleton instance getter
 export const backgroundMusic = BackgroundMusicManager.getInstance();
 export default backgroundMusic;

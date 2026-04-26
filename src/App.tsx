@@ -310,6 +310,7 @@ export default function App() {
 
   // ---- Enter Trophy Room ----
   const handleEnterTrophyRoom = useCallback(() => {
+    backgroundMusic.playTrophyTheme();
     setRoute("trophy-room");
   }, []);
 
@@ -331,6 +332,7 @@ export default function App() {
 
   // ---- Trophy Room exit → back to map (player continues to node 9) ----
   const handleTrophyRoomExit = useCallback(() => {
+    backgroundMusic.restoreMainTheme();
     setTrophyJustCompleted(false);
     setArrivedFromWord(null);
     setMapRevision((r) => r + 1);
@@ -346,12 +348,14 @@ export default function App() {
 
   const handleExplore = useCallback((envId: string) => {
     markEnvironmentVisited(envId);
+    backgroundMusic.playDiscoveryTheme(envId);
     setExploreEnvId(envId);
     setTrophyJustCompleted(false);
     setRoute("explore");
   }, [activeQuest?.id]);
 
   const handleExploreBack = useCallback(() => {
+    backgroundMusic.restoreMainTheme();
     setExploreEnvId(null);
     setRoute("map");
   }, []);
