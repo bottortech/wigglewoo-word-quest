@@ -23,8 +23,17 @@ dist-ssr
 *.sln
 *.sw?
 
-# iOS native build (Capacitor)
-ios/
+# iOS native build (Capacitor) — managed by `npx cap sync`.
+# Track only the two App-Store-critical config files; ignore everything else.
+ios/*
+!ios/App/
+ios/App/*
+!ios/App/App/
+!ios/App/App.xcodeproj/
+ios/App/App/*
+!ios/App/App/Info.plist
+ios/App/App.xcodeproj/*
+!ios/App/App.xcodeproj/project.pbxproj
 
 # Word doc temp lock files
 ~$*
