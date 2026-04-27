@@ -14,14 +14,16 @@ const VOLUME = 0.30;
 const CROSSFADE_MS = 600;
 const FADE_TICK_MS = 30;
 
-// Discovery room ID → theme URL. null means "no dedicated theme yet
-// — fall back to the main theme." Files live in /public/assets/audio/.
+// Discovery room env ID → theme URL. Keys must match the values in
+// QUEST_ENVIRONMENT_MAP (src/game/exploreData.ts) — those are what
+// handleExplore() actually receives. null means "no dedicated theme
+// yet — fall back to the main theme." Files live in /public/assets/audio/.
 const DISCOVERY_THEMES: Record<string, string | null> = {
-  "rumble-peak-volcano": "/assets/audio/volcano-theme.mp3",
-  "stonewall-castle": "/assets/audio/castle-theme.mp3",
-  "coral-cove-village": "/assets/audio/coral-theme.mp3",
-  "greenhouse-domes": "/assets/audio/greenhouse-theme.mp3",
-  "geartown-workshop": null,
+  "valcano": "/assets/audio/volcano-theme.mp3",
+  "castle-island": "/assets/audio/castle-theme.mp3",
+  "small-coastal-village": "/assets/audio/coral-theme.mp3",
+  "glass-dome": "/assets/audio/greenhouse-theme.mp3",
+  "industrial-tech-city": null,
 };
 
 const TROPHY_ROOM_THEME = "/assets/audio/trophy-room-theme.mp3";
