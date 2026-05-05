@@ -8,8 +8,9 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { CVC_WORD_BANK } from "../game/wordData";
-import { loadQuestProgress, isQuestFullyComplete } from "../game/progression";
-import type { VowelId, Quest, PatternType } from "../game/types";
+import { loadQuestProgress, loadTrophyProgress } from "../game/progression";
+import type { VowelId, Quest, PatternType, TrophyTier } from "../game/types";
+import { FIRST_HALF_WORDS, WORDS_PER_QUEST } from "../game/types";
 
 import trophyRoomBg from "../assets/Invention_Trophy_Room.png";
 import titleBar from "../assets/InventionRoom_Title.png";
@@ -27,6 +28,8 @@ interface TrophyRoomScreenProps {
   quest: Quest;
   onComplete: () => void;
   onExit: () => void;
+  /** Which trophy phase: 1 = post-node-8 (half), 2 = post-node-16 (full) */
+  phase?: 1 | 2;
   /** View-only mode — no card game, trophy in display case */
   viewOnly?: boolean;
 }
@@ -64,13 +67,24 @@ const PAIRS_PER_TIER: Record<PatternType, number> = {
   advanced: 6,
 };
 
-// Select random unique words from the word bank
-function selectRandomWords(vowelId: VowelId, count: number): string[] {
-  const wordPool = CVC_WORD_BANK[vowelId] || [];
-  if (wordPool.length < count) {
-    return shuffleArray(CVC_WORD_BANK.shortA).slice(0, count).map(w => w.word);
+// Select random unique words from a provided pool of word strings.
+// Falls back to the vowel-specific bank if the pool is too small.
+function selectRandomWords(pool: string[], vowelId: VowelId, count: number): string[] {
+  if (pool.length >= count) {
+    return shuffleArray(pool).slice(0, count);
   }
-  return shuffleArray(wordPool).slice(0, count).map(w => w.word);
+  const fallback = (CVC_WORD_BANK[vowelId] || CVC_WORD_BANK.shortA).map(w => w.word);
+  // Top up from the fallback bank without duplicates
+  const seen = new Set(pool);
+  const merged = [...pool];
+  for (const w of shuffleArray(fallback)) {
+    if (merged.length >= count) break;
+    if (!seen.has(w)) {
+      merged.push(w);
+      seen.add(w);
+    }
+  }
+  return shuffleArray(merged).slice(0, count);
 }
 
 // Create word-to-image card pairs: one "word" card + one "image" card per word
@@ -120,14 +134,21 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
   quest,
   onComplete,
   onExit,
+  phase = 1,
   viewOnly = false,
 }) => {
-  // Initialize cards — pair count scales with tier
+  // Initialize cards — pair count scales with tier; words scoped to phase
   const pairCount = PAIRS_PER_TIER[quest.patternType] || 3;
+  const phaseWordPool = useMemo(() => {
+    const start = phase === 2 ? FIRST_HALF_WORDS : 0;
+    const end = phase === 2 ? WORDS_PER_QUEST : FIRST_HALF_WORDS;
+    return quest.words.slice(start, end).map(w => w.word);
+  }, [quest.words, phase]);
+
   const initialCards = useMemo(() => {
-    const words = selectRandomWords(vowelId, pairCount);
+    const words = selectRandomWords(phaseWordPool, vowelId, pairCount);
     return createCardPairs(words);
-  }, [vowelId, pairCount]);
+  }, [phaseWordPool, vowelId, pairCount]);
 
   const [cards, setCards] = useState<Card[]>(initialCards);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
@@ -155,7 +176,18 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
 
   const patternLabel = PATTERN_LABELS[quest.patternType] || "CVC";
   const vowelLabel = VOWEL_LABELS[vowelId] || "Short A";
-  const questEarned = isQuestFullyComplete(quest.id);
+
+  // Tier shown in the display case:
+  // - In active play, mirror the saved tier; once the trophy lands, bump
+  //   to the tier this phase awards (half for phase 1, full for phase 2).
+  // - In view-only mode, show whatever tier the player currently has.
+  const savedTier: TrophyTier = useMemo(() => loadTrophyProgress(quest.id).tier, [quest.id]);
+  const awardedTier: TrophyTier = phase === 2 ? "full" : "half";
+  const displayTier: TrophyTier = viewOnly
+    ? savedTier
+    : trophyLanded
+      ? awardedTier
+      : savedTier;
 
   // Check for win condition
   useEffect(() => {
@@ -299,7 +331,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
 
       {/* Trophy Showcase Display Case — Right Wall */}
       <div className="trophy-showcase-wall">
-        <GlassDisplayCase earned={trophyLanded || questEarned} patternType={quest.patternType} size="medium" />
+        <GlassDisplayCase tier={displayTier} patternType={quest.patternType} size="medium" />
       </div>
 
       {/* Stage wrapper — trophy + cards move together */}
@@ -370,9 +402,9 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
 
           {/* WiggleWoo standing next to cards */}
           <div className="trophy-room__wigglewoo">
-            <img 
-              src={wigglewooTrophyRoom} 
-              alt="WiggleWoo" 
+            <img
+              src={wigglewooTrophyRoom}
+              alt="WiggleWoo"
               className="trophy-room__wigglewoo-img"
               draggable={false}
             />

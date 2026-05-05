@@ -41,7 +41,8 @@ import {
   loadGlobalProgress,
   saveGlobalProgress,
   saveQuestProgress,
-  completeTrophyRoom,
+  loadTrophyProgress,
+  awardTrophyTier,
   resetTrophyProgress,
   clearTrophyUnlockSeen,
   clearNodeRatings,
@@ -54,6 +55,7 @@ import {
   unlockChallengeMode,
   hasHighAccuracy,
 } from "./game/progression";
+import { FIRST_HALF_WORDS } from "./game/types";
 import { unlockSkinForEnvironment, initDefaultSkinPaths } from "./game/skins";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, CVVC_QUEST_IDS } from "./game/questIds";
 import WardrobeModal from "./components/WardrobeModal";
@@ -198,7 +200,8 @@ export default function App() {
         const updated = advanceWord(progress);
         setWordIndex(updated.currentWordIndex);
       } else if (target === "quest-map") {
-        // Level done → advance, go back to map
+        // Level done → advance, route to trophy phase 1 if just finished node 8,
+        // otherwise go back to map.
         advanceWord(progress);
         setArrivedFromWord(completedWordIndex);
         setTimeout(checkChallengeUnlock, 300);
@@ -222,18 +225,40 @@ export default function App() {
           }
         }, 500);
 
+        // Just completed node 8? Route to trophy phase 1 (only if not already
+        // earned — migrated players with tier "full" skip phase 1 entirely).
+        if (completedWordIndex === FIRST_HALF_WORDS - 1) {
+          const tp = loadTrophyProgress(activeQuest.id);
+          if (tp.tier === "none") {
+            setTrophyPhase(1);
+            backgroundMusic.playTrophyTheme();
+            setRoute("trophy-room");
+            return;
+          }
+        }
+
         setRoute("map");
         setMapRevision((r) => r + 1);
       } else {
-        // quest-summary: last word (node 16) → go to discovery room
+        // quest-summary: last word (node 16) → trophy phase 2, then discovery
         advanceWord(progress);
         setTimeout(checkChallengeUnlock, 300);
         recordVowelQuestCompletion(activeQuest.id);
 
-        // Enter the matching discovery room
+        const tp = loadTrophyProgress(activeQuest.id);
+        if (tp.tier === "half") {
+          // Phase 2 trophy room → exit will route to discovery
+          setTrophyPhase(2);
+          backgroundMusic.playTrophyTheme();
+          setRoute("trophy-room");
+          return;
+        }
+
+        // tier === "full" (migrated) or "none" (edge): go straight to discovery
         const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
         if (envId) {
           markEnvironmentVisited(envId);
+          backgroundMusic.playDiscoveryTheme(envId);
           setExploreEnvId(envId);
           setRoute("discovery-room");
         } else {
@@ -309,10 +334,16 @@ export default function App() {
   }, []);
 
   // ---- Enter Trophy Room ----
+  // Phase is chosen from current tier: none → phase 1, half → phase 2.
+  // (Map's trophy node only goes "active" when tier === "none", so the
+  // common entry from the map is phase 1; dev / replay paths use this too.)
   const handleEnterTrophyRoom = useCallback(() => {
+    if (!activeQuest) return;
+    const tp = loadTrophyProgress(activeQuest.id);
+    setTrophyPhase(tp.tier === "none" ? 1 : 2);
     backgroundMusic.playTrophyTheme();
     setRoute("trophy-room");
-  }, []);
+  }, [activeQuest?.id]);
 
   // ---- Enter Trophy Room (view-only, from quest map showcase click) ----
   const handleViewTrophyRoom = useCallback(() => {
@@ -321,23 +352,42 @@ export default function App() {
 
   // ---- Trophy Room Complete — progression saved, animation handles in-screen ----
   const [trophyJustCompleted, setTrophyJustCompleted] = useState(false);
+  // Which phase the active trophy room represents (1 = post-node-8, 2 = post-node-16)
+  const [trophyPhase, setTrophyPhase] = useState<1 | 2>(1);
 
   const handleTrophyRoomComplete = useCallback(() => {
     if (!activeQuest) return;
-    completeTrophyRoom(activeQuest.id);
+    const awarded = awardTrophyTier(activeQuest.id, trophyPhase === 2 ? "full" : "half");
     recordTrophyEarned(activeQuest.id, activeQuest.patternType);
     setTrophyJustCompleted(true);
     setMapRevision((r) => r + 1);
-  }, [activeQuest?.id]);
+    void awarded;
+  }, [activeQuest?.id, trophyPhase]);
 
-  // ---- Trophy Room exit → back to map (player continues to node 9) ----
+  // ---- Trophy Room exit → phase 1 returns to map; phase 2 routes to discovery ----
   const handleTrophyRoomExit = useCallback(() => {
-    backgroundMusic.restoreMainTheme();
     setTrophyJustCompleted(false);
     setArrivedFromWord(null);
+
+    if (trophyPhase === 2 && activeQuest) {
+      // Phase 2 implies the player has completed all 16 words. Backstop the
+      // skip path so tier reaches "full" even if they tapped Continue before
+      // finishing the match — keeps tier and quest state consistent.
+      awardTrophyTier(activeQuest.id, "full");
+      const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
+      if (envId) {
+        markEnvironmentVisited(envId);
+        backgroundMusic.playDiscoveryTheme(envId);
+        setExploreEnvId(envId);
+        setRoute("discovery-room");
+        return;
+      }
+    }
+
+    backgroundMusic.restoreMainTheme();
     setMapRevision((r) => r + 1);
     setRoute("map");
-  }, []);
+  }, [trophyPhase, activeQuest?.id]);
 
   // ---- Open/close Learning Insights ----
   const handleOpenInsights = useCallback(() => setRoute("insights"), []);
@@ -530,6 +580,7 @@ export default function App() {
           <TrophyRoomScreen
             vowelId={questIdToVowelId(activeQuest.id) as VowelId}
             quest={activeQuest}
+            phase={trophyPhase}
             onComplete={handleTrophyRoomComplete}
             onExit={handleTrophyRoomExit}
           />

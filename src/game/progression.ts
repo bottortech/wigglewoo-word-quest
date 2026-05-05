@@ -11,8 +11,8 @@
 //   - Global quest sequence tracking
 // =============================================
 
-import type { NodeState, Quest } from "./types";
-import { WORDS_PER_QUEST } from "./types";
+import type { NodeState, Quest, TrophyTier } from "./types";
+import { WORDS_PER_QUEST, FIRST_HALF_WORDS } from "./types";
 
 const STORAGE_KEY = "wigglewoo-cvc-progress";
 const GLOBAL_KEY = "wigglewoo-global-progress";
@@ -28,12 +28,15 @@ export interface QuestProgress {
   questComplete: boolean;
 }
 
-/** Trophy room progress */
+/** Trophy room progress (tiered).
+ *  - "none": no trophy earned
+ *  - "half": phase 1 done (after node 8)
+ *  - "full": phase 2 done (after node 16) */
 export interface TrophyProgress {
-  /** Whether the trophy room after node 8 has been completed */
-  trophyRoomComplete: boolean;
   /** Quest ID this trophy belongs to */
   questId: string;
+  /** Current trophy tier */
+  tier: TrophyTier;
 }
 
 /** Discovery room progress */
@@ -170,21 +173,61 @@ export function isNodeTappable(state: NodeState): boolean {
 
 const TROPHY_PROGRESS_KEY = "wigglewoo-trophy-all";
 
-/** Load all trophy progress */
+/** Normalize one trophy record to the tiered shape, migrating legacy
+ *  `{ trophyRoomComplete: true }` records to `tier: "full"`. */
+function normalizeTrophyRecord(raw: unknown, fallbackId: string): TrophyProgress {
+  if (raw && typeof raw === "object") {
+    const r = raw as Record<string, unknown>;
+    const questId = typeof r.questId === "string" ? r.questId : fallbackId;
+    if (r.tier === "none" || r.tier === "half" || r.tier === "full") {
+      return { questId, tier: r.tier };
+    }
+    // Legacy: { trophyRoomComplete: boolean }
+    if (typeof r.trophyRoomComplete === "boolean") {
+      return { questId, tier: r.trophyRoomComplete ? "full" : "none" };
+    }
+  }
+  return { questId: fallbackId, tier: "none" };
+}
+
+/** Load all trophy progress (with migration of legacy records). */
 function loadAllTrophyProgress(): Record<string, TrophyProgress> {
   try {
     const raw = localStorage.getItem(TROPHY_PROGRESS_KEY);
-    if (raw) return JSON.parse(raw);
-    // Migrate from old single-trophy format
-    const oldRaw = localStorage.getItem(TROPHY_KEY);
-    if (oldRaw) {
-      const old = JSON.parse(oldRaw);
-      if (old.questId) {
-        const migrated: Record<string, TrophyProgress> = { [old.questId]: old };
-        localStorage.setItem(TROPHY_PROGRESS_KEY, JSON.stringify(migrated));
-        return migrated;
+    let parsed: Record<string, unknown> | null = null;
+    if (raw) {
+      parsed = JSON.parse(raw);
+    } else {
+      // Migrate from older single-trophy format
+      const oldRaw = localStorage.getItem(TROPHY_KEY);
+      if (oldRaw) {
+        const old = JSON.parse(oldRaw);
+        if (old?.questId) {
+          parsed = { [old.questId]: old };
+        }
       }
     }
+    if (!parsed) return {};
+    const out: Record<string, TrophyProgress> = {};
+    let migrated = false;
+    for (const [id, val] of Object.entries(parsed)) {
+      const normalized = normalizeTrophyRecord(val, id);
+      out[id] = normalized;
+      // Detect if the on-disk record needed re-shaping
+      if (
+        !val ||
+        typeof val !== "object" ||
+        !("tier" in (val as object))
+      ) {
+        migrated = true;
+      }
+    }
+    if (migrated) {
+      try {
+        localStorage.setItem(TROPHY_PROGRESS_KEY, JSON.stringify(out));
+      } catch { /* fail silently */ }
+    }
+    return out;
   } catch { /* corrupted */ }
   return {};
 }
@@ -198,7 +241,7 @@ function saveAllTrophyProgress(data: Record<string, TrophyProgress>): void {
 /** Load trophy progress for a quest */
 export function loadTrophyProgress(questId: string): TrophyProgress {
   const all = loadAllTrophyProgress();
-  return all[questId] ?? { trophyRoomComplete: false, questId };
+  return all[questId] ?? { questId, tier: "none" };
 }
 
 /** Save trophy progress */
@@ -208,19 +251,20 @@ export function saveTrophyProgress(progress: TrophyProgress): void {
   saveAllTrophyProgress(all);
 }
 
-/** Mark trophy room as complete */
-export function completeTrophyRoom(questId: string): TrophyProgress {
-  const progress: TrophyProgress = {
-    questId,
-    trophyRoomComplete: true,
-  };
-  saveTrophyProgress(progress);
-  return progress;
+/** Award (or upgrade) the trophy tier for a quest. Tier is monotonic:
+ *  attempting to downgrade is ignored. */
+export function awardTrophyTier(questId: string, tier: TrophyTier): TrophyProgress {
+  const current = loadTrophyProgress(questId);
+  const rank: Record<TrophyTier, number> = { none: 0, half: 1, full: 2 };
+  const nextTier: TrophyTier = rank[tier] >= rank[current.tier] ? tier : current.tier;
+  const updated: TrophyProgress = { questId, tier: nextTier };
+  saveTrophyProgress(updated);
+  return updated;
 }
 
 /** Reset trophy progress (for new quest) */
 export function resetTrophyProgress(questId: string): void {
-  saveTrophyProgress({ questId, trophyRoomComplete: false });
+  saveTrophyProgress({ questId, tier: "none" });
 }
 
 // ---- Discovery Room Progress ----
@@ -269,13 +313,13 @@ export function resetDiscoveryProgress(questId: string): void {
 }
 
 /**
- * Check if a specific quest is FULLY complete (all nodes + trophy + discovery).
+ * Check if a specific quest is FULLY complete (all nodes + full trophy + discovery).
  */
 export function isQuestFullyComplete(questId: string): boolean {
   const qp = loadQuestProgress(questId);
   const tp = loadTrophyProgress(questId);
   const dp = loadDiscoveryProgress(questId);
-  return qp.questComplete && tp.trophyRoomComplete && dp.discoveryRoomComplete;
+  return qp.questComplete && tp.tier === "full" && dp.discoveryRoomComplete;
 }
 
 /**
@@ -286,25 +330,40 @@ export function areAllQuestsComplete(questIds: string[]): boolean {
 }
 
 /**
- * Check if player should go to trophy room.
- * Triggers after node 8 (fixed position).
+ * Should phase 1 trophy room run? Triggers once after node 8.
  */
-export function shouldShowTrophyRoom(progress: QuestProgress, trophyProgress: TrophyProgress): boolean {
-  return progress.currentWordIndex >= 8 && !trophyProgress.trophyRoomComplete;
+export function shouldShowTrophyPhase1(
+  progress: QuestProgress,
+  trophyProgress: TrophyProgress
+): boolean {
+  return progress.currentWordIndex >= FIRST_HALF_WORDS && trophyProgress.tier === "none";
 }
 
 /**
- * Get trophy node state based on progress.
- * Trophy unlocks after node 8 (fixed position between node 8 and 9).
+ * Should phase 2 trophy room run? Triggers once after node 16, and only
+ * when phase 1 has already been earned (tier === "half"). Migrated players
+ * with tier "full" already skip phase 2.
+ */
+export function shouldShowTrophyPhase2(
+  progress: QuestProgress,
+  trophyProgress: TrophyProgress
+): boolean {
+  return progress.currentWordIndex >= WORDS_PER_QUEST && trophyProgress.tier === "half";
+}
+
+/**
+ * Get trophy node state for the map (used as a milestone marker for phase 1).
+ * Trophy node is "active" when the player has completed node 8 but hasn't
+ * earned any trophy yet. Once half or full, the node renders as completed.
  */
 export function getTrophyNodeState(
   questProgress: QuestProgress,
   trophyProgress: TrophyProgress
 ): NodeState {
-  if (questProgress.currentWordIndex < 8) {
+  if (questProgress.currentWordIndex < FIRST_HALF_WORDS) {
     return "locked";
   }
-  if (!trophyProgress.trophyRoomComplete) {
+  if (trophyProgress.tier === "none") {
     return "active";
   }
   return "completed";
@@ -455,15 +514,16 @@ export function migrateOldCompletedQuests(allQuestIds: string[]): void {
     const dp = loadDiscoveryProgress(questId);
     // Old system: quest was fully complete if nodes + trophy done
     // New system also requires discovery. Auto-grant it.
-    if (qp.questComplete && tp.trophyRoomComplete && !dp.discoveryRoomComplete) {
+    if (qp.questComplete && tp.tier === "full" && !dp.discoveryRoomComplete) {
       completeDiscoveryRoom(questId);
     }
   }
 }
 
+/** Count quests with a fully-earned trophy (tier === "full"). */
 export function countEarnedTrophies(): number {
   const all = loadAllTrophyProgress();
-  return Object.values(all).filter(tp => tp.trophyRoomComplete).length;
+  return Object.values(all).filter(tp => tp.tier === "full").length;
 }
 
 // =============================================

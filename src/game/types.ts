@@ -141,6 +141,12 @@ export const WORDS_PER_QUEST = 16;
 /** First half of quest (nodes 1-8, before trophy room) */
 export const FIRST_HALF_WORDS = 8;
 
+/** Trophy progression tiers.
+ *  none = no trophy yet
+ *  half = phase 1 trophy (earned after node 8)
+ *  full = phase 2 trophy (earned after node 16) */
+export type TrophyTier = "none" | "half" | "full";
+
 /** Vowel IDs for quest selection */
 export type VowelId = "shortA" | "shortE" | "shortI" | "shortO" | "shortU";
 

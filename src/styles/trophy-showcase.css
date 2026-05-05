@@ -135,7 +135,8 @@
   filter: drop-shadow(0 calc(2px * var(--u)) calc(6px * var(--u)) rgba(0, 0, 0, 0.3));
 }
 
-.glass-display__trophy-img--earned {
+/* Tier: full — animated, glowing trophy */
+.glass-display__trophy-img--full {
   animation: glass-display-float 6s ease-in-out infinite;
 }
 
@@ -144,13 +145,49 @@
   50% { transform: translateY(calc(-3px * var(--uv))); }
 }
 
-.glass-display__trophy-img--locked {
+/* Tier: none — locked silhouette */
+.glass-display__trophy-img--none {
   opacity: 0.5;
   filter:
     grayscale(0.6)
     brightness(0.8)
     drop-shadow(0 0 calc(8px * var(--u)) rgba(212, 168, 67, 0.25))
     drop-shadow(0 calc(2px * var(--u)) calc(4px * var(--u)) rgba(0, 0, 0, 0.2));
+}
+
+/* Tier: half — wrapper that sizes itself off the first trophy image; the
+ * second copy is absolutely overlaid and clipped to the bottom half so it
+ * sits exactly inside the ghost outline. */
+.glass-display__half-stack {
+  position: relative;
+  width: 215%;       /* slightly larger than full so the half reads bigger */
+  line-height: 0;    /* avoid baseline gap below the img */
+  flex-shrink: 0;
+  filter: drop-shadow(0 calc(2px * var(--u)) calc(6px * var(--u)) rgba(0, 0, 0, 0.3));
+}
+
+.glass-display__half-stack > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Override the base .glass-display__trophy-img sizing/filter so the
+   * stack-level filter is the only drop-shadow applied. */
+  filter: none;
+}
+
+.glass-display__trophy-img--half-ghost {
+  opacity: 0.32;
+  filter: grayscale(0.85) brightness(0.85) !important;
+  pointer-events: none;
+}
+
+.glass-display__trophy-img--half-fill {
+  position: absolute;
+  inset: 0;
+  /* Show only the bottom 50% — gives a clear "filling up" feel inside the
+   * ghost outline. clip-path is widely supported and unambiguous. */
+  clip-path: inset(50% 0 0 0);
+  -webkit-clip-path: inset(50% 0 0 0);
 }
 
 /* --- Base platform --- */

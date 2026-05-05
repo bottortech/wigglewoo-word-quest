@@ -6,6 +6,7 @@
 
 import React, { useMemo, useState, useEffect, useRef, useCallback, Component } from "react";
 import type { Quest, NodeState } from "../game/types";
+import { FIRST_HALF_WORDS } from "../game/types";
 import {
   loadQuestProgress,
   isNodeTappable,
@@ -435,7 +436,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   }, []);
 
   // Quest fully done — nodes, path, trophy, discovery, WiggleWoo all hidden
-  const questFullyDone = progress.questComplete && trophyProgress.trophyRoomComplete && discoveryProgress.discoveryRoomComplete;
+  const questFullyDone = progress.questComplete && trophyProgress.tier === "full" && discoveryProgress.discoveryRoomComplete;
 
   // Trophy node state — midpoint of IMAGE words only
   const trophyNodeState = useMemo(() =>
@@ -457,14 +458,21 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   // Per-node performance ratings
   const nodeRatings = useMemo(() => loadNodeRatings(quest.id), [quest.id]);
 
-  // Generate states for all nodes — image nodes progress normally, decode nodes gated
+  // Generate states for all nodes — image nodes progress normally, decode nodes gated.
+  // Additionally, nodes 9–16 stay locked until the player earns the half trophy
+  // (phase 1) — completing node 8 alone is not enough.
+  const trophyGateActive = trophyProgress.tier === "none";
   const nodeStates: NodeState[] = useMemo(() => {
     const states: NodeState[] = [];
     for (let i = 0; i < wordCount; i++) {
       const isDecodeNode = i >= imageWordCount;
+      const isTrophyGated = i >= FIRST_HALF_WORDS && trophyGateActive;
 
       if (isDecodeNode && !decodeUnlocked) {
         // Decode node locked until mastery
+        states.push("locked");
+      } else if (isTrophyGated) {
+        // Locked behind phase 1 trophy
         states.push("locked");
       } else if (progress.questComplete) {
         states.push("completed");
@@ -477,7 +485,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       }
     }
     return states;
-  }, [progress.questComplete, progress.currentWordIndex, wordCount]);
+  }, [progress.questComplete, progress.currentWordIndex, wordCount, imageWordCount, decodeUnlocked, trophyGateActive]);
 
   // Find active node index (could be a regular node OR trophy is active)
   const activeNodeIndex = useMemo(() => {
@@ -1130,15 +1138,17 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
       />
 
-      {/* TROPHY SHOWCASE — below badge logo, glass display case */}
+      {/* TROPHY SHOWCASE — below badge logo, glass display case.
+          Clickable once any trophy is earned (half or full), so the player can
+          replay the trophy room in view-only mode. */}
       <div
-        className={`trophy-showcase ${trophyProgress.trophyRoomComplete ? 'trophy-showcase--clickable' : ''}`}
-        onClick={() => trophyProgress.trophyRoomComplete && onViewTrophyRoom?.()}
-        role={trophyProgress.trophyRoomComplete ? "button" : undefined}
-        tabIndex={trophyProgress.trophyRoomComplete ? 0 : undefined}
+        className={`trophy-showcase ${trophyProgress.tier !== "none" ? 'trophy-showcase--clickable' : ''}`}
+        onClick={() => trophyProgress.tier !== "none" && onViewTrophyRoom?.()}
+        role={trophyProgress.tier !== "none" ? "button" : undefined}
+        tabIndex={trophyProgress.tier !== "none" ? 0 : undefined}
       >
         <GlassDisplayCase
-          earned={trophyProgress.trophyRoomComplete}
+          tier={trophyProgress.tier}
           patternType={quest.patternType}
           size="medium"
         />

@@ -1297,7 +1297,7 @@ export function getEnvironmentForQuest(questId: string): string | null {
   const envId = QUEST_ENVIRONMENT_MAP[questId];
   if (!envId) return null;
   const tp = loadTrophyProgress(questId);
-  return tp.trophyRoomComplete ? envId : null;
+  return tp.tier === "full" ? envId : null;
 }
 
 /**
