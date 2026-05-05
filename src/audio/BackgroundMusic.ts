@@ -23,7 +23,7 @@ const DISCOVERY_THEMES: Record<string, string | null> = {
   "castle-island": "/assets/audio/castle-theme.mp3",
   "small-coastal-village": "/assets/audio/coral-theme.mp3",
   "glass-dome": "/assets/audio/greenhouse-theme.mp3",
-  "industrial-tech-city": null,
+  "industrial-tech-city": "/assets/audio/workshop-theme.mp3",
 };
 
 const TROPHY_ROOM_THEME = "/assets/audio/trophy-room-theme.mp3";
