@@ -110,9 +110,7 @@ export function playLetterSound(letter: string): void {
   const audio = getChannel("letter");
   audio.pause();
   audio.currentTime = 0;
-  // TEMP: phonetic recordings being re-cut. Falling back to letter-name
-  // sounds in /when-letter-is-dropped/ until corrected phonemes land.
-  audio.src = `${AUDIO_BASE}/when-letter-is-dropped/Alphabet%20Phenomes%20-%20${key.toUpperCase()}.wav`;
+  audio.src = `${AUDIO_BASE}/new%20phonetics/${key.toUpperCase()}%20Phoneme_1.wav`;
   audio.volume = 0.3;
   audio.playbackRate = document.documentElement.classList.contains("slow-phoneme") ? 0.7 : 1.0;
   audio.play().catch(() => {});
