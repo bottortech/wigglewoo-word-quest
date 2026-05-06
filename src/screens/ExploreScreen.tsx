@@ -41,7 +41,8 @@ const FactPanelSheet: React.FC<{
   onClose: () => void;
   ambientColor: string;
   onFactViewed?: (factId: string) => void;
-}> = ({ panel, onClose, onFactViewed }) => {
+  onFactNarrationEnded?: () => void;
+}> = ({ panel, onClose, onFactViewed, onFactNarrationEnded }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [lockedToast] = useState<string | null>(null);
 
@@ -80,7 +81,12 @@ const FactPanelSheet: React.FC<{
                 {isExpanded && !isLocked && (
                   <>
                     <p className="fact-panel__item-fact">{item.core}</p>
-                    <FactNarration text={item.core} audioSrc={item.audioSrc} autoPlay />
+                    <FactNarration
+                      text={item.core}
+                      audioSrc={item.audioSrc}
+                      autoPlay
+                      onEnded={onFactNarrationEnded}
+                    />
                   </>
                 )}
               </div>
@@ -144,13 +150,22 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     setMiniGamesCompleted(true);
     setShowMiniGames(false);
     localStorage.setItem(miniGameSeenKey, "true");
+    // Welcome VO ("search around for cool facts") fires here — once the
+    // mini-games clear and the kid can actually see the room.
+    playEvent("discover-welcome");
     // Do NOT call onComplete here — room completes after viewing 2 facts
   }, [miniGameSeenKey]);
 
-  // Welcome VO on first mount of a room
+  // Welcome VO on first mount — only when mini-games aren't covering the room
+  // (returning visits, or entries that bypass the discovery flow). First-visit
+  // welcome plays inside handleMiniGamesComplete instead.
+  const [welcomePlayed, setWelcomePlayed] = useState(false);
   useEffect(() => {
+    if (welcomePlayed) return;
+    if (showMiniGames) return;
     playEvent("discover-welcome");
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    setWelcomePlayed(true);
+  }, [showMiniGames, welcomePlayed]);
 
   // Room completion — triggers after viewing 2 facts (first visit only)
   useEffect(() => {
@@ -284,7 +299,8 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const learnFactForProp = useCallback((prop: SceneProp) => {
     recordFactDiscovery(environmentId);
     setFactsDiscoveredThisSession(c => c + 1);
-    playEvent("discover-fact-reaction");
+    // "wow did you know that" reaction fires AFTER the kid actually hears the
+    // fact — wired into FactNarration's onEnded below, not here.
 
     playObjectAnimation(prop);
     showFactForProp(prop);
@@ -681,6 +697,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
               return next;
             });
           }}
+          onFactNarrationEnded={() => playEvent("discover-fact-reaction")}
         />
       )}
 

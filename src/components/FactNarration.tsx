@@ -14,9 +14,11 @@ interface FactNarrationProps {
   text: string;
   audioSrc?: string;
   autoPlay?: boolean;
+  /** Fires once the narration audio finishes playing naturally. */
+  onEnded?: () => void;
 }
 
-const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay = false }) => {
+const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay = false, onEnded }) => {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const settings = loadSettings();
@@ -38,13 +40,16 @@ const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay 
       audio.play().catch(() => {
         setPlaying(false);
       });
-      audio.onended = () => setPlaying(false);
+      audio.onended = () => {
+        setPlaying(false);
+        onEnded?.();
+      };
       audio.onerror = () => {
         setPlaying(false);
       };
     }
     // TTS fallback disabled — will be replaced with voice actor recordings
-  }, [audioSrc, text, playing, settings.slowPhoneme]);
+  }, [audioSrc, text, playing, settings.slowPhoneme, onEnded]);
 
   const stop = useCallback(() => {
     if (audioRef.current) {
