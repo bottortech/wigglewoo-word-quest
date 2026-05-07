@@ -178,14 +178,19 @@ export type EventSlug =
   | "onboard-intro" | "onboard-tap-gear" | "onboard-first-complete"
   // Trophy room
   | "trophy-flying" | "trophy-all-matched" | "trophy-return"
+  | "trophy-phase2-intro"          // NEW — phase 2 entry ("One more challenge — let's earn the full trophy!")
   // Decode (Challenge Mode)
   | "decode-unlock" | "decode-complete"
   // Discovery rooms
   | "discover-welcome" | "discover-fact-reaction"
   | "discover-skin-unlocked" | "discover-complete"
+  | "discover-exit-bridge"         // NEW — plays as the room fades out ("Nice exploring! Let's keep going.")
   // Mini-games
   | "mini-vowel-builder" | "mini-word-sort"
-  | "mini-correct" | "mini-complete";
+  | "mini-correct" | "mini-complete"
+  // Cross-match (Quick Review) — drag-line word→picture mini-game
+  | "cross-match-intro"            // NEW — "Drag the word to its picture!"
+  | "cross-match-complete";        // NEW — "Great matching!"
 
 export function playEvent(slug: EventSlug): void {
   play("event", `${AUDIO_BASE}/events/${slug}.m4a`, 0.4);
@@ -204,7 +209,19 @@ export function stopAllSfx(): void {
  * phoneme isn't cut off by the next VO.
  */
 export function waitForLetterDone(): Promise<void> {
-  const audio = letterAudio;
+  return waitForChannelDone(letterAudio, 1500);
+}
+
+/**
+ * Resolves when the word channel finishes playing (or immediately if
+ * idle). Use this before playing an event/phrase so the word VO doesn't
+ * overlap the celebration ("cat" + "great job!" sounded layered).
+ */
+export function waitForWordDone(): Promise<void> {
+  return waitForChannelDone(wordAudio, 2500);
+}
+
+function waitForChannelDone(audio: HTMLAudioElement | null, fallbackMs: number): Promise<void> {
   if (!audio || audio.paused || audio.ended || !audio.src) {
     return Promise.resolve();
   }
@@ -219,7 +236,6 @@ export function waitForLetterDone(): Promise<void> {
     };
     audio.addEventListener("ended", done, { once: true });
     audio.addEventListener("pause", done, { once: true });
-    // Safety: phonemes are under 1s, but guard against stalled audio.
-    setTimeout(done, 1500);
+    setTimeout(done, fallbackMs);
   });
 }

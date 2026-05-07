@@ -18,9 +18,19 @@ interface FactNarrationProps {
   onEnded?: () => void;
 }
 
+/** After the narration audio finishes, wait this many ms before firing
+ *  `onEnded` so the kid has time to actually read the fact text. The window
+ *  scales with text length but never drops below the floor. */
+const READ_DWELL_MS_PER_CHAR = 50;
+const READ_DWELL_FLOOR_MS = 2000;
+function computeDwellMs(text: string): number {
+  return Math.max(READ_DWELL_FLOOR_MS, text.length * READ_DWELL_MS_PER_CHAR);
+}
+
 const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay = false, onEnded }) => {
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settings = loadSettings();
 
   // Don't render if narration is disabled
@@ -36,13 +46,24 @@ const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay 
       audio.src = audioSrc;
       audio.volume = 0.8;
       audio.playbackRate = settings.slowPhoneme ? 0.75 : 1.0;
+      const startedAt = Date.now();
       setPlaying(true);
       audio.play().catch(() => {
         setPlaying(false);
       });
       audio.onended = () => {
         setPlaying(false);
-        onEnded?.();
+        // Hold off the onEnded callback so a kid can finish reading the
+        // text before any downstream "reaction" VO fires. Total dwell scales
+        // with the text length and is measured from when audio started, so
+        // long narrations don't double-pay.
+        const elapsed = Date.now() - startedAt;
+        const remaining = Math.max(0, computeDwellMs(text) - elapsed);
+        if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current);
+        dwellTimerRef.current = setTimeout(() => {
+          onEnded?.();
+          dwellTimerRef.current = null;
+        }, remaining);
       };
       audio.onerror = () => {
         setPlaying(false);
@@ -55,6 +76,10 @@ const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay 
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+    }
+    if (dwellTimerRef.current) {
+      clearTimeout(dwellTimerRef.current);
+      dwellTimerRef.current = null;
     }
     setPlaying(false);
   }, []);

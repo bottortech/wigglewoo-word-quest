@@ -15,7 +15,7 @@
 
 import { useState, useCallback, useEffect, useRef, useLayoutEffect } from "react";
 import WordImage from "../components/WordImage";
-import { playLetterSound, playEvent, playWordSound, waitForLetterDone } from "../audio/SoundEffects";
+import { playLetterSound, playEvent, playWordSound, waitForLetterDone, waitForWordDone } from "../audio/SoundEffects";
 import "../styles/onboarding.css";
 
 interface OnboardingScreenProps {
@@ -175,13 +175,19 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     }
   }, [step, mode, slotIndex, correctLetter, shakingId, moveHandToCorrect]);
 
-  // ---- Done: speak the word after the final phoneme settles ----
+  // ---- Done: speak the word, then play the completion VO ----
+  // Sequence: final phoneme → word ("cat") → completion phrase. Reordered
+  // so the word doesn't overlap the completion event VO (different audio
+  // channels, so they'd otherwise layer audibly).
   useEffect(() => {
     if (step !== "done") return;
-    playEvent("onboard-first-complete");
     let cancelled = false;
     waitForLetterDone().then(() => {
-      if (!cancelled) playWordSound(DEMO_WORD);
+      if (cancelled) return;
+      playWordSound(DEMO_WORD);
+      waitForWordDone().then(() => {
+        if (!cancelled) playEvent("onboard-first-complete");
+      });
     });
     return () => { cancelled = true; };
   }, [step]);

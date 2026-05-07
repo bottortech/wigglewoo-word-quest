@@ -15,9 +15,10 @@ import GameScreen from "./screens/GameScreen";
 import TrophyRoomScreen from "./screens/TrophyRoomScreen";
 import LearningInsightsScreen from "./screens/LearningInsightsScreen";
 import ExploreScreen from "./screens/ExploreScreen";
+import CrossMatchScreen from "./screens/CrossMatchScreen";
 
 import { loadSettings } from "./game/settings";
-import OrientationGuard from "./components/OrientationOverlay";
+import LoadingGate from "./components/LoadingScreen";
 import Stage from "./components/Stage";
 import ScreenGate from "./components/ScreenGate";
 import {
@@ -54,6 +55,9 @@ import {
   recordVowelQuestCompletion,
   unlockChallengeMode,
   hasHighAccuracy,
+  getPendingCrossMatch,
+  markCrossMatchComplete,
+  resetCrossMatchProgress,
 } from "./game/progression";
 import { FIRST_HALF_WORDS } from "./game/types";
 import { unlockSkinForEnvironment, initDefaultSkinPaths } from "./game/skins";
@@ -71,7 +75,7 @@ import OnboardingScreen from "./screens/OnboardingScreen";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "onboarding" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe";
+type Route = "home" | "onboarding" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match";
 
 const ONBOARDING_SEEN_KEY = "ww_onboarding_seen";
 
@@ -225,6 +229,16 @@ export default function App() {
           }
         }, 500);
 
+        // Cross-match review checkpoints (after word 4, 12). The helper
+        // returns the earliest pending checkpoint that the player has reached
+        // — handles both fresh completion and resume-after-skip.
+        const pendingCp = getPendingCrossMatch(activeQuest.id, completedWordIndex + 1);
+        if (pendingCp !== null) {
+          setCrossMatchCheckpoint(pendingCp);
+          setRoute("cross-match");
+          return;
+        }
+
         // Just completed node 8? Route to trophy phase 1 (only if not already
         // earned — migrated players with tier "full" skip phase 1 entirely).
         if (completedWordIndex === FIRST_HALF_WORDS - 1) {
@@ -282,6 +296,7 @@ export default function App() {
     });
     resetTrophyProgress(activeQuest.id);
     resetDiscoveryProgress(activeQuest.id);
+    resetCrossMatchProgress(activeQuest.id);
     clearTrophyUnlockSeen(activeQuest.id);
     clearNodeRatings(activeQuest.id);
     setArrivedFromWord(null);
@@ -302,6 +317,7 @@ export default function App() {
       "wigglewoo-trophy-progress",
       "wigglewoo-trophy-all",
       "wigglewoo-discovery-all",
+      "wigglewoo-crossmatch-all",
       "wigglewoo-node-ratings",
       "wigglewoo-trophy-unlock-seen",
       "wigglewoo-skins",
@@ -354,6 +370,19 @@ export default function App() {
   const [trophyJustCompleted, setTrophyJustCompleted] = useState(false);
   // Which phase the active trophy room represents (1 = post-node-8, 2 = post-node-16)
   const [trophyPhase, setTrophyPhase] = useState<1 | 2>(1);
+
+  // Active cross-match checkpoint (1-indexed word number, 4 or 12). null when
+  // no cross-match is in progress.
+  const [crossMatchCheckpoint, setCrossMatchCheckpoint] = useState<number | null>(null);
+
+  // ---- Cross-match completed → mark + return to map ----
+  const handleCrossMatchComplete = useCallback(() => {
+    if (!activeQuest || crossMatchCheckpoint === null) return;
+    markCrossMatchComplete(activeQuest.id, crossMatchCheckpoint);
+    setCrossMatchCheckpoint(null);
+    setMapRevision((r) => r + 1);
+    setRoute("map");
+  }, [activeQuest?.id, crossMatchCheckpoint]);
 
   const handleTrophyRoomComplete = useCallback(() => {
     if (!activeQuest) return;
@@ -490,6 +519,7 @@ export default function App() {
     const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
     if (envId) {
       markEnvironmentVisited(envId);
+      backgroundMusic.playDiscoveryTheme(envId);
       setExploreEnvId(envId);
       setRoute("discovery-room");
     }
@@ -525,7 +555,7 @@ export default function App() {
   }
 
   return (
-    <OrientationGuard>
+    <LoadingGate>
 
       <Stage>
 
@@ -599,6 +629,16 @@ export default function App() {
         </ScreenGate>
       )}
 
+      {route === "cross-match" && crossMatchCheckpoint !== null && (
+        <ScreenGate>
+          <CrossMatchScreen
+            key={`cm-${activeQuest.id}-${crossMatchCheckpoint}`}
+            words={activeQuest.words.slice(crossMatchCheckpoint - 4, crossMatchCheckpoint)}
+            onComplete={handleCrossMatchComplete}
+          />
+        </ScreenGate>
+      )}
+
       {route === "explore" && exploreEnvId && (
         <ScreenGate>
           <ExploreScreen
@@ -663,6 +703,6 @@ export default function App() {
           onSaveLater={handleSkinUnlockSaveLater}
         />
       )}
-    </OrientationGuard>
+    </LoadingGate>
   );
 }

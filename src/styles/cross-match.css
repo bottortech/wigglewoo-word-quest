@@ -1,0 +1,592 @@
+/* ==========================================
+   CROSS MATCH SCREEN — Mid-quest review
+   Drag words on the left to pictures on the right.
+   Sizes use calc(Npx * var(--u)) to follow Stage scaling.
+   ========================================== */
+
+.cross-match {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* `100% 100%` (stretch-fit) instead of `cover` so the submarine floor at
+   * the bottom of the image is always visible — `cover` was zooming and
+   * cropping bottom/sides on stages whose aspect didn't match the 3:2
+   * image. Slight aspect distortion is acceptable since the panels are
+   * roughly rectangular. */
+  background:
+    url("/assets/crossandmatch-background.png") center / 100% 100% no-repeat,
+    #102540;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+/* The columns wrapper is just a passthrough container — each column
+ * positions itself absolutely inside the cross-match stage, over the
+ * painted panel zones in the background image. */
+.cross-match__columns {
+  /* No layout responsibility — children handle their own positioning. */
+  display: contents;
+}
+
+/* Word & picture columns are positioned absolutely so they fall *inside*
+ * the panels painted into the background image. Top-anchored under the
+ * header pill, centered horizontally, fixed gap between items.
+ * Coordinates measured against the 1536x1024 background:
+ *   WORDS panel interior  ≈ x 34–53%, y 34–94%  → center 43.5%
+ *   PICTURES panel interior ≈ x 57–77%, y 34–94%  → center 67%
+ */
+.cross-match__column {
+  position: absolute;
+  top: 30%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.cross-match__column--words {
+  /* Pulled left so the pills sit deep inside the painted WORDS panel
+   * (panel-interior center ≈ 39–40% of stage width). Narrower than before
+   * so the gold pills get more breathing room from the neon panel border. */
+  left: 37%;
+  width: 15%;
+  transform: translateX(-50%);
+  gap: calc(10px * var(--uv));
+}
+
+.cross-match__column--pictures {
+  /* Nudged left + tighter spacing so all 4 tiles fit cleanly inside the
+   * painted PICTURES panel and the bottom one isn't crowding the floor. */
+  left: 65%;
+  width: 15%;
+  transform: translateX(-50%);
+  gap: calc(6px * var(--uv));
+}
+
+/* Word card — gold pill. Width fills the column so 4 stack neatly inside
+ * the painted WORDS panel without overflowing horizontally. */
+.cross-match__word-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: calc(8px * var(--uv)) calc(14px * var(--u));
+  background: linear-gradient(180deg, #FFE08A 0%, #FFB940 100%);
+  border: calc(2.5px * var(--u)) solid #b8892a;
+  border-radius: calc(16px * var(--u));
+  box-shadow:
+    inset 0 calc(2px * var(--u)) 0 rgba(255, 255, 255, 0.5),
+    0 calc(3px * var(--u)) calc(8px * var(--u)) rgba(0, 0, 0, 0.35);
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cross-match__word-card:hover {
+  transform: translateX(calc(2px * var(--u)));
+}
+
+.cross-match__word-card:active,
+.cross-match__word-card--dragging {
+  cursor: grabbing;
+  transform: scale(1.04);
+  box-shadow:
+    inset 0 calc(2px * var(--u)) 0 rgba(255, 255, 255, 0.5),
+    0 calc(6px * var(--u)) calc(14px * var(--u)) rgba(0, 0, 0, 0.5),
+    0 0 calc(18px * var(--u)) rgba(255, 200, 80, 0.6);
+}
+
+.cross-match__word-card--matched {
+  cursor: default;
+  filter: saturate(0.9) brightness(1.05);
+  border-color: #4FC3F7;
+  box-shadow:
+    inset 0 calc(2px * var(--u)) 0 rgba(255, 255, 255, 0.5),
+    0 calc(3px * var(--u)) calc(8px * var(--u)) rgba(0, 0, 0, 0.3),
+    0 0 calc(14px * var(--u)) rgba(79, 195, 247, 0.55);
+}
+
+.cross-match__word-card--matched:hover {
+  transform: none;
+}
+
+.cross-match__word-text {
+  font-size: calc(20px * var(--u));
+  font-weight: 900;
+  color: #3e2c0e;
+  letter-spacing: calc(2px * var(--u));
+  text-transform: uppercase;
+  text-shadow: 0 calc(1px * var(--u)) 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Picture card — small square drop target. The visible tile is 56×56, but
+ * pointer hit-testing in the JS expands by ~14px so the kid doesn't have
+ * to land precisely. */
+.cross-match__picture-card {
+  position: relative;
+  width: calc(56px * var(--u));
+  height: calc(56px * var(--u));
+  background: rgba(255, 252, 240, 0.92);
+  border: calc(2px * var(--u)) solid #b8892a;
+  border-radius: calc(11px * var(--u));
+  box-shadow:
+    inset 0 calc(2px * var(--u)) 0 rgba(255, 255, 255, 0.7),
+    0 calc(2px * var(--u)) calc(6px * var(--u)) rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible; /* let the target ring extend past the tile */
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+/* Subtle circular target ring behind each tile — hints "drop here". */
+.cross-match__picture-card::before {
+  content: "";
+  position: absolute;
+  inset: calc(-10px * var(--u));
+  border: calc(2px * var(--u)) dashed rgba(255, 224, 138, 0.28);
+  border-radius: 50%;
+  pointer-events: none;
+  transition: opacity 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.cross-match__picture-card--matched {
+  border-color: #4FC3F7;
+  box-shadow:
+    inset 0 calc(2px * var(--u)) 0 rgba(255, 255, 255, 0.7),
+    0 calc(2px * var(--u)) calc(6px * var(--u)) rgba(0, 0, 0, 0.3),
+    0 0 calc(14px * var(--u)) rgba(79, 195, 247, 0.55);
+}
+
+.cross-match__picture-card--matched::before {
+  opacity: 0;
+}
+
+/* Drag-hover preview — scale up + warm glow + brighter ring */
+.cross-match__picture-card--hover {
+  transform: scale(1.05);
+  border-color: #FFE08A;
+  box-shadow:
+    inset 0 calc(2px * var(--u)) 0 rgba(255, 255, 255, 0.7),
+    0 calc(3px * var(--u)) calc(10px * var(--u)) rgba(0, 0, 0, 0.35),
+    0 0 calc(18px * var(--u)) rgba(255, 200, 80, 0.7);
+}
+
+.cross-match__picture-card--hover::before {
+  border-color: rgba(255, 224, 138, 0.7);
+  transform: scale(1.05);
+}
+
+.cross-match__picture-card--wrong {
+  animation: cross-match-shake 0.45s ease-in-out;
+  border-color: #ff8a65;
+}
+
+@keyframes cross-match-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(calc(-6px * var(--u))); }
+  40%      { transform: translateX(calc(6px * var(--u))); }
+  60%      { transform: translateX(calc(-4px * var(--u))); }
+  80%      { transform: translateX(calc(4px * var(--u))); }
+}
+
+.cross-match__picture-img {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.cross-match__picture-fallback {
+  font-size: calc(18px * var(--u));
+  font-weight: 900;
+  color: #3e2c0e;
+  letter-spacing: calc(1px * var(--u));
+}
+
+/* Connector dots — visual hint where the line attaches */
+.cross-match__connector {
+  position: absolute;
+  top: 50%;
+  width: calc(10px * var(--u));
+  height: calc(10px * var(--u));
+  background: #b8892a;
+  border: calc(2px * var(--u)) solid #FFE08A;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  box-shadow: 0 0 calc(6px * var(--u)) rgba(255, 200, 80, 0.5);
+}
+
+.cross-match__connector--right {
+  right: calc(-6px * var(--u));
+}
+
+.cross-match__connector--left {
+  left: calc(-6px * var(--u));
+}
+
+.cross-match__word-card--matched .cross-match__connector,
+.cross-match__picture-card--matched .cross-match__connector {
+  background: #4FC3F7;
+  border-color: #ffffff;
+  box-shadow: 0 0 calc(8px * var(--u)) rgba(79, 195, 247, 0.7);
+}
+
+/* SVG line layer — sits above cards, never intercepts pointer events */
+.cross-match__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.cross-match__line {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.cross-match__line--active {
+  stroke: rgba(255, 224, 138, 0.95);
+  stroke-width: calc(5px * var(--u));
+  filter: drop-shadow(0 0 calc(6px * var(--u)) rgba(255, 200, 80, 0.7));
+}
+
+.cross-match__line--matched {
+  stroke: #4FC3F7;
+  stroke-width: calc(5px * var(--u));
+  filter: drop-shadow(0 0 calc(6px * var(--u)) rgba(79, 195, 247, 0.55));
+}
+
+/* ==========================================
+   SUBMARINE CRT MONITOR — right-side green screen
+   Positioned to overlay the green grid display painted into the background
+   image. Reads as a sub computer responding to the player's actions.
+   ========================================== */
+.cross-match__monitor {
+  position: absolute;
+  /* Coordinates matched to the painted screen in crossandmatch-background.png
+   * (1536×1024). Tweak by ~1–2% if it sits off the painted bezel. */
+  left: 87.5%;
+  top: 47%;
+  width: 11%;
+  height: 21%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(6px * var(--uv)) calc(8px * var(--u));
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+  font-weight: 700;
+  letter-spacing: calc(0.5px * var(--u));
+  color: #5eff8d;
+  text-shadow:
+    0 0 calc(3px * var(--u)) rgba(94, 255, 141, 0.8),
+    0 0 calc(8px * var(--u)) rgba(94, 255, 141, 0.4);
+  overflow: hidden;
+  pointer-events: none;
+  /* Soft idle flicker — runs always, intensifies briefly on flash via
+   * .cross-match__monitor-flicker. */
+  animation: cross-match-monitor-idle-flicker 4s ease-in-out infinite;
+}
+
+/* Scanlines overlay — fine horizontal stripes baked into the screen */
+.cross-match__monitor-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.18) 2px,
+    rgba(0, 0, 0, 0.18) 3px
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Brief flicker that pulses brighter when a phrase appears */
+.cross-match__monitor-flicker {
+  position: absolute;
+  inset: 0;
+  background: rgba(94, 255, 141, 0.05);
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes cross-match-monitor-idle-flicker {
+  0%, 100% { filter: brightness(1); }
+  47%      { filter: brightness(0.92); }
+  50%      { filter: brightness(1.08); }
+  53%      { filter: brightness(0.94); }
+}
+
+/* The line shown when a phrase fires — combines type-on, hold, and fade
+ * into one keyframe so we don't need a JS animation state machine. */
+.cross-match__monitor-line {
+  display: inline-flex;
+  align-items: baseline;
+  gap: calc(4px * var(--u));
+  white-space: nowrap;
+  /* Type-on uses clip-path wipe — paired with monospaced text it reads
+   * as character-by-character reveal at speed. */
+  animation: cross-match-monitor-line 2.4s steps(1, end) forwards;
+}
+
+.cross-match__monitor-line--celebration {
+  /* Bigger + brighter for the win */
+  font-size: calc(13px * var(--u));
+  color: #b3ff9d;
+  text-shadow:
+    0 0 calc(4px * var(--u)) rgba(180, 255, 150, 0.9),
+    0 0 calc(12px * var(--u)) rgba(120, 255, 100, 0.55);
+  animation-duration: 3.2s;
+}
+
+.cross-match__monitor-line--system {
+  font-size: calc(10px * var(--u));
+}
+
+.cross-match__monitor-prompt {
+  flex: 0 0 auto;
+  opacity: 0.85;
+}
+
+.cross-match__monitor-text {
+  display: inline-block;
+  /* Type-on wipe: clip-path inset shrinks from 100% right to 0 over the
+   * type-on portion of the keyframe. */
+  animation: cross-match-monitor-typeon 0.55s linear forwards;
+}
+
+.cross-match__monitor-line--celebration .cross-match__monitor-text {
+  animation-duration: 0.7s;
+}
+
+@keyframes cross-match-monitor-typeon {
+  0%   { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes cross-match-monitor-line {
+  /* System (2.4s total): 0–22% type, 22–88% hold, 88–100% fade */
+  0%    { opacity: 1; }
+  88%   { opacity: 1; }
+  100%  { opacity: 0; }
+}
+
+/* Idle state — subtle horizontal sweep + faint readiness label */
+.cross-match__monitor-idle {
+  font-size: calc(8px * var(--u));
+  letter-spacing: calc(1.5px * var(--u));
+  opacity: 0.3;
+  animation: cross-match-monitor-idle-pulse 3s ease-in-out infinite;
+}
+
+.cross-match__monitor-sweep {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  height: calc(2px * var(--uv));
+  background: linear-gradient(
+    90deg,
+    rgba(94, 255, 141, 0) 0%,
+    rgba(94, 255, 141, 0.7) 50%,
+    rgba(94, 255, 141, 0) 100%
+  );
+  filter: blur(1px);
+  pointer-events: none;
+  animation: cross-match-monitor-sweep 3.6s linear infinite;
+}
+
+@keyframes cross-match-monitor-idle-pulse {
+  0%, 100% { opacity: 0.18; }
+  50%      { opacity: 0.42; }
+}
+
+@keyframes cross-match-monitor-sweep {
+  0%   { top: 5%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 95%; opacity: 0; }
+}
+
+/* ==========================================
+   WIGGLEWOO CHARACTER — reacts to drag + match outcomes
+   ========================================== */
+.cross-match__wigglewoo {
+  position: absolute;
+  bottom: calc(8px * var(--uv));
+  right: calc(20px * var(--u));
+  width: calc(140px * var(--u));
+  height: calc(160px * var(--uv));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+  /* Mirror so he faces the action (words are to the left of him). */
+  transform: scaleX(-1);
+  transform-origin: center bottom;
+  transition: filter 0.2s ease;
+}
+
+.cross-match__wigglewoo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 calc(4px * var(--u)) calc(8px * var(--u)) rgba(0, 0, 0, 0.4));
+}
+
+/* --- Idle: gentle bob --- */
+.cross-match__wigglewoo--idle .cross-match__wigglewoo-img {
+  animation: ww-bob 3s ease-in-out infinite;
+}
+
+@keyframes ww-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(calc(-6px * var(--u))); }
+}
+
+/* --- Watching: lean forward, slightly larger, faster bob --- */
+.cross-match__wigglewoo--watching {
+  filter: drop-shadow(0 0 calc(14px * var(--u)) rgba(255, 220, 120, 0.5));
+}
+.cross-match__wigglewoo--watching .cross-match__wigglewoo-img {
+  animation: ww-watch 1.4s ease-in-out infinite;
+}
+@keyframes ww-watch {
+  0%, 100% { transform: translateY(0)              scale(1.04); }
+  50%      { transform: translateY(calc(-3px * var(--u))) scale(1.05); }
+}
+
+/* --- Happy: quick bounce on a correct match --- */
+.cross-match__wigglewoo--happy .cross-match__wigglewoo-img {
+  animation: ww-happy 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes ww-happy {
+  0%   { transform: translateY(0)               scale(1); }
+  35%  { transform: translateY(calc(-22px * var(--u))) scale(1.08); }
+  60%  { transform: translateY(calc(-8px * var(--u)))  scale(1.04); }
+  100% { transform: translateY(0)               scale(1); }
+}
+
+/* --- Encourage: small horizontal wiggle on a wrong match --- */
+.cross-match__wigglewoo--encourage .cross-match__wigglewoo-img {
+  animation: ww-encourage 0.6s ease-in-out;
+}
+@keyframes ww-encourage {
+  0%, 100% { transform: rotate(0deg); }
+  20%      { transform: rotate(-5deg); }
+  40%      { transform: rotate(5deg); }
+  60%      { transform: rotate(-3deg); }
+  80%      { transform: rotate(3deg); }
+}
+
+/* --- Celebrate: big jump for completion --- */
+.cross-match__wigglewoo--celebrate {
+  z-index: 4; /* above the celebration overlay's tint, but below its text */
+  filter: drop-shadow(0 0 calc(22px * var(--u)) rgba(255, 220, 120, 0.7));
+}
+.cross-match__wigglewoo--celebrate .cross-match__wigglewoo-img {
+  animation: ww-celebrate 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate;
+}
+@keyframes ww-celebrate {
+  0%   { transform: translateY(0)               rotate(-3deg) scale(1); }
+  50%  { transform: translateY(calc(-28px * var(--u))) rotate(2deg)  scale(1.08); }
+  100% { transform: translateY(calc(-8px * var(--u)))  rotate(-2deg) scale(1.04); }
+}
+
+/* Celebration banner */
+.cross-match__celebration {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(255, 220, 100, 0.35) 0%, rgba(0, 0, 0, 0.45) 70%);
+  z-index: 4;
+  pointer-events: none;
+  animation: cross-match-fade-in 0.3s ease-out;
+}
+
+.cross-match__celebration-text {
+  font-size: calc(34px * var(--u));
+  font-weight: 900;
+  color: #FFE08A;
+  text-shadow:
+    0 calc(2px * var(--u)) 0 rgba(0, 0, 0, 0.5),
+    0 0 calc(20px * var(--u)) rgba(255, 200, 80, 0.7);
+  letter-spacing: calc(1px * var(--u));
+  animation: cross-match-celebrate 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cross-match-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes cross-match-celebrate {
+  0%   { transform: scale(0.3); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Reserved bottom bar — anchored to the bottom of the stage so the
+   Continue Quest button is always visible above the submarine floor.
+   Empty (just air) when the kid is mid-game. */
+.cross-match__bottom-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(28px * var(--uv));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.cross-match__bottom-bar > * {
+  pointer-events: auto;
+}
+
+/* Continue Quest button — appears with the celebration. Tap to advance
+   immediately; auto-exit fires after 6s as a safety net. */
+.cross-match__continue-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  /* Fade in slightly delayed so the celebration banner pops first */
+  animation: cross-match-cta-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.7s both;
+  filter: drop-shadow(0 calc(4px * var(--u)) calc(10px * var(--u)) rgba(0, 0, 0, 0.45));
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.cross-match__continue-btn img {
+  display: block;
+  width: calc(180px * var(--u));
+  height: auto;
+  pointer-events: none;
+}
+
+.cross-match__continue-btn:hover {
+  transform: scale(1.04);
+}
+
+.cross-match__continue-btn:active {
+  transform: scale(0.96);
+}
+
+@keyframes cross-match-cta-pop {
+  0%   { opacity: 0; transform: translateY(calc(16px * var(--u))) scale(0.85); }
+  60%  { opacity: 1; transform: translateY(calc(-3px * var(--u))) scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}

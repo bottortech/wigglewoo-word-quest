@@ -26,6 +26,296 @@
   height: auto;
   z-index: 2;
   pointer-events: none;
+  /* Smooth reveal when first-visit trace completes — props "power on" */
+  transition: opacity 0.6s ease-out, filter 0.6s ease-out;
+}
+
+/* While the kid is doing the first-visit trace, hide every in-room prop so
+ * the V is the only focal element. After they finish, the modifier class is
+ * removed and props fade back in via the transition above. */
+.explore-screen--first-visit-trace .explore-prop {
+  opacity: 0;
+  pointer-events: none !important;
+}
+
+/* ---- First-visit trace path themes ----
+ * The default trace path styling (defined in trace-moment.css) uses a
+ * cyan/electrical look intended for the Geartown power core. Each room
+ * with a first-visit trace overrides this so the letter feels embedded
+ * in the environment instead of overlaid on top.
+ *
+ * VOLCANO — the V looks chiseled into the rock with magma in the cracks.
+ *   Dim:  dark warm stroke, multiplied with the rock so the texture shows
+ *         through the channel + a fake bevel via offset drop-shadows.
+ *   Lit:  hot orange stroke with three-layer lava glow.
+ */
+[data-trace-theme="volcano"] .trace-moment__path-dim {
+  fill: none;
+  stroke: rgba(28, 12, 5, 0.85);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(1px 2px 0 rgba(255, 200, 100, 0.18))   /* warm highlight along bottom-right edge */
+    drop-shadow(-1px -1px 0 rgba(0, 0, 0, 0.45));      /* shadow along top-left edge */
+}
+
+[data-trace-theme="volcano"] .trace-moment__path-lit {
+  fill: none;
+  stroke: #ff7a3a;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 4px rgba(255, 220, 140, 0.95))     /* core glow */
+    drop-shadow(0 0 12px rgba(255, 120, 40, 0.85))     /* mid lava glow */
+    drop-shadow(0 0 28px rgba(255, 60, 0, 0.55));      /* outer ember haze */
+}
+
+[data-trace-theme="volcano"] .trace-moment__spark {
+  fill: #ffe6b3;
+  filter:
+    drop-shadow(0 0 4px #ffb060)
+    drop-shadow(0 0 10px #ff5a10);
+}
+
+/* CASTLE — chiseled into stone with warm torchlight when traced. */
+[data-trace-theme="castle"] .trace-moment__path-dim {
+  fill: none;
+  stroke: rgba(20, 22, 28, 0.85);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(1px 2px 0 rgba(220, 200, 160, 0.18))
+    drop-shadow(-1px -1px 0 rgba(0, 0, 0, 0.45));
+}
+[data-trace-theme="castle"] .trace-moment__path-lit {
+  fill: none;
+  stroke: #ffcc66;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 4px rgba(255, 240, 180, 0.95))
+    drop-shadow(0 0 12px rgba(255, 190, 90, 0.85))
+    drop-shadow(0 0 28px rgba(220, 130, 40, 0.55));
+}
+[data-trace-theme="castle"] .trace-moment__spark {
+  fill: #fff4d0;
+  filter:
+    drop-shadow(0 0 4px #ffd87a)
+    drop-shadow(0 0 10px #f4a838);
+}
+
+/* CORAL COVE — etched into coral, bioluminescent pink/teal glow. */
+[data-trace-theme="coral"] .trace-moment__path-dim {
+  fill: none;
+  stroke: rgba(8, 30, 50, 0.85);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(1px 2px 0 rgba(140, 220, 230, 0.2))
+    drop-shadow(-1px -1px 0 rgba(0, 0, 0, 0.4));
+}
+[data-trace-theme="coral"] .trace-moment__path-lit {
+  fill: none;
+  stroke: #ff7eb8;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 4px rgba(255, 220, 240, 0.95))
+    drop-shadow(0 0 12px rgba(255, 110, 180, 0.85))
+    drop-shadow(0 0 28px rgba(80, 220, 230, 0.55));
+}
+[data-trace-theme="coral"] .trace-moment__spark {
+  fill: #ffe2f0;
+  filter:
+    drop-shadow(0 0 4px #ff9ec8)
+    drop-shadow(0 0 10px #6ad8df);
+}
+
+/* GREENHOUSE — carved into greenery with sun-through-leaves bloom. */
+[data-trace-theme="greenhouse"] .trace-moment__path-dim {
+  fill: none;
+  stroke: rgba(15, 30, 12, 0.85);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(1px 2px 0 rgba(200, 230, 130, 0.2))
+    drop-shadow(-1px -1px 0 rgba(0, 0, 0, 0.4));
+}
+[data-trace-theme="greenhouse"] .trace-moment__path-lit {
+  fill: none;
+  stroke: #9fff6d;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 4px rgba(240, 255, 200, 0.95))
+    drop-shadow(0 0 12px rgba(170, 255, 90, 0.85))
+    drop-shadow(0 0 28px rgba(220, 240, 90, 0.5));
+}
+[data-trace-theme="greenhouse"] .trace-moment__spark {
+  fill: #f5ffd8;
+  filter:
+    drop-shadow(0 0 4px #c8ff80)
+    drop-shadow(0 0 10px #ffe770);
+}
+
+/* GEARTOWN — dark copper/iron carved into machinery, electric cyan glow. */
+[data-trace-theme="geartown"] .trace-moment__path-dim {
+  fill: none;
+  stroke: rgba(15, 18, 25, 0.88);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(1px 2px 0 rgba(220, 140, 80, 0.22))
+    drop-shadow(-1px -1px 0 rgba(0, 0, 0, 0.5));
+}
+[data-trace-theme="geartown"] .trace-moment__path-lit {
+  fill: none;
+  stroke: #4ec3ff;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 4px rgba(200, 240, 255, 0.95))
+    drop-shadow(0 0 12px rgba(78, 195, 255, 0.85))
+    drop-shadow(0 0 28px rgba(40, 140, 255, 0.55));
+}
+[data-trace-theme="geartown"] .trace-moment__spark {
+  fill: #c8edff;
+  filter:
+    drop-shadow(0 0 4px #9be7ff)
+    drop-shadow(0 0 10px #4ec3ff);
+}
+
+/* Start-here indicator — pulsing ring + dot + bouncing arrow at the path's
+ * first point. Tells the kid where to begin tracing. Hides as soon as the
+ * trace has any coverage (handled in JSX). All elements are inside the
+ * trace SVG (viewBox 0 0 100 100), so sizes here are in those units. */
+.trace-start {
+  /* Slight overall flicker so the group reads as "active hint" */
+  animation: trace-start-flicker 2s ease-in-out infinite;
+}
+
+.trace-start__ring {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.7));
+  animation: trace-start-ring 1.6s ease-out infinite;
+}
+
+@keyframes trace-start-ring {
+  0%   { r: 2;  opacity: 0.95; }
+  100% { r: 12; opacity: 0; }
+}
+
+.trace-start__dot {
+  fill: white;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.85));
+}
+
+.trace-start__arrow {
+  fill: white;
+  font-size: 10px;
+  font-weight: 900;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
+  animation: trace-start-arrow 1.1s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes trace-start-arrow {
+  0%, 100% { transform: translateY(0);    opacity: 0.85; }
+  50%      { transform: translateY(-1.2px); opacity: 1; }
+}
+
+@keyframes trace-start-flicker {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.92; }
+}
+
+/* Per-room tinting on the start indicator — picks up the theme color so
+ * the hint reads as part of the environment. */
+[data-trace-theme="volcano"] .trace-start__ring,
+[data-trace-theme="volcano"] .trace-start__dot {
+  stroke: #ffd9a8;
+  fill: #ffe6c0;
+  filter: drop-shadow(0 0 2px #ff8a3a);
+}
+[data-trace-theme="castle"] .trace-start__ring,
+[data-trace-theme="castle"] .trace-start__dot {
+  stroke: #fff0c0;
+  fill: #fff4d0;
+  filter: drop-shadow(0 0 2px #ffcc66);
+}
+[data-trace-theme="coral"] .trace-start__ring,
+[data-trace-theme="coral"] .trace-start__dot {
+  stroke: #ffd2e8;
+  fill: #ffe2f0;
+  filter: drop-shadow(0 0 2px #ff7eb8);
+}
+[data-trace-theme="greenhouse"] .trace-start__ring,
+[data-trace-theme="greenhouse"] .trace-start__dot {
+  stroke: #e8ffc4;
+  fill: #f5ffd8;
+  filter: drop-shadow(0 0 2px #9fff6d);
+}
+[data-trace-theme="geartown"] .trace-start__ring,
+[data-trace-theme="geartown"] .trace-start__dot {
+  stroke: #c8edff;
+  fill: #e0f4ff;
+  filter: drop-shadow(0 0 2px #4ec3ff);
+}
+
+/* Skip button shown during the first-visit trace. Subtle, low-prominence
+ * styling so most kids try the trace first; mainly exists for older kids
+ * or parents who want to bypass. Sits at the bottom-center where the
+ * room-progress hint lives normally. */
+.explore-trace-skip {
+  position: absolute;
+  bottom: calc(28px * var(--uv));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: calc(6px * var(--uv)) calc(20px * var(--u));
+  background: rgba(0, 0, 0, 0.4);
+  border: calc(1.5px * var(--u)) solid rgba(255, 220, 160, 0.35);
+  border-radius: calc(18px * var(--u));
+  color: rgba(255, 235, 200, 0.75);
+  font-size: calc(14px * var(--u));
+  font-weight: 700;
+  letter-spacing: calc(0.5px * var(--u));
+  cursor: pointer;
+  z-index: 32;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.explore-trace-skip:hover {
+  background: rgba(0, 0, 0, 0.55);
+  border-color: rgba(255, 220, 160, 0.7);
+  color: #ffeec8;
+}
+
+.explore-trace-skip:active {
+  transform: translateX(-50%) scale(0.96);
 }
 
 .explore-prop--top {
@@ -1024,66 +1314,107 @@
   transition: filter 0.3s ease-out;
 }
 
-/* ---- Geartown: Dust particles ---- */
+/* ---- Geartown: atmospheric dust ----
+ * Two layered copies of dust.png drifting behind the props. Replaces the
+ * older dot-particle dust system. Stays subtle while the lights are off,
+ * brightens when the kid flips the workshop lights on so the new light
+ * "catches" the dust in the air.
+ *
+ * Layers:
+ *   --bg     low-opacity wash, slow horizontal drift, slight rotate
+ *   --catch  brighter layer, opposite drift, slow opacity pulse — the
+ *            "lit" override drives the pulse via CSS custom properties so
+ *            the keyframe doesn't fight a static opacity declaration.
+ */
 .geartown-dust {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* z-index 1: above the room background, below all interactive props
+     (.explore-prop sits at z-index 2). */
   z-index: 1;
   overflow: hidden;
 }
 
-.dust-particle {
+.geartown-dust__layer {
   position: absolute;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  opacity: 0;
+  /* Oversize + offset so the drift translation never reveals empty edge. */
+  top: -12%;
+  left: -22%;
+  width: 144%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* `screen` blends bright dust specks onto the dark workshop without
+   * laying down a milky overlay. The image needs bright (white-ish)
+   * content for screen to make it visible — if dust.png turns out to be
+   * dark-specks-on-light, swap to `mix-blend-mode: multiply` instead. */
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
 }
 
-.dust-particle--1 {
-  left: 15%;
-  top: 20%;
-  animation: dust-float 8s ease-in-out 0s infinite;
+.geartown-dust__layer--bg {
+  opacity: 0.55;
+  filter: brightness(1.1) contrast(1.1);
+  animation: geartown-dust-drift-a 32s ease-in-out infinite;
 }
 
-.dust-particle--2 {
-  left: 45%;
-  top: 40%;
-  animation: dust-float 10s ease-in-out 1.5s infinite;
+.geartown-dust__layer--catch {
+  /* Slightly larger + offset so the two layers don't read as duplicates. */
+  top: -6%;
+  left: -10%;
+  width: 124%;
+  --dust-pulse-base: 0.45;
+  --dust-pulse-peak: 0.7;
+  filter: brightness(1.3) contrast(1.15);
+  animation:
+    geartown-dust-drift-b 26s ease-in-out infinite,
+    geartown-dust-pulse 8s ease-in-out infinite;
 }
 
-.dust-particle--3 {
-  left: 70%;
-  top: 15%;
-  animation: dust-float 9s ease-in-out 3s infinite;
+/* Lights-on boost — kicks in via the `--lit` modifier on the parent. */
+.geartown-dust--lit .geartown-dust__layer--bg {
+  opacity: 0.7;
+  filter: brightness(1.3) contrast(1.15);
+  transition: opacity 0.7s ease-out, filter 0.7s ease-out;
 }
 
-.dust-particle--4 {
-  left: 30%;
-  top: 60%;
-  animation: dust-float 11s ease-in-out 2s infinite;
+.geartown-dust--lit .geartown-dust__layer--catch {
+  --dust-pulse-base: 0.65;
+  --dust-pulse-peak: 0.95;
+  filter: brightness(1.6) contrast(1.2);
+  transition: filter 0.7s ease-out;
 }
 
-.dust-particle--5 {
-  left: 80%;
-  top: 50%;
-  animation: dust-float 7s ease-in-out 4s infinite;
+/* Drift uses % of the dust layer's own width so the motion is responsive
+ * across stages. The layers are sized 144%/124% of the room with negative
+ * left offsets, so translations up to ±12–13% keep the canvas edge
+ * covered (no blank side reveal). */
+@keyframes geartown-dust-drift-a {
+  0%, 100% { transform: translate3d(-12%,  0%, 0) rotate(-0.8deg); }
+  50%      { transform: translate3d( 12%,  2%, 0) rotate( 0.8deg); }
 }
 
-.dust-particle--6 {
-  left: 55%;
-  top: 30%;
-  animation: dust-float 12s ease-in-out 5s infinite;
+@keyframes geartown-dust-drift-b {
+  0%, 100% { transform: translate3d( 10%,  0%, 0) rotate( 0.6deg); }
+  50%      { transform: translate3d(-10%,  1%, 0) rotate(-0.6deg); }
 }
 
-@keyframes dust-float {
-  0%   { opacity: 0; transform: translateY(0) translateX(0); }
-  15%  { opacity: 0.4; }
-  50%  { opacity: 0.25; transform: translateY(-30px) translateX(10px); }
-  85%  { opacity: 0.35; }
-  100% { opacity: 0; transform: translateY(-60px) translateX(-5px); }
+@keyframes geartown-dust-pulse {
+  0%, 100% { opacity: var(--dust-pulse-base); }
+  50%      { opacity: var(--dust-pulse-peak); }
+}
+
+/* Respect users who've requested reduced motion: hold a midpoint frame. */
+@media (prefers-reduced-motion: reduce) {
+  .geartown-dust__layer {
+    animation: none !important;
+    transform: none !important;
+  }
+  .geartown-dust__layer--catch {
+    opacity: var(--dust-pulse-peak, 0.32);
+  }
 }
 
 /* ---- Erupt button — pulsing interactive ---- */

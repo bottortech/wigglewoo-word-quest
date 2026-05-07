@@ -299,48 +299,50 @@
     </style>
   </head>
   <body>
-    <div id="root">
-      <!-- Branded loading screen — replaced when React mounts -->
-      <div id="boot-fallback">
-        <!-- Scene layers -->
-        <div class="boot-sky"></div>
+    <!-- Branded loading screen. Lives OUTSIDE #root so React's mount doesn't
+         tear it down — LoadingGate (src/components/LoadingScreen.tsx) fades
+         it out once boot has had a beat AND the device is in landscape. -->
+    <div id="boot-fallback">
+      <!-- Scene layers -->
+      <div class="boot-sky"></div>
 
-        <!-- Clouds -->
-        <img class="boot-cloud boot-cloud--1" src="/assets/cloud-cluster.png" alt="" draggable="false" />
-        <img class="boot-cloud boot-cloud--2" src="/assets/cloud-cluster.png" alt="" draggable="false" />
+      <!-- Clouds -->
+      <img class="boot-cloud boot-cloud--1" src="/assets/cloud-cluster.png" alt="" draggable="false" />
+      <img class="boot-cloud boot-cloud--2" src="/assets/cloud-cluster.png" alt="" draggable="false" />
 
-        <!-- Distant islands -->
-        <img class="boot-island boot-island--1" src="/assets/castle-island.png" alt="" draggable="false" />
-        <img class="boot-island boot-island--2" src="/assets/small-coastal-village.png" alt="" draggable="false" />
+      <!-- Distant islands -->
+      <img class="boot-island boot-island--1" src="/assets/castle-island.png" alt="" draggable="false" />
+      <img class="boot-island boot-island--2" src="/assets/small-coastal-village.png" alt="" draggable="false" />
 
-        <!-- Water -->
-        <div class="boot-water">
-          <img class="boot-submarine" src="/assets/submarine.png" alt="" draggable="false" />
-          <img class="boot-fish boot-fish--1" src="/assets/discovery rooms/coral-cove-village/school of fish 1.png" alt="" draggable="false" />
-          <img class="boot-fish boot-fish--2" src="/assets/discovery rooms/coral-cove-village/school of fish 2.png" alt="" draggable="false" />
+      <!-- Water -->
+      <div class="boot-water">
+        <img class="boot-submarine" src="/assets/submarine.png" alt="" draggable="false" />
+        <img class="boot-fish boot-fish--1" src="/assets/discovery rooms/coral-cove-village/school of fish 1.png" alt="" draggable="false" />
+        <img class="boot-fish boot-fish--2" src="/assets/discovery rooms/coral-cove-village/school of fish 2.png" alt="" draggable="false" />
+      </div>
+
+      <!-- Main content -->
+      <div class="boot-content">
+        <img
+          class="boot-logo"
+          src="/assets/wigglewoos_word_quest_badge-logo.png"
+          alt="WiggleWoo's Word Quest"
+          draggable="false"
+        />
+
+        <div class="boot-gears">
+          <img class="boot-gear boot-gear--left" src="/assets/gear2.png" alt="" draggable="false" />
+          <img class="boot-gear boot-gear--center" src="/assets/gear1.png" alt="" draggable="false" />
+          <img class="boot-gear boot-gear--right" src="/assets/gear3.png" alt="" draggable="false" />
         </div>
 
-        <!-- Main content -->
-        <div class="boot-content">
-          <img
-            class="boot-logo"
-            src="/assets/wigglewoos_word_quest_badge-logo.png"
-            alt="WiggleWoo's Word Quest"
-            draggable="false"
-          />
+        <p class="boot-text">Loading WiggleWoo's Word Quest…</p>
 
-          <div class="boot-gears">
-            <img class="boot-gear boot-gear--left" src="/assets/gear2.png" alt="" draggable="false" />
-            <img class="boot-gear boot-gear--center" src="/assets/gear1.png" alt="" draggable="false" />
-            <img class="boot-gear boot-gear--right" src="/assets/gear3.png" alt="" draggable="false" />
-          </div>
-
-          <p class="boot-text">Loading WiggleWoo's Word Quest…</p>
-
-          <pre id="boot-error"></pre>
-        </div>
+        <pre id="boot-error"></pre>
       </div>
     </div>
+
+    <div id="root"></div>
 
     <!-- Catch errors before React loads -->
     <script>

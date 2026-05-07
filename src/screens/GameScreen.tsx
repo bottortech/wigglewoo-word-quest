@@ -26,7 +26,9 @@ import {
   playLetterSound,
   playWordSound,
   playEvent,
+  playSuccessPhrase,
   waitForLetterDone,
+  waitForWordDone,
 } from "../audio/SoundEffects";
 import CelebrationOverlay from "../components/CelebrationOverlay";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
@@ -230,16 +232,21 @@ const GameScreen: React.FC<GameScreenProps> = ({
   useEffect(() => {
     if (step === "celebrate") {
       // Wait for the final letter phoneme to finish so it isn't cut off,
-      // then speak the whole word, then the rating-specific celebration VO.
+      // then speak the whole word, then the celebration VO.
+      // Per-word completions pull from the 12-phrase SUCCESS_PHRASES pool
+      // (anti-repeat) for variety. The quest-complete milestone keeps its
+      // dedicated event slug.
       const isLastInQuest = currentWordIndex === quest.words.length - 1;
-      const celebSlug = isLastInQuest
-        ? "celebrate-quest-complete"
-        : incorrectCount === 0
-          ? "celebrate-perfect"
-          : "celebrate-assisted";
+      // Sequence: final phoneme → word VO → celebration. Use waitForWordDone
+      // so the word ("cat") fully finishes before the celebration plays —
+      // they live on different channels and would otherwise overlap audibly
+      // when the word VO runs >900ms.
       waitForLetterDone().then(() => {
         playWordSound(currentWord.word);
-        setTimeout(() => playEvent(celebSlug), 900);
+        waitForWordDone().then(() => {
+          if (isLastInQuest) playEvent("celebrate-quest-complete");
+          else playSuccessPhrase();
+        });
       });
 
       // Record analytics

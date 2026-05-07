@@ -23,7 +23,44 @@ import DailyCapModal from "../components/DailyCapModal";
 import FactNarration from "../components/FactNarration";
 import PictureMatch from "../components/PictureMatch";
 import { playEvent } from "../audio/SoundEffects";
+import TraceMoment from "../components/handwriting/TraceMoment";
+import { LETTER_PATHS } from "../components/handwriting/letterPaths";
+import { useTraceValidator } from "../components/handwriting/useTraceValidator";
+import { playLetterSound } from "../audio/SoundEffects";
 import "../styles/explore.css";
+
+// ---- Daily letter rotation ----
+// All 5 Discovery Rooms run a first-visit trace; each day pulls 5 consecutive
+// letters from this rotation and assigns one per room. Calendar-day boundary
+// so kids who skip a day still come back to a fresh letter set, and any
+// letter the kid skipped naturally reappears in a future cycle.
+const TRACE_LETTER_ROTATION = [
+  "a", "b", "c", "d", "e",
+  "h", "i", "m", "n", "o",
+  "p", "s", "t", "u", "v",
+];
+const TRACE_ROOM_ORDER = [
+  "valcano",
+  "castle-island",
+  "small-coastal-village",
+  "glass-dome",
+  "industrial-tech-city",
+];
+
+/** Per-day index anchored at LOCAL midnight (so the rotation flips over with
+ *  the kid's calendar day, not at UTC midnight). */
+const getDayIndex = (): number => {
+  const now = new Date();
+  const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return Math.floor(localMidnight / 86400000);
+};
+
+const getLetterForRoom = (envId: string): string | null => {
+  const roomIdx = TRACE_ROOM_ORDER.indexOf(envId);
+  if (roomIdx < 0) return null;
+  const start = (getDayIndex() * TRACE_ROOM_ORDER.length) % TRACE_LETTER_ROTATION.length;
+  return TRACE_LETTER_ROTATION[(start + roomIdx) % TRACE_LETTER_ROTATION.length];
+};
 
 interface ExploreScreenProps {
   environmentId: string;
@@ -41,7 +78,7 @@ const FactPanelSheet: React.FC<{
   onClose: () => void;
   ambientColor: string;
   onFactViewed?: (factId: string) => void;
-  onFactNarrationEnded?: () => void;
+  onFactNarrationEnded?: (factId: string) => void;
 }> = ({ panel, onClose, onFactViewed, onFactNarrationEnded }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [lockedToast] = useState<string | null>(null);
@@ -85,7 +122,7 @@ const FactPanelSheet: React.FC<{
                       text={item.core}
                       audioSrc={item.audioSrc}
                       autoPlay
-                      onEnded={onFactNarrationEnded}
+                      onEnded={() => onFactNarrationEnded?.(item.id)}
                     />
                   </>
                 )}
@@ -140,10 +177,44 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const FACTS_REQUIRED = 2;
   const needsCompletion = !!onComplete && !isRoomAlreadyComplete;
 
-  // Mini-game session state — show on first visit to each room
-  const miniGameSeenKey = `ww_minigames_seen_${environmentId}`;
+  // The fact whose narration finishing should trigger discover-complete
+  // (instead of the usual fact-reaction). Captured the moment the kid views
+  // the FACTS_REQUIRED-th fact, so we can let its narration play out + dwell
+  // and then segue cleanly into the room-complete VO without stomping on
+  // a per-fact reaction.
+  const [completingFactId, setCompletingFactId] = useState<string | null>(null);
+
+  // Per-room first-visit trace experience. The trace renders directly over
+  // the targeted in-room prop — the prop itself swaps to its "active" sprite
+  // via existing room state (e.g. `erupting` for the volcano), so we don't
+  // need to pass our own dim/active asset pair. The actual letter is picked
+  // from the daily rotation (see TRACE_LETTER_ROTATION) so the kid works
+  // through the alphabet over time rather than seeing the same letter forever.
+  const FIRST_VISIT_TRACE: Record<string, { targetPropId: string; theme: string } | undefined> = {
+    "valcano":               { targetPropId: "volcano-image", theme: "volcano" },
+    "castle-island":         { targetPropId: "treasure-box",  theme: "castle" },
+    "small-coastal-village": { targetPropId: "clam",          theme: "coral" },
+    "glass-dome":            { targetPropId: "flower-stage",  theme: "greenhouse" },
+    "industrial-tech-city":  { targetPropId: "light-switch",  theme: "geartown" },
+  };
+  const firstVisitTraceConfig = FIRST_VISIT_TRACE[environmentId];
+  const traceLetter = firstVisitTraceConfig ? getLetterForRoom(environmentId) : null;
+
+  // Mini-game session state — show on first visit to each room.
+  // Suppressed when this room has a first-visit trace configured (the trace
+  // replaces the mini-games for that room). Both gates share the same
+  // `seenKey` so a single first-visit experience marks the room as initialized.
+  // Date-keyed: each calendar day fires a fresh trace with that day's letter
+  // from the rotation, so kids who revisit a room across days still get the
+  // alphabet practice.
+  const miniGameSeenKey = `ww_minigames_seen_${environmentId}_${getDayIndex()}`;
   const hasSeenMiniGames = localStorage.getItem(miniGameSeenKey) === "true";
-  const [showMiniGames, setShowMiniGames] = useState(!!onComplete && !hasSeenMiniGames);
+  const [showFirstVisitTrace, setShowFirstVisitTrace] = useState(
+    !!onComplete && !hasSeenMiniGames && !!firstVisitTraceConfig
+  );
+  const [showMiniGames, setShowMiniGames] = useState(
+    !!onComplete && !hasSeenMiniGames && !firstVisitTraceConfig
+  );
   const [, setMiniGamesCompleted] = useState(false);
 
   const handleMiniGamesComplete = useCallback(() => {
@@ -156,31 +227,60 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     // Do NOT call onComplete here — room completes after viewing 2 facts
   }, [miniGameSeenKey]);
 
-  // Welcome VO on first mount — only when mini-games aren't covering the room
-  // (returning visits, or entries that bypass the discovery flow). First-visit
-  // welcome plays inside handleMiniGamesComplete instead.
+  // Welcome VO on first mount — only when neither the mini-games nor the
+  // first-visit trace is covering the room. First-visit welcome plays inside
+  // each completion handler instead.
   const [welcomePlayed, setWelcomePlayed] = useState(false);
   useEffect(() => {
     if (welcomePlayed) return;
     if (showMiniGames) return;
+    if (showFirstVisitTrace) return;
     playEvent("discover-welcome");
     setWelcomePlayed(true);
-  }, [showMiniGames, welcomePlayed]);
+  }, [showMiniGames, showFirstVisitTrace, welcomePlayed]);
 
-  // Room completion — triggers after viewing 2 facts (first visit only)
-  useEffect(() => {
+  // Single entry point for room completion — fires the discover-complete VO,
+  // then a brief bridge VO, then exits. Idempotent so both the "narration
+  // ended" path and the narration-disabled fallback can call it safely.
+  // The exit-bridge file lands at /assets/audio/events/discover-exit-bridge.m4a
+  // — until then playEvent fails silently and the gap is just background music.
+  const triggerRoomComplete = useCallback(() => {
     if (!needsCompletion || roomJustCompleted) return;
-    if (factsViewedThisVisit.size >= FACTS_REQUIRED) {
-      setRoomJustCompleted(true);
-      localStorage.setItem(roomCompleteKey, "true");
-      playEvent("discover-complete");
-      // Brief celebration then auto-exit
-      setTimeout(() => {
-        onComplete?.();
-        onBack();
-      }, 2000);
+    setRoomJustCompleted(true);
+    localStorage.setItem(roomCompleteKey, "true");
+    playEvent("discover-complete");
+    // discover-complete plays for ~2s, then the bridge line plays as the
+    // room is fading out. Total dwell before exit = ~3.5s.
+    setTimeout(() => playEvent("discover-exit-bridge"), 2200);
+    setTimeout(() => {
+      onComplete?.();
+      onBack();
+    }, 3500);
+  }, [needsCompletion, roomJustCompleted, roomCompleteKey, onComplete, onBack]);
+
+  /** Routed from `<FactNarration onEnded>`. Fires the per-fact reaction VO
+   *  for every fact (including the completing one) — the room-complete VO
+   *  no longer fires here. Instead it's gated on the kid actively closing
+   *  the fact panel, so they can read/digest at their own pace before the
+   *  completion sequence kicks off. */
+  const handleFactNarrationEnded = useCallback((_factId: string) => {
+    if (roomJustCompleted) return;
+    playEvent("discover-fact-reaction");
+  }, [roomJustCompleted]);
+
+  /** Called when the fact panel closes (X button or backdrop tap). If the
+   *  kid has already viewed the threshold-th fact, this is the moment to
+   *  fire discover-complete + auto-exit. */
+  const handleFactPanelClose = useCallback(() => {
+    setActivePanel(null);
+    if (
+      completingFactId !== null &&
+      needsCompletion &&
+      !roomJustCompleted
+    ) {
+      triggerRoomComplete();
     }
-  }, [factsViewedThisVisit.size, needsCompletion, roomJustCompleted, roomCompleteKey, onComplete, onBack]);
+  }, [completingFactId, needsCompletion, roomJustCompleted, triggerRoomComplete]);
 
   const handleMiniGamesBack = useCallback(() => {
     setShowMiniGames(false);
@@ -239,6 +339,11 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   // Geartown: light switch and power core state
   const [lightsOn, setLightsOn] = useState(false);
   const [powerCoreGlowing, setPowerCoreGlowing] = useState(false);
+
+  // MVP embedded handwriting — only wired for Geartown power core.
+  // Holds the SceneProp that was tapped while the trace overlay is active.
+  const [tracePropTarget, setTracePropTarget] = useState<SceneProp | null>(null);
+  const tracedPropsRef = useRef<Set<string>>(new Set());
 
   // Greenhouse flower stage cycling
   const [flowerStage, setFlowerStage] = useState(0);
@@ -327,6 +432,18 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       return;
     }
 
+    // MVP handwriting intercept — Geartown power core, first tap only.
+    // After tracing, the prop falls through to the normal discovery flow on
+    // any subsequent tap.
+    if (
+      environmentId === "industrial-tech-city" &&
+      prop.id === "power-core" &&
+      !tracedPropsRef.current.has(prop.id)
+    ) {
+      setTracePropTarget(prop);
+      return;
+    }
+
     // Only fact-panel props trigger the discovery flow
     if (!prop.factPanel) return;
 
@@ -352,6 +469,32 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     setActiveHotspot(hotspot);
   }, []);
 
+  // ---- Trace moment (MVP, Geartown power-core only) ----
+  const handleTraceComplete = useCallback(() => {
+    const prop = tracePropTarget;
+    if (!prop) return;
+    tracedPropsRef.current.add(prop.id);
+    // Hero swap + chained light cascade — uses existing room state.
+    setPowerCoreGlowing(true);
+    setLightsOn(true);
+    setTracePropTarget(null);
+    // Continue into the existing discovery flow so the fact panel still opens
+    // (room-completion logic depends on facts viewed).
+    if (prop.factPanel) {
+      learnFactForProp(prop);
+    }
+  }, [tracePropTarget, learnFactForProp]);
+
+  const handleTraceSkip = useCallback(() => {
+    const prop = tracePropTarget;
+    setTracePropTarget(null);
+    // Skipping must not soft-lock progression — fall through to the normal flow.
+    if (prop) {
+      tracedPropsRef.current.add(prop.id);
+      if (prop.factPanel) learnFactForProp(prop);
+    }
+  }, [tracePropTarget, learnFactForProp]);
+
   // Volcano eruption handler — 2.5s cycle then full reset
   const handleErupt = useCallback(() => {
     if (erupting) return;
@@ -365,6 +508,278 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       setErupting(false);
     }, 2500);
   }, [erupting]);
+
+  // First-visit trace complete → reveal the room. Mark seen, fire the
+  // welcome VO, and trigger a thematic reveal reaction per room — the kid
+  // sees the room "wake up" in a way that matches the environment.
+  const handleFirstVisitTraceComplete = useCallback(() => {
+    setShowFirstVisitTrace(false);
+    localStorage.setItem(miniGameSeenKey, "true");
+    playEvent("discover-welcome");
+    switch (firstVisitTraceConfig?.targetPropId) {
+      case "volcano-image":
+        handleErupt();
+        break;
+      case "treasure-box":
+        setChestOpen(true);
+        break;
+      case "clam":
+        setClamOpen(true);
+        break;
+      case "flower-stage":
+        // Bloom in stages so it feels like growth, mirroring the existing
+        // greenhouse interaction sequence.
+        setFlowerStage(1);
+        setTimeout(() => setFlowerStage(2), 600);
+        setTimeout(() => setFlowerStage(3), 1200);
+        break;
+      case "light-switch":
+        setLightsOn(true);
+        break;
+    }
+  }, [miniGameSeenKey, firstVisitTraceConfig, handleErupt]);
+
+  // First-visit trace plumbing — SVG positioned over the targeted in-room
+  // prop. Validator handles pointer events; on success, the room's existing
+  // state machine handles the visual reaction (volcano erupts via handleErupt).
+  const traceSvgRef = useRef<SVGSVGElement | null>(null);
+  const tracePathRef = useRef<SVGPathElement | null>(null);
+  const traceLetterPath = traceLetter ? LETTER_PATHS[traceLetter] : null;
+  const traceTargetProp = firstVisitTraceConfig
+    ? env?.props?.find((p) => p.id === firstVisitTraceConfig.targetPropId)
+    : null;
+
+  // Where the start-here indicator should sit RIGHT NOW. For multi-stroke
+  // letters (m, t) the indicator hops onto the next stroke's start once
+  // the previous stroke is mostly complete — guides the kid through the
+  // letter one stroke at a time.
+  // Returns null when:
+  //   - the kid is actively tracing a stroke (mid-progress), or
+  //   - every stroke is sufficiently complete.
+  // Two thresholds:
+  //   STROKE_HOP_COVERAGE   — fraction of the current stroke covered
+  //                           before the indicator hops to the next.
+  //   STROKE_DONE_COVERAGE  — fraction every stroke must hit before the
+  //                           letter is treated as complete.
+  // Hop is more lenient so the kid sees the next-stroke hint while still
+  // tying off the current one; success is stricter so the kid actually
+  // finishes the letter (reaches the end of every stroke) before the
+  // success phrase plays — a P that fires halfway through the bowl, or
+  // a partially-traced final stroke, both feel premature.
+  const STROKE_HOP_COVERAGE = 0.7;
+  const STROKE_DONE_COVERAGE = 0.95;
+
+  const handleTraceSuccess = useCallback(() => {
+    if (!firstVisitTraceConfig || !traceLetter) return;
+    playLetterSound(traceLetter);
+    playEvent("mini-correct");
+    // Hold the lit V briefly so the kid sees the trace complete, then
+    // finalize the first-visit flow. Eruption (and any other room reaction)
+    // fires from handleFirstVisitTraceComplete so it lines up with the
+    // prop reveal rather than happening while props are still hidden.
+    setTimeout(() => {
+      handleFirstVisitTraceComplete();
+    }, 1500);
+  }, [firstVisitTraceConfig, traceLetter, handleFirstVisitTraceComplete]);
+
+  const traceValidator = useTraceValidator({
+    pathRef: tracePathRef,
+    svgRef: traceSvgRef,
+    // Validator's built-in success fires on GLOBAL coverage, but for multi-
+    // stroke letters that lets the longest sub-path alone trip success.
+    // We disable the auto-fire here and gate completion in our own effect
+    // below that requires every sub-path to reach STROKE_DONE_COVERAGE.
+    onSuccess: () => {},
+    coverageThreshold: 2,
+    // Tighter hit radius (was the default 9). With 9, the kid's finger at
+    // the top of one stroke registers a hit on the next stroke's first
+    // waypoint too — causing a small bleed at sub-path boundaries.
+    hitRadius: 5,
+  });
+
+  // (Per-stroke completion gate is set up further below, AFTER subpathInfo
+  //  is declared — see the `traceSuccessTriggered` block.)
+  const traceSuccessTriggered = useRef(false);
+
+  // Split the letter's path into its sub-paths so each stroke can fill
+  // independently. A multi-sub-path letter (M, T) was treating the whole
+  // glyph as one shared progress bar; tracing one stroke would bleed into
+  // the next at the sub-path boundary. With per-sub-path rendering, each
+  // stroke has its own <path> + its own dasharray and stays dark until
+  // its OWN waypoints are hit.
+  const subpathInfo = useMemo(() => {
+    if (!traceLetterPath || typeof document === "undefined") {
+      return [] as { d: string; len: number; startLen: number }[];
+    }
+    // Split at each M command (capture the M as the start of each chunk).
+    const chunks = (traceLetterPath.d.match(/M[^M]*/g) ?? []).map((s) => s.trim()).filter(Boolean);
+    const tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    let cum = 0;
+    return chunks.map((d) => {
+      tempPath.setAttribute("d", d);
+      let len = 0;
+      try { len = tempPath.getTotalLength(); } catch { /* path malformed */ }
+      const startLen = cum;
+      cum += len;
+      return { d, len, startLen };
+    });
+  }, [traceLetterPath]);
+
+  // Per-sub-path dasharray: lights only segments WITHIN that sub-path whose
+  // waypoint pair is fully hit. Cross-boundary segments never light up
+  // because we treat each sub-path as its own visual rendering pass.
+  const subpathDasharrays = useMemo(() => {
+    const hits = traceValidator.hitMask;
+    const total = traceValidator.pathLength;
+    const N = hits.length;
+    if (!total || N < 2 || subpathInfo.length === 0) {
+      return subpathInfo.map(() => undefined as string | undefined);
+    }
+    const segLen = total / (N - 1);
+
+    return subpathInfo.map(({ len, startLen }) => {
+      // Global waypoint indices that land inside this sub-path.
+      const startIdx = Math.max(0, Math.ceil(startLen / segLen));
+      const endIdx = Math.min(N, Math.floor((startLen + len) / segLen) + 1);
+      if (endIdx - startIdx < 2) return `0 ${len.toFixed(2)}`;
+
+      // Each segment is "on" iff both endpoints are hit AND both endpoints
+      // are within THIS sub-path. By scoping startIdx/endIdx to local hits
+      // only, cross-stroke leakage is impossible.
+      const segOn: boolean[] = [];
+      for (let i = startIdx; i < endIdx - 1; i++) {
+        segOn.push(hits[i] && hits[i + 1]);
+      }
+
+      // Leading prefix (sub-path length before the first scoped waypoint)
+      // — always OFF.
+      const leadingOffset = Math.max(0, startIdx * segLen - startLen);
+      // Trailing suffix (sub-path length after the last scoped waypoint).
+      const trailingOffset = Math.max(
+        0,
+        startLen + len - (endIdx - 1) * segLen
+      );
+
+      // Run-length encode segOn into ON/OFF run lengths.
+      const runs: number[] = [];
+      let currentOn = segOn[0];
+      let currentLen = 0;
+      for (const isOn of segOn) {
+        if (isOn === currentOn) {
+          currentLen += segLen;
+        } else {
+          runs.push(currentLen);
+          currentOn = isOn;
+          currentLen = segLen;
+        }
+      }
+      runs.push(currentLen);
+
+      // Stitch the leading prefix in. dasharray must start with an ON run.
+      if (segOn[0]) {
+        // First run is ON — prepend a zero-length ON + the leading OFF.
+        if (leadingOffset > 0) runs.unshift(0, leadingOffset);
+      } else {
+        // First run is OFF — extend it by leadingOffset, then prepend 0 ON.
+        runs[0] += leadingOffset;
+        runs.unshift(0);
+      }
+
+      // Append trailing suffix. After the unshift dance, runs always starts
+      // with an ON (possibly zero-length), so even-indexed entries are ON
+      // and odd-indexed are OFF. The trailing region is always OFF.
+      if (trailingOffset > 0) {
+        if (runs.length % 2 === 0) {
+          // Last run is OFF — extend it.
+          runs[runs.length - 1] += trailingOffset;
+        } else {
+          // Last run is ON — append a new OFF run.
+          runs.push(trailingOffset);
+        }
+      }
+
+      return runs.map((n) => n.toFixed(2)).join(" ");
+    });
+  }, [traceValidator.hitMask, traceValidator.pathLength, subpathInfo]);
+
+  // Per-stroke success: every sub-path must reach STROKE_DONE_COVERAGE
+  // before we treat the letter as complete. Single-sub-path letters
+  // collapse to a single check and behave identically to the old global
+  // threshold; multi-stroke letters (m, t) actually require all strokes.
+  useEffect(() => {
+    // Re-arm whenever the letter swaps (different room → different trace).
+    traceSuccessTriggered.current = false;
+  }, [traceLetterPath]);
+
+  useEffect(() => {
+    if (traceSuccessTriggered.current) return;
+    if (!firstVisitTraceConfig) return;
+    if (subpathInfo.length === 0) return;
+    // Wait for the kid to actually LIFT their finger before firing the
+    // success phrase. Coverage can cross threshold mid-drag while the kid
+    // is still moving — playing "that's right" while their finger is in
+    // motion feels premature.
+    if (traceValidator.pointerPos) return;
+    const totalLen = traceValidator.pathLength;
+    const N = traceValidator.hitMask.length;
+    if (!totalLen || N < 2) return;
+    const segLen = totalLen / (N - 1);
+    for (const sp of subpathInfo) {
+      const startIdx = Math.max(0, Math.ceil(sp.startLen / segLen));
+      const endIdx = Math.min(N, Math.floor((sp.startLen + sp.len) / segLen) + 1);
+      const total = endIdx - startIdx;
+      if (total <= 0) continue;
+      let hits = 0;
+      for (let i = startIdx; i < endIdx; i++) {
+        if (traceValidator.hitMask[i]) hits++;
+      }
+      if (hits / total < STROKE_DONE_COVERAGE) return; // some stroke isn't done yet
+    }
+    traceSuccessTriggered.current = true;
+    handleTraceSuccess();
+  }, [
+    traceValidator.hitMask,
+    traceValidator.pathLength,
+    traceValidator.pointerPos,
+    subpathInfo,
+    firstVisitTraceConfig,
+    handleTraceSuccess,
+  ]);
+
+  // Active stroke's start point — the indicator dot hops here as the kid
+  // moves through the strokes. For each sub-path in order:
+  //   - coverage < threshold + zero hits  → indicator at this stroke's start
+  //   - coverage < threshold + some hits  → kid is mid-trace, hide indicator
+  //   - coverage >= threshold             → move on to the next stroke
+  // Returns null when every stroke is complete or no path is loaded.
+  const activeStrokeStart = useMemo(() => {
+    if (!traceLetterPath) return null;
+    const totalLen = traceValidator.pathLength;
+    const N = traceValidator.hitMask.length;
+    // Until subpaths/waypoints are sampled, fall back to the path's first M
+    // so the indicator shows immediately on mount.
+    if (!totalLen || N < 2 || subpathInfo.length === 0) {
+      const m = traceLetterPath.d.match(/^M\s+([\d.]+)[\s,]+([\d.]+)/);
+      return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : null;
+    }
+    const segLen = totalLen / (N - 1);
+    for (const sp of subpathInfo) {
+      const startIdx = Math.max(0, Math.ceil(sp.startLen / segLen));
+      const endIdx = Math.min(N, Math.floor((sp.startLen + sp.len) / segLen) + 1);
+      const total = endIdx - startIdx;
+      if (total <= 0) continue;
+      let hits = 0;
+      for (let i = startIdx; i < endIdx; i++) {
+        if (traceValidator.hitMask[i]) hits++;
+      }
+      const coverage = hits / total;
+      if (coverage >= STROKE_HOP_COVERAGE) continue;
+      if (hits > 0) return null; // mid-stroke, keep out of the kid's way
+      const m = sp.d.match(/^M\s+([\d.]+)[\s,]+([\d.]+)/);
+      return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : null;
+    }
+    return null;
+  }, [traceLetterPath, traceValidator.pathLength, traceValidator.hitMask, subpathInfo]);
 
   if (!env) {
     return (
@@ -561,7 +976,14 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     });
 
   return (
-    <div className={`explore-screen ${quaking ? "quake" : ""}`} style={bgStyle}>
+    <div
+      className={[
+        "explore-screen",
+        quaking ? "quake" : "",
+        showFirstVisitTrace ? "explore-screen--first-visit-trace" : "",
+      ].filter(Boolean).join(" ")}
+      style={bgStyle}
+    >
       {/* Mini-game overlay — renders ON TOP of the room */}
       {showMiniGames && (
         <div className="mg-overlay">
@@ -576,15 +998,24 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
           </div>
         </div>
       )}
-      {/* Geartown dust particles */}
+      {/* Geartown atmospheric dust — two layered copies of dust.png drifting
+          behind the props. The "catch" layer brightens once the lights flip
+          on so the room feels like the new light is revealing dust in the
+          air. Pointer-events: none so it never blocks gameplay. */}
       {environmentId === "industrial-tech-city" && (
-        <div className="geartown-dust">
-          <span className="dust-particle dust-particle--1" />
-          <span className="dust-particle dust-particle--2" />
-          <span className="dust-particle dust-particle--3" />
-          <span className="dust-particle dust-particle--4" />
-          <span className="dust-particle dust-particle--5" />
-          <span className="dust-particle dust-particle--6" />
+        <div className={`geartown-dust ${lightsOn ? "geartown-dust--lit" : ""}`} aria-hidden="true">
+          <img
+            className="geartown-dust__layer geartown-dust__layer--bg"
+            src="/assets/discovery%20rooms/geartown-workshop/dust.png"
+            alt=""
+            draggable={false}
+          />
+          <img
+            className="geartown-dust__layer geartown-dust__layer--catch"
+            src="/assets/discovery%20rooms/geartown-workshop/dust.png"
+            alt=""
+            draggable={false}
+          />
         </div>
       )}
 
@@ -640,8 +1071,9 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
 
       {/* Fact counter removed */}
 
-      {/* Room completion progress (first visit only) */}
-      {needsCompletion && !roomJustCompleted && !showMiniGames && (
+      {/* Room completion progress (first visit only). Hidden during the
+          first-visit trace so the trace screen reads as its own moment. */}
+      {needsCompletion && !roomJustCompleted && !showMiniGames && !showFirstVisitTrace && (
         <div className="explore-room-progress">
           <span className="explore-room-progress__text">
             {factsViewedThisVisit.size === 0
@@ -663,12 +1095,27 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         </div>
       )}
 
-      {/* Hint text */}
-      <div className="explore-hint">
-        {needsCompletion && !roomJustCompleted
-          ? "Tap objects and read facts to complete this room!"
-          : "Tap objects to discover facts!"}
-      </div>
+      {/* Hint text — hidden during the first-visit trace */}
+      {!showFirstVisitTrace && (
+        <div className="explore-hint">
+          {needsCompletion && !roomJustCompleted
+            ? "Tap objects and read facts to complete this room!"
+            : "Tap objects to discover facts!"}
+        </div>
+      )}
+
+      {/* Skip button — appears only during the first-visit trace so the
+          trace stays optional. Tapping it reveals the room the same way
+          completing the trace would. */}
+      {showFirstVisitTrace && (
+        <button
+          className="explore-trace-skip"
+          onClick={handleFirstVisitTraceComplete}
+          aria-label="Skip the trace and continue"
+        >
+          Skip →
+        </button>
+      )}
 
       {/* Daily cap modal — hidden in dev or when VITE_DISABLE_COMPLETION_MODAL is set */}
       {!import.meta.env.DEV && !import.meta.env.VITE_DISABLE_COMPLETION_MODAL && showDailyCap && (
@@ -688,16 +1135,26 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       {activePanel && (
         <FactPanelSheet
           panel={activePanel}
-          onClose={() => setActivePanel(null)}
+          onClose={handleFactPanelClose}
           ambientColor={env.ambientColor}
           onFactViewed={(factId) => {
             setFactsViewedThisVisit((prev) => {
               const next = new Set(prev);
               next.add(factId);
+              // Capture the fact whose narration end should trigger
+              // discover-complete (the one that just crossed the threshold).
+              if (
+                needsCompletion &&
+                !roomJustCompleted &&
+                next.size >= FACTS_REQUIRED &&
+                completingFactId === null
+              ) {
+                setCompletingFactId(factId);
+              }
               return next;
             });
           }}
-          onFactNarrationEnded={() => playEvent("discover-fact-reaction")}
+          onFactNarrationEnded={handleFactNarrationEnded}
         />
       )}
 
@@ -706,6 +1163,123 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         <HotspotPopup
           hotspot={activeHotspot}
           onClose={() => setActiveHotspot(null)}
+        />
+      )}
+
+      {/* First-visit trace — SVG positioned center-stage on the empty
+          background. All in-room props are hidden during this phase
+          (see .explore-screen--first-visit-trace) so the letter is the
+          single focal element. On success the props fade back in. */}
+      {showFirstVisitTrace && traceLetterPath && traceTargetProp && (
+        <>
+          {/* Prompt label above the trace area */}
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "12%",
+              transform: "translateX(-50%)",
+              color: "#FFE08A",
+              fontWeight: 800,
+              fontSize: "calc(22px * var(--u))",
+              letterSpacing: "calc(1px * var(--u))",
+              textShadow: "0 calc(2px * var(--u)) 0 rgba(0, 0, 0, 0.6)",
+              pointerEvents: "none",
+              zIndex: 32,
+            }}
+          >
+            Trace the letter
+          </div>
+          <svg
+            ref={traceSvgRef}
+            viewBox={traceLetterPath.viewBox}
+            preserveAspectRatio="xMidYMid meet"
+            data-trace-theme={firstVisitTraceConfig?.theme}
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: "30%",
+              aspectRatio: "1",
+              transform: "translate(-50%, -50%)",
+              touchAction: "none",
+              zIndex: 32,
+            }}
+            onPointerDown={traceValidator.onPointerDown}
+            onPointerMove={traceValidator.onPointerMove}
+            onPointerUp={traceValidator.onPointerUp}
+            onPointerCancel={traceValidator.onPointerCancel}
+          >
+            {/* Hidden reference path for the global hit detector. The
+                validator samples ALL waypoints across the combined geometry;
+                only the visual rendering below is split per-stroke. */}
+            <path
+              ref={tracePathRef}
+              d={traceLetterPath.d}
+              fill="none"
+              stroke="none"
+              style={{ visibility: "hidden" }}
+            />
+            {/* Per-sub-path dim + lit. Each stroke renders independently
+                with its own dasharray, so tracing one stroke can never
+                bleed into another's fill. */}
+            {subpathInfo.map((sp, i) => (
+              <g key={`sp-${i}`}>
+                <path className="trace-moment__path-dim" d={sp.d} />
+                <path
+                  className="trace-moment__path-lit"
+                  d={sp.d}
+                  strokeDasharray={subpathDasharrays[i]}
+                  strokeDashoffset={0}
+                />
+              </g>
+            ))}
+            {traceValidator.pointerPos && (
+              <circle
+                className="trace-moment__spark"
+                cx={traceValidator.pointerPos.x}
+                cy={traceValidator.pointerPos.y}
+                r={3.2}
+              />
+            )}
+            {/* Start-here indicator — pulsing ring + dot + arrow at the
+                path's first point. Hides as soon as the kid begins tracing
+                (any coverage progress). */}
+            {activeStrokeStart && (
+              <g className="trace-start" pointerEvents="none">
+                <circle
+                  className="trace-start__ring"
+                  cx={activeStrokeStart.x}
+                  cy={activeStrokeStart.y}
+                />
+                <circle
+                  className="trace-start__dot"
+                  cx={activeStrokeStart.x}
+                  cy={activeStrokeStart.y}
+                  r={2.2}
+                />
+                <text
+                  className="trace-start__arrow"
+                  x={activeStrokeStart.x}
+                  y={activeStrokeStart.y > 50 ? activeStrokeStart.y - 7 : activeStrokeStart.y + 11}
+                  textAnchor="middle"
+                >
+                  {activeStrokeStart.y > 50 ? "▼" : "▲"}
+                </text>
+              </g>
+            )}
+          </svg>
+        </>
+      )}
+
+      {/* MVP embedded handwriting — Geartown power core only */}
+      {tracePropTarget && tracePropTarget.id === "power-core" && (
+        <TraceMoment
+          letter="c"
+          dimSrc="/assets/discovery rooms/geartown-workshop/power-core-not-glowing.png"
+          activeSrc="/assets/discovery rooms/geartown-workshop/power-core-glowing.png"
+          onComplete={handleTraceComplete}
+          onSkip={handleTraceSkip}
         />
       )}
     </div>

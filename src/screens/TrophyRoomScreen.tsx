@@ -167,12 +167,19 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
     return quest.words.slice(0, completedCount).map(w => w.word);
   }, [quest]);
 
-  // Play "Tap a card" on enter
+  // Entry VO. Phase 1 plays the standard "Tap a card!" prompt; phase 2 (the
+  // final-trophy moment after node 16) plays a milestone-specific intro so
+  // the second visit doesn't feel identical to the first.
+  // The phase-2 file lands at /assets/audio/events/trophy-phase2-intro.m4a
+  // — until then playEvent fails silently and the room is silent on entry.
   useEffect(() => {
-    if (!viewOnly) {
-      setTimeout(() => playTapCardPhrase(), 500);
-    }
-  }, [viewOnly]);
+    if (viewOnly) return;
+    const t = setTimeout(() => {
+      if (phase === 2) playEvent("trophy-phase2-intro");
+      else playTapCardPhrase();
+    }, 500);
+    return () => clearTimeout(t);
+  }, [viewOnly, phase]);
 
   const patternLabel = PATTERN_LABELS[quest.patternType] || "CVC";
   const vowelLabel = VOWEL_LABELS[vowelId] || "Short A";
@@ -200,22 +207,27 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
     }
   }, [matchCount, showCelebration]);
 
-  // After celebration, start trophy fly animation (not in view-only)
+  // After celebration, start trophy fly animation (not in view-only).
+  // Gaps between event VOs were tight — each new playEvent on the `event`
+  // audio channel kills the previous one mid-playback. Spacing them out so
+  // each line gets enough time to actually finish before the next fires.
   useEffect(() => {
     if (showCelebration && !viewOnly) {
-      // Brief celebration, then fly trophy to case
+      // Hold long enough for "trophy-all-matched" (~2.5s) to play out before
+      // launching the fly cue.
       const flyTimer = setTimeout(() => {
         setTrophyFlying(true);
         playEvent("trophy-flying");
-      }, 1500);
-      // Trophy lands in case after flight animation
+      }, 2700);
+      // Hold long enough for "trophy-flying" (~2.2s) to play out before the
+      // trophy lands and "trophy-return" plays.
       const landTimer = setTimeout(() => {
         setTrophyFlying(false);
         setTrophyLanded(true);
         setShowReturnBtn(true);
         playEvent("trophy-return");
         onComplete(); // mark trophy room complete in progression
-      }, 3200); // 1.5s celebration + 1.7s flight
+      }, 5000); // 2.7s pre-fly + 2.3s flight
       return () => {
         clearTimeout(flyTimer);
         clearTimeout(landTimer);
@@ -258,8 +270,11 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
       const secondCard = cards.find(c => c.id === secondId)!;
 
       if (firstCard.word === secondCard.word) {
-        // Match found!
-        playMatchPhrase();
+        // Match found! Skip the per-pair "It's a match!" phrase on the
+        // FINAL pair so it doesn't overlap with `trophy-all-matched`
+        // (different audio channel, would layer audibly).
+        const isFinalPair = matchCount + 1 >= pairCount;
+        if (!isFinalPair) playMatchPhrase();
         setTimeout(() => {
           setCards(prev => prev.map(c =>
             c.id === firstId || c.id === secondId

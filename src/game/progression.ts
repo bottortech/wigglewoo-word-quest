@@ -18,6 +18,12 @@ const STORAGE_KEY = "wigglewoo-cvc-progress";
 const GLOBAL_KEY = "wigglewoo-global-progress";
 const TROPHY_KEY = "wigglewoo-trophy-progress";
 const DISCOVERY_KEY = "wigglewoo-discovery-all";
+const CROSSMATCH_KEY = "wigglewoo-crossmatch-all";
+
+/** Cross-match review checkpoints (1-indexed word numbers). After completing
+ *  word 4, the player does a cross-match review of words 1–4; after word 12,
+ *  a review of words 9–12. Trophy nodes (8 and 16) are intentionally clean. */
+export const CROSSMATCH_CHECKPOINTS: readonly number[] = [4, 12];
 
 /** Persisted progress for a single quest */
 export interface QuestProgress {
@@ -310,6 +316,66 @@ export function completeDiscoveryRoom(questId: string): DiscoveryProgress {
 /** Reset discovery progress (for quest restart) */
 export function resetDiscoveryProgress(questId: string): void {
   saveDiscoveryProgress({ questId, discoveryRoomComplete: false });
+}
+
+// ---- Cross-Match Review Progress ----
+
+/** Per-quest set of completed cross-match checkpoints (1-indexed word numbers). */
+function loadAllCrossMatchProgress(): Record<string, number[]> {
+  try {
+    const raw = localStorage.getItem(CROSSMATCH_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch { /* corrupted */ }
+  return {};
+}
+
+function saveAllCrossMatchProgress(data: Record<string, number[]>): void {
+  try {
+    localStorage.setItem(CROSSMATCH_KEY, JSON.stringify(data));
+  } catch { /* fail silently */ }
+}
+
+/** Has the cross-match review been completed at this checkpoint? */
+export function isCrossMatchComplete(questId: string, checkpoint: number): boolean {
+  const all = loadAllCrossMatchProgress();
+  return (all[questId] ?? []).includes(checkpoint);
+}
+
+/** Mark a cross-match checkpoint as completed for this quest. */
+export function markCrossMatchComplete(questId: string, checkpoint: number): void {
+  const all = loadAllCrossMatchProgress();
+  const list = all[questId] ?? [];
+  if (!list.includes(checkpoint)) {
+    all[questId] = [...list, checkpoint];
+    saveAllCrossMatchProgress(all);
+  }
+}
+
+/** Reset cross-match progress for a quest (used on restart). */
+export function resetCrossMatchProgress(questId: string): void {
+  const all = loadAllCrossMatchProgress();
+  if (questId in all) {
+    delete all[questId];
+    saveAllCrossMatchProgress(all);
+  }
+}
+
+/** Find the next pending cross-match checkpoint for this quest, given the
+ *  player's current word index. Returns null if none pending. The checkpoint
+ *  fires once the player has completed *at least* that word number. */
+export function getPendingCrossMatch(
+  questId: string,
+  currentWordIndex: number
+): number | null {
+  for (const cp of CROSSMATCH_CHECKPOINTS) {
+    if (currentWordIndex >= cp && !isCrossMatchComplete(questId, cp)) {
+      return cp;
+    }
+  }
+  return null;
 }
 
 /**
