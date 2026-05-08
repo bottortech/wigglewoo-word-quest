@@ -1,0 +1,45 @@
+/* =============================================
+   fonts.css — Self-hosted brand font (Nunito)
+   WiggleWoo's Word Quest
+   =============================================
+   Nunito is the kid-facing UI font referenced throughout the app
+   (questmap, skin-unlock, explore, etc.). Self-hosted so the bundle
+   doesn't depend on whatever fonts the device has installed and so
+   no third-party requests fire (matters for the COPPA story).
+
+   The file at /fonts/Nunito-VariableFont_wght.woff2 is the variable
+   font — one woff2 covers the full 200-1000 weight axis, so all
+   three @font-face rules below point at the same URL and let the
+   browser interpolate to 400 / 600 / 700.
+
+   SIL OFL 1.1 — see /fonts/Nunito-LICENSE.txt
+   OpenDyslexic's @font-face declarations live in accessibility.css
+   since they're only activated by the dyslexia-mode toggle.
+   ============================================= */
+
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Nunito-VariableFont_wght.woff2") format("woff2-variations"),
+       url("/fonts/Nunito-VariableFont_wght.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/Nunito-VariableFont_wght.woff2") format("woff2-variations"),
+       url("/fonts/Nunito-VariableFont_wght.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Nunito-VariableFont_wght.woff2") format("woff2-variations"),
+       url("/fonts/Nunito-VariableFont_wght.woff2") format("woff2");
+}

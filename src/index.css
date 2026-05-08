@@ -2,6 +2,7 @@
    index.css — Global resets for Wigglewoo CVC Quest
    ============================================ */
 
+@import "./styles/fonts.css";
 @import "./styles/theme.css";
 
 :root {
