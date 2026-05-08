@@ -1,10 +1,12 @@
 # WiggleWoo's Word Quest — V1 Voiceover Recording Sheet
 
-**Prepared:** 2026-05-05
+**Prepared:** 2026-05-05 · **Updated:** 2026-05-07
 **Game:** WiggleWoo's Word Quest (phonics game, ages 4–7)
-**Total takes to record:** ~239 (everything below)
+**Total takes to record:** ~100 (everything below)
 
 This sheet supersedes any prior VO brief. Recording all of this completes the V1 audio pass.
+
+> **2026-05-07 update:** Mini-games (RhymePop, SoundPop, LetterBuilder, etc.) are scrapped for V1 — every mini-game-specific slug and its 123 mini-game-only words have been removed from this sheet and moved to "Out of Scope" below. Total dropped from ~239 → ~100 takes.
 
 ---
 
@@ -36,29 +38,17 @@ This sheet supersedes any prior VO brief. Recording all of this completes the V1
 
 | Tier | What | Takes | Why |
 |---|---|---|---|
-| **1** | Fix "stuck record" repetition | ~30 | Highest impact — kids hear these every few seconds |
+| **1** | Fix "stuck record" repetition | 14 | Highest impact — kids hear these every few seconds |
 | **2** | Expand single-take events into pools of 3 | ~38 | Variety on recurring beats |
 | **3** | Phrase pool variants | ~18 | Atmosphere |
-| **4** | Newly identified gaps (this session) | ~30 | Mini-game intros, accessibility for pre-readers |
-| **Words** | Missing word VOs | 124 | 1 main-quest gap + 123 mini-game words |
+| **4** | Newly identified gaps (this session) | ~30 | Pre-reader accessibility + per-room welcomes |
+| **Words** | Missing word VOs | 1 | Main-quest gap (`cob`) |
 
 ---
 
 # TIER 1 — Repetition Fixes (Record First)
 
 These currently fire as a single take and the kid hears them on a loop. Multiple takes per slug.
-
-## `mini-correct` — 5 variants
-
-Plays on every correct answer in mini-games. Most repetitive line in the app.
-
-| Variant | Line |
-|---|---|
-| 01 | "Yes!" |
-| 02 | "That's it!" |
-| 03 | "Got it!" |
-| 04 | "Spot on!" |
-| 05 | "Nice one!" |
 
 ## `match` (replaces `its-a-match`) — 5 variants
 
@@ -79,31 +69,6 @@ Plays on every correct match in CrossMatch and Trophy Room. Up to 4× in a row.
 | `crossmatch-intro` | 3 | "Match the words to the pictures!" / "Drag each word to its picture!" / "Find the picture that goes with each word!" |
 | `crossmatch-encourage` | 3 | "Try a different one!" / "That's not the match — keep looking!" / "Look again, you'll find it!" |
 | `crossmatch-complete` | 3 | "All matched up!" / "You got every one!" / "Four for four — amazing!" |
-
-## Mini-game intros — NEW (3 of 5 mini-games are silent on entry)
-
-| Slug | Variants | Lines |
-|---|---|---|
-| `mini-rhyme-pop` | 2 | "Pop the rhyming words!" / "Tap the words that rhyme!" |
-| `mini-sound-pop` | 2 | "What sound finishes the word?" / "Pick the last sound!" |
-| `mini-letter-builder` | 2 | "Build the word, sound by sound!" / "Tap the letters in order!" |
-
-## `mini-wrong` — 3 variants (NEW)
-
-| Variant | Line |
-|---|---|
-| 01 | "Hmm, try a different one!" |
-| 02 | "Not that one — listen again!" |
-| 03 | "Almost! Look once more!" |
-
-## `mini-session-complete` — 2 variants (NEW)
-
-End of all 3 mini-games (separate from per-game `mini-complete`).
-
-| Variant | Line |
-|---|---|
-| 01 | "All three games — done!" |
-| 02 | "You finished every game!" |
 
 ---
 
@@ -270,7 +235,7 @@ Currently shown as text only. Pre-readers (entire 4–7 audience) cannot read th
 
 ---
 
-# WORD VOs — 124 takes
+# WORD VOs — 1 take
 
 One word per file: `{word}.wav`. Single clear utterance, no segmentation.
 
@@ -280,23 +245,7 @@ One word per file: `{word}.wav`. Single clear utterance, no segmentation.
 cob
 ```
 
-## Mini-game words (123)
-
-Sourced from rhyme-family pools and pruned ONSET_POOL. All real, kid-friendly CVC words.
-
-```
-bad, ban, bet, bid, big, bin, bit, bud, bun, but, cod, cog, cub, dab, dad,
-dam, den, dew, did, dim, din, dub, dud, fad, fat, fib, fig, fit, fix, fog,
-gel, get, got, gut, had, has, hem, hex, hid, him, hip, his, hob, hog, hub,
-hum, hut, jab, jag, jam, job, jot, jut, kid, kin, lad, lag, lap, led, let,
-lip, lit, lob, lot, mad, man, mat, mid, mob, mod, mom, mug, nab, nag, nod,
-not, nub, nun, pad, pal, pat, peg, pep, pip, pit, pod, pub, pun, rag, ram,
-ran, rap, rep, rid, rig, rim, rob, rod, rub, rut, sag, sap, sat, set, six,
-sod, sop, sub, sum, tab, tan, tap, tin, tip, tot, tug, vat, wag, wax, wed,
-wit, zig
-```
-
-(123 mini-game words + `cob` from main quest = 124 total)
+(The 123 mini-game words previously listed here have been removed — see "Out of Scope" below.)
 
 ---
 
@@ -304,6 +253,7 @@ wit, zig
 
 The following are intentionally excluded. Do NOT record:
 
+- **Mini-games (RhymePop, SoundPop, LetterBuilder, WordSort, etc.)** — scrapped for V1 as of 2026-05-07. Includes the `mini-correct` pool, all mini-game intro slugs (`mini-rhyme-pop` / `mini-sound-pop` / `mini-letter-builder`), `mini-wrong`, `mini-session-complete`, and the 123 mini-game-only word VOs (`bad`, `ban`, `bet`, `bid`, … `wit`, `zig`). The first-visit Discovery Room slot is now the letter-trace experience instead.
 - **Advanced tier word VOs** (e.g. `snowman`, r-controlled vowels) — Advanced tier is locked in v1.
 - **Discovery Room fact narrations** — already complete (80 files in `/DiscoverRoomFacts_take2/`).
 - **Per-letter phonemes (a–z)** — already recorded as the new phoneme set in `/audio/new phonetics/`.
@@ -316,10 +266,10 @@ The following are intentionally excluded. Do NOT record:
 
 If recording in multiple sessions, order for maximum impact:
 
-1. **Session A — Critical accessibility:** all 21 PictureMatch prompts + 3 onboarding tutorial lines + `mini-correct` (5 variants) + `match` (5 variants). ~34 takes.
-2. **Session B — Mini-game completeness:** mini-rhyme-pop / mini-sound-pop / mini-letter-builder (6 takes), mini-wrong (3), mini-session-complete (2), CrossMatch (9), per-room welcomes (5). ~25 takes.
+1. **Session A — Critical accessibility:** all 20 PictureMatch prompts + 3 onboarding tutorial lines + `match` (5 variants). ~28 takes.
+2. **Session B — CrossMatch + per-room welcomes:** CrossMatch (9), per-room welcomes (5). ~14 takes.
 3. **Session C — Pool expansions:** all of Tier 2 (~38 takes).
 4. **Session D — Phrase variants + modals:** all of Tier 3 (~18 takes) + modal/screen lines (4). ~22 takes.
-5. **Session E — Words:** all 124 word VOs in one block. ~124 takes.
+5. **Session E — Words:** the 1 main-quest gap (`cob`).
 
 Sessions A + B alone close the most painful UX gaps and unblock pre-reader accessibility.
