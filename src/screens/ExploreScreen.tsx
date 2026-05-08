@@ -2,14 +2,25 @@
 // ExploreScreen.tsx — Discovery Room environment viewer
 // WiggleWoo's Word Quest
 // =============================================
-// Smart Discovery Room system:
+// Active first-visit flow (v1): letter-trace overlay on the
+// targeted prop, with a per-day letter from TRACE_LETTER_ROTATION.
+// On trace success the room reveals (volcano erupts, chest opens,
+// etc.) and the kid taps props to learn facts.
+//
+// Steady-state loop:
 //   - Tap object → learn a fact → animation → fact panel
 //   - Every 4th fact → Picture Match challenge before learning
 //   - Daily cap: 4 facts per room per day
+//
+// Parked: the discovery-room mini-game session (DiscoverySession)
+// is fully wired but disabled via MINI_GAMES_ENABLED below. See
+// the banner near that constant for the revival recipe.
 // =============================================
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { ENVIRONMENTS, ENVIRONMENT_QUEST_MAP } from "../game/exploreData";
+// PARKED for v1 — see MINI_GAMES_ENABLED below. Import + styles kept
+// so we can flip the flag back on without re-plumbing the screen.
 import DiscoverySession from "../components/miniGames/DiscoverySession";
 import "../styles/miniGames.css";
 import type { EnvironmentConfig, SceneProp, Hotspot, FactPanel, FactItem } from "../game/exploreData";
@@ -28,6 +39,26 @@ import { LETTER_PATHS } from "../components/handwriting/letterPaths";
 import { useTraceValidator } from "../components/handwriting/useTraceValidator";
 import { playLetterSound } from "../audio/SoundEffects";
 import "../styles/explore.css";
+
+// =============================================
+// MINI-GAMES — PARKED for v1 (2026-05-08)
+// =============================================
+// The discovery-room mini-game session (RhymePop, SoundPop,
+// LetterBuilder, WordSort, etc.) is intentionally OFF for v1 in
+// favor of the first-visit letter-trace experience. All wiring is
+// kept intact — DiscoverySession import, miniGames.css, the
+// handlers, and the JSX branch — so flipping this flag back to
+// `true` revives the feature without re-plumbing the screen.
+//
+// To revive (post-v1, after trace flow stabilizes):
+//   1. Flip this constant to true.
+//   2. Decide per-room policy: should mini-games run alongside
+//      the trace, or replace it for some rooms? Today FIRST_VISIT_TRACE
+//      covers all 5 rooms, so showMiniGames would still resolve false.
+//      Either drop a room from FIRST_VISIT_TRACE or change the gate.
+//   3. Re-record the mini-game VO slugs that were moved to the
+//      Out-of-Scope list in docs/VO-Recording-Sheet-V1.md.
+const MINI_GAMES_ENABLED = false;
 
 // ---- Daily letter rotation ----
 // All 5 Discovery Rooms run a first-visit trace; each day pulls 5 consecutive
@@ -200,36 +231,40 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const firstVisitTraceConfig = FIRST_VISIT_TRACE[environmentId];
   const traceLetter = firstVisitTraceConfig ? getLetterForRoom(environmentId) : null;
 
-  // Mini-game session state — show on first visit to each room.
-  // Suppressed when this room has a first-visit trace configured (the trace
-  // replaces the mini-games for that room). Both gates share the same
-  // `seenKey` so a single first-visit experience marks the room as initialized.
-  // Date-keyed: each calendar day fires a fresh trace with that day's letter
-  // from the rotation, so kids who revisit a room across days still get the
-  // alphabet practice.
-  const miniGameSeenKey = `ww_minigames_seen_${environmentId}_${getDayIndex()}`;
-  const hasSeenMiniGames = localStorage.getItem(miniGameSeenKey) === "true";
+  // First-visit gate (active flow): show the letter-trace overlay once per
+  // calendar day per room. Date-keyed so kids who revisit across days get a
+  // fresh letter from the rotation and continue alphabet practice. The same
+  // key gates the parked mini-game branch below — whichever first-visit
+  // experience renders, completing it sets the flag for the day.
+  const firstVisitSeenKey = `ww_first_visit_seen_${environmentId}_${getDayIndex()}`;
+  const hasSeenFirstVisit = localStorage.getItem(firstVisitSeenKey) === "true";
   const [showFirstVisitTrace, setShowFirstVisitTrace] = useState(
-    !!onComplete && !hasSeenMiniGames && !!firstVisitTraceConfig
+    !!onComplete && !hasSeenFirstVisit && !!firstVisitTraceConfig
   );
+  // PARKED — gated by MINI_GAMES_ENABLED (false for v1). Even when revived,
+  // a room with a firstVisitTraceConfig will still take the trace path; the
+  // mini-game branch only runs in rooms without a trace config.
   const [showMiniGames, setShowMiniGames] = useState(
-    !!onComplete && !hasSeenMiniGames && !firstVisitTraceConfig
+    MINI_GAMES_ENABLED && !!onComplete && !hasSeenFirstVisit && !firstVisitTraceConfig
   );
   const [, setMiniGamesCompleted] = useState(false);
 
+  // PARKED — only reachable when MINI_GAMES_ENABLED is flipped on.
   const handleMiniGamesComplete = useCallback(() => {
     setMiniGamesCompleted(true);
     setShowMiniGames(false);
-    localStorage.setItem(miniGameSeenKey, "true");
+    localStorage.setItem(firstVisitSeenKey, "true");
     // Welcome VO ("search around for cool facts") fires here — once the
     // mini-games clear and the kid can actually see the room.
     playEvent("discover-welcome");
     // Do NOT call onComplete here — room completes after viewing 2 facts
-  }, [miniGameSeenKey]);
+  }, [firstVisitSeenKey]);
 
-  // Welcome VO on first mount — only when neither the mini-games nor the
-  // first-visit trace is covering the room. First-visit welcome plays inside
-  // each completion handler instead.
+  // Welcome VO on first mount — only when no first-visit experience is
+  // covering the room. First-visit welcome plays inside each completion
+  // handler instead. The showMiniGames check is a no-op while mini-games
+  // are parked, but kept for symmetry with the trace gate so the predicate
+  // still reads correctly when the parked branch is revived.
   const [welcomePlayed, setWelcomePlayed] = useState(false);
   useEffect(() => {
     if (welcomePlayed) return;
@@ -282,12 +317,15 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     }
   }, [completingFactId, needsCompletion, roomJustCompleted, triggerRoomComplete]);
 
+  // PARKED — only reachable when MINI_GAMES_ENABLED is flipped on.
   const handleMiniGamesBack = useCallback(() => {
     setShowMiniGames(false);
     onBack();
   }, [onBack]);
 
-  // Gather facts for mini-game rewards
+  // Feeds the parked DiscoverySession (3 facts as mini-game rewards).
+  // Computed unconditionally so React-hooks order stays stable across
+  // the flag flip; cheap memoized walk over env.props.
   const roomFacts = useMemo(() => {
     if (!env?.props) return [];
     const facts: string[] = [];
@@ -514,7 +552,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   // sees the room "wake up" in a way that matches the environment.
   const handleFirstVisitTraceComplete = useCallback(() => {
     setShowFirstVisitTrace(false);
-    localStorage.setItem(miniGameSeenKey, "true");
+    localStorage.setItem(firstVisitSeenKey, "true");
     playEvent("discover-welcome");
     switch (firstVisitTraceConfig?.targetPropId) {
       case "volcano-image":
@@ -537,7 +575,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         setLightsOn(true);
         break;
     }
-  }, [miniGameSeenKey, firstVisitTraceConfig, handleErupt]);
+  }, [firstVisitSeenKey, firstVisitTraceConfig, handleErupt]);
 
   // First-visit trace plumbing — SVG positioned over the targeted in-room
   // prop. Validator handles pointer events; on success, the room's existing
@@ -984,7 +1022,11 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       ].filter(Boolean).join(" ")}
       style={bgStyle}
     >
-      {/* Mini-game overlay — renders ON TOP of the room */}
+      {/* PARKED for v1: mini-game overlay. `showMiniGames` is gated by
+          MINI_GAMES_ENABLED (false) at the top of this file, so this
+          branch never renders today — kept intact so flipping the flag
+          revives the feature without re-plumbing the JSX. The active
+          first-visit flow is the trace overlay rendered further below. */}
       {showMiniGames && (
         <div className="mg-overlay">
           <div className="mg-overlay__backdrop" />
