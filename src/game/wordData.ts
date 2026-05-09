@@ -441,7 +441,6 @@ export const CVC_WORD_BANK: Record<string, Array<{ word: string; imageKey: strin
     { word: "mop", imageKey: "mop" },
     { word: "cot", imageKey: "cot" },
     { word: "fox", imageKey: "fox" },
-    { word: "cob", imageKey: "cob" },
     { word: "dot", imageKey: "dot" },
   ],
   shortU: [

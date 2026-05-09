@@ -42,7 +42,6 @@ This sheet supersedes any prior VO brief. Recording all of this completes the V1
 | **2** | Expand single-take events into pools of 3 | ~38 | Variety on recurring beats |
 | **3** | Phrase pool variants | ~18 | Atmosphere |
 | **4** | Newly identified gaps (this session) | ~30 | Pre-reader accessibility + per-room welcomes |
-| **Words** | Missing word VOs | 1 | Main-quest gap (`cob`) |
 
 ---
 
@@ -235,17 +234,14 @@ Currently shown as text only. Pre-readers (entire 4–7 audience) cannot read th
 
 ---
 
-# WORD VOs — 1 take
+# WORD VOs — none
 
-One word per file: `{word}.wav`. Single clear utterance, no segmentation.
+All 80 CVC quest words are already recorded and on disk. The previous
+`cob` gap has been removed — `cob` was a Trophy Match bank-only word
+and has been deleted from the game entirely (2026-05-08).
 
-## Main quest gap (1)
-
-```
-cob
-```
-
-(The 123 mini-game words previously listed here have been removed — see "Out of Scope" below.)
+(The 123 mini-game-only words previously listed here are out of scope —
+see below.)
 
 ---
 
@@ -270,6 +266,5 @@ If recording in multiple sessions, order for maximum impact:
 2. **Session B — CrossMatch + per-room welcomes:** CrossMatch (9), per-room welcomes (5). ~14 takes.
 3. **Session C — Pool expansions:** all of Tier 2 (~38 takes).
 4. **Session D — Phrase variants + modals:** all of Tier 3 (~18 takes) + modal/screen lines (4). ~22 takes.
-5. **Session E — Words:** the 1 main-quest gap (`cob`).
 
 Sessions A + B alone close the most painful UX gaps and unblock pre-reader accessibility.

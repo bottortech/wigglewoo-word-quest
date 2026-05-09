@@ -11,7 +11,7 @@ cat, hat, bat, map, cap, van, ham, cab, rat, pan, can, fan, bag, nap, sad, tag
 sit, pin, dig, lid, wig, rip, mix, zip, pig, bib, hit, kit, dip, win, fin, sip
 
 ### Short O
-dog, hop, pot, log, box, mop, cot, fox, cob, dot, jog, rot, top, sob, pop, nod
+dog, hop, pot, log, box, mop, cot, fox, dot, jog, rot, top, sob, pop, nod
 
 ### Short U
 cup, bus, tub, rug, sun, hug, mud, bug, pup, jug, gum, run, fun, dug, nut, cut

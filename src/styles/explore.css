@@ -1895,3 +1895,42 @@
   60%  { transform: translate(-50%, -100%) scale(1.1); filter: brightness(1.4) drop-shadow(0 0 25px rgba(255, 215, 0, 0.8)); }
   100% { transform: translate(-50%, -100%) scale(1); filter: brightness(1); }
 }
+
+/* ==========================================
+   Geartown spinning gears — overlay on top of
+   the static gears-on-wall artwork. Four
+   spinners at varied sizes / speeds /
+   directions for visual depth.
+   ========================================== */
+
+.geartown-spinner img {
+  display: block;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Per-spinner motion. Different durations + alternating directions so
+   the cluster feels mechanical, not synchronized. */
+.geartown-spinner--1 img { animation: geartown-gear-spin-cw  5.0s linear infinite; }
+.geartown-spinner--2 img { animation: geartown-gear-spin-ccw 7.0s linear infinite; }
+.geartown-spinner--3 img { animation: geartown-gear-spin-cw  3.2s linear infinite; }
+.geartown-spinner--4 img { animation: geartown-gear-spin-ccw 4.6s linear infinite; }
+
+@keyframes geartown-gear-spin-cw {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes geartown-gear-spin-ccw {
+  from { transform: rotate(0deg);    }
+  to   { transform: rotate(-360deg); }
+}
+
+/* Respect reduced-motion preference — freeze the gears mid-pose
+   instead of looping for kids who get motion-sick or have it set
+   for accessibility. */
+@media (prefers-reduced-motion: reduce) {
+  .geartown-spinner img {
+    animation: none !important;
+  }
+}

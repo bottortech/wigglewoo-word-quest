@@ -823,6 +823,9 @@ const TECH_CITY_ENV: EnvironmentConfig = {
       width: 38,
       factPanel: {
         title: "Gears & Machines",
+        // (Spinning-gear overlays are added as separate props after this one
+        //  so they render on top of the static wall artwork. See the
+        //  geartown-spinner-* entries below.)
         items: [
           {
             id: "how-gears-work",
@@ -858,6 +861,39 @@ const TECH_CITY_ENV: EnvironmentConfig = {
           },
         ],
       },
+    },
+    // ---- Spinning gear overlays on top of gears-on-wall ----
+    // Position coords are best-guess clusters over where the static wall
+    // gears appear; tweak x/y/width once visible against the actual artwork.
+    // ExploreScreen.tsx renders props with id starting "geartown-spinner-"
+    // through a dedicated branch that adds the rotation animation.
+    {
+      id: "geartown-spinner-1",
+      src: "/assets/discovery rooms/geartown-workshop/spinning-gear.png",
+      x: 15,
+      y: 57,
+      width: 9,
+    },
+    {
+      id: "geartown-spinner-2",
+      src: "/assets/discovery rooms/geartown-workshop/spinning-gear.png",
+      x: 28.2,
+      y: 48,
+      width: 7,
+    },
+    {
+      id: "geartown-spinner-3",
+      src: "/assets/discovery rooms/geartown-workshop/spinning-gear.png",
+      x: 35.5,
+      y: 57.7,
+      width: 5,
+    },
+    {
+      id: "geartown-spinner-4",
+      src: "/assets/discovery rooms/geartown-workshop/spinning-gear.png",
+      x: 24,
+      y: 63,
+      width: 8,
     },
     {
       id: "light-switch",

@@ -78,7 +78,7 @@ const ONSET_POOL: Record<string, string[]> = {
 
   // Short O onsets
   "bo": ["box"],
-  "co": ["cot", "cob", "cod", "cop", "cog"],
+  "co": ["cot", "cod", "cop", "cog"],
   "do": ["dog", "dot"],
   "fo": ["fog", "fox"],
   "go": ["got"],

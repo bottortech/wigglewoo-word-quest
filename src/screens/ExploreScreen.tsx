@@ -852,6 +852,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       const isCastleScroll = prop.id === "castle-scroll";
       const isClam = prop.id === "clam";
       const isOctopus = prop.id === "octopus";
+      const isGeartownSpinner = prop.id.startsWith("geartown-spinner-");
       const anchorTransform =
         prop.anchor === "top" ? "translate(-50%, 0%)" : "translate(-50%, -100%)";
 
@@ -940,6 +941,29 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
               />
             )}
           </button>
+        );
+      }
+
+      // Spinning gear overlay (Geartown wall) — non-interactive, continuous
+      // rotation. Each spinner has its own modifier class so individual
+      // size/speed/direction is controlled in explore.css.
+      if (isGeartownSpinner) {
+        const variant = prop.id.replace("geartown-spinner-", "");
+        return (
+          <div
+            key={prop.id}
+            className={`explore-prop geartown-spinner geartown-spinner--${variant}`}
+            style={{
+              position: "absolute",
+              left: `${prop.x}%`,
+              top: `${prop.y}%`,
+              width: `${prop.width}%`,
+              transform: anchorTransform,
+            }}
+            aria-hidden="true"
+          >
+            {propEl}
+          </div>
         );
       }
 
