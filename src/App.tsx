@@ -74,7 +74,10 @@ import { recordTrophyEarned } from "./game/analytics";
 import trophyTransitionImg from "./assets/trophy.png";
 import "./styles/trophy-transition.css";
 import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
-import BlendingPowerUnlock from "./components/BlendingPowerUnlock";
+// PARKED for v1 — Blending Power celebration is replaced by QuestCompleteCelebration.
+// Re-import + re-fire when CVCC ships in 1.1.
+// import BlendingPowerUnlock from "./components/BlendingPowerUnlock";
+import QuestCompleteCelebration from "./components/QuestCompleteCelebration";
 import OnboardingScreen from "./screens/OnboardingScreen";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
@@ -134,11 +137,12 @@ export default function App() {
   // Resolve initial quest synchronously for CVC, null if chunk not loaded
   const resolvedInitial = getQuestById(globalProg.activeQuestId) ?? null;
 
-  // CVC + CVCC ship in this release. Clamp placement_tiers so stale
-  // localStorage from a hypothetical higher-tier build can't expose
-  // Magic E / Vowel Teams / Advanced before they're ready.
+  // V1 ships CVC only. Blending Power (CVCC) is parked for 1.1 — clamp
+  // the placement tier list so stale localStorage from any prior build
+  // can't expose CVCC / Magic E / Vowel Teams / Advanced. When CVCC is
+  // re-enabled in 1.1, change this back to ["CVC", "CVCC"].
   useEffect(() => {
-    const expected = JSON.stringify(["CVC", "CVCC"]);
+    const expected = JSON.stringify(["CVC"]);
     const tiers = localStorage.getItem("ww_placement_tiers");
     if (tiers !== expected) {
       localStorage.setItem("ww_placement_tiers", expected);
@@ -186,8 +190,8 @@ export default function App() {
   // ---- Onboarding complete → Map (first word of first quest) ----
   const handleOnboardingComplete = useCallback(() => {
     localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
-    // CVC + CVCC are the shipped tiers — persist exactly those.
-    localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC", "CVCC"]));
+    // V1 ships CVC only — see App.tsx clamp above for the 1.1 path.
+    localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
     setRoute("map");
   }, []);
 
@@ -462,23 +466,27 @@ export default function App() {
   // ---- Challenge Mode unlock ----
   const [showChallengeUnlock, setShowChallengeUnlock] = useState(false);
 
-  // ---- Blending Power (CVCC tier) unlock ----
-  // Fires once when the player has fully completed all 5 CVC quests and the
-  // CVCC tier becomes available. Re-checks on every map mount so the moment
-  // is never missed (works for completion path, dev-skip path, and existing
-  // saves that already finished CVC before this notification existed).
-  const [showBlendingPowerUnlock, setShowBlendingPowerUnlock] = useState(false);
-  const BLENDING_POWER_SEEN_KEY = "ww_blending_power_unlock_seen";
+  // ---- V1 Quest Complete celebration ----
+  // Replaces the parked BlendingPowerUnlock for v1. Fires once when the
+  // player has fully finished all 5 CVC quests (nodes + trophy + discovery
+  // for each). After dismissal the map shifts into "free explore" mode:
+  // every Discovery Room is reachable directly from the map, vowel islands
+  // are replayable, and the discovery cluster gets a beacon arrow + glow.
+  //
+  // Parked: BlendingPowerUnlock (CVCC tier celebration). When CVCC ships
+  // in 1.1, swap this back to firing BlendingPowerUnlock instead.
+  const [showQuestComplete, setShowQuestComplete] = useState(false);
+  const V1_QUEST_COMPLETE_SEEN_KEY = "ww_v1_quest_complete_seen";
   useEffect(() => {
     if (route !== "map") return;
-    if (localStorage.getItem(BLENDING_POWER_SEEN_KEY) === "true") return;
+    if (localStorage.getItem(V1_QUEST_COMPLETE_SEEN_KEY) === "true") return;
     if (!areAllQuestsComplete([...CVC_QUEST_IDS])) return;
-    setShowBlendingPowerUnlock(true);
+    setShowQuestComplete(true);
   }, [route, mapRevision]);
 
-  const handleBlendingPowerDismiss = useCallback(() => {
-    localStorage.setItem(BLENDING_POWER_SEEN_KEY, "true");
-    setShowBlendingPowerUnlock(false);
+  const handleQuestCompleteDismiss = useCallback(() => {
+    localStorage.setItem(V1_QUEST_COMPLETE_SEEN_KEY, "true");
+    setShowQuestComplete(false);
   }, []);
 
   /** Check if Challenge Mode should unlock for the active quest */
@@ -736,8 +744,8 @@ export default function App() {
         />
       )}
 
-      {showBlendingPowerUnlock && (
-        <BlendingPowerUnlock onDismiss={handleBlendingPowerDismiss} />
+      {showQuestComplete && (
+        <QuestCompleteCelebration onDismiss={handleQuestCompleteDismiss} />
       )}
 
       {unlockedSkinId && (

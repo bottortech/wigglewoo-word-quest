@@ -1,0 +1,67 @@
+/* =============================================
+   QuestCompleteCelebration.css
+   WiggleWoo's Word Quest
+   =============================================
+   Adds a hero image + extra hint line on top of
+   the shared .challenge-unlock-overlay layout.
+   Cozy, magical adventure-book energy — soft
+   colors, slow scale-in, no arcade feel.
+   ============================================= */
+
+/* Slightly warmer/softer backdrop than the cyan blending-power overlay */
+.quest-complete-overlay {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(40, 80, 120, 0.55) 0%,
+    rgba(20, 50, 90, 0.85) 70%,
+    rgba(10, 30, 60, 0.92) 100%
+  );
+}
+
+.quest-complete-card {
+  /* Roomier card so the hero fits and the message has space to breathe. */
+  padding: 28px 36px 32px;
+  max-width: 460px;
+  text-align: center;
+  background: linear-gradient(180deg, #fffbe9 0%, #fff3c8 100%);
+  border: 3px solid rgba(255, 200, 80, 0.65);
+  box-shadow:
+    0 0 60px rgba(255, 215, 100, 0.45),
+    0 16px 48px rgba(0, 0, 0, 0.35);
+  animation: quest-complete-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes quest-complete-card-in {
+  0%   { opacity: 0; transform: scale(0.85) translateY(20px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.quest-complete-card__hero {
+  width: 120px;
+  height: auto;
+  margin: 0 auto -4px;
+  display: block;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.22));
+  animation: quest-complete-hero-bob 2.4s ease-in-out 0.5s infinite;
+}
+
+@keyframes quest-complete-hero-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.quest-complete-card__hint {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(110, 75, 30, 0.78);
+  font-style: italic;
+}
+
+/* Reduced-motion respect */
+@media (prefers-reduced-motion: reduce) {
+  .quest-complete-card,
+  .quest-complete-card__hero {
+    animation: none;
+  }
+}

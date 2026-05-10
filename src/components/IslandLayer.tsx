@@ -67,20 +67,37 @@ interface IslandLayerProps {
   revision?: number; // bump to re-check unlock state
   devUnlock?: boolean; // dev mode — unlock all rooms
   hideBadges?: boolean; // hide explore badges (used on PlayNowScreen)
+  /** v1-end mode — when all 5 CVC quests are fully complete. Unlocks
+   *  every landmark for direct map-tap access, applies a soft glow/
+   *  pulse aura, and shows ✓ completion checkmarks. */
+  allComplete?: boolean;
+  /** Per-landmark completion state. Keys are envIds, values are true
+   *  for any environment whose CVC quest is fully complete. Used to
+   *  render subtle ✓ checkmarks on the appropriate islands. */
+  completedEnvs?: Set<string>;
 }
 
-const IslandLayer: React.FC<IslandLayerProps> = ({ onExplore, revision = 0, devUnlock = false, hideBadges = false }) => {
-  // Islands are decorative — discovery rooms are accessed via the quest map node
-  // Only dev mode makes them directly clickable
+const IslandLayer: React.FC<IslandLayerProps> = ({
+  onExplore,
+  revision = 0,
+  devUnlock = false,
+  hideBadges = false,
+  allComplete = false,
+  completedEnvs,
+}) => {
+  // Landmarks are clickable when:
+  //   - dev mode is on, OR
+  //   - v1 quest is fully complete (every CVC vowel done) — the map
+  //     opens up and every Discovery Room becomes a direct tap target
   const unlockedSet = useMemo(() => {
     const set = new Set<string>();
-    if (devUnlock) {
+    if (devUnlock || allComplete) {
       for (const lm of LANDMARKS) {
         set.add(lm.envId);
       }
     }
     return set;
-  }, [revision, devUnlock]);
+  }, [revision, devUnlock, allComplete]);
 
   return (
     <div className="island-layer">
@@ -111,11 +128,15 @@ const IslandLayer: React.FC<IslandLayerProps> = ({ onExplore, revision = 0, devU
         const pos = LANDMARK_POSITIONS[lm.envId];
         if (!pos) return null;
         const unlocked = unlockedSet.has(lm.envId);
+        const isCompleted = !!completedEnvs?.has(lm.envId);
 
         return (
           <div
             key={lm.envId}
-            className={`island-layer__landmark-wrap`}
+            className={[
+              "island-layer__landmark-wrap",
+              allComplete ? "island-layer__landmark-wrap--free-explore" : "",
+            ].filter(Boolean).join(" ")}
             style={{
               position: "absolute",
               left: `${pos.x}%`,
@@ -134,9 +155,21 @@ const IslandLayer: React.FC<IslandLayerProps> = ({ onExplore, revision = 0, devU
               draggable={false}
               style={{ width: "100%" }}
             />
+            {/* Soft glow aura — only on v1-end free-explore mode */}
+            {allComplete && (
+              <div className="island-layer__free-explore-glow" aria-hidden="true" />
+            )}
             {unlocked && !hideBadges && (
               <div className="island-layer__explore-badge">
                 <span className="island-layer__explore-icon">{lm.emoji}</span>
+              </div>
+            )}
+            {/* Completion checkmark — subtle ✓ on islands whose CVC
+                quest is fully done. Renders even before allComplete
+                fires, so each vowel earns its mark as it's mastered. */}
+            {isCompleted && !hideBadges && (
+              <div className="island-layer__complete-check" aria-label="Completed">
+                ✓
               </div>
             )}
           </div>

@@ -119,12 +119,99 @@
   }
 }
 
+/* ==========================================
+   FREE-EXPLORE STATE — v1 quest complete
+   ==========================================
+   Triggered by IslandLayer prop `allComplete`.
+   Adds a soft warm glow aura to every landmark
+   so all 5 Discovery Rooms read as "open for
+   exploring." Subtle, magical, slow — never
+   harsh or arcade-y.
+   ========================================== */
+
+.island-layer__free-explore-glow {
+  position: absolute;
+  inset: -12% -8% -8% -8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 230, 140, 0.45) 0%,
+    rgba(255, 200, 90, 0.22) 40%,
+    rgba(255, 180, 70, 0.08) 65%,
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(8px);
+  animation: landmark-glow-breathe 3.6s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+@keyframes landmark-glow-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1);    }
+  50%      { opacity: 0.95; transform: scale(1.06); }
+}
+
+/* Slight bob on free-explore landmarks for that "alive" feel */
+.island-layer__landmark-wrap--free-explore {
+  animation: landmark-free-bob 4.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Stagger via :nth-child so the 5 rooms don't bob in unison */
+.island-layer__landmark-wrap--free-explore:nth-child(2n)   { animation-delay: 1.2s; }
+.island-layer__landmark-wrap--free-explore:nth-child(3n)   { animation-delay: 2.4s; }
+.island-layer__landmark-wrap--free-explore:nth-child(5n+1) { animation-delay: 3.6s; }
+
+@keyframes landmark-free-bob {
+  0%, 100% { transform: translate(-50%, -50%); }
+  50%      { transform: translate(-50%, calc(-50% - 4px)); }
+}
+
+/* ==========================================
+   COMPLETION CHECKMARK — per-vowel mastery
+   ==========================================
+   Tiny green badge anchored top-right of any
+   landmark whose CVC quest is fully complete.
+   Earned per-vowel as the player progresses,
+   so the marks accumulate rather than appearing
+   all at once at v1-end. */
+.island-layer__complete-check {
+  position: absolute;
+  top: 4%;
+  right: 8%;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6BCF6E 0%, #45A748 100%);
+  border: 2.5px solid #fff;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.30),
+    0 0 12px rgba(105, 200, 110, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: none;
+  z-index: 5;
+  animation: complete-check-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+@keyframes complete-check-in {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .island-layer__item--submarine,
-  .island-layer__item--shipwreck {
-    animation: none;
-  }
-  .island-layer__explore-badge {
+  .island-layer__item--shipwreck,
+  .island-layer__explore-badge,
+  .island-layer__free-explore-glow,
+  .island-layer__landmark-wrap--free-explore,
+  .island-layer__complete-check {
     animation: none;
   }
 }

@@ -2447,3 +2447,97 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* ==========================================
+   DISCOVERY BEACON — v1 free-explore banner
+   ==========================================
+   Soft pill-shaped guidance banner that appears
+   once all 5 CVC vowels are fully complete.
+   Cozy magical-book energy: warm gradient,
+   sparkle decorations, gentle bob, soft glow.
+   Pointer-events: none — landmarks themselves
+   are the click targets (per IslandLayer).
+   ========================================== */
+.discovery-beacon {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px 12px;
+  border-radius: 28px;
+  background: linear-gradient(180deg,
+    rgba(255, 250, 230, 0.96) 0%,
+    rgba(255, 235, 190, 0.96) 100%);
+  border: 2.5px solid rgba(255, 200, 90, 0.7);
+  box-shadow:
+    0 0 24px rgba(255, 215, 100, 0.45),
+    0 8px 24px rgba(0, 0, 0, 0.18);
+  font-family: "Fredoka", "Nunito", sans-serif;
+  animation: discovery-beacon-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards,
+             discovery-beacon-bob 3.6s ease-in-out 0.7s infinite;
+  will-change: transform, opacity, box-shadow;
+}
+
+.discovery-beacon__text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #6e4b1e;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.2px;
+}
+
+.discovery-beacon__sparkle {
+  font-size: 18px;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 100, 0.8));
+  animation: discovery-beacon-sparkle 2s ease-in-out infinite;
+}
+
+.discovery-beacon__sparkle:nth-of-type(2) {
+  animation-delay: 1s;
+}
+
+.discovery-beacon__arrow {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  color: rgba(255, 200, 90, 0.95);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  animation: discovery-beacon-arrow-bounce 1.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes discovery-beacon-in {
+  0%   { opacity: 0; transform: translate(-50%, -16px) scale(0.92); }
+  100% { opacity: 1; transform: translate(-50%, 0)     scale(1); }
+}
+
+/* Combine the bob with the centered translateX so we don't fight it. */
+@keyframes discovery-beacon-bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, -3px); }
+}
+
+@keyframes discovery-beacon-sparkle {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1.0; transform: scale(1.2); }
+}
+
+@keyframes discovery-beacon-arrow-bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, 6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discovery-beacon,
+  .discovery-beacon__sparkle,
+  .discovery-beacon__arrow {
+    animation: none;
+  }
+}
+

@@ -17,6 +17,7 @@ import {
   hasTrophyUnlockBeenSeen,
   markTrophyUnlockSeen,
   loadNodeRatings,
+  isQuestFullyComplete,
 } from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS, ADVANCED_QUEST_IDS } from "../game/questIds";
@@ -34,7 +35,7 @@ import WaterSparklesLayer from "../components/WaterSparklesLayer";
 import IslandLayer from "../components/IslandLayer";
 import SkyLayer from "../components/SkyLayer";
 import { playNewChallengePhrase, playEvent } from "../audio/SoundEffects";
-import { isEnvironmentUnlocked } from "../game/exploreData";
+import { isEnvironmentUnlocked, QUEST_ENVIRONMENT_MAP } from "../game/exploreData";
 import "../styles/game.css";
 import "../styles/home.css";
 import "../styles/questmap.css";
@@ -144,7 +145,9 @@ function isPlacementUnlocked(tier: string): boolean {
 // Tiers that ship in this release. Everything else is shown as
 // "Coming soon" and locked regardless of placement / completion state.
 // Expand this set as Magic E / Vowel Teams / Advanced ship.
-const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(["CVC", "CVCC"]);
+// V1 ships CVC only. Blending Power (CVCC) is parked for the 1.1 update —
+// flip this back to ["CVC", "CVCC"] when re-enabling.
+const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(["CVC"]);
 
 function isTierShipped(tier: QuestType): boolean {
   return SHIPPED_TIERS.has(tier);
@@ -438,6 +441,27 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
 
   // Quest fully done — nodes, path, trophy, discovery, WiggleWoo all hidden
   const questFullyDone = progress.questComplete && trophyProgress.tier === "full" && discoveryProgress.discoveryRoomComplete;
+
+  // V1-end: every CVC vowel quest fully complete (nodes + trophy + discovery
+  // for all 5). When true the map switches into "free explore" mode — every
+  // landmark becomes a direct tap-to-room, the discovery cluster gets a
+  // beacon arrow, and quest UI fades back out of the way. The component is
+  // keyed on map+skin revision in App.tsx, so this is recomputed naturally
+  // whenever progress can have changed.
+  const allCvcComplete = areAllQuestsComplete([...CVC_QUEST_IDS]);
+
+  // Per-environment completion set — drives the green ✓ checkmarks on
+  // landmarks. Earned per-vowel as the player progresses, NOT gated on
+  // allCvcComplete.
+  const completedEnvs = (() => {
+    const set = new Set<string>();
+    for (const qid of CVC_QUEST_IDS) {
+      if (!isQuestFullyComplete(qid)) continue;
+      const envId = QUEST_ENVIRONMENT_MAP[qid];
+      if (envId) set.add(envId);
+    }
+    return set;
+  })();
 
   // Trophy node state — midpoint of IMAGE words only
   const trophyNodeState = useMemo(() =>
@@ -873,7 +897,13 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             sparkles in the very spots we want them. */}
         <WaterSparklesLayer />
         {/* Layer 3-4: Land pieces, objects, landmarks */}
-        <IslandLayer onExplore={onExplore} devUnlock={devUnlock} hideBadges={!questFullyDone && !devUnlock} />
+        <IslandLayer
+          onExplore={onExplore}
+          devUnlock={devUnlock}
+          hideBadges={!questFullyDone && !devUnlock}
+          allComplete={allCvcComplete}
+          completedEnvs={completedEnvs}
+        />
         {/* Layer 5: Clouds at top of map */}
         <SkyLayer />
 
@@ -1094,6 +1124,22 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         </>)}
       </div>
       {/* end quest-map-overlay */}
+
+      {/* V1-end discovery beacon — appears once every CVC vowel is fully
+          complete. Sits above the map content as a non-interactive guide
+          banner pointing at the Discovery Rooms. The actual click targets
+          are the landmarks themselves (handled by IslandLayer's free-
+          explore unlock). */}
+      {allCvcComplete && (
+        <div className="discovery-beacon" aria-hidden="true">
+          <span className="discovery-beacon__sparkle">✨</span>
+          <span className="discovery-beacon__text">
+            Tap any island to explore the Discovery Rooms!
+          </span>
+          <span className="discovery-beacon__sparkle">✨</span>
+          <div className="discovery-beacon__arrow">▼</div>
+        </div>
+      )}
       </div>
       {/* end map-window */}
 
