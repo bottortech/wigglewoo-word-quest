@@ -1137,7 +1137,6 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             Tap any island to explore the Discovery Rooms!
           </span>
           <span className="discovery-beacon__sparkle">✨</span>
-          <div className="discovery-beacon__arrow">▲</div>
         </div>
       )}
       </div>
