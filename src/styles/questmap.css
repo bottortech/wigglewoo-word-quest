@@ -2468,16 +2468,16 @@
   pointer-events: none;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 22px 12px;
-  border-radius: 28px;
+  gap: 6px;
+  padding: 6px 14px 7px;
+  border-radius: 20px;
   background: linear-gradient(180deg,
     rgba(255, 250, 230, 0.96) 0%,
     rgba(255, 235, 190, 0.96) 100%);
-  border: 2.5px solid rgba(255, 200, 90, 0.7);
+  border: 2px solid rgba(255, 200, 90, 0.7);
   box-shadow:
-    0 0 24px rgba(255, 215, 100, 0.45),
-    0 8px 24px rgba(0, 0, 0, 0.18);
+    0 0 18px rgba(255, 215, 100, 0.40),
+    0 4px 14px rgba(0, 0, 0, 0.18);
   font-family: "Fredoka", "Nunito", sans-serif;
   animation: discovery-beacon-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards,
              discovery-beacon-bob 3.6s ease-in-out 0.7s infinite;
@@ -2485,7 +2485,7 @@
 }
 
 .discovery-beacon__text {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   color: #6e4b1e;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -2493,8 +2493,8 @@
 }
 
 .discovery-beacon__sparkle {
-  font-size: 18px;
-  filter: drop-shadow(0 0 4px rgba(255, 215, 100, 0.8));
+  font-size: 13px;
+  filter: drop-shadow(0 0 3px rgba(255, 215, 100, 0.8));
   animation: discovery-beacon-sparkle 2s ease-in-out infinite;
 }
 
@@ -2506,10 +2506,10 @@
    (banner is at the bottom of the map after the v1 reposition). */
 .discovery-beacon__arrow {
   position: absolute;
-  top: -22px;
+  top: -16px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 22px;
+  font-size: 16px;
   color: rgba(255, 200, 90, 0.95);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   animation: discovery-beacon-arrow-bounce 1.4s ease-in-out infinite;
