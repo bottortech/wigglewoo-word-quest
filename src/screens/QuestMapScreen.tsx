@@ -35,7 +35,7 @@ import WaterSparklesLayer from "../components/WaterSparklesLayer";
 import IslandLayer from "../components/IslandLayer";
 import SkyLayer from "../components/SkyLayer";
 import { playNewChallengePhrase, playEvent } from "../audio/SoundEffects";
-import { isEnvironmentUnlocked, QUEST_ENVIRONMENT_MAP } from "../game/exploreData";
+import { isEnvironmentUnlocked, QUEST_ENVIRONMENT_MAP, LANDMARK_POSITIONS } from "../game/exploreData";
 import "../styles/game.css";
 import "../styles/home.css";
 import "../styles/questmap.css";
@@ -832,8 +832,45 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   // FINAL POSITION: animation override if active, otherwise resting position
   const wwLevel = wwAnimOverride !== null ? wwAnimOverride : wwRestingNode;
 
-  // Calculate WW coordinates from node index
+  // ---- Free-explore mode: hop between landmarks ----
+  // When all CVC vowels are fully complete, WiggleWoo no longer rests on
+  // a quest node — instead the active skin character cycles through the
+  // 5 Discovery Room islands on a slow timer, with a smooth slide between
+  // positions and a continuous happy-bounce on the sprite for the "jumping
+  // between islands" feel.
+  const FREE_EXPLORE_HOP_ORDER = [
+    "valcano",
+    "castle-island",
+    "industrial-tech-city",
+    "glass-dome",
+    "small-coastal-village",
+  ];
+  const FREE_EXPLORE_HOP_INTERVAL_MS = 4500;
+  const [freeExploreHopIdx, setFreeExploreHopIdx] = useState(0);
+
+  useEffect(() => {
+    if (!allCvcComplete) return;
+    const id = setInterval(() => {
+      setFreeExploreHopIdx((i) => (i + 1) % FREE_EXPLORE_HOP_ORDER.length);
+    }, FREE_EXPLORE_HOP_INTERVAL_MS);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCvcComplete]);
+
+  // Calculate WW coordinates — landmark-cycling in free-explore mode,
+  // otherwise the existing quest-node positioning.
   const wwPosition = useMemo(() => {
+    if (allCvcComplete) {
+      const envId = FREE_EXPLORE_HOP_ORDER[freeExploreHopIdx];
+      const pos = LANDMARK_POSITIONS[envId];
+      if (pos) {
+        return {
+          left: `${pos.x}%`,
+          top: `calc(${pos.y}% - 70px)`,
+          transform: 'translateX(-50%)',
+        };
+      }
+    }
     if (wwLevel === 'discovery') {
       return {
         left: `${DISCOVERY_POSITION.x}%`,
@@ -856,7 +893,8 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       top: `calc(${pos.y}% - 70px)`,
       transform: 'translateX(-50%)',
     };
-  }, [wwLevel, wordCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wwLevel, wordCount, allCvcComplete, freeExploreHopIdx]);
 
   // Generate SVG path for the glowing learning line (horizontal flow)
   const pathD = useMemo(() => {
@@ -1097,7 +1135,12 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         {/* WiggleWoo positioned near active node, trophy, or discovery */}
         {(activeNodeIndex >= 0 || trophyNodeState === "active" || discoveryNodeState === "active") && (
           <div
-            className={`map-wigglewoo ${wwAnimating ? "map-wigglewoo--moving" : ""} ${showOnboardingArrow ? "map-wigglewoo--onboarding" : ""}`}
+            className={[
+              "map-wigglewoo",
+              wwAnimating ? "map-wigglewoo--moving" : "",
+              showOnboardingArrow ? "map-wigglewoo--onboarding" : "",
+              allCvcComplete ? "map-wigglewoo--free-explore" : "",
+            ].filter(Boolean).join(" ")}
             style={{...wwPosition, cursor: showOnboardingArrow ? "pointer" : undefined}}
             onClick={showOnboardingArrow ? handleOnboardingTap : undefined}
           >

@@ -796,6 +796,26 @@
   transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Free-explore mode — WiggleWoo cycles through Discovery Room
+   landmarks. Smooth slide between positions; the sprite plays a
+   continuous happy-hop instead of the gentle idle bob. Pointer-
+   events stay off so landmark clicks below pass through. */
+.map-wigglewoo--free-explore {
+  transition:
+    left 1.4s cubic-bezier(0.4, 0, 0.2, 1),
+    top  1.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.map-wigglewoo--free-explore .map-wigglewoo__img {
+  animation: ww-free-hop 0.9s ease-in-out infinite;
+}
+
+@keyframes ww-free-hop {
+  0%, 100% { transform: translateY(0)    scale(1, 1);       }
+  35%      { transform: translateY(-12px) scale(0.94, 1.08); }
+  70%      { transform: translateY(0)    scale(1.04, 0.96); }
+}
+
 .map-wigglewoo__img {
   width: 80px;
   height: auto;
@@ -807,6 +827,15 @@
 @keyframes ww-idle {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-wigglewoo--free-explore {
+    transition: none;
+  }
+  .map-wigglewoo--free-explore .map-wigglewoo__img {
+    animation: ww-idle 2s ease-in-out infinite;
+  }
 }
 
 /* ==========================================
