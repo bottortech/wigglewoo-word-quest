@@ -1168,6 +1168,26 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       </div>
       {/* end quest-map-overlay */}
 
+      {/* V1-end free-explore WiggleWoo — renders OUTSIDE the
+          quest-map-overlay's `!questFullyDone` gate so the active skin's
+          character stays on the map after every CVC quest is complete.
+          Hops between landmark positions via the wwPosition useMemo
+          (which detects allCvcComplete and points at LANDMARK_POSITIONS). */}
+      {allCvcComplete && (
+        <div
+          className="map-wigglewoo map-wigglewoo--free-explore"
+          style={wwPosition}
+          aria-hidden="true"
+        >
+          <img
+            src={skinAssets.heroImg || heroImg}
+            alt=""
+            className="map-wigglewoo__img"
+            draggable={false}
+          />
+        </div>
+      )}
+
       {/* V1-end discovery beacon — appears once every CVC vowel is fully
           complete. Sits above the map content as a non-interactive guide
           banner pointing at the Discovery Rooms. The actual click targets
