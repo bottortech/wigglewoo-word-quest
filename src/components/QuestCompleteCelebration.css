@@ -19,17 +19,23 @@
 }
 
 .quest-complete-card {
-  /* Roomier card so the hero fits and the message has space to breathe. */
-  padding: 28px 36px 32px;
-  max-width: 460px;
+  /* Compact — fits comfortably without dominating the screen. */
+  padding: 18px 24px 20px;
+  max-width: 320px;
   text-align: center;
   background: linear-gradient(180deg, #fffbe9 0%, #fff3c8 100%);
-  border: 3px solid rgba(255, 200, 80, 0.65);
+  border: 2.5px solid rgba(255, 200, 80, 0.65);
   box-shadow:
-    0 0 60px rgba(255, 215, 100, 0.45),
-    0 16px 48px rgba(0, 0, 0, 0.35);
+    0 0 40px rgba(255, 215, 100, 0.40),
+    0 12px 32px rgba(0, 0, 0, 0.30);
   animation: quest-complete-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Trim the shared challenge-mode title/subtitle inside this card so
+   the smaller container reads nicely. */
+.quest-complete-card .challenge-unlock__icon { font-size: 38px; }
+.quest-complete-card .challenge-unlock__title { font-size: 22px; margin: 6px 0 4px; }
+.quest-complete-card .challenge-unlock__subtitle { font-size: 14px; line-height: 1.4; }
 
 @keyframes quest-complete-card-in {
   0%   { opacity: 0; transform: scale(0.85) translateY(20px); }
@@ -37,11 +43,11 @@
 }
 
 .quest-complete-card__hero {
-  width: 120px;
+  width: 84px;
   height: auto;
-  margin: 0 auto -4px;
+  margin: 0 auto -2px;
   display: block;
-  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.22));
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.22));
   animation: quest-complete-hero-bob 2.4s ease-in-out 0.5s infinite;
 }
 

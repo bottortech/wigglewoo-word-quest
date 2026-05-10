@@ -2459,7 +2459,9 @@
    ========================================== */
 .discovery-beacon {
   position: absolute;
-  top: 4%;
+  /* Bottom of the map, sitting roughly over the submarine + shipwreck
+     decorations (which live around y=68–72%). */
+  top: 73%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 6;
@@ -2500,9 +2502,11 @@
   animation-delay: 1s;
 }
 
+/* Arrow now sits ABOVE the banner, pointing UP toward the islands
+   (banner is at the bottom of the map after the v1 reposition). */
 .discovery-beacon__arrow {
   position: absolute;
-  bottom: -14px;
+  top: -22px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 22px;
@@ -2530,7 +2534,7 @@
 
 @keyframes discovery-beacon-arrow-bounce {
   0%, 100% { transform: translate(-50%, 0); }
-  50%      { transform: translate(-50%, 6px); }
+  50%      { transform: translate(-50%, -6px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

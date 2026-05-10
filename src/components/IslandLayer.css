@@ -152,21 +152,8 @@
   50%      { opacity: 0.95; transform: scale(1.06); }
 }
 
-/* Slight bob on free-explore landmarks for that "alive" feel */
-.island-layer__landmark-wrap--free-explore {
-  animation: landmark-free-bob 4.8s ease-in-out infinite;
-  will-change: transform;
-}
-
-/* Stagger via :nth-child so the 5 rooms don't bob in unison */
-.island-layer__landmark-wrap--free-explore:nth-child(2n)   { animation-delay: 1.2s; }
-.island-layer__landmark-wrap--free-explore:nth-child(3n)   { animation-delay: 2.4s; }
-.island-layer__landmark-wrap--free-explore:nth-child(5n+1) { animation-delay: 3.6s; }
-
-@keyframes landmark-free-bob {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50%      { transform: translate(-50%, calc(-50% - 4px)); }
-}
+/* Free-explore landmarks stay STATIC — only the glow aura animates.
+   Removed the float/bob per UX direction so the islands feel grounded. */
 
 /* ==========================================
    COMPLETION CHECKMARK — per-vowel mastery
@@ -210,7 +197,6 @@
   .island-layer__item--shipwreck,
   .island-layer__explore-badge,
   .island-layer__free-explore-glow,
-  .island-layer__landmark-wrap--free-explore,
   .island-layer__complete-check {
     animation: none;
   }
