@@ -16,26 +16,27 @@
 
 /* ==========================================
    1. CAUSTICS SHIMMER
-   Slow-drifting light refraction pattern.
-   Uses layered radial gradients to simulate
-   underwater caustics without a texture PNG.
+   Slow-drifting light refraction pattern over
+   the water-layer.png base. Toned down to
+   opacity 0.10 because the new texture already
+   carries strong caustic detail — this layer
+   just adds drift motion on top. Soft-light
+   blend keeps it gentle on island tones.
    ========================================== */
 .water-ambient__shimmer {
   position: absolute;
   inset: -20%;          /* oversized so edges don't flash */
-  opacity: 0.08;
+  opacity: 0.10;
   mix-blend-mode: soft-light;
   will-change: transform;
-  animation: shimmer-drift 10s linear infinite;
+  animation: shimmer-drift 22s linear infinite;
   background:
-    /* Primary caustic cells */
     radial-gradient(ellipse 18% 22% at 20% 30%, rgba(255,255,255,0.5) 0%, transparent 70%),
     radial-gradient(ellipse 14% 18% at 55% 20%, rgba(255,255,255,0.4) 0%, transparent 70%),
     radial-gradient(ellipse 20% 16% at 80% 45%, rgba(255,255,255,0.45) 0%, transparent 70%),
     radial-gradient(ellipse 16% 20% at 35% 65%, rgba(255,255,255,0.35) 0%, transparent 70%),
     radial-gradient(ellipse 18% 14% at 70% 75%, rgba(255,255,255,0.4) 0%, transparent 70%),
     radial-gradient(ellipse 12% 16% at 15% 80%, rgba(255,255,255,0.3) 0%, transparent 70%),
-    /* Secondary smaller cells offset */
     radial-gradient(ellipse 10% 12% at 45% 45%, rgba(200,240,255,0.3) 0%, transparent 60%),
     radial-gradient(ellipse 10% 14% at 90% 25%, rgba(200,240,255,0.25) 0%, transparent 60%),
     radial-gradient(ellipse 12% 10% at 10% 50%, rgba(200,240,255,0.3) 0%, transparent 60%);
@@ -43,10 +44,83 @@
 
 @keyframes shimmer-drift {
   0%   { transform: translate(0, 0) scale(1); }
-  25%  { transform: translate(2%, 1.5%) scale(1.02); }
-  50%  { transform: translate(3.5%, 0%) scale(1); }
-  75%  { transform: translate(1.5%, -1.5%) scale(1.01); }
+  25%  { transform: translate(4%, 2%) scale(1.02); }
+  50%  { transform: translate(5%, 0%) scale(1); }
+  75%  { transform: translate(2%, -2%) scale(1.01); }
   100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ==========================================
+   1b. SLOW SHEEN PAN
+   Soft highlight stripe drifts horizontally
+   across the water on a 50s loop. Long enough
+   to feel luxurious and calm. Overlay blend +
+   water mask so islands aren't touched.
+   ========================================== */
+.water-ambient__sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.10;
+  mix-blend-mode: overlay;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(220, 240, 255, 0.40) 47%,
+    rgba(255, 255, 255, 0.60) 50%,
+    rgba(220, 240, 255, 0.40) 53%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: sheen-pan 50s linear infinite;
+  will-change: background-position;
+  mask-image: url("/assets/river_mask.png");
+  -webkit-mask-image: url("/assets/river_mask.png");
+  mask-size: cover;
+  -webkit-mask-size: cover;
+  mask-position: center;
+  -webkit-mask-position: center;
+}
+
+@keyframes sheen-pan {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+
+/* ==========================================
+   1c. ATMOSPHERIC HAZE (NEW)
+   Soft cyan bloom centered on the water area
+   that breathes very slowly (24s). Adds a
+   dreamy, magical quality to the scene
+   without competing with the texture's
+   sparkles or the shimmer's caustics.
+   Water-masked, screen blend.
+   ========================================== */
+.water-ambient__haze {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    ellipse at 50% 60%,
+    rgba(220, 250, 255, 0.55) 0%,
+    rgba(180, 230, 250, 0.30) 35%,
+    transparent 70%
+  );
+  animation: haze-breathe 24s ease-in-out infinite;
+  will-change: opacity, transform;
+  mask-image: url("/assets/river_mask.png");
+  -webkit-mask-image: url("/assets/river_mask.png");
+  mask-size: cover;
+  -webkit-mask-size: cover;
+  mask-position: center;
+  -webkit-mask-position: center;
+}
+
+@keyframes haze-breathe {
+  0%, 100% { opacity: 0.05; transform: scale(1); }
+  50%      { opacity: 0.10; transform: scale(1.025); }
 }
 
 /* ==========================================
@@ -262,6 +336,8 @@
 
 /* Freeze all animations when ambient is off */
 .quest-map-overlay:not(.ambient-on) .water-ambient__shimmer,
+.quest-map-overlay:not(.ambient-on) .water-ambient__sheen,
+.quest-map-overlay:not(.ambient-on) .water-ambient__haze,
 .quest-map-overlay:not(.ambient-on) .bubble,
 .quest-map-overlay:not(.ambient-on) .fish-shadow,
 .quest-map-overlay:not(.ambient-on) .water-ambient__whale::after {
@@ -272,6 +348,8 @@
 /* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .water-ambient__shimmer,
+  .water-ambient__sheen,
+  .water-ambient__haze,
   .bubble,
   .fish-shadow,
   .water-ambient__whale::after {

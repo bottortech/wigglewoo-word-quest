@@ -30,6 +30,7 @@ import ParentGate from "../components/ParentGate";
 import WaterBaseLayer from "../components/WaterBaseLayer";
 // import RiverLayer from "../components/RiverLayer"; // temp hidden
 import WaterAmbientLayer from "../components/WaterAmbientLayer";
+import WaterSparklesLayer from "../components/WaterSparklesLayer";
 import IslandLayer from "../components/IslandLayer";
 import SkyLayer from "../components/SkyLayer";
 import { playNewChallengePhrase, playEvent } from "../audio/SoundEffects";
@@ -866,6 +867,11 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         <WaterBaseLayer />
         {/* <RiverLayer /> — TEMP HIDDEN to identify straight line */}
         <WaterAmbientLayer />
+        {/* Layer 2b: Water sparkles — sibling of WaterBaseLayer (NOT
+            nested inside it) so they aren't clipped by the river_mask.
+            That mask was painted for a different layout and was hiding
+            sparkles in the very spots we want them. */}
+        <WaterSparklesLayer />
         {/* Layer 3-4: Land pieces, objects, landmarks */}
         <IslandLayer onExplore={onExplore} devUnlock={devUnlock} hideBadges={!questFullyDone && !devUnlock} />
         {/* Layer 5: Clouds at top of map */}
@@ -985,7 +991,12 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           {/* Layer 3: Pedestal highlight ring beneath trophy */}
           <div className="trophy-node__pedestal" />
           
-          {/* Layer 4: Animated sparkles */}
+          {/* Layer 4: Animated sparkles — DISABLED 2026-05-09 to keep
+              the map calm/atmospheric. Six gold twinkles around the
+              trophy node read as visual noise alongside the new water
+              treatment. Re-enable by uncommenting if the trophy node
+              ever needs more emphasis. */}
+          {/*
           <div className="trophy-node__sparkles">
             <span className="trophy-sparkle trophy-sparkle--1" />
             <span className="trophy-sparkle trophy-sparkle--2" />
@@ -994,6 +1005,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             <span className="trophy-sparkle trophy-sparkle--5" />
             <span className="trophy-sparkle trophy-sparkle--6" />
           </div>
+          */}
           
           <button
             className={`trophy-node trophy-node--${trophyNodeState}${shakingTrophy ? ' trophy-node--shaking' : ''}`}

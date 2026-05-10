@@ -16,21 +16,27 @@
   z-index: 0;
   pointer-events: none;
 
-  /* Uniform bright turquoise base — no two-tone split */
+  /* Uniform bright turquoise base — peeks through the texture's
+     translucent edges */
   background-color: #3a9fd4;
 
-  /* Tiled water texture on top of the colour */
-  background-image:
-    /* Repeating water texture only — no gradient overlays */
-    url("/assets/river_overlay.png");
-
+  /* Stylized water texture (water-layer.png is ~2:1 aspect, painted
+     with built-in caustic ripples and tiny gleams). Tile size picked
+     so the repeat isn't obvious at typical map zoom — tune if the
+     pattern reads as too small/large on real device. */
+  background-image: url("/assets/water-layer.png");
   background-repeat: repeat;
-  background-size: 256px 256px;
-  background-position: 0 40px;
-  animation: water-base-drift 30s linear infinite;
+  background-size: 600px 300px;
+  background-position: 0 0;
 
-  /* Brighter tropical turquoise — matches island shoreline tones */
-  filter: brightness(1.12) saturate(1.25) hue-rotate(-12deg);
+  /* Very slow purely-horizontal drift — one full tile every 90s
+     reads as gentle current, not arcade scroll. */
+  animation: water-base-drift 90s linear infinite;
+
+  /* Light brightness/saturation lift to harmonize with island
+     shoreline tones; gentler than before since the new texture
+     is already vibrant. */
+  filter: brightness(1.05) saturate(1.10);
 
   /* River mask — shapes where water is visible */
   mask-image: url("/assets/river_mask.png");
@@ -42,8 +48,8 @@
 }
 
 @keyframes water-base-drift {
-  0%   { background-position: 0 40px; }
-  100% { background-position: 256px 296px; }
+  0%   { background-position: 0 0; }
+  100% { background-position: 600px 0; }
 }
 
 /* Ambient toggle — freeze animation when ambient is off */

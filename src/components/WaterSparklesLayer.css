@@ -1,0 +1,111 @@
+/* =============================================
+   WaterSparklesLayer.css — Twinkles
+   WiggleWoo's Word Quest
+   =============================================
+   Sibling of WaterBaseLayer / WaterAmbientLayer.
+   Sits at z-index 2 — above the ambient water
+   effects (z-index 0/1) but BELOW IslandLayer
+   (z-index 3), so islands naturally cover any
+   sparkle whose position overlaps a solid PNG.
+   No mask: the previous river_mask.png didn't
+   align with the current IslandLayer placements,
+   so coverage is delegated entirely to whatever
+   renders above on the z-stack.
+   ============================================= */
+
+.water-sparkles {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.water-sparkle {
+  position: absolute;
+  /* 18px — gives the cross arms room to extend. */
+  width: 18px;
+  height: 18px;
+  /* 4-point cross/star shape via three layered radial gradients:
+       1. Vertical ray  — tall thin ellipse top-to-bottom
+       2. Horizontal ray — wide thin ellipse left-to-right
+       3. Center dot     — bright tight circle at the crossing
+     Stacked, they form the same cross-gleam style painted into
+     water-layer.png so the code-driven sparkles match the texture's
+     own highlights. */
+  background:
+    /* Center bright dot (drawn last in CSS = top layer) */
+    radial-gradient(circle 5px at center,
+      rgba(255, 255, 255, 1.00) 0%,
+      rgba(255, 255, 255, 0.80) 35%,
+      rgba(230, 250, 255, 0.30) 70%,
+      transparent 100%),
+    /* Vertical ray */
+    radial-gradient(1.4px 10px at center,
+      rgba(255, 255, 255, 1.00) 0%,
+      rgba(255, 255, 255, 0.55) 35%,
+      transparent 80%),
+    /* Horizontal ray */
+    radial-gradient(10px 1.4px at center,
+      rgba(255, 255, 255, 1.00) 0%,
+      rgba(255, 255, 255, 0.55) 35%,
+      transparent 80%);
+  /* Stacked bloom — tight inner glow + medium halo + wide diffused
+     atmospheric scatter. Gives a real light-source look. */
+  filter:
+    drop-shadow(0 0 2px rgba(255, 255, 255, 1.0))
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.85))
+    drop-shadow(0 0 14px rgba(180, 230, 255, 0.55));
+  /* Screen blend mode = additive light: the sparkle BRIGHTENS the
+     water beneath it instead of just sitting on top. Gives the
+     "sun-glint on water" feel that flat dots can't achieve. */
+  mix-blend-mode: screen;
+  opacity: 0;
+  will-change: opacity, transform;
+  /* 6s cycle — sparkle holds at peak for most of the cycle, gentle
+     fade-in/out for the magical pulse feel. */
+  animation: water-sparkle-twinkle 6s ease-in-out infinite;
+}
+
+/* Positions placed relative to QuestMapScreen NODE_POSITIONS (line 71)
+   so sparkles cluster around specific quest nodes in open water.
+   The river_mask inherited from .water-base-layer auto-hides any glint
+   that drifts onto land, so positions are forgiving. */
+
+/* Two sparkles in the water between node 5 (35, 78) and node 6 (60, 94) */
+.water-sparkle--1 { left: 44%; top: 84%; animation-delay: 0.0s; }
+.water-sparkle--2 { left: 52%; top: 89%; animation-delay: 2.4s; }
+
+/* Two sparkles in the water just in front of (below) node 12 (37, 31) */
+.water-sparkle--3 { left: 32%; top: 39%; animation-delay: 1.6s; }
+.water-sparkle--4 { left: 42%; top: 41%; animation-delay: 4.4s; }
+
+/* One sparkle by node 15 (78, 22) — open water above-right of it */
+.water-sparkle--5 { left: 82%; top: 17%; animation-delay: 3.2s; }
+
+/* One sparkle by node 10 (14, 51) — water to the left of it */
+.water-sparkle--6 { left:  9%; top: 55%; animation-delay: 0.8s; }
+
+@keyframes water-sparkle-twinkle {
+  /* Quick fade-in to bright, hold visible most of the cycle,
+     gentle fade-out, brief pause at zero before next cycle. */
+  0%        { opacity: 0;    transform: scale(0.6); }
+  20%       { opacity: 0.95; transform: scale(1.05); }
+  50%       { opacity: 0.85; transform: scale(1.0); }
+  80%       { opacity: 0.95; transform: scale(1.05); }
+  100%      { opacity: 0;    transform: scale(0.6); }
+}
+
+/* Freeze when ambient is off (matches sibling water layers) */
+.quest-map-overlay:not(.ambient-on) ~ * .water-sparkle,
+.quest-map-overlay:not(.ambient-on) .water-sparkle {
+  animation: none;
+  opacity: 0;
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .water-sparkle {
+    animation: none;
+    opacity: 0;
+  }
+}
