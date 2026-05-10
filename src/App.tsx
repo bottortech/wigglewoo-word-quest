@@ -51,6 +51,7 @@ import {
   markEnvironmentVisited,
   completeDiscoveryRoom,
   resetDiscoveryProgress,
+  loadDiscoveryProgress,
   migrateOldCompletedQuests,
   isChallengeUnlocked,
   recordVowelQuestCompletion,
@@ -107,8 +108,22 @@ export default function App() {
   // Initialize default skin asset paths (bundled imports)
   useEffect(() => {
     initDefaultSkinPaths(heroImgDefault, helperImgDefault);
+    const allQuestIds = [...CVC_QUEST_IDS, ...CVCC_QUEST_IDS, ...CVVC_QUEST_IDS];
     // Migrate old completed quests to include discovery room progress
-    migrateOldCompletedQuests([...CVC_QUEST_IDS, ...CVCC_QUEST_IDS, ...CVVC_QUEST_IDS]);
+    migrateOldCompletedQuests(allQuestIds);
+
+    // Backfill skin unlocks. The standard unlock path runs from
+    // handleDiscoveryRoomComplete, but if a quest was finished via dev
+    // controls, an interrupted session, or before the skin-unlock branch was
+    // wired, the corresponding skin can stay locked even though the room
+    // shows complete. Walking saved progress on boot fixes those stuck saves
+    // in one pass and prevents drift going forward.
+    for (const questId of allQuestIds) {
+      const dp = loadDiscoveryProgress(questId);
+      if (!dp.discoveryRoomComplete) continue;
+      const envId = QUEST_ENVIRONMENT_MAP[questId];
+      if (envId) unlockSkinForEnvironment(envId);
+    }
   }, []);
 
   // Global quest tracker — which vowel set we're on

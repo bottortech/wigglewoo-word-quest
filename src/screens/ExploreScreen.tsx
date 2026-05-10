@@ -18,7 +18,7 @@
 // =============================================
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { ENVIRONMENTS, ENVIRONMENT_QUEST_MAP } from "../game/exploreData";
+import { ENVIRONMENTS, ENVIRONMENT_QUEST_MAP, isEnvironmentVowelMastered } from "../game/exploreData";
 // PARKED for v1 — see MINI_GAMES_ENABLED below. Import + styles kept
 // so we can flip the flag back on without re-plumbing the screen.
 import DiscoverySession from "../components/miniGames/DiscoverySession";
@@ -485,8 +485,14 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     // Only fact-panel props trigger the discovery flow
     if (!prop.factPanel) return;
 
-    // Check daily cap (skip in dev)
-    if (!import.meta.env.DEV && isDailyFactCapReached(environmentId)) {
+    // Check daily cap (skip in dev). The cap is also lifted once any quest
+    // tied to this environment is fully complete — kids who finished the
+    // content shouldn't be told to come back tomorrow for two more facts.
+    if (
+      !import.meta.env.DEV &&
+      isDailyFactCapReached(environmentId) &&
+      !isEnvironmentVowelMastered(environmentId)
+    ) {
       setShowDailyCap(true);
       return;
     }

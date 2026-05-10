@@ -8,7 +8,7 @@
 // with science facts and animations.
 // =============================================
 
-import { countEarnedTrophies, loadTrophyProgress } from "./progression";
+import { countEarnedTrophies, loadTrophyProgress, isQuestFullyComplete } from "./progression";
 
 // ---- Types ----
 
@@ -1344,4 +1344,21 @@ export function getLinkedEnvironment(questId: string): EnvironmentConfig | null 
   const envId = QUEST_ENVIRONMENT_MAP[questId];
   if (!envId) return null;
   return ENVIRONMENTS[envId] ?? null;
+}
+
+/**
+ * Has the player fully mastered any quest mapped to this environment?
+ * "Fully mastered" = all 16 nodes done + full trophy + discovery complete
+ * for at least one of the quests sharing this room (CVC, CVCC, etc).
+ *
+ * Used to lift the per-room daily fact cap once a kid has actually finished
+ * the content. Pacing matters during first-pass learning, but gating
+ * engagement after mastery just frustrates kids who already know the words.
+ */
+export function isEnvironmentVowelMastered(envId: string): boolean {
+  for (const [questId, mappedEnvId] of Object.entries(QUEST_ENVIRONMENT_MAP)) {
+    if (mappedEnvId !== envId) continue;
+    if (isQuestFullyComplete(questId)) return true;
+  }
+  return false;
 }
