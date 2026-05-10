@@ -45,8 +45,11 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
 
   // ---- Vowels ----
   a: {
-    // Bowl on the left + stem on the right, two strokes.
-    d: "M 65 30 Q 25 30 25 50 Q 25 70 65 70 M 65 22 L 65 78",
+    // Round handwriting "a" — bowl on the left + short tail on the right.
+    // Earlier draft had the stem from y=22 to y=78 (taller than the bowl),
+    // which read as "d". Stem now sits from the top of the bowl (y=30) to
+    // a small tail below it (y=80), so it's unmistakably "a".
+    d: "M 65 30 Q 25 30 25 50 Q 25 70 65 70 M 65 30 L 65 80",
     viewBox: "0 0 100 100",
   },
   e: {
