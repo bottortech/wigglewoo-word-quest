@@ -37,7 +37,8 @@ interface TrophyRoomScreenProps {
 interface Card {
   id: string;
   word: string;
-  type: "word" | "image";   // word card shows text, image card shows picture
+  /** word = uppercase text, word-lower = lowercase text, image = picture */
+  type: "word" | "word-lower" | "image";
   isFlipped: boolean;
   isMatched: boolean;
   rotation: number; // -4 to +4 degrees
@@ -111,6 +112,35 @@ function createCardPairs(words: string[]): Card[] {
   return shuffleArray(cards);
 }
 
+/**
+ * Word-only pairs (no images): one UPPERCASE card + one lowercase card per
+ * word. Used for CVCC where most words are decode-mode and don't ship with
+ * images. Doubles as a literacy reinforcement — kids match a word against
+ * its case variant, which is a meaningful early-reading skill.
+ */
+function createWordOnlyPairs(words: string[]): Card[] {
+  const cards: Card[] = [];
+  words.forEach((word, idx) => {
+    cards.push({
+      id: `${word}-upper-${idx}`,
+      word,
+      type: "word",
+      isFlipped: false,
+      isMatched: false,
+      rotation: getRandomRotation(),
+    });
+    cards.push({
+      id: `${word}-lower-${idx}`,
+      word,
+      type: "word-lower",
+      isFlipped: false,
+      isMatched: false,
+      rotation: getRandomRotation(),
+    });
+  });
+  return shuffleArray(cards);
+}
+
 // Pattern type to display label (user-facing tier names)
 const PATTERN_LABELS: Record<PatternType, string> = {
   cvc: "Sound Builders",
@@ -147,8 +177,14 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
 
   const initialCards = useMemo(() => {
     const words = selectRandomWords(phaseWordPool, vowelId, pairCount);
+    // CVCC ships with image-mode words only for the early slots; the trophy
+    // match pulls from the full bank, so word-pair (uppercase vs lowercase)
+    // matching avoids broken-image cards and adds case-recognition practice.
+    if (quest.patternType === "cvcc") {
+      return createWordOnlyPairs(words);
+    }
     return createCardPairs(words);
-  }, [phaseWordPool, vowelId, pairCount]);
+  }, [phaseWordPool, vowelId, pairCount, quest.patternType]);
 
   const [cards, setCards] = useState<Card[]>(initialCards);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
@@ -383,6 +419,8 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
                 <div className="flip-card__back">
                   {card.type === "word" ? (
                     <span className="flip-card__word">{card.word.toUpperCase()}</span>
+                  ) : card.type === "word-lower" ? (
+                    <span className="flip-card__word flip-card__word--lower">{card.word.toLowerCase()}</span>
                   ) : (
                     <img
                       className="flip-card__image"

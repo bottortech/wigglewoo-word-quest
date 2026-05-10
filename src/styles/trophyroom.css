@@ -411,6 +411,15 @@
   letter-spacing: calc(1px * var(--u));
 }
 
+/* Lowercase variant — used by CVCC Trophy Match. Slightly lighter weight
+   and a hint of warmer color so the two cards in a pair read as related
+   variants of the same word rather than identical text. */
+.flip-card__word.flip-card__word--lower {
+  font-weight: 700;
+  color: #6D4C41;
+  letter-spacing: calc(0.5px * var(--u));
+}
+
 .flip-card__image {
   width: 80%;
   height: 80%;

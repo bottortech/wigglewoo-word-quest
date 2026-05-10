@@ -47,7 +47,7 @@ export interface CvcWord {
 export type PatternType = "cvc" | "cvcc" | "magic-e" | "cvvc" | "advanced";
 
 /** Which patterns are currently playable (images/audio ready) */
-export const ENABLED_PATTERNS: PatternType[] = ["cvc"];
+export const ENABLED_PATTERNS: PatternType[] = ["cvc", "cvcc"];
 
 /** A single subtrack within a tier quest (e.g., "Short A" within CVC) */
 export interface Subtrack {

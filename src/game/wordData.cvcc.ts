@@ -110,7 +110,7 @@ export const QUEST_CVCC_SHORT_U: Quest = {
     { word: "dunk", imageKey: "dunk", letters: ["d", "u", "n", "k"], distractors: [], mode: "decode" },
     { word: "hung", imageKey: "hung", letters: ["h", "u", "n", "g"], distractors: ["t"], mode: "decode" },
     { word: "dusk", imageKey: "dusk", letters: ["d", "u", "s", "k"], distractors: ["n", "o"], mode: "decode" },
-    { word: "must", imageKey: "must", letters: ["m", "u", "s", "t"], distractors: ["n", "a"], mode: "decode" },
+    { word: "junk", imageKey: "junk", letters: ["j", "u", "n", "k"], distractors: ["b", "a"], mode: "decode" },
   ],
 };
 

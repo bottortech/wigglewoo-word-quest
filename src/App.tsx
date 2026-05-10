@@ -57,6 +57,7 @@ import {
   recordVowelQuestCompletion,
   unlockChallengeMode,
   hasHighAccuracy,
+  areAllQuestsComplete,
   getPendingCrossMatch,
   markCrossMatchComplete,
   resetCrossMatchProgress,
@@ -73,6 +74,7 @@ import { recordTrophyEarned } from "./game/analytics";
 import trophyTransitionImg from "./assets/trophy.png";
 import "./styles/trophy-transition.css";
 import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
+import BlendingPowerUnlock from "./components/BlendingPowerUnlock";
 import OnboardingScreen from "./screens/OnboardingScreen";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
@@ -132,12 +134,14 @@ export default function App() {
   // Resolve initial quest synchronously for CVC, null if chunk not loaded
   const resolvedInitial = getQuestById(globalProg.activeQuestId) ?? null;
 
-  // v1: only CVC ships. If an older session has higher tiers stored,
-  // clamp back to CVC so stale localStorage doesn't expose locked content.
+  // CVC + CVCC ship in this release. Clamp placement_tiers so stale
+  // localStorage from a hypothetical higher-tier build can't expose
+  // Magic E / Vowel Teams / Advanced before they're ready.
   useEffect(() => {
+    const expected = JSON.stringify(["CVC", "CVCC"]);
     const tiers = localStorage.getItem("ww_placement_tiers");
-    if (tiers !== JSON.stringify(["CVC"])) {
-      localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
+    if (tiers !== expected) {
+      localStorage.setItem("ww_placement_tiers", expected);
     }
   }, []);
 
@@ -182,8 +186,8 @@ export default function App() {
   // ---- Onboarding complete → Map (first word of first quest) ----
   const handleOnboardingComplete = useCallback(() => {
     localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
-    // v1 ships CVC only — persist exactly that tier.
-    localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
+    // CVC + CVCC are the shipped tiers — persist exactly those.
+    localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC", "CVCC"]));
     setRoute("map");
   }, []);
 
@@ -458,6 +462,25 @@ export default function App() {
   // ---- Challenge Mode unlock ----
   const [showChallengeUnlock, setShowChallengeUnlock] = useState(false);
 
+  // ---- Blending Power (CVCC tier) unlock ----
+  // Fires once when the player has fully completed all 5 CVC quests and the
+  // CVCC tier becomes available. Re-checks on every map mount so the moment
+  // is never missed (works for completion path, dev-skip path, and existing
+  // saves that already finished CVC before this notification existed).
+  const [showBlendingPowerUnlock, setShowBlendingPowerUnlock] = useState(false);
+  const BLENDING_POWER_SEEN_KEY = "ww_blending_power_unlock_seen";
+  useEffect(() => {
+    if (route !== "map") return;
+    if (localStorage.getItem(BLENDING_POWER_SEEN_KEY) === "true") return;
+    if (!areAllQuestsComplete([...CVC_QUEST_IDS])) return;
+    setShowBlendingPowerUnlock(true);
+  }, [route, mapRevision]);
+
+  const handleBlendingPowerDismiss = useCallback(() => {
+    localStorage.setItem(BLENDING_POWER_SEEN_KEY, "true");
+    setShowBlendingPowerUnlock(false);
+  }, []);
+
   /** Check if Challenge Mode should unlock for the active quest */
   const checkChallengeUnlock = useCallback(() => {
     if (!activeQuest) return;
@@ -711,6 +734,10 @@ export default function App() {
           questTitle={activeQuest.title}
           onDismiss={() => setShowChallengeUnlock(false)}
         />
+      )}
+
+      {showBlendingPowerUnlock && (
+        <BlendingPowerUnlock onDismiss={handleBlendingPowerDismiss} />
       )}
 
       {unlockedSkinId && (

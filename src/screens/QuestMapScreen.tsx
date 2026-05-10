@@ -143,8 +143,8 @@ function isPlacementUnlocked(tier: string): boolean {
 
 // Tiers that ship in this release. Everything else is shown as
 // "Coming soon" and locked regardless of placement / completion state.
-// Expand this set as CVCC / Magic E / Vowel Teams / Advanced ship.
-const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(["CVC"]);
+// Expand this set as Magic E / Vowel Teams / Advanced ship.
+const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(["CVC", "CVCC"]);
 
 function isTierShipped(tier: QuestType): boolean {
   return SHIPPED_TIERS.has(tier);
