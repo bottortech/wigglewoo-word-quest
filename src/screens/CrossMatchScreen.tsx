@@ -15,9 +15,8 @@ import {
   playMatchPhrase,
   playEvent,
 } from "../audio/SoundEffects";
-import wigglewooIdle from "../assets/wigglewoo_idle_transparent.png";
-import wigglewooCelebration from "../assets/wigglewoo_celebration_transparent.png";
 import continueQuestBtn from "../assets/cont_quest.png";
+import { getActiveSkinAssets } from "../game/skins";
 import "../styles/cross-match.css";
 
 type WigglewooReaction = "idle" | "watching" | "happy" | "encourage" | "celebrate";
@@ -87,6 +86,11 @@ const CrossMatchScreen: React.FC<CrossMatchScreenProps> = ({ words, onComplete }
   const wordRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const pictureRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const stageRef = useRef<HTMLDivElement>(null);
+
+  // Active skin's helper asset — same image for every reaction state;
+  // the bounce/wiggle/celebrate animations live in cross-match.css
+  // keyed off the wrapper's reaction-state class.
+  const skinAssets = useMemo(() => getActiveSkinAssets(), []);
 
   // Set of words that are correctly matched (by word string).
   const [matched, setMatched] = useState<Set<string>>(new Set());
@@ -447,7 +451,7 @@ const CrossMatchScreen: React.FC<CrossMatchScreenProps> = ({ words, onComplete }
         aria-hidden="true"
       >
         <img
-          src={wwReaction === "happy" || wwReaction === "celebrate" ? wigglewooCelebration : wigglewooIdle}
+          src={skinAssets.helperImg}
           alt=""
           className="cross-match__wigglewoo-img"
           draggable={false}

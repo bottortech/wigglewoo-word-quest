@@ -42,6 +42,7 @@ import gear3 from "../assets/gear3.png";
 import pipe1 from "../assets/pipe1.png";
 import pipe2 from "../assets/pipe2.png";
 import { saveNodeRating, type WordRating } from "../game/progression";
+import { getActiveSkinAssets } from "../game/skins";
 import "../styles/game.css";
 import "../styles/questmap.css";
 import "../styles/home.css";
@@ -120,6 +121,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const letterBank: LetterTile[] = useMemo(() => {
     return buildLetterBank(currentWord, quest.patternType);
   }, [currentWord, quest.patternType]);
+
+  // Active skin's helper asset for the bottom-right companion. Falls
+  // back to the default WiggleWoo helper PNG when no themed skin is
+  // active (e.g. before the first discovery room is completed).
+  const skinAssets = useMemo(() => getActiveSkinAssets(), []);
 
   // ---- Step state ----
   const [step, setStep] = useState<GameStep>("build");
@@ -395,6 +401,21 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
 
               </div>
+            </div>
+
+            {/* WiggleWoo helper — companion in the bottom-right of the
+                gameplay viewport. Idle bob always; bigger celebrate
+                bounce when the word is solved (step === "celebrate"). */}
+            <div
+              className={`game-screen__helper ${step === "celebrate" ? "game-screen__helper--celebrate" : ""}`}
+              aria-hidden="true"
+            >
+              <img
+                src={skinAssets.helperImg}
+                alt=""
+                className="game-screen__helper-img"
+                draggable={false}
+              />
             </div>
           </div>
 

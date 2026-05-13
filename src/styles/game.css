@@ -1220,3 +1220,52 @@
   0%   { opacity: 0; }
   100% { opacity: 1; }
 }
+
+/* ==========================================
+   WIGGLEWOO HELPER — bottom-right companion
+   ==========================================
+   The active-skin helper character anchors to
+   the bottom-right of the machine viewport.
+   Idle bob always; bigger celebrate bounce
+   when the player solves the word. */
+.game-screen__helper {
+  position: absolute;
+  bottom: 3%;
+  right: 3%;
+  width: 14%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.game-screen__helper-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.28));
+  animation: game-helper-bob 3.6s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+@keyframes game-helper-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-5px) rotate(-0.6deg); }
+}
+
+/* Celebrate — bigger bounce on word solve. Overrides the idle bob. */
+.game-screen__helper--celebrate .game-screen__helper-img {
+  animation: game-helper-celebrate 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes game-helper-celebrate {
+  0%   { transform: translateY(0) scale(1); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.28)); }
+  35%  { transform: translateY(-18px) scale(1.10); filter: drop-shadow(0 10px 18px rgba(255, 220, 120, 0.55)); }
+  60%  { transform: translateY(-6px)  scale(1.04); }
+  100% { transform: translateY(0)     scale(1); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.28)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-screen__helper-img,
+  .game-screen__helper--celebrate .game-screen__helper-img {
+    animation: none;
+  }
+}

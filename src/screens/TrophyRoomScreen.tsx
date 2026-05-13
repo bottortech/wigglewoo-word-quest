@@ -16,8 +16,8 @@ import trophyRoomBg from "../assets/Invention_Trophy_Room.png";
 import titleBar from "../assets/InventionRoom_Title.png";
 import trophyImg from "../assets/trophy.png";
 import continueQuestBtn from "../assets/cont_quest.png";
-import wigglewooTrophyRoom from "../assets/wigglewoo_trophyroom.png";
 import GlassDisplayCase from "../components/GlassDisplayCase";
+import { getActiveSkinAssets } from "../game/skins";
 
 import { playTapCardPhrase, playMatchPhrase, playEvent, playWordSound } from "../audio/SoundEffects";
 import { useFocusTrap } from "../hooks/useFocusTrap";
@@ -185,6 +185,11 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
     }
     return createCardPairs(words);
   }, [phaseWordPool, vowelId, pairCount, quest.patternType]);
+
+  // Active skin's helper asset — swaps in the themed WiggleWoo when
+  // the kid has unlocked + equipped a discovery-room outfit. Falls
+  // back to the default helper PNG when no themed skin is active.
+  const skinAssets = useMemo(() => getActiveSkinAssets(), []);
 
   const [cards, setCards] = useState<Card[]>(initialCards);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
@@ -456,7 +461,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
           {/* WiggleWoo standing next to cards */}
           <div className="trophy-room__wigglewoo">
             <img
-              src={wigglewooTrophyRoom}
+              src={skinAssets.helperImg}
               alt="WiggleWoo"
               className="trophy-room__wigglewoo-img"
               draggable={false}
