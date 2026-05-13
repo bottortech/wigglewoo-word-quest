@@ -18,7 +18,7 @@
 // =============================================
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { ENVIRONMENTS, ENVIRONMENT_QUEST_MAP, isEnvironmentVowelMastered } from "../game/exploreData";
+import { ENVIRONMENTS, isEnvironmentVowelMastered } from "../game/exploreData";
 // PARKED for v1 — see MINI_GAMES_ENABLED below. Import + styles kept
 // so we can flip the flag back on without re-plumbing the screen.
 import DiscoverySession from "../components/miniGames/DiscoverySession";
@@ -32,7 +32,6 @@ import {
 } from "../game/progression";
 import DailyCapModal from "../components/DailyCapModal";
 import FactNarration from "../components/FactNarration";
-import PictureMatch from "../components/PictureMatch";
 import { playEvent } from "../audio/SoundEffects";
 import TraceMoment from "../components/handwriting/TraceMoment";
 import { LETTER_PATHS } from "../components/handwriting/letterPaths";
@@ -339,27 +338,13 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     return facts;
   }, [env]);
 
-  // Resolve vowel group for picture match challenges
-  const vowelGroup = useMemo(() => {
-    const qId = questId ?? ENVIRONMENT_QUEST_MAP[environmentId] ?? "";
-    if (qId.includes("short-a")) return "shortA";
-    if (qId.includes("short-e")) return "shortE";
-    if (qId.includes("short-i")) return "shortI";
-    if (qId.includes("short-o")) return "shortO";
-    if (qId.includes("short-u")) return "shortU";
-    return "shortA";
-  }, [questId, environmentId]);
-
   // ---- UI state ----
   const [activePanel, setActivePanel] = useState<FactPanel | null>(null);
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
   const [tappedHotspotId, setTappedHotspotId] = useState<string | null>(null);
 
   // Choice modal state
-  const [choiceTarget, setChoiceTarget] = useState<SceneProp | null>(null);
   const [showDailyCap, setShowDailyCap] = useState(false);
-  const [showPictureMatch, setShowPictureMatch] = useState(false);
-  const [factsDiscoveredThisSession, setFactsDiscoveredThisSession] = useState(0);
 
   // Volcano eruption state
   const [erupting, setErupting] = useState(false);
@@ -441,7 +426,6 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   // Learn a fact directly (no choice modal)
   const learnFactForProp = useCallback((prop: SceneProp) => {
     recordFactDiscovery(environmentId);
-    setFactsDiscoveredThisSession(c => c + 1);
     // "wow did you know that" reaction fires AFTER the kid actually hears the
     // fact — wired into FactNarration's onEnded below, not here.
 
@@ -449,18 +433,6 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     showFactForProp(prop);
   }, [environmentId, playObjectAnimation, showFactForProp]);
 
-  // After picture match challenge completes, award the fact
-  const handlePictureMatchCorrect = useCallback(() => {
-    setShowPictureMatch(false);
-    if (!choiceTarget?.factPanel) return;
-    learnFactForProp(choiceTarget);
-    setChoiceTarget(null);
-  }, [choiceTarget, learnFactForProp]);
-
-  const handleChallengeClose = useCallback(() => {
-    setShowPictureMatch(false);
-    setChoiceTarget(null);
-  }, []);
 
   // ---- Main prop click handler ----
   const handlePropClick = useCallback((prop: SceneProp) => {
@@ -497,15 +469,8 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       return;
     }
 
-    // Every 4th fact → PictureMatch challenge before learning (skip in dev)
-    if (!import.meta.env.DEV && (factsDiscoveredThisSession + 1) % 4 === 0) {
-      setChoiceTarget(prop);
-      setShowPictureMatch(true);
-    } else {
-      // Learn fact directly
-      learnFactForProp(prop);
-    }
-  }, [environmentId, factsDiscoveredThisSession, learnFactForProp]);
+    learnFactForProp(prop);
+  }, [environmentId, learnFactForProp]);
 
   const handleHotspotClick = useCallback((hotspot: Hotspot) => {
     setTappedHotspotId(hotspot.id);
@@ -1192,15 +1157,6 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       {/* Daily cap modal — hidden in dev or when VITE_DISABLE_COMPLETION_MODAL is set */}
       {!import.meta.env.DEV && !import.meta.env.VITE_DISABLE_COMPLETION_MODAL && showDailyCap && (
         <DailyCapModal onClose={() => setShowDailyCap(false)} />
-      )}
-
-      {/* Picture Match challenge (every 4th fact) */}
-      {showPictureMatch && (
-        <PictureMatch
-          vowelGroup={vowelGroup}
-          onCorrect={handlePictureMatchCorrect}
-          onClose={handleChallengeClose}
-        />
       )}
 
       {/* Fact panel (bottom sheet) */}
