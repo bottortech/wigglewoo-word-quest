@@ -19,7 +19,6 @@ import CrossMatchScreen from "./screens/CrossMatchScreen";
 
 import { loadSettings } from "./game/settings";
 import LoadingGate from "./components/LoadingScreen";
-import OrientationOverlay from "./components/OrientationOverlay";
 import Stage from "./components/Stage";
 import ScreenGate from "./components/ScreenGate";
 import {
@@ -603,8 +602,6 @@ export default function App() {
 
   return (
     <LoadingGate>
-     <OrientationOverlay>
-
       <Stage>
 
       {route === "onboarding" && (
@@ -755,7 +752,6 @@ export default function App() {
           onSaveLater={handleSkinUnlockSaveLater}
         />
       )}
-     </OrientationOverlay>
     </LoadingGate>
   );
 }

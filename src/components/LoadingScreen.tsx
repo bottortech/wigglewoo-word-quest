@@ -1,18 +1,16 @@
 // =============================================
-// LoadingScreen.tsx — Boot loader / orientation gate
+// LoadingScreen.tsx — Boot loader
 // WiggleWoo's Word Quest
 // =============================================
 // The branded loading screen is `#boot-fallback` in index.html
 // (kept OUTSIDE #root so React's mount doesn't tear it down).
-// This gate just decides WHEN to fade it out:
-//   - minimum display time has passed (so even a fast boot
-//     plays the splash for a beat — feels intentional), AND
-//   - on touch devices, the device is in landscape.
-// On desktop / non-touch viewports, only the time gate
-// applies — there's nothing to rotate.
-// Replaces the old "Rotate your device" overlay so a kid
-// who launches in portrait sees the loading splash during
-// the rotate, instead of a corrective prompt.
+// This gate just enforces a minimum display time so even a fast
+// boot plays the splash for a beat — feels intentional.
+//
+// Orientation handling is no longer here. The whole app, including
+// #boot-fallback, is force-rotated to landscape via CSS in index.css
+// when the viewport is portrait, so the splash always renders in
+// landscape regardless of device orientation.
 // =============================================
 
 import React, { useEffect } from "react";
@@ -20,7 +18,7 @@ import React, { useEffect } from "react";
 interface LoadingGateProps {
   /** Fully disable the gate (drops the splash immediately). */
   disabled?: boolean;
-  /** Min splash duration even on a fast landscape boot. Default 1500ms. */
+  /** Min splash duration even on a fast boot. Default 1500ms. */
   minDurationMs?: number;
   children?: React.ReactNode;
 }
@@ -40,38 +38,12 @@ const LoadingGate: React.FC<LoadingGateProps> = ({
       return () => clearTimeout(t);
     }
 
-    const isMobile =
-      "ontouchstart" in window ||
-      navigator.maxTouchPoints > 0 ||
-      window.innerWidth <= 1024;
-
-    let minElapsed = false;
-    let removed = false;
-    let removeTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const tryHide = () => {
-      if (removed || !minElapsed) return;
-      const portrait = window.innerHeight > window.innerWidth;
-      if (isMobile && portrait) return; // wait for the rotate
-      removed = true;
-      fallback.classList.add("fade-out");
-      removeTimer = setTimeout(() => fallback.remove(), 600);
-    };
-
     const minTimer = setTimeout(() => {
-      minElapsed = true;
-      tryHide();
+      fallback.classList.add("fade-out");
+      setTimeout(() => fallback.remove(), 600);
     }, minDurationMs);
 
-    window.addEventListener("resize", tryHide);
-    window.addEventListener("orientationchange", tryHide);
-
-    return () => {
-      clearTimeout(minTimer);
-      if (removeTimer) clearTimeout(removeTimer);
-      window.removeEventListener("resize", tryHide);
-      window.removeEventListener("orientationchange", tryHide);
-    };
+    return () => clearTimeout(minTimer);
   }, [disabled, minDurationMs]);
 
   return <>{children}</>;
