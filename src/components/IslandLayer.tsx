@@ -55,7 +55,7 @@ interface LandmarkDef {
 }
 
 const LANDMARKS: LandmarkDef[] = [
-  { envId: "valcano",               src: "/assets/volcano-no-erupt.png",      emoji: "🌋" },
+  { envId: "valcano",               src: "/assets/valcano.png",               emoji: "🌋" },
   { envId: "castle-island",         src: "/assets/castle-island.png",         emoji: "🏰" },
   { envId: "small-coastal-village", src: "/assets/small-coastal-village.png", emoji: "🏘️" },
   { envId: "industrial-tech-city",  src: "/assets/industrial-tech-city.png",  emoji: "⚙️" },
