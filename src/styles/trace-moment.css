@@ -65,29 +65,66 @@
   -webkit-touch-callout: none;
 }
 
-/* Dim "groove" path — always visible at low opacity */
+/* ==========================================
+   Trace path — warm gold dashed guide
+   ==========================================
+   Three stacked layers:
+     1. Dim groove   — faint baseline of the full letter
+     2. Pending      — flowing warm-gold dashes (ahead of finger)
+     3. Completed    — static brighter dashes (behind finger),
+                       revealed via SVG mask up to coverage length
+   Tune via CSS vars on .trace-moment__svg. */
+.trace-moment__svg {
+  --trace-dash-length: 8;
+  --trace-gap-length: 6;
+  --trace-flow-speed: 1.2s;
+  --trace-dim-color: rgba(255, 197, 71, 0.20);
+  --trace-pending-color: rgba(255, 197, 71, 0.55);
+  --trace-completed-color: #FFC547;
+  --trace-glow-soft: rgba(255, 197, 71, 0.55);
+  --trace-glow-strong: rgba(255, 200, 100, 0.95);
+}
+
+/* Dim "groove" path — full letter shape at low opacity */
 .trace-moment__path-dim {
   fill: none;
-  stroke: rgba(78, 195, 255, 0.22);
+  stroke: var(--trace-dim-color);
   stroke-width: 7;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-/* Lit path — fills as coverage rises */
-.trace-moment__path-lit {
+/* Pending dashes — flow forever in trace direction */
+.trace-moment__path-pending {
   fill: none;
-  stroke: #4ec3ff;
-  stroke-width: 7;
+  stroke: var(--trace-pending-color);
+  stroke-width: 6;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 6px rgba(78,195,255,0.9));
-  transition: stroke-dashoffset 120ms linear;
+  stroke-dasharray: var(--trace-dash-length) var(--trace-gap-length);
+  animation: trace-dash-flow var(--trace-flow-speed) linear infinite;
+  filter: drop-shadow(0 0 3px var(--trace-glow-soft));
+}
+
+/* Completed dashes — static, brighter, revealed by mask */
+.trace-moment__path-completed {
+  fill: none;
+  stroke: var(--trace-completed-color);
+  stroke-width: 6.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--trace-dash-length) var(--trace-gap-length);
+  filter: drop-shadow(0 0 5px var(--trace-glow-strong));
+}
+
+@keyframes trace-dash-flow {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -14; }
 }
 
 .trace-moment__spark {
-  fill: #c8edff;
-  filter: drop-shadow(0 0 5px #9be7ff) drop-shadow(0 0 10px #4ec3ff);
+  fill: #FFF4D6;
+  filter: drop-shadow(0 0 5px #FFC547) drop-shadow(0 0 10px #FFB820);
   pointer-events: none;
 }
 
@@ -129,9 +166,14 @@
 
 .trace-moment__skip:hover { opacity: 1; }
 
-/* Success burst */
-.trace-moment--complete .trace-moment__path-lit {
+/* Success burst — applied to the completed dashes when the trace
+   finishes. Freezes the dash flow on the pending layer too. */
+.trace-moment--complete .trace-moment__path-completed {
   animation: trace-success-pulse 600ms ease-out;
+}
+.trace-moment--complete .trace-moment__path-pending {
+  animation: none;
+  opacity: 0;
 }
 
 @keyframes trace-fade-in {
@@ -145,7 +187,7 @@
 }
 
 @keyframes trace-success-pulse {
-  0%   { filter: drop-shadow(0 0 6px rgba(78,195,255,0.9)); }
-  40%  { filter: drop-shadow(0 0 22px rgba(150,230,255,1)) drop-shadow(0 0 40px rgba(78,195,255,1)); }
-  100% { filter: drop-shadow(0 0 8px rgba(78,195,255,0.95)); }
+  0%   { filter: drop-shadow(0 0 6px rgba(255, 200, 100, 0.9)); }
+  40%  { filter: drop-shadow(0 0 22px rgba(255, 235, 170, 1)) drop-shadow(0 0 40px rgba(255, 197, 71, 1)); }
+  100% { filter: drop-shadow(0 0 8px rgba(255, 200, 100, 0.95)); }
 }

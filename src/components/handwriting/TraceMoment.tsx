@@ -80,7 +80,10 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
 
   if (!path) return null;
 
-  const dashOffset = validator.pathLength * (1 - validator.coverage);
+  // Length of the path that has been traced so far. Drives the mask
+  // that reveals the "completed" (static) dashed layer on top of the
+  // perpetually-flowing "pending" dashed layer underneath.
+  const coveredLength = validator.pathLength * validator.coverage;
 
   return (
     <div
@@ -122,18 +125,48 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
           onPointerUp={validator.onPointerUp}
           onPointerCancel={validator.onPointerCancel}
         >
-          {/* Dim groove */}
+          {/* Mask that reveals the "completed" dashed layer only for
+              the portion of the path the kid has actually traced.
+              `strokeDasharray` of (coveredLength, pathLength) draws
+              a single white dash of coveredLength followed by an
+              infinite gap — so only the traced portion is visible. */}
+          <defs>
+            <mask id="trace-completed-mask">
+              <rect width="100%" height="100%" fill="black" />
+              {validator.pathLength > 0 && (
+                <path
+                  d={path.d}
+                  stroke="white"
+                  strokeWidth="14"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  strokeDasharray={`${coveredLength} ${validator.pathLength}`}
+                  strokeDashoffset="0"
+                />
+              )}
+            </mask>
+          </defs>
+
+          {/* Dim groove — faint baseline showing the full letter shape
+              so kids can read the letter even where dashes have gaps. */}
           <path
             ref={pathRef}
             className="trace-moment__path-dim"
             d={path.d}
           />
-          {/* Lit fill — animates with coverage progress */}
+          {/* Pending dashes — perpetually flowing in the trace direction,
+              showing the kid "go this way." */}
           <path
-            className="trace-moment__path-lit"
+            className="trace-moment__path-pending"
             d={path.d}
-            strokeDasharray={validator.pathLength || undefined}
-            strokeDashoffset={validator.pathLength ? dashOffset : undefined}
+          />
+          {/* Completed dashes — static, brighter, revealed only for
+              the portion already traced (via the mask above). */}
+          <path
+            className="trace-moment__path-completed"
+            d={path.d}
+            mask="url(#trace-completed-mask)"
           />
           {validator.pointerPos && !completed && (
             <circle
