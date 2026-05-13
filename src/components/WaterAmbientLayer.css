@@ -29,7 +29,7 @@
   opacity: 0.10;
   mix-blend-mode: soft-light;
   will-change: transform;
-  animation: shimmer-drift 22s linear infinite;
+  animation: shimmer-drift 18s linear infinite;
   background:
     radial-gradient(ellipse 18% 22% at 20% 30%, rgba(255,255,255,0.5) 0%, transparent 70%),
     radial-gradient(ellipse 14% 18% at 55% 20%, rgba(255,255,255,0.4) 0%, transparent 70%),

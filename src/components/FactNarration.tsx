@@ -27,9 +27,19 @@ function computeDwellMs(text: string): number {
   return Math.max(READ_DWELL_FLOOR_MS, text.length * READ_DWELL_MS_PER_CHAR);
 }
 
+// Module-level singleton Audio element shared across every FactNarration
+// instance. iOS Safari only "primes" Audio elements that have been touched
+// by a user gesture — creating a fresh `new Audio()` per fact means each
+// new fact's element is un-primed and `.play()` silently rejects. Sharing
+// one element keeps the gesture-priming intact across the whole session.
+let narrationAudio: HTMLAudioElement | null = null;
+function getNarrationAudio(): HTMLAudioElement {
+  if (!narrationAudio) narrationAudio = new Audio();
+  return narrationAudio;
+}
+
 const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay = false, onEnded }) => {
   const [playing, setPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settings = loadSettings();
 
@@ -40,9 +50,7 @@ const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay 
     if (playing) return;
 
     if (audioSrc) {
-      // Use pre-recorded audio
-      if (!audioRef.current) audioRef.current = new Audio();
-      const audio = audioRef.current;
+      const audio = getNarrationAudio();
       audio.src = audioSrc;
       audio.volume = 0.8;
       audio.playbackRate = settings.slowPhoneme ? 0.75 : 1.0;
@@ -73,9 +81,13 @@ const FactNarration: React.FC<FactNarrationProps> = ({ text, audioSrc, autoPlay 
   }, [audioSrc, text, playing, settings.slowPhoneme, onEnded]);
 
   const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    if (narrationAudio) {
+      narrationAudio.pause();
+      narrationAudio.currentTime = 0;
+      // Drop callbacks so a late `ended` event from the previous fact
+      // doesn't fire the new fact's onEnded.
+      narrationAudio.onended = null;
+      narrationAudio.onerror = null;
     }
     if (dwellTimerRef.current) {
       clearTimeout(dwellTimerRef.current);

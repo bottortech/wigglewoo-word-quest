@@ -102,7 +102,7 @@ const DISCOVERY_POSITION = { x: 92, y: 32 };
 
 // Discovery room preview — images for the top-of-screen reward shelf
 const DISCOVERY_ROOM_PREVIEWS: { envId: string; image: string; label: string }[] = [
-  { envId: "valcano", image: "/assets/valcano.png", label: "Rumble Peak" },
+  { envId: "valcano", image: "/assets/volcano-no-erupt.png", label: "Rumble Peak" },
   { envId: "castle-island", image: "/assets/castle-island.png", label: "Stonewall Castle" },
   { envId: "small-coastal-village", image: "/assets/small-coastal-village.png", label: "Coral Cove" },
   { envId: "industrial-tech-city", image: "/assets/industrial-tech-city.png", label: "Geartown" },

@@ -29,9 +29,10 @@
   background-size: 600px 300px;
   background-position: 0 0;
 
-  /* Very slow purely-horizontal drift — one full tile every 90s
-     reads as gentle current, not arcade scroll. */
-  animation: water-base-drift 90s linear infinite;
+  /* Horizontal current — one full tile every 60s. A touch faster
+     than the previous 90s so the flow is perceptible, but still
+     reads as gentle river current, not arcade scroll. */
+  animation: water-base-drift 60s linear infinite;
 
   /* Light brightness/saturation lift to harmonize with island
      shoreline tones; gentler than before since the new texture
