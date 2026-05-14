@@ -206,6 +206,31 @@
   }
 }
 
+/* ---- Reviewer-mode toast (5-tap-on-logo cheat) ---- */
+.home-reviewer-toast {
+  position: absolute;
+  bottom: calc(28px * var(--u));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: calc(10px * var(--u)) calc(20px * var(--u));
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  font-family: inherit;
+  font-size: clamp(12px, calc(14px * var(--u)), 16px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 calc(6px * var(--u)) calc(20px * var(--u)) rgba(0, 0, 0, 0.45);
+  animation: reviewer-toast-in 0.25s ease-out;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@keyframes reviewer-toast-in {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* ---- Responsive — small-screen bulbs only (home elements now use --u scaling) ---- */
 @media (max-width: 600px) {
   .bulb {
