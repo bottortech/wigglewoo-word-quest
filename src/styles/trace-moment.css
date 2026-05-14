@@ -75,13 +75,15 @@
                        revealed via SVG mask up to coverage length
    Tune via CSS vars on .trace-moment__svg. */
 .trace-moment__svg {
-  --trace-dash-length: 8;
-  --trace-gap-length: 6;
+  --trace-dash-length: 4;
+  --trace-gap-length: 4;
   --trace-flow-speed: 1.2s;
   --trace-dim-color: rgba(255, 197, 71, 0.20);
-  --trace-pending-color: rgba(255, 197, 71, 0.55);
+  /* Pending = white road-marking dashes inside the letter outline,
+     mirroring the dashed style on the alphabet tile icons. */
+  --trace-pending-color: rgba(255, 255, 255, 0.95);
   --trace-completed-color: #FFC547;
-  --trace-glow-soft: rgba(255, 197, 71, 0.55);
+  --trace-glow-soft: rgba(255, 255, 255, 0.55);
   --trace-glow-strong: rgba(255, 200, 100, 0.95);
 }
 
@@ -94,32 +96,44 @@
   stroke-linejoin: round;
 }
 
-/* Pending dashes — flow forever in trace direction */
-.trace-moment__path-pending {
+/* Track — always-visible white dashed road markings inside the letter body.
+   Independent of the trace masks so it renders correctly on every browser
+   and from the first frame. Sits between dim (letter body) and pending
+   (trace guide). Dash values are hardcoded (not CSS vars) because the
+   first-visit-trace SVG in ExploreScreen doesn't have .trace-moment__svg
+   on it, so it wouldn't inherit those vars. */
+.trace-moment__path-track {
   fill: none;
-  stroke: var(--trace-pending-color);
-  stroke-width: 6;
-  stroke-linecap: round;
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 3;
+  stroke-linecap: butt;
   stroke-linejoin: round;
-  stroke-dasharray: var(--trace-dash-length) var(--trace-gap-length);
-  animation: trace-dash-flow var(--trace-flow-speed) linear infinite;
-  filter: drop-shadow(0 0 3px var(--trace-glow-soft));
+  stroke-dasharray: 4 4;
 }
 
-/* Completed dashes — static, brighter, revealed by mask */
+/* Pending dashes — hidden. The white track now carries the untraced look;
+   the completed layer still lights up the traced region in warm gold.
+   Pending is left in the JSX so its mask can stay wired without further
+   churn, but visually it adds nothing now. */
+.trace-moment__path-pending {
+  display: none;
+}
+
+/* Completed dashes — warm-gold, revealed by mask behind the finger.
+   Sized to match the white track exactly so the dashes just swap color
+   as the kid traces, with no halo or size jump. */
 .trace-moment__path-completed {
   fill: none;
-  stroke: var(--trace-completed-color);
-  stroke-width: 6.5;
-  stroke-linecap: round;
+  stroke: var(--trace-completed-color, #FFC547);
+  stroke-width: 3;
+  stroke-linecap: butt;
   stroke-linejoin: round;
-  stroke-dasharray: var(--trace-dash-length) var(--trace-gap-length);
-  filter: drop-shadow(0 0 5px var(--trace-glow-strong));
+  stroke-dasharray: 4 4;
 }
 
 @keyframes trace-dash-flow {
   from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: -14; }
+  to   { stroke-dashoffset: -8; }
 }
 
 .trace-moment__spark {

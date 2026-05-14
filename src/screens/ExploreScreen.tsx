@@ -1295,6 +1295,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
             {subpathInfo.map((sp, i) => (
               <g key={`sp-${i}`}>
                 <path className="trace-moment__path-dim" d={sp.d} />
+                <path className="trace-moment__path-track" d={sp.d} />
                 <path
                   className="trace-moment__path-pending"
                   d={sp.d}

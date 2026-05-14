@@ -172,6 +172,10 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
             className="trace-moment__path-dim"
             d={path.d}
           />
+          {/* Track — always-visible white road-marking dashes inside the
+              letter body. Independent of the trace mask so it shows
+              from the first frame regardless of validator timing. */}
+          <path className="trace-moment__path-track" d={path.d} />
           {/* Pending dashes — flowing, masked to hide in the traced region. */}
           <path
             className="trace-moment__path-pending"
