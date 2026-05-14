@@ -40,30 +40,3 @@ body {
   height: 100%;
   overflow: hidden;
 }
-
-/* ============================================
-   Landscape lock — force-rotate when portrait
-   ============================================
-   This game is landscape-only. Rather than show a "rotate your phone"
-   prompt, we render the entire app rotated 90° via CSS when the viewport
-   is portrait. The user holds their phone in any orientation and the
-   content always appears in landscape proportions; on a portrait phone
-   the content reads sideways until they rotate, then snaps to right-side-
-   up landscape when the media query disengages.
-
-   #boot-fallback (the loading splash defined inline in index.html) is
-   also rotated so the loading state matches the gameplay orientation. */
-@media screen and (orientation: portrait) {
-  #root,
-  #boot-fallback {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    right: auto;
-    bottom: auto;
-    width: 100vh;
-    height: 100vw;
-    transform: translate(-50%, -50%) rotate(90deg);
-    transform-origin: center center;
-  }
-}

@@ -236,3 +236,49 @@
   40% { transform: translateY(4px) scale(0.78); }
   100% { transform: translateY(0) scale(1); }
 }
+
+/* =============================================
+   Short viewport — landscape phones (iPhone in landscape is ~393px tall)
+   The default stack (instruction + image + slots + choices + gaps +
+   padding) is taller than 393px, so the top and bottom get cropped. Compact
+   the elements and shrink the WordImage so the whole flow fits without
+   scrolling.
+   ============================================= */
+@media (max-height: 500px) {
+  .onboarding__content {
+    gap: 6px;
+    padding: 8px;
+  }
+  .onboarding__instruction {
+    min-height: 0;
+    font-size: clamp(14px, 3vh, 20px);
+  }
+  .onboarding__image {
+    margin: 0;
+  }
+  .onboarding__image .word-image {
+    width: clamp(56px, 14vh, 96px) !important;
+    height: clamp(56px, 14vh, 96px) !important;
+  }
+  .onboarding__slots,
+  .onboarding__choices {
+    gap: 8px;
+    margin: 2px 0;
+  }
+  .onboarding__slot,
+  .onboarding__tile {
+    width: clamp(38px, 10vh, 58px);
+    height: clamp(38px, 10vh, 58px);
+    font-size: clamp(18px, 5vh, 28px);
+  }
+  .onboarding__done {
+    gap: 8px;
+  }
+  .onboarding__word-reveal {
+    font-size: clamp(32px, 9vh, 56px);
+  }
+  .onboarding__continue {
+    padding: 8px 24px;
+    font-size: clamp(14px, 3vh, 18px);
+  }
+}

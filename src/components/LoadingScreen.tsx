@@ -6,11 +6,6 @@
 // (kept OUTSIDE #root so React's mount doesn't tear it down).
 // This gate just enforces a minimum display time so even a fast
 // boot plays the splash for a beat — feels intentional.
-//
-// Orientation handling is no longer here. The whole app, including
-// #boot-fallback, is force-rotated to landscape via CSS in index.css
-// when the viewport is portrait, so the splash always renders in
-// landscape regardless of device orientation.
 // =============================================
 
 import React, { useEffect } from "react";
