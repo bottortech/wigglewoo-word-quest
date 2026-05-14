@@ -17,7 +17,7 @@
 // the banner near that constant for the revival recipe.
 // =============================================
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { ENVIRONMENTS, isEnvironmentVowelMastered } from "../game/exploreData";
 // PARKED for v1 — see MINI_GAMES_ENABLED below. Import + styles kept
 // so we can flip the flag back on without re-plumbing the screen.
@@ -1248,17 +1248,62 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
               stroke="none"
               style={{ visibility: "hidden" }}
             />
-            {/* Per-sub-path dim + lit. Each stroke renders independently
-                with its own dasharray, so tracing one stroke can never
-                bleed into another's fill. */}
+            {/* Per-sub-path masks. Each subpath gets a matched pair:
+                  - completed-mask: black bg + white stroke using the
+                    subpath dasharray → reveals only traced segments
+                  - pending-mask:   white bg + black stroke (inverse) →
+                    HIDES the traced segments so flowing pending dashes
+                    don't visually bleed through completed dashes
+                strokeWidth 14 is wide enough to cover the visible
+                stroke (≤9px) plus glow halos. */}
+            <defs>
+              {subpathInfo.map((sp, i) => (
+                <React.Fragment key={`mask-${i}`}>
+                  <mask id={`trace-completed-mask-${i}`}>
+                    <rect width="100%" height="100%" fill="black" />
+                    <path
+                      d={sp.d}
+                      stroke="white"
+                      strokeWidth="14"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                      strokeDasharray={subpathDasharrays[i]}
+                      strokeDashoffset={0}
+                    />
+                  </mask>
+                  <mask id={`trace-pending-mask-${i}`}>
+                    <rect width="100%" height="100%" fill="white" />
+                    <path
+                      d={sp.d}
+                      stroke="black"
+                      strokeWidth="14"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                      strokeDasharray={subpathDasharrays[i]}
+                      strokeDashoffset={0}
+                    />
+                  </mask>
+                </React.Fragment>
+              ))}
+            </defs>
+            {/* Per-sub-path dim + pending + completed. Pending dashes flow
+                in the trace direction; completed dashes lock in behind
+                the finger. The pending mask hides flowing dashes in the
+                traced region so completed dashes appear clean on top. */}
             {subpathInfo.map((sp, i) => (
               <g key={`sp-${i}`}>
                 <path className="trace-moment__path-dim" d={sp.d} />
                 <path
-                  className="trace-moment__path-lit"
+                  className="trace-moment__path-pending"
                   d={sp.d}
-                  strokeDasharray={subpathDasharrays[i]}
-                  strokeDashoffset={0}
+                  mask={`url(#trace-pending-mask-${i})`}
+                />
+                <path
+                  className="trace-moment__path-completed"
+                  d={sp.d}
+                  mask={`url(#trace-completed-mask-${i})`}
                 />
               </g>
             ))}

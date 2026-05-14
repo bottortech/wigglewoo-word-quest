@@ -125,11 +125,13 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
           onPointerUp={validator.onPointerUp}
           onPointerCancel={validator.onPointerCancel}
         >
-          {/* Mask that reveals the "completed" dashed layer only for
-              the portion of the path the kid has actually traced.
-              `strokeDasharray` of (coveredLength, pathLength) draws
-              a single white dash of coveredLength followed by an
-              infinite gap — so only the traced portion is visible. */}
+          {/* Mask pair driving the dashed reveal:
+                - completed-mask: black bg + white stroke from the path
+                  origin to coveredLength → reveals the traced portion
+                  of the static "completed" dashes.
+                - pending-mask: inverse (white bg + black stroke) →
+                  HIDES the flowing pending dashes in the traced region
+                  so completed dashes appear cleanly on top. */}
           <defs>
             <mask id="trace-completed-mask">
               <rect width="100%" height="100%" fill="black" />
@@ -137,6 +139,21 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
                 <path
                   d={path.d}
                   stroke="white"
+                  strokeWidth="14"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  strokeDasharray={`${coveredLength} ${validator.pathLength}`}
+                  strokeDashoffset="0"
+                />
+              )}
+            </mask>
+            <mask id="trace-pending-mask">
+              <rect width="100%" height="100%" fill="white" />
+              {validator.pathLength > 0 && (
+                <path
+                  d={path.d}
+                  stroke="black"
                   strokeWidth="14"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -155,14 +172,14 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
             className="trace-moment__path-dim"
             d={path.d}
           />
-          {/* Pending dashes — perpetually flowing in the trace direction,
-              showing the kid "go this way." */}
+          {/* Pending dashes — flowing, masked to hide in the traced region. */}
           <path
             className="trace-moment__path-pending"
             d={path.d}
+            mask="url(#trace-pending-mask)"
           />
-          {/* Completed dashes — static, brighter, revealed only for
-              the portion already traced (via the mask above). */}
+          {/* Completed dashes — static, brighter, revealed for the
+              traced portion via the completed mask. */}
           <path
             className="trace-moment__path-completed"
             d={path.d}
