@@ -593,6 +593,37 @@ export function countEarnedTrophies(): number {
 }
 
 // =============================================
+// DISCOVERED PROPS — per-room, persistent across days
+// =============================================
+// Tracks which fact-bearing props the kid has tapped at least once,
+// so the soft glow halo on undiscovered props can fade out after
+// they've heard the fact. Survives day rollovers because the goal
+// is "find the new ones", not a daily re-discovery loop.
+const DISCOVERED_PROPS_KEY = "ww_discoveredProps";
+
+function loadAllDiscoveredProps(): Record<string, string[]> {
+  try {
+    return JSON.parse(localStorage.getItem(DISCOVERED_PROPS_KEY) || "{}");
+  } catch { return {}; }
+}
+
+/** Get the set of prop IDs the kid has already discovered in a room. */
+export function loadDiscoveredProps(roomId: string): Set<string> {
+  return new Set(loadAllDiscoveredProps()[roomId] ?? []);
+}
+
+/** Mark a prop as discovered in a room. Idempotent. */
+export function recordPropDiscovered(roomId: string, propId: string): void {
+  const all = loadAllDiscoveredProps();
+  const list = all[roomId] ?? [];
+  if (!list.includes(propId)) {
+    all[roomId] = [...list, propId];
+    try { localStorage.setItem(DISCOVERED_PROPS_KEY, JSON.stringify(all)); }
+    catch { /* storage disabled — ok */ }
+  }
+}
+
+// =============================================
 // DAILY FACT PROGRESS — 4 facts per room per day
 // =============================================
 const FACT_PROGRESS_KEY = "ww_factProgress";

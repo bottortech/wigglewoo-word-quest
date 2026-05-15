@@ -29,6 +29,8 @@ import {
   recordFactDiscovery,
   getUnlockedFactCount,
   getVowelForQuest,
+  loadDiscoveredProps,
+  recordPropDiscovered,
 } from "../game/progression";
 import DailyCapModal from "../components/DailyCapModal";
 import FactNarration from "../components/FactNarration";
@@ -343,6 +345,17 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
   const [tappedHotspotId, setTappedHotspotId] = useState<string | null>(null);
 
+  // Per-room set of prop IDs whose facts have already been heard. Drives the
+  // soft glow halo: undiscovered fact props get the pulse, discovered ones
+  // fade it off. Loaded once on mount, mutated via setDiscoveredProps when
+  // a new fact is learned so the halo fades within the current visit.
+  const [discoveredProps, setDiscoveredProps] = useState<Set<string>>(
+    () => loadDiscoveredProps(environmentId)
+  );
+  useEffect(() => {
+    setDiscoveredProps(loadDiscoveredProps(environmentId));
+  }, [environmentId]);
+
   // Choice modal state
   const [showDailyCap, setShowDailyCap] = useState(false);
 
@@ -426,6 +439,18 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   // Learn a fact directly (no choice modal)
   const learnFactForProp = useCallback((prop: SceneProp) => {
     recordFactDiscovery(environmentId);
+    // Mark the specific prop as discovered so its glow halo fades. Persists
+    // to localStorage AND updates local state so the halo dims within the
+    // current room visit, not just on next entry.
+    if (prop.factPanel) {
+      recordPropDiscovered(environmentId, prop.id);
+      setDiscoveredProps((s) => {
+        if (s.has(prop.id)) return s;
+        const next = new Set(s);
+        next.add(prop.id);
+        return next;
+      });
+    }
     // "wow did you know that" reaction fires AFTER the kid actually hears the
     // fact — wired into FactNarration's onEnded below, not here.
 
@@ -888,10 +913,20 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
 
       // Interactive prop with fact panel (or light switch)
       if (isInteractive) {
+        // Soft glow halo for fact-bearing props only (not the light switch).
+        // Fades out once this specific prop's fact has been heard so the
+        // hint stays on the things the kid hasn't found yet.
+        const hasFact = !!prop.factPanel;
+        const isDiscovered = hasFact && discoveredProps.has(prop.id);
         return (
           <button
             key={prop.id}
-            className="explore-prop explore-prop--interactive"
+            className={[
+              "explore-prop",
+              "explore-prop--interactive",
+              hasFact ? "explore-prop--has-fact" : "",
+              isDiscovered ? "explore-prop--fact-discovered" : "",
+            ].filter(Boolean).join(" ")}
             style={{
               position: "absolute",
               left: `${prop.x}%`,
@@ -1016,6 +1051,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         showFirstVisitTrace ? "explore-screen--first-visit-trace" : "",
       ].filter(Boolean).join(" ")}
       style={bgStyle}
+      data-room-theme={firstVisitTraceConfig?.theme}
     >
       {/* PARKED for v1: mini-game overlay. `showMiniGames` is gated by
           MINI_GAMES_ENABLED (false) at the top of this file, so this

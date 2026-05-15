@@ -38,6 +38,74 @@
   pointer-events: none !important;
 }
 
+/* ---- Fact-bearing prop glow halo ----
+ * A soft, slowly breathing halo around props the kid hasn't tapped yet.
+ * Visual goal: gentle guidance, never flashy. The halo color is set
+ * per-room via [data-room-theme] below — default is a soft warm white
+ * for rooms without a theme. The halo lives on the underlying <img>
+ * (via drop-shadow) so it follows the prop's silhouette, not its
+ * bounding box.
+ *
+ * Discovered props (kid already heard the fact) transition the
+ * highlight off over ~700ms, leaving the prop visually unchanged
+ * but with no halo — directing attention to undiscovered ones. */
+.explore-prop--has-fact > img {
+  animation: explore-glow-breathe 3.6s ease-in-out infinite;
+  transition: filter 700ms ease-out;
+}
+
+.explore-prop--fact-discovered > img {
+  animation: none;
+  filter: none;
+}
+
+@keyframes explore-glow-breathe {
+  0%, 100% {
+    filter: drop-shadow(0 0 calc(4px * var(--u, 1)) var(--explore-glow-soft, rgba(255, 240, 200, 0.55)));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 calc(8px * var(--u, 1)) var(--explore-glow-mid, rgba(255, 235, 180, 0.7)))
+      drop-shadow(0 0 calc(14px * var(--u, 1)) var(--explore-glow-far, rgba(255, 220, 140, 0.35)));
+  }
+}
+
+/* Per-room glow tints — match the trace-screen theming so the highlight
+ * reads as part of the environment, not an overlay sticker. */
+[data-room-theme="volcano"] {
+  --explore-glow-soft: rgba(255, 180, 100, 0.6);
+  --explore-glow-mid:  rgba(255, 150, 70, 0.75);
+  --explore-glow-far:  rgba(255, 90, 30, 0.4);
+}
+[data-room-theme="castle"] {
+  --explore-glow-soft: rgba(255, 220, 140, 0.55);
+  --explore-glow-mid:  rgba(255, 200, 100, 0.7);
+  --explore-glow-far:  rgba(220, 150, 60, 0.35);
+}
+[data-room-theme="coral"] {
+  --explore-glow-soft: rgba(140, 240, 230, 0.55);
+  --explore-glow-mid:  rgba(120, 220, 240, 0.7);
+  --explore-glow-far:  rgba(80, 200, 255, 0.35);
+}
+[data-room-theme="greenhouse"] {
+  --explore-glow-soft: rgba(200, 255, 160, 0.55);
+  --explore-glow-mid:  rgba(170, 240, 110, 0.7);
+  --explore-glow-far:  rgba(220, 250, 130, 0.35);
+}
+[data-room-theme="geartown"] {
+  --explore-glow-soft: rgba(180, 230, 255, 0.6);
+  --explore-glow-mid:  rgba(120, 200, 255, 0.75);
+  --explore-glow-far:  rgba(60, 150, 255, 0.4);
+}
+
+/* Honor reduced motion — replace the breathing with a static gentle glow */
+@media (prefers-reduced-motion: reduce) {
+  .explore-prop--has-fact > img {
+    animation: none;
+    filter: drop-shadow(0 0 calc(6px * var(--u, 1)) var(--explore-glow-mid, rgba(255, 235, 180, 0.6)));
+  }
+}
+
 /* ---- First-visit trace path themes ----
  * The default trace path styling (defined in trace-moment.css) uses a
  * cyan/electrical look intended for the Geartown power core. Each room
