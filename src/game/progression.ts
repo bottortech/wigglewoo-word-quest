@@ -12,7 +12,12 @@
 // =============================================
 
 import type { NodeState, Quest, TrophyTier } from "./types";
-import { WORDS_PER_QUEST, FIRST_HALF_WORDS } from "./types";
+import {
+  WORDS_PER_QUEST,
+  FIRST_HALF_WORDS,
+  WORDS_PER_LESSON,
+  LESSONS_PER_QUEST,
+} from "./types";
 
 const STORAGE_KEY = "wigglewoo-cvc-progress";
 const GLOBAL_KEY = "wigglewoo-global-progress";
@@ -590,6 +595,69 @@ export function migrateOldCompletedQuests(allQuestIds: string[]): void {
 export function countEarnedTrophies(): number {
   const all = loadAllTrophyProgress();
   return Object.values(all).filter(tp => tp.tier === "full").length;
+}
+
+// =============================================
+// LESSON STRUCTURE — quests are 4 lessons of 4 words
+// =============================================
+// Words 1-3 / 5-7 / 9-11 / 13-15 are guided practice (audio model on
+// mount, hand-pointer hint on idle, letter-tap sounds). Words 4 / 8 /
+// 12 / 16 are independent mastery checks — same word mechanic, but
+// the model audio and hand-pointer hint are suppressed so the kid
+// has to recall the spelling on their own. Passing a mastery check
+// records a silver-star skill badge for that lesson.
+
+/** True if this word index opens a new lesson (0, 4, 8, 12). */
+export function isLessonStart(wordIndex: number): boolean {
+  return wordIndex >= 0 && wordIndex % WORDS_PER_LESSON === 0
+    && wordIndex < WORDS_PER_QUEST;
+}
+
+/** True if this word index is the lesson's mastery check (3, 7, 11, 15). */
+export function isMasteryCheckWord(wordIndex: number): boolean {
+  return wordIndex >= 0 && (wordIndex + 1) % WORDS_PER_LESSON === 0
+    && wordIndex < WORDS_PER_QUEST;
+}
+
+/** 0-based lesson index this word belongs to (0..3). */
+export function getLessonIndex(wordIndex: number): number {
+  return Math.floor(wordIndex / WORDS_PER_LESSON);
+}
+
+const LESSON_MASTERY_KEY = "ww_lessonMastery";
+
+function loadAllLessonMastery(): Record<string, boolean[]> {
+  try {
+    return JSON.parse(localStorage.getItem(LESSON_MASTERY_KEY) || "{}");
+  } catch { return {}; }
+}
+
+/** Returns the kid's mastery-badge state for a quest as a length-4 boolean
+ *  array (one entry per lesson). Default = all false. */
+export function loadLessonMastery(questId: string): boolean[] {
+  const stored = loadAllLessonMastery()[questId];
+  const out = new Array<boolean>(LESSONS_PER_QUEST).fill(false);
+  if (Array.isArray(stored)) {
+    for (let i = 0; i < LESSONS_PER_QUEST; i++) out[i] = !!stored[i];
+  }
+  return out;
+}
+
+/** Marks a lesson's mastery badge as earned. Idempotent. Returns the
+ *  updated mastery array so callers can react to the new state. */
+export function recordLessonMastery(
+  questId: string,
+  lessonIndex: number,
+): boolean[] {
+  const all = loadAllLessonMastery();
+  const current = loadLessonMastery(questId);
+  if (lessonIndex < 0 || lessonIndex >= LESSONS_PER_QUEST) return current;
+  if (current[lessonIndex]) return current;
+  current[lessonIndex] = true;
+  all[questId] = current;
+  try { localStorage.setItem(LESSON_MASTERY_KEY, JSON.stringify(all)); }
+  catch { /* storage disabled — ok */ }
+  return current;
 }
 
 // =============================================

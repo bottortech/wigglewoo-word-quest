@@ -440,6 +440,37 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
+/* ---- Mastery-check pill (top bar) ----
+ * Subtle silver badge that surfaces on words 4/8/12/16 so the kid (and
+ * any peering parent/teacher) understands "this one's on you — no
+ * audio model, no auto-hint." Sits between the progress counter and
+ * the speaker button. */
+.mastery-marker {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #4A5568;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #F7FAFC 0%, #E2E8F0 100%);
+  border: 1px solid rgba(160, 174, 192, 0.6);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: mastery-marker-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes mastery-marker-shimmer {
+  0%, 100% { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8); }
+  50%      { box-shadow: 0 1px 6px rgba(80, 100, 130, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.95); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mastery-marker { animation: none; }
+}
+
 /* ---- Speaker button ---- */
 .speaker-btn {
   display: flex;

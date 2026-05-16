@@ -141,6 +141,12 @@ export const WORDS_PER_QUEST = 16;
 /** First half of quest (nodes 1-8, before trophy room) */
 export const FIRST_HALF_WORDS = 8;
 
+/** Curriculum chunking — each quest is structured as 4 lessons of 4 words.
+ *  Words 1-3, 5-7, 9-11, 13-15 are guided practice; words 4, 8, 12, 16 are
+ *  independent mastery checks that earn a silver-star skill badge. */
+export const WORDS_PER_LESSON = 4;
+export const LESSONS_PER_QUEST = 4;
+
 /** Trophy progression tiers.
  *  none = no trophy yet
  *  half = phase 1 trophy (earned after node 8)

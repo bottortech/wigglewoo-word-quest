@@ -41,11 +41,27 @@ import gear2 from "../assets/gear2.png";
 import gear3 from "../assets/gear3.png";
 import pipe1 from "../assets/pipe1.png";
 import pipe2 from "../assets/pipe2.png";
-import { saveNodeRating, type WordRating } from "../game/progression";
+import {
+  saveNodeRating,
+  type WordRating,
+  isLessonStart,
+  isMasteryCheckWord,
+  getLessonIndex,
+  recordLessonMastery,
+} from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
+import LessonObjectiveCard from "../components/LessonObjectiveCard";
+import MasteryBadgeUnlock from "../components/MasteryBadgeUnlock";
 import "../styles/game.css";
 import "../styles/questmap.css";
 import "../styles/home.css";
+
+/** "Sound Builders: Short A" → "Short A" so the mastery card focus
+ *  matches the lesson intro card. */
+function getFocusLabel(questTitle: string): string {
+  const colon = questTitle.lastIndexOf(":");
+  return colon >= 0 ? questTitle.slice(colon + 1).trim() : questTitle;
+}
 
 // =============================================
 // SESSION STREAK — persists across remounts
@@ -98,7 +114,14 @@ const SpeakerIcon: React.FC<{ active: boolean }> = ({ active }) => (
   </svg>
 );
 
-type GameStep = "build" | "celebrate";
+/** Step machine:
+ *  - lesson-intro: shown at the start of each lesson (words 0/4/8/12)
+ *  - build:        the existing tap-to-place letter mechanic
+ *  - celebrate:    per-word "yay!" overlay (existing CelebrationOverlay)
+ *  - mastery-unlock: silver-star badge shown after a mastery-check word
+ *                  (words 3/7/11/15) before any quest-level navigation
+ */
+type GameStep = "lesson-intro" | "build" | "celebrate" | "mastery-unlock";
 
 interface GameScreenProps {
   quest: Quest;
@@ -128,7 +151,15 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const skinAssets = useMemo(() => getActiveSkinAssets(), []);
 
   // ---- Step state ----
-  const [step, setStep] = useState<GameStep>("build");
+  // Start in "lesson-intro" when entering the first word of a new lesson
+  // (indices 0, 4, 8, 12). Mid-lesson resumes (word 5, 6, 9, etc.) skip
+  // straight to "build". The intro/mastery flags are tied to the mount
+  // so they only fire once per word-screen entry; navigation away unmounts.
+  const isMasteryWord = isMasteryCheckWord(currentWordIndex);
+  const showLessonIntro = isLessonStart(currentWordIndex);
+  const [step, setStep] = useState<GameStep>(
+    showLessonIntro ? "lesson-intro" : "build"
+  );
   const [filledSlots, setFilledSlots] = useState<(string | null)[]>(
     () => Array(wordLength).fill(null)
   );
@@ -172,19 +203,24 @@ const GameScreen: React.FC<GameScreenProps> = ({
     };
   }, [quest.id, quest.patternType, currentWordIndex]);
 
-  // Speak the target word on first mount so the child hears what to build
+  // Speak the target word on first mount so the child hears what to build.
+  // SUPPRESSED on mastery-check words (3/7/11/15) — the kid has to recall
+  // the spelling on their own. Speaker button still works for self-replay.
+  // Also defer until the lesson-intro overlay is dismissed; otherwise the
+  // model audio plays underneath the intro card.
   const hasPlayedPrompt = useRef(false);
   useEffect(() => {
-    if (!hasPlayedPrompt.current) {
-      hasPlayedPrompt.current = true;
-      setTimeout(() => {
-        playWordSound(currentWord.word);
-        setAudioActive(true);
-        if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
-        audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
-      }, 800);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (hasPlayedPrompt.current) return;
+    if (isMasteryWord) return;
+    if (step === "lesson-intro") return;
+    hasPlayedPrompt.current = true;
+    setTimeout(() => {
+      playWordSound(currentWord.word);
+      setAudioActive(true);
+      if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
+      audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
+    }, 800);
+  }, [step, isMasteryWord, currentWord.word]);
 
   // ---- Step 1: Tap-to-place ----
   const nextEmptySlot = useMemo(() => {
@@ -269,6 +305,14 @@ const GameScreen: React.FC<GameScreenProps> = ({
       const rating: WordRating = incorrectCount === 0 ? "perfect" : incorrectCount <= 2 ? "clean" : "assisted";
       saveNodeRating(quest.id, currentWordIndex, rating);
 
+      // Lesson mastery — completing the mastery-check word (3/7/11/15)
+      // earns the silver-star badge for that lesson. Any completion
+      // counts in Phase A; later phases can tighten this to require
+      // a "perfect" rating if educators want stricter assessment.
+      if (isMasteryWord) {
+        recordLessonMastery(quest.id, getLessonIndex(currentWordIndex));
+      }
+
       // Streak
       if (rating === "perfect") {
         sessionStreak++;
@@ -281,15 +325,34 @@ const GameScreen: React.FC<GameScreenProps> = ({
     }
   }, [step]);
 
-  // ---- Celebration complete → navigate ----
-  const handleCelebrationComplete = useCallback(() => {
+  // ---- Celebration complete → mastery unlock (if applicable) → navigate ----
+  // Mastery-check words detour through the silver-star unlock screen
+  // before any quest-level routing. handleMasteryUnlockComplete picks
+  // up the navigation once the kid taps "Keep Going!".
+  const navigateAfterWord = useCallback(() => {
     const celebType = getCelebrationTypeForWord(currentWordIndex, quest.words.length);
     if (celebType === "quest-complete") {
       onNavigate("quest-summary");
     } else {
       onNavigate("quest-map");
     }
-  }, [currentWordIndex, onNavigate]);
+  }, [currentWordIndex, onNavigate, quest.words.length]);
+
+  const handleCelebrationComplete = useCallback(() => {
+    if (isMasteryWord) {
+      setStep("mastery-unlock");
+      return;
+    }
+    navigateAfterWord();
+  }, [isMasteryWord, navigateAfterWord]);
+
+  const handleMasteryUnlockComplete = useCallback(() => {
+    navigateAfterWord();
+  }, [navigateAfterWord]);
+
+  const handleLessonIntroComplete = useCallback(() => {
+    setStep("build");
+  }, []);
 
 
   // =============================================
@@ -307,6 +370,16 @@ const GameScreen: React.FC<GameScreenProps> = ({
             <div className="progress-indicator">
               ⭐ {currentWordIndex + 1} / {quest.words.length}
             </div>
+            {isMasteryWord && (
+              <div
+                className="mastery-marker"
+                role="status"
+                aria-label="Mastery check"
+                title="Mastery check — try it on your own!"
+              >
+                ★ Mastery Check
+              </div>
+            )}
             <button
               className={`speaker-btn ${audioActive ? "speaker-btn--active" : ""}`}
               onClick={handleSpeakerTap}
@@ -428,6 +501,25 @@ const GameScreen: React.FC<GameScreenProps> = ({
               totalWords={quest.words.length}
               word={currentWord.word}
               rating={incorrectCount === 0 ? "perfect" : incorrectCount <= 2 ? "clean" : "assisted"}
+            />
+          )}
+
+          {/* ========== LESSON INTRO (words 0/4/8/12) ========== */}
+          {step === "lesson-intro" && (
+            <LessonObjectiveCard
+              lessonIndex={getLessonIndex(currentWordIndex)}
+              questTitle={quest.title}
+              exampleWord={currentWord}
+              onContinue={handleLessonIntroComplete}
+            />
+          )}
+
+          {/* ========== MASTERY UNLOCK (after words 3/7/11/15) ========== */}
+          {step === "mastery-unlock" && (
+            <MasteryBadgeUnlock
+              lessonIndex={getLessonIndex(currentWordIndex)}
+              focusLabel={getFocusLabel(quest.title)}
+              onContinue={handleMasteryUnlockComplete}
             />
           )}
         </div>

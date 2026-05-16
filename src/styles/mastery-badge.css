@@ -1,0 +1,219 @@
+/* =============================================
+   mastery-badge.css — Lesson mastery celebration
+   ============================================= */
+
+.mastery-badge {
+  position: absolute;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mastery-fade-in 0.35s ease-out;
+}
+
+@keyframes mastery-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mastery-badge__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(255, 248, 215, 0.95) 0%, rgba(255, 232, 160, 0.85) 40%, rgba(135, 96, 30, 0.55) 100%);
+  backdrop-filter: blur(2px);
+}
+
+/* Soft conic rays sweeping behind the medallion — slow rotation so it
+   feels celebratory but not dizzying. */
+.mastery-badge__rays {
+  position: absolute;
+  width: min(90vmin, 720px);
+  height: min(90vmin, 720px);
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 215, 100, 0.0)   0deg,
+    rgba(255, 230, 150, 0.35)  10deg,
+    rgba(255, 215, 100, 0.0)   30deg,
+    rgba(255, 230, 150, 0.35)  60deg,
+    rgba(255, 215, 100, 0.0)   80deg,
+    rgba(255, 230, 150, 0.35) 110deg,
+    rgba(255, 215, 100, 0.0)  130deg,
+    rgba(255, 230, 150, 0.35) 160deg,
+    rgba(255, 215, 100, 0.0)  180deg,
+    rgba(255, 230, 150, 0.35) 210deg,
+    rgba(255, 215, 100, 0.0)  230deg,
+    rgba(255, 230, 150, 0.35) 260deg,
+    rgba(255, 215, 100, 0.0)  280deg,
+    rgba(255, 230, 150, 0.35) 310deg,
+    rgba(255, 215, 100, 0.0)  330deg,
+    rgba(255, 230, 150, 0.0)  360deg
+  );
+  mask-image: radial-gradient(circle, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
+  animation: mastery-rays-spin 22s linear infinite;
+  opacity: 0.85;
+}
+
+@keyframes mastery-rays-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.mastery-badge__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.4vh, 14px);
+  padding: clamp(14px, 2.5vh, 28px) clamp(28px, 5vw, 52px);
+  text-align: center;
+  animation: mastery-card-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes mastery-card-pop {
+  0%   { transform: scale(0.7); opacity: 0; }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.mastery-badge__eyebrow {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(13px, 2.2vh, 18px);
+  font-weight: 800;
+  color: #8E5A18;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: clamp(4px, 0.8vh, 6px) clamp(12px, 2vw, 18px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 2px 8px rgba(143, 90, 24, 0.18);
+}
+
+/* Medallion — silver star inside a gold ring */
+.mastery-badge__medallion {
+  position: relative;
+  width: clamp(120px, 26vh, 200px);
+  height: clamp(120px, 26vh, 200px);
+  margin: clamp(4px, 0.8vh, 8px) 0;
+}
+
+.mastery-badge__medallion-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, #FFF6D0 0%, #FFD86A 28%, #E5A21A 62%, #8E5A18 100%);
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.6) inset,
+    0 8px 24px rgba(143, 90, 24, 0.45),
+    0 0 28px rgba(255, 215, 100, 0.85);
+  animation: mastery-medallion-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes mastery-medallion-pulse {
+  0%, 100% { box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.6) inset,
+    0 8px 24px rgba(143, 90, 24, 0.45),
+    0 0 22px rgba(255, 215, 100, 0.75); }
+  50%      { box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.65) inset,
+    0 8px 28px rgba(143, 90, 24, 0.55),
+    0 0 34px rgba(255, 215, 100, 0.95); }
+}
+
+.mastery-badge__medallion-disk {
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, #FBFCFE 0%, #E2EDF7 50%, #95A8BD 100%);
+  box-shadow:
+    inset 0 4px 10px rgba(255, 255, 255, 0.85),
+    inset 0 -6px 12px rgba(80, 100, 130, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mastery-badge__medallion-star {
+  font-size: clamp(60px, 14vh, 110px);
+  line-height: 1;
+  color: #C4D3E2;
+  text-shadow:
+    0 2px 4px rgba(80, 100, 130, 0.45),
+    0 0 16px rgba(255, 255, 255, 0.7);
+  animation: mastery-star-twinkle 3.4s ease-in-out infinite;
+}
+
+@keyframes mastery-star-twinkle {
+  0%, 100% { transform: scale(1)   rotate(0deg); filter: brightness(1); }
+  40%      { transform: scale(1.08) rotate(2deg); filter: brightness(1.15); }
+  60%      { transform: scale(1.08) rotate(-2deg); filter: brightness(1.15); }
+}
+
+.mastery-badge__title {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(24px, 5vh, 38px);
+  font-weight: 900;
+  color: #5D3A0E;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+.mastery-badge__focus {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(15px, 2.8vh, 20px);
+  font-weight: 700;
+  color: #6E4914;
+}
+.mastery-badge__focus strong { color: #B07314; }
+
+.mastery-badge__continue {
+  margin-top: clamp(4px, 0.8vh, 10px);
+  padding: clamp(10px, 1.8vh, 14px) clamp(28px, 5vw, 44px);
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(16px, 3vh, 22px);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mastery-badge__continue:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 22px rgba(255, 152, 0, 0.5);
+}
+.mastery-badge__continue:active { transform: scale(0.95); }
+
+/* Short viewport — landscape phones */
+@media (max-height: 500px) {
+  .mastery-badge__card {
+    gap: 4px;
+    padding: 8px 18px;
+  }
+  .mastery-badge__eyebrow { font-size: 11px; padding: 3px 10px; }
+  .mastery-badge__medallion { width: clamp(80px, 22vh, 130px); height: clamp(80px, 22vh, 130px); }
+  .mastery-badge__medallion-star { font-size: clamp(40px, 12vh, 70px); }
+  .mastery-badge__title { font-size: clamp(20px, 5vh, 28px); }
+  .mastery-badge__focus { font-size: clamp(12px, 2.4vh, 16px); }
+  .mastery-badge__continue {
+    padding: 6px 22px;
+    font-size: clamp(14px, 3vh, 18px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mastery-badge__rays,
+  .mastery-badge__medallion-ring,
+  .mastery-badge__medallion-star {
+    animation: none;
+  }
+}
