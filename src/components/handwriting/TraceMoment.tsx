@@ -23,10 +23,15 @@ import "../../styles/trace-moment.css";
 interface TraceMomentProps {
   /** Single lowercase letter to trace. Must exist in LETTER_PATHS. */
   letter: string;
-  /** Asset URL shown before tracing succeeds. */
-  dimSrc: string;
-  /** Asset URL shown after tracing succeeds. */
-  activeSrc: string;
+  /** Optional asset URL shown before tracing succeeds (Discovery-Room
+   *  prop sprite). Omit for in-quest trace where there's no prop. */
+  dimSrc?: string;
+  /** Optional asset URL shown after tracing succeeds. Omit when there's
+   *  no prop sprite to swap. Either both or neither should be set. */
+  activeSrc?: string;
+  /** Optional caption shown below the trace prompt — e.g. "for CAT" so
+   *  the kid keeps word context while focusing on the letter. */
+  caption?: string;
   /** Fired after the success reaction animation finishes. */
   onComplete: () => void;
   /** Optional skip handler — exposed after a delay for accessibility. */
@@ -40,9 +45,11 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
   letter,
   dimSrc,
   activeSrc,
+  caption,
   onComplete,
   onSkip,
 }) => {
+  const hasPropSprite = !!dimSrc && !!activeSrc;
   const path = LETTER_PATHS[letter];
   const svgRef = useRef<SVGSVGElement | null>(null);
   const pathRef = useRef<SVGPathElement | null>(null);
@@ -105,15 +112,20 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
       )}
 
       <div className="trace-moment__prompt">Trace the letter</div>
+      {caption && (
+        <div className="trace-moment__caption" aria-live="polite">{caption}</div>
+      )}
 
       <div className="trace-moment__stage">
-        <div className={`trace-moment__prop ${completed ? "trace-moment__prop--lit" : ""}`}>
-          <img
-            src={completed ? activeSrc : dimSrc}
-            alt=""
-            draggable={false}
-          />
-        </div>
+        {hasPropSprite && (
+          <div className={`trace-moment__prop ${completed ? "trace-moment__prop--lit" : ""}`}>
+            <img
+              src={completed ? activeSrc : dimSrc}
+              alt=""
+              draggable={false}
+            />
+          </div>
+        )}
 
         <svg
           ref={svgRef}

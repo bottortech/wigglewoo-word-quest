@@ -46,12 +46,17 @@ import {
   type WordRating,
   isLessonStart,
   isMasteryCheckWord,
+  isTracePrepWord,
   getLessonIndex,
+  getTraceLetterForWord,
   recordLessonMastery,
 } from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
 import LessonObjectiveCard from "../components/LessonObjectiveCard";
 import MasteryBadgeUnlock from "../components/MasteryBadgeUnlock";
+import SayItOutLoudCue from "../components/SayItOutLoudCue";
+import TraceMoment from "../components/handwriting/TraceMoment";
+import { LETTER_PATHS } from "../components/handwriting/letterPaths";
 import "../styles/game.css";
 import "../styles/questmap.css";
 import "../styles/home.css";
@@ -115,13 +120,27 @@ const SpeakerIcon: React.FC<{ active: boolean }> = ({ active }) => (
 );
 
 /** Step machine:
- *  - lesson-intro: shown at the start of each lesson (words 0/4/8/12)
- *  - build:        the existing tap-to-place letter mechanic
- *  - celebrate:    per-word "yay!" overlay (existing CelebrationOverlay)
- *  - mastery-unlock: silver-star badge shown after a mastery-check word
- *                  (words 3/7/11/15) before any quest-level navigation
+ *  - lesson-intro:   start of each lesson (words 0/4/8/12)
+ *  - trace-prep:     letter trace before build, on word-3 of a lesson
+ *                    (indices 2/6/10/14). Uses the existing TraceMoment
+ *                    overlay; letter rotates 1st / vowel / last / vowel
+ *                    across the 4 lessons of a quest.
+ *  - say-cue:        "say it out loud" prompt, fires after the audio
+ *                    model on the FIRST word of each lesson (0/4/8/12)
+ *                    so the kid vocalizes the target before tapping
+ *                    tiles. Auto-dismiss after 2.5s.
+ *  - build:          the existing tap-to-place letter mechanic
+ *  - celebrate:      per-word "yay!" overlay (existing CelebrationOverlay)
+ *  - mastery-unlock: silver-star badge after a mastery-check word
+ *                    (3/7/11/15) before any quest-level navigation
  */
-type GameStep = "lesson-intro" | "build" | "celebrate" | "mastery-unlock";
+type GameStep =
+  | "lesson-intro"
+  | "trace-prep"
+  | "say-cue"
+  | "build"
+  | "celebrate"
+  | "mastery-unlock";
 
 interface GameScreenProps {
   quest: Quest;
@@ -151,15 +170,29 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const skinAssets = useMemo(() => getActiveSkinAssets(), []);
 
   // ---- Step state ----
-  // Start in "lesson-intro" when entering the first word of a new lesson
-  // (indices 0, 4, 8, 12). Mid-lesson resumes (word 5, 6, 9, etc.) skip
-  // straight to "build". The intro/mastery flags are tied to the mount
-  // so they only fire once per word-screen entry; navigation away unmounts.
+  // Initial step is the first overlay we owe the kid before "build":
+  //   word 0/4/8/12 → lesson-intro (then later say-cue after audio model)
+  //   word 2/6/10/14 → trace-prep   (when a valid letter is available)
+  //   everything else → build
   const isMasteryWord = isMasteryCheckWord(currentWordIndex);
   const showLessonIntro = isLessonStart(currentWordIndex);
-  const [step, setStep] = useState<GameStep>(
-    showLessonIntro ? "lesson-intro" : "build"
-  );
+  const lessonIndex = getLessonIndex(currentWordIndex);
+  // The letter to trace on word-3 of this lesson. null when the chosen
+  // letter has no path data — caller falls back to "build" without a trace.
+  const traceLetter = useMemo<string | null>(() => {
+    if (!isTracePrepWord(currentWordIndex)) return null;
+    const candidate = getTraceLetterForWord(lessonIndex, currentWord.letters);
+    if (!candidate) return null;
+    return LETTER_PATHS[candidate] ? candidate : null;
+  }, [currentWordIndex, lessonIndex, currentWord.letters]);
+  const [step, setStep] = useState<GameStep>(() => {
+    if (showLessonIntro) return "lesson-intro";
+    if (isTracePrepWord(currentWordIndex)) {
+      const candidate = getTraceLetterForWord(lessonIndex, currentWord.letters);
+      if (candidate && LETTER_PATHS[candidate]) return "trace-prep";
+    }
+    return "build";
+  });
   const [filledSlots, setFilledSlots] = useState<(string | null)[]>(
     () => Array(wordLength).fill(null)
   );
@@ -204,23 +237,44 @@ const GameScreen: React.FC<GameScreenProps> = ({
   }, [quest.id, quest.patternType, currentWordIndex]);
 
   // Speak the target word on first mount so the child hears what to build.
-  // SUPPRESSED on mastery-check words (3/7/11/15) — the kid has to recall
-  // the spelling on their own. Speaker button still works for self-replay.
-  // Also defer until the lesson-intro overlay is dismissed; otherwise the
-  // model audio plays underneath the intro card.
+  // Plays on every word INCLUDING mastery checks (3/7/11/15) — the kid
+  // hears the target once, then has to recall the spelling independently
+  // (no hand-pointer hint, no say-cue follow-up on mastery words). The
+  // ★ Mastery Check pill in the top bar still signals "this one's on you".
+  //
+  // Deferred until the lesson-intro AND trace-prep overlays are dismissed
+  // so the model audio doesn't play underneath those screens.
+  //
+  // Lesson-opener words (0/4/8/12) chain the audio model into the say-cue
+  // overlay so the kid vocalizes the word before tapping tiles.
   const hasPlayedPrompt = useRef(false);
+  const sayCueTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const audioStartTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     if (hasPlayedPrompt.current) return;
-    if (isMasteryWord) return;
-    if (step === "lesson-intro") return;
+    if (step === "lesson-intro" || step === "trace-prep") return;
+    if (step !== "build" && step !== "say-cue") return;
     hasPlayedPrompt.current = true;
-    setTimeout(() => {
+    audioStartTimerRef.current = setTimeout(() => {
       playWordSound(currentWord.word);
       setAudioActive(true);
       if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
       audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
+      // On lesson openers (non-mastery) follow the audio with the say-cue.
+      // Mastery words skip the cue — independent recall, no vocalization
+      // prompt — just the model audio + the marker pill.
+      if (isLessonStart(currentWordIndex) && !isMasteryWord) {
+        sayCueTimerRef.current = setTimeout(() => setStep("say-cue"), 1400);
+      }
     }, 800);
-  }, [step, isMasteryWord, currentWord.word]);
+  }, [step, isMasteryWord, currentWord.word, currentWordIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (sayCueTimerRef.current) clearTimeout(sayCueTimerRef.current);
+      if (audioStartTimerRef.current) clearTimeout(audioStartTimerRef.current);
+    };
+  }, []);
 
   // ---- Step 1: Tap-to-place ----
   const nextEmptySlot = useMemo(() => {
@@ -351,6 +405,24 @@ const GameScreen: React.FC<GameScreenProps> = ({
   }, [navigateAfterWord]);
 
   const handleLessonIntroComplete = useCallback(() => {
+    // After the kid taps Let's Go on the intro card, route to the right
+    // pre-build step for this word. Trace-prep words drop straight into
+    // the trace overlay before the build screen renders.
+    if (
+      isTracePrepWord(currentWordIndex)
+      && traceLetter
+    ) {
+      setStep("trace-prep");
+    } else {
+      setStep("build");
+    }
+  }, [currentWordIndex, traceLetter]);
+
+  const handleTracePrepComplete = useCallback(() => {
+    setStep("build");
+  }, []);
+
+  const handleSayCueDismiss = useCallback(() => {
     setStep("build");
   }, []);
 
@@ -394,8 +466,13 @@ const GameScreen: React.FC<GameScreenProps> = ({
             <div className="game-play-area">
               <div className={`game-center-column ${wordLengthClass}`}>
 
-                {/* ========== STEP 1: BUILD ========== */}
-                {step === "build" && (
+                {/* ========== STEP 1: BUILD ==========
+                    Build group also renders during the say-cue step so
+                    the overlay layers on top of the visible image + word
+                    slots. handleTileTap guards against non-"build" step
+                    so tiles are visibly present but un-tappable while
+                    the cue is on screen. */}
+                {(step === "build" || step === "say-cue") && (
                   <div className="build-group">
                     {/* Target image — only for "image" mode words */}
                     {(currentWord.mode ?? "image") === "image" && (
@@ -511,6 +588,30 @@ const GameScreen: React.FC<GameScreenProps> = ({
               questTitle={quest.title}
               exampleWord={currentWord}
               onContinue={handleLessonIntroComplete}
+            />
+          )}
+
+          {/* ========== TRACE PREP (word-3 of each lesson) ==========
+              The trace overlay re-uses the Discovery-Room trace
+              component, without the prop sprite — the kid just sees a
+              clean letter to trace. A caption keeps word context
+              ("for CAT") so they remember which word the letter
+              belongs to. onSkip mirrors onComplete so a stuck kid can
+              still progress past it. */}
+          {step === "trace-prep" && traceLetter && (
+            <TraceMoment
+              letter={traceLetter}
+              caption={`for ${currentWord.word.toUpperCase()}`}
+              onComplete={handleTracePrepComplete}
+              onSkip={handleTracePrepComplete}
+            />
+          )}
+
+          {/* ========== SAY-IT-OUT-LOUD CUE (after audio on lesson openers) ========== */}
+          {step === "say-cue" && (
+            <SayItOutLoudCue
+              word={currentWord.word}
+              onDismiss={handleSayCueDismiss}
             />
           )}
 

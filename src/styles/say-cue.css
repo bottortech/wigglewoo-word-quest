@@ -1,0 +1,130 @@
+/* =============================================
+   say-cue.css — "Say it out loud!" prompt
+   ============================================= */
+
+.say-cue {
+  position: absolute;
+  inset: 0;
+  z-index: 550;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 71, 161, 0.18);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: say-cue-fade-in 0.25s ease-out;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.say-cue--dismissing {
+  animation: say-cue-fade-out 0.25s ease-in forwards;
+}
+
+@keyframes say-cue-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes say-cue-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.say-cue__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.6vh, 14px);
+  padding: clamp(16px, 3vh, 28px) clamp(28px, 5vw, 48px);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0F8FF 100%);
+  border: 3px solid rgba(13, 71, 161, 0.18);
+  border-radius: 24px;
+  box-shadow:
+    0 12px 36px rgba(13, 71, 161, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: say-cue-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+  max-width: min(560px, 86vw);
+}
+
+@keyframes say-cue-pop {
+  from { transform: scale(0.86); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* Speech bubble with mouth emoji — clearly signals "you, vocalize" */
+.say-cue__bubble {
+  position: relative;
+  width: clamp(72px, 14vh, 110px);
+  height: clamp(72px, 14vh, 110px);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #BBDEFB 0%, #90CAF9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(13, 71, 161, 0.22);
+  animation: say-cue-bubble-bob 1.6s ease-in-out infinite;
+}
+
+.say-cue__bubble-emoji {
+  font-size: clamp(40px, 8vh, 64px);
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.18));
+}
+
+/* Little tail at the bottom-left so the bubble reads as speech */
+.say-cue__bubble-tail {
+  position: absolute;
+  bottom: -6px;
+  left: 18%;
+  width: 18px;
+  height: 18px;
+  background: #90CAF9;
+  border-radius: 4px 0 50% 0;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 6px rgba(13, 71, 161, 0.18);
+}
+
+@keyframes say-cue-bubble-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+.say-cue__prompt {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(16px, 3vh, 22px);
+  font-weight: 800;
+  color: #1565C0;
+  letter-spacing: 0.01em;
+}
+
+.say-cue__word {
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(36px, 8vh, 64px);
+  font-weight: 900;
+  color: #0D47A1;
+  letter-spacing: clamp(4px, 1.2vh, 10px);
+  text-shadow: 0 2px 8px rgba(13, 71, 161, 0.15);
+}
+
+/* Short viewport — landscape phones */
+@media (max-height: 500px) {
+  .say-cue__card {
+    gap: 4px;
+    padding: 8px 22px;
+  }
+  .say-cue__bubble {
+    width: clamp(48px, 11vh, 70px);
+    height: clamp(48px, 11vh, 70px);
+  }
+  .say-cue__bubble-emoji { font-size: clamp(28px, 7vh, 40px); }
+  .say-cue__prompt { font-size: clamp(13px, 2.6vh, 18px); }
+  .say-cue__word { font-size: clamp(26px, 6.5vh, 40px); letter-spacing: clamp(3px, 1vh, 6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .say-cue,
+  .say-cue__card,
+  .say-cue__bubble { animation: none; }
+}

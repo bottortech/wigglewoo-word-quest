@@ -78,7 +78,12 @@
   --trace-dash-length: 4;
   --trace-gap-length: 4;
   --trace-flow-speed: 1.2s;
-  --trace-dim-color: rgba(255, 197, 71, 0.20);
+  /* Dim layer is the faint "groove" of the full letter shape. Hidden by
+     default so the kid sees only the white road-marking dashes before
+     they start tracing. Discovery-Room themes (volcano, coral, etc.)
+     explicitly set their own dim stroke so this transparent default
+     doesn't suppress them. */
+  --trace-dim-color: transparent;
   /* Pending = white road-marking dashes inside the letter outline,
      mirroring the dashed style on the alphabet tile icons. */
   --trace-pending-color: rgba(255, 255, 255, 0.95);
@@ -154,6 +159,22 @@
   text-shadow: 0 2px 8px rgba(0,0,0,0.5);
   pointer-events: none;
   opacity: 0.92;
+}
+
+/* Optional context line beneath the prompt — e.g. "for CAT" so the kid
+   knows which word the letter belongs to during an in-quest trace. */
+.trace-moment__caption {
+  position: absolute;
+  top: calc(6% + clamp(20px, 3.6vmin, 30px));
+  left: 50%;
+  transform: translateX(-50%);
+  color: #FFE08A;
+  font-size: clamp(12px, 2vmin, 16px);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.55);
+  pointer-events: none;
 }
 
 .trace-moment__skip {

@@ -19,12 +19,27 @@ interface UseTraceValidatorOpts {
   pathRef: React.RefObject<SVGPathElement | null>;
   svgRef: React.RefObject<SVGSVGElement | null>;
   onSuccess: () => void;
-  /** Hit radius in SVG units (viewBox space). Default 9. */
+  /** Hit radius in SVG units (viewBox space). Default 5. Tightened from
+   *  9 → 5 so the filled trace tracks the cursor within a fraction of a
+   *  dash; with 60 waypoints over a ~200-unit path the spacing is ~3.4
+   *  units, so the cursor hits one waypoint at a time instead of 2-3. */
   hitRadius?: number;
-  /** Number of waypoints sampled along the path. Default 40. */
+  /** Number of waypoints sampled along the path. Default 60. Increased
+   *  from 40 → 60 for finer resolution that complements the tighter
+   *  hit radius without making the trace harder to pass. */
   waypointCount?: number;
-  /** 0..1 fraction of waypoints needed to trigger success. Default 0.6. */
+  /** 0..1 fraction of waypoints needed to trigger success. Default 0.85.
+   *  Raised from 0.6 → 0.85 so success requires actually tracing most
+   *  of the letter, not just sweeping through ~25% of it. Combined
+   *  with requireEnd, the kid has to reach the final waypoint AND
+   *  cover at least 85% of all waypoints before onSuccess fires. */
   coverageThreshold?: number;
+  /** When true, success also requires the LAST waypoint to be hit
+   *  (i.e. the kid actually reached the end of the letter). Default
+   *  true — prevents early success when the kid covers the middle
+   *  but skips the tail. Set false to restore old "any 60% somewhere"
+   *  behavior. */
+  requireEnd?: boolean;
 }
 
 interface UseTraceValidatorReturn {
@@ -45,9 +60,10 @@ interface UseTraceValidatorReturn {
 }
 
 export function useTraceValidator(opts: UseTraceValidatorOpts): UseTraceValidatorReturn {
-  const HIT_R = opts.hitRadius ?? 9;
-  const N = opts.waypointCount ?? 40;
-  const THRESHOLD = opts.coverageThreshold ?? 0.6;
+  const HIT_R = opts.hitRadius ?? 5;
+  const N = opts.waypointCount ?? 60;
+  const THRESHOLD = opts.coverageThreshold ?? 0.85;
+  const REQUIRE_END = opts.requireEnd ?? true;
 
   const waypoints = useRef<Pt[]>([]);
   const [pathLength, setPathLength] = useState(0);
@@ -141,14 +157,18 @@ export function useTraceValidator(opts: UseTraceValidatorOpts): UseTraceValidato
   }, []);
 
   const coverage = hitMask.reduce((acc, h) => acc + (h ? 1 : 0), 0) / N;
+  // Kid has actually reached the end of the letter — the final waypoint
+  // is hit. Gates success when REQUIRE_END so the trace can't complete
+  // by sweeping the middle and stopping early.
+  const endReached = hitMask.length > 0 && !!hitMask[hitMask.length - 1];
 
   useEffect(() => {
     if (succeeded.current) return;
-    if (coverage >= THRESHOLD) {
-      succeeded.current = true;
-      opts.onSuccess();
-    }
-  }, [coverage, THRESHOLD, opts]);
+    if (coverage < THRESHOLD) return;
+    if (REQUIRE_END && !endReached) return;
+    succeeded.current = true;
+    opts.onSuccess();
+  }, [coverage, endReached, THRESHOLD, REQUIRE_END, opts]);
 
   return {
     onPointerDown,

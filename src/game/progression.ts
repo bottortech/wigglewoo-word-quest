@@ -624,6 +624,53 @@ export function getLessonIndex(wordIndex: number): number {
   return Math.floor(wordIndex / WORDS_PER_LESSON);
 }
 
+/** True if this word is the lesson's "trace" word (word 3 of the lesson —
+ *  indices 2, 6, 10, 14). Word 3 sits inside the guided-practice block
+ *  so failing the trace doesn't gate the mastery check. */
+export function isTracePrepWord(wordIndex: number): boolean {
+  return wordIndex >= 0 && wordIndex < WORDS_PER_QUEST
+    && wordIndex % WORDS_PER_LESSON === WORDS_PER_LESSON - 2;
+}
+
+/** True if this word is the lesson's opener (word 1 of the lesson —
+ *  indices 0, 4, 8, 12). Used to fire the "say it out loud" cue
+ *  after the auto-play audio model. */
+export function isLessonOpenerWord(wordIndex: number): boolean {
+  return isLessonStart(wordIndex);
+}
+
+/** Picks the letter the kid traces on a trace-prep word.
+ *
+ *  Rotation across the 4 lessons of a quest gives alphabet coverage
+ *  through word variety while still anchoring each trace to the word
+ *  the kid just heard / is about to build:
+ *    Lesson 1 (word 3,  idx 2):  first letter of that word
+ *    Lesson 2 (word 7,  idx 6):  middle/vowel letter
+ *    Lesson 3 (word 11, idx 10): last letter
+ *    Lesson 4 (word 15, idx 14): middle/vowel letter (focus reinforcement)
+ *
+ *  Returns lowercase letter, or null when the chosen letter is multi-
+ *  character (e.g. a CVVC grapheme like "ai") since the trace data set
+ *  is single-letter only — callers should skip the trace step in that
+ *  case rather than block on missing data. */
+export function getTraceLetterForWord(
+  lessonIndex: number,
+  wordLetters: string[],
+): string | null {
+  if (wordLetters.length === 0) return null;
+  let position: number;
+  switch (lessonIndex) {
+    case 0: position = 0; break;
+    case 2: position = wordLetters.length - 1; break;
+    case 1:
+    case 3:
+    default: position = Math.floor((wordLetters.length - 1) / 2); break;
+  }
+  const letter = (wordLetters[position] ?? "").toLowerCase();
+  if (letter.length !== 1) return null;
+  return letter;
+}
+
 const LESSON_MASTERY_KEY = "ww_lessonMastery";
 
 function loadAllLessonMastery(): Record<string, boolean[]> {

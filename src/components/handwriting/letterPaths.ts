@@ -99,4 +99,44 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     d: "M 70 30 Q 50 22 30 30 Q 22 38 30 50 Q 50 58 70 50 Q 78 58 70 70 Q 50 78 30 70",
     viewBox: "0 0 100 100",
   },
+  f: {
+    // Hook at top, vertical stem, crossbar through the middle.
+    // Two sub-paths: stem-with-hook, then the crossbar.
+    d: "M 70 30 Q 55 18 40 26 L 40 80 M 28 46 L 60 46",
+    viewBox: "0 0 100 100",
+  },
+  g: {
+    // Bowl + descender that hooks left. Single continuous stroke that
+    // starts at the top right, sweeps left around the bowl, comes back
+    // to the right side, drops below the baseline, then hooks left.
+    d: "M 72 38 Q 50 22 30 38 Q 22 50 30 62 Q 50 72 72 60 L 72 80 Q 72 92 56 92 Q 42 92 38 84",
+    viewBox: "0 0 100 100",
+  },
+  j: {
+    // Tittle (dot loop) + descender stem that hooks left at the bottom.
+    d: "M 58 16 Q 66 16 66 22 Q 66 28 58 28 Q 50 28 50 22 Q 50 16 58 16 M 58 36 L 58 78 Q 58 92 42 92 Q 30 92 28 80",
+    viewBox: "0 0 100 100",
+  },
+  k: {
+    // Vertical stem + upper diagonal in + lower diagonal out.
+    // Three sub-paths so each leg lights independently as the kid traces it.
+    d: "M 30 22 L 30 78 M 70 30 L 30 54 M 42 50 L 72 78",
+    viewBox: "0 0 100 100",
+  },
+  l: {
+    // Simple vertical stem — full x-height plus a touch.
+    d: "M 50 18 L 50 78",
+    viewBox: "0 0 100 100",
+  },
+  r: {
+    // Stem + small hook arching up to the right at the top.
+    d: "M 30 30 L 30 78 M 30 38 Q 40 22 60 28 Q 68 30 70 36",
+    viewBox: "0 0 100 100",
+  },
+  w: {
+    // Four diagonals zig-zagging across the baseline. Single stroke,
+    // mirrors uppercase W. Kids can lift and continue — coverage-based.
+    d: "M 18 28 L 32 78 L 50 38 L 68 78 L 82 28",
+    viewBox: "0 0 100 100",
+  },
 };
