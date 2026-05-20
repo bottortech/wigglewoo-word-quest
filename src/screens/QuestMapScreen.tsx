@@ -6,7 +6,7 @@
 
 import React, { useMemo, useState, useEffect, useRef, useCallback, Component } from "react";
 import type { Quest, NodeState } from "../game/types";
-import { FIRST_HALF_WORDS } from "../game/types";
+import { FIRST_HALF_WORDS, LESSONS_PER_QUEST } from "../game/types";
 import {
   loadQuestProgress,
   isNodeTappable,
@@ -18,6 +18,7 @@ import {
   markTrophyUnlockSeen,
   loadNodeRatings,
   isQuestFullyComplete,
+  loadLessonMastery,
 } from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS, ADVANCED_QUEST_IDS } from "../game/questIds";
@@ -339,6 +340,8 @@ interface QuestMapScreenProps {
   onViewTrophyRoom?: () => void;
   onEnterDiscoveryRoom?: () => void;
   onOpenInsights?: () => void;
+  /** Phase C: opens the cross-quest skill-badge gallery. */
+  onOpenBadges?: () => void;
   onExplore?: (envId: string) => void;
   onOpenWardrobe?: () => void;
   hasNewSkin?: boolean;
@@ -359,6 +362,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   onViewTrophyRoom,
   onEnterDiscoveryRoom,
   onOpenInsights,
+  onOpenBadges,
   onExplore,
 
   onOpenWardrobe,
@@ -1274,6 +1278,11 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
               {QUEST_CATALOG[selectedQuestType].tracks.map((track) => {
                 const isActive = activeVowelId === track.id;
                 const isUnlocked = devUnlock || isVowelUnlocked(track.id);
+                // Phase C: 4 mini-stars showing lesson-mastery state for
+                // this quest — kid + parent can see at a glance how many
+                // skill badges have been earned on this vowel without
+                // entering the quest.
+                const mastery = isUnlocked ? loadLessonMastery(track.id) : null;
                 return (
                   <button
                     key={track.id}
@@ -1285,6 +1294,22 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                   >
                     <span className="word-quest-box__vowel-letter">{track.vowel}</span>
                     <span className="word-quest-box__vowel-label">{track.label}</span>
+                    {mastery && (
+                      <span
+                        className="quest-mastery-stars"
+                        aria-label={`${mastery.filter(Boolean).length} of ${LESSONS_PER_QUEST} lessons mastered`}
+                      >
+                        {Array.from({ length: LESSONS_PER_QUEST }, (_, i) => (
+                          <span
+                            key={i}
+                            className={`quest-mastery-stars__dot ${mastery[i] ? "quest-mastery-stars__dot--earned" : ""}`}
+                            aria-hidden="true"
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </span>
+                    )}
                     {!isUnlocked && <span className="word-quest-box__lock">🔒</span>}
                     {isUnlocked && isChallengeUnlocked(track.id) && (
                       <span className="challenge-star-badge" title="Challenge Mode available">⭐</span>
@@ -1311,6 +1336,18 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         >
           <span className="for-parents-btn__wave" aria-hidden="true">👋</span>
           <span className="for-parents-btn__label">For Parents</span>
+        </button>
+      )}
+
+      {/* Skill Badges — kid-reachable collection view (no parental gate) */}
+      {!showOnboardingArrow && onOpenBadges && (
+        <button
+          className="badges-btn"
+          onClick={onOpenBadges}
+          aria-label="See my skill badges"
+        >
+          <span className="badges-btn__star" aria-hidden="true">★</span>
+          <span className="badges-btn__label">Badges</span>
         </button>
       )}
 

@@ -25,10 +25,18 @@ const TROPHY_KEY = "wigglewoo-trophy-progress";
 const DISCOVERY_KEY = "wigglewoo-discovery-all";
 const CROSSMATCH_KEY = "wigglewoo-crossmatch-all";
 
-/** Cross-match review checkpoints (1-indexed word numbers). After completing
- *  word 4, the player does a cross-match review of words 1–4; after word 12,
- *  a review of words 9–12. Trophy nodes (8 and 16) are intentionally clean. */
-export const CROSSMATCH_CHECKPOINTS: readonly number[] = [4, 12];
+/** Cross-match review checkpoints (1-indexed word numbers).
+ *
+ *  PARKED for the curriculum redesign: the Phase A lesson loop puts
+ *  a Mastery Check at words 4 / 8 / 12 / 16, which overlaps with the
+ *  cross-match review at words 4 and 12. Two assessments back-to-back
+ *  at the same boundary was confusing for kids, so the checkpoint
+ *  list is empty for v1.
+ *
+ *  CrossMatchScreen and its plumbing remain intact in case we want to
+ *  re-enable the format as an optional "extra review" feature later —
+ *  just repopulate this array with the word numbers (e.g. [4, 12]). */
+export const CROSSMATCH_CHECKPOINTS: readonly number[] = [];
 
 /** Persisted progress for a single quest */
 export interface QuestProgress {

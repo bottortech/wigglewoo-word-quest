@@ -55,8 +55,10 @@ import { getActiveSkinAssets } from "../game/skins";
 import LessonObjectiveCard from "../components/LessonObjectiveCard";
 import MasteryBadgeUnlock from "../components/MasteryBadgeUnlock";
 import SayItOutLoudCue from "../components/SayItOutLoudCue";
+import ParentPrompt from "../components/ParentPrompt";
 import TraceMoment from "../components/handwriting/TraceMoment";
 import { LETTER_PATHS } from "../components/handwriting/letterPaths";
+import { getParentPrompt } from "../game/parentPrompts";
 import "../styles/game.css";
 import "../styles/questmap.css";
 import "../styles/home.css";
@@ -140,7 +142,8 @@ type GameStep =
   | "say-cue"
   | "build"
   | "celebrate"
-  | "mastery-unlock";
+  | "mastery-unlock"
+  | "parent-prompt";
 
 interface GameScreenProps {
   quest: Quest;
@@ -401,6 +404,14 @@ const GameScreen: React.FC<GameScreenProps> = ({
   }, [isMasteryWord, navigateAfterWord]);
 
   const handleMasteryUnlockComplete = useCallback(() => {
+    // After the silver-star badge, surface the home-extension prompt
+    // before any quest-level routing. Falls through to navigation when
+    // dismissed. This is Phase C: parent prompts after each mastery
+    // check so educators / parents get a per-lesson conversation hook.
+    setStep("parent-prompt");
+  }, []);
+
+  const handleParentPromptDismiss = useCallback(() => {
     navigateAfterWord();
   }, [navigateAfterWord]);
 
@@ -621,6 +632,22 @@ const GameScreen: React.FC<GameScreenProps> = ({
               lessonIndex={getLessonIndex(currentWordIndex)}
               focusLabel={getFocusLabel(quest.title)}
               onContinue={handleMasteryUnlockComplete}
+            />
+          )}
+
+          {/* ========== PARENT PROMPT (after every mastery unlock) ==========
+              One conversational tip + ask-at-home question. Default-
+              shown, single Got it tap dismisses. Copy is keyed by the
+              quest's vowel + lesson index so the prompts shift across
+              the four lessons of a quest (listen / build / trace /
+              read superpower). */}
+          {step === "parent-prompt" && (
+            <ParentPrompt
+              prompt={getParentPrompt(
+                questIdToVowelId(quest.id),
+                getLessonIndex(currentWordIndex),
+              )}
+              onDismiss={handleParentPromptDismiss}
             />
           )}
         </div>

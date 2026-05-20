@@ -1509,6 +1509,33 @@
 }
 
 /* ==========================================
+   QUEST MASTERY MINI-STARS
+   ==========================================
+   Phase C indicator: 4 small star dots inside each vowel-quest button
+   in the quest-type picker. Earned lessons show a gold star; not-yet
+   shows a faded outline. Gives parents and kids a glance at lesson-
+   level progress without entering the quest. */
+.quest-mastery-stars {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 6px;
+  align-items: center;
+}
+
+.quest-mastery-stars__dot {
+  font-size: 11px;
+  line-height: 1;
+  color: rgba(120, 120, 120, 0.4);
+  text-shadow: none;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+.quest-mastery-stars__dot--earned {
+  color: #FFC547;
+  text-shadow: 0 0 4px rgba(255, 197, 71, 0.55);
+}
+
+/* ==========================================
    DEV UNLOCK BUTTON — development only
    ========================================== */
 .dev-unlock-btn {
@@ -1681,6 +1708,52 @@
 }
 
 .for-parents-btn__label {
+  line-height: 1;
+}
+
+/* ---- BADGES BUTTON ----
+   Kid-reachable shortcut to the Skill Badge gallery. Sits next to the
+   For Parents button along the top-right edge, but uses a warm gold
+   look so it reads as a kid affordance rather than an adult setting. */
+.badges-btn {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: calc(max(12px, env(safe-area-inset-right)) + 120px);
+  z-index: 199;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px 6px 10px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #FFE48B 0%, #FFB740 100%);
+  color: #5D3A0E;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(143, 90, 24, 0.32);
+  pointer-events: auto;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.badges-btn:hover,
+.badges-btn:focus-visible {
+  transform: scale(1.04);
+  box-shadow: 0 3px 12px rgba(143, 90, 24, 0.45);
+}
+
+.badges-btn:active { transform: scale(0.96); }
+
+.badges-btn__star {
+  font-size: 16px;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(143, 90, 24, 0.5);
+}
+
+.badges-btn__label {
   line-height: 1;
 }
 

@@ -16,6 +16,7 @@ import TrophyRoomScreen from "./screens/TrophyRoomScreen";
 import LearningInsightsScreen from "./screens/LearningInsightsScreen";
 import ExploreScreen from "./screens/ExploreScreen";
 import CrossMatchScreen from "./screens/CrossMatchScreen";
+import SkillBadgeGalleryScreen from "./screens/SkillBadgeGalleryScreen";
 
 import { loadSettings } from "./game/settings";
 import LoadingGate from "./components/LoadingScreen";
@@ -82,7 +83,7 @@ import OnboardingScreen from "./screens/OnboardingScreen";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "onboarding" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match";
+type Route = "home" | "onboarding" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges";
 
 const ONBOARDING_SEEN_KEY = "ww_onboarding_seen";
 
@@ -263,15 +264,17 @@ export default function App() {
           return;
         }
 
-        // Just completed node 8? Route to trophy phase 1 (only if not already
-        // earned — migrated players with tier "full" skip phase 1 entirely).
+        // Just completed node 8 (Lesson 2 mastery)? PARKED for v1: the
+        // half-trophy ceremony used to fire here, but the Phase A
+        // Builder Badge already marks the lesson-2 milestone and the
+        // double celebration was redundant. We silently award tier
+        // "half" so the existing word-16 flow (which routes to phase 2
+        // only when tier === "half") and the map's node-9-16 gate
+        // (which requires tier !== "none") keep working unchanged.
         if (completedWordIndex === FIRST_HALF_WORDS - 1) {
           const tp = loadTrophyProgress(activeQuest.id);
           if (tp.tier === "none") {
-            setTrophyPhase(1);
-            backgroundMusic.playTrophyTheme();
-            setRoute("trophy-room");
-            return;
+            awardTrophyTier(activeQuest.id, "half");
           }
         }
 
@@ -445,6 +448,9 @@ export default function App() {
   // ---- Open/close Learning Insights ----
   const handleOpenInsights = useCallback(() => setRoute("insights"), []);
   const handleCloseInsights = useCallback(() => setRoute("map"), []);
+
+  const handleOpenBadges = useCallback(() => setRoute("badges"), []);
+  const handleCloseBadges = useCallback(() => setRoute("map"), []);
 
   // ---- Explore Mode ----
   const [exploreEnvId, setExploreEnvId] = useState<string | null>(null);
@@ -632,6 +638,7 @@ export default function App() {
             onViewTrophyRoom={handleViewTrophyRoom}
             onEnterDiscoveryRoom={handleEnterDiscoveryRoom}
             onOpenInsights={handleOpenInsights}
+            onOpenBadges={handleOpenBadges}
             onExplore={handleExplore}
             onOpenWardrobe={handleOpenWardrobe}
             hasNewSkin={hasNewSkin}
@@ -728,6 +735,12 @@ export default function App() {
       {route === "insights" && (
         <ScreenGate>
           <LearningInsightsScreen onClose={handleCloseInsights} />
+        </ScreenGate>
+      )}
+
+      {route === "badges" && (
+        <ScreenGate>
+          <SkillBadgeGalleryScreen onBack={handleCloseBadges} />
         </ScreenGate>
       )}
 
