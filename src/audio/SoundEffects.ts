@@ -184,16 +184,38 @@ export type EventSlug =
   // Discovery rooms
   | "discover-welcome" | "discover-fact-reaction"
   | "discover-skin-unlocked" | "discover-complete"
-  | "discover-exit-bridge"         // NEW — plays as the room fades out ("Nice exploring! Let's keep going.")
+  | "discover-exit-bridge"         // plays as the room fades out ("Nice exploring! Let's keep going.")
+  | "welcome-intro"                // first-ever discovery room visit ("Welcome to the Discovery Room!")
+  | "welcome-volcano" | "welcome-castle" | "welcome-coastal"
+  | "welcome-geartown" | "welcome-greenhouse" // per-room thematic welcome (replaces generic discover-welcome)
+  | "tap-to-listen"                // first-discovery hotspot interaction hint
   // Mini-games
   | "mini-vowel-builder" | "mini-word-sort"
   | "mini-correct" | "mini-complete"
   // Cross-match (Quick Review) — drag-line word→picture mini-game
-  | "cross-match-intro"            // NEW — "Drag the word to its picture!"
-  | "cross-match-complete";        // NEW — "Great matching!"
+  | "cross-match-intro"            // "Drag the word to its picture!"
+  | "cross-match-complete"         // "Great matching!"
+  // Quest completion
+  | "v1-quest-complete";           // CVC tier (all 5 vowel quests) complete
 
 export function playEvent(slug: EventSlug): void {
   play("event", `${AUDIO_BASE}/events/${slug}.m4a`, 0.4);
+}
+
+const ROOM_WELCOME_SLUG: Record<string, EventSlug> = {
+  "valcano": "welcome-volcano",
+  "castle-island": "welcome-castle",
+  "small-coastal-village": "welcome-coastal",
+  "industrial-tech-city": "welcome-geartown",
+  "glass-dome": "welcome-greenhouse",
+};
+
+/**
+ * Plays the per-room welcome VO. Falls back to the generic discover-welcome
+ * line if the environment id isn't in the room map.
+ */
+export function playRoomWelcome(envId: string): void {
+  playEvent(ROOM_WELCOME_SLUG[envId] ?? "discover-welcome");
 }
 
 export function stopAllSfx(): void {

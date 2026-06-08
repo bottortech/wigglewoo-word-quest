@@ -20,8 +20,10 @@ Target: iOS App Store, Kids 4+ category
 - [x] Web build, `cap sync ios`, simulator-target `xcodebuild` all clean
 
 ### Audio
-- [x] **Phoneme audio re-record landed** — `/public/assets/audio/new phonetics/{A-Z} Phoneme_1.wav`, wired in `playLetterSound`. *Resolved 2026-05-05.*
-- [x] All 28 event VOs present and matched to `EventSlug` types
+- [x] **Phoneme audio — Take 3 final cut landed** — `/public/assets/audio/new phonetics/{A-Z} Phoneme_1.wav`, wired in `playLetterSound`. *Take 3 replaced earlier takes on 2026-05-31.*
+- [x] All event VOs present and matched to `EventSlug` types (36 total — original 28 + 4 from May pickup + 4 from May "additional lines" batch — see `playEvent()` in [src/audio/SoundEffects.ts](../src/audio/SoundEffects.ts))
+- [x] **Per-room discovery welcome lines** (`welcome-volcano`, `-castle`, `-coastal`, `-geartown`, `-greenhouse`) + first-ever discovery intro (`welcome-intro`) + interaction hint (`tap-to-listen`) wired via `playRoomWelcome()` in [src/screens/ExploreScreen.tsx](../src/screens/ExploreScreen.tsx) — *landed 2026-05-31*
+- [x] CVC tier completion VO (`v1-quest-complete`) wired in [src/components/QuestCompleteCelebration.tsx](../src/components/QuestCompleteCelebration.tsx) — *landed 2026-05-31*
 - [x] All 11 phrase VOs (success / encouragement / progression / etc.)
 - [x] All 80 v1 CVC word audio + image assets present
 - [x] All 80 Discovery Room fact narrations on disk
@@ -49,12 +51,12 @@ Target: iOS App Store, Kids 4+ category
 ## 🔴 Must do before submission
 
 ### Apple account
-- [ ] **Pay $99 Apple Developer Program enrollment fee** — currently the single hard blocker. Until this clears: no App Store Connect record, no signing certs, no TestFlight, no submission.
+- [x] **Apple Developer Program enrollment paid** — *cleared 2026-05-31*. Account is active; another app ("Retro Rack") is already under review, so signing certs / TestFlight / App Store Connect access are all in working order.
 
 ### Code / build (do at archive time)
 - [ ] Increment `CURRENT_PROJECT_VERSION` in Xcode for each TestFlight upload (currently `1`)
 - [ ] Run `npx cap sync ios` after final web build, before archiving (use `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8` prefix to dodge the CocoaPods Ruby encoding bug on this Mac)
-- [ ] *(optional)* Wire the 6 unrecorded VO slugs (`trace-prompt`, `play-now-nudge`, `idle-tap-gear`, `idle-pickup`, `idle-another-word`, `idle-keep-reading`) — independent of the Apple blocker, but won't fire until both wired AND recorded
+- [ ] *(optional)* Wire + record the remaining 6 VO slugs (`trace-prompt`, `play-now-nudge`, `idle-tap-gear`, `idle-pickup`, `idle-another-word`, `idle-keep-reading`) — pickup script sent to voice actor on 2026-05-31 (see [docs/Voiceover-Pickup-2026-06.md](Voiceover-Pickup-2026-06.md)). Not in code yet either: title-screen idle timer, Quest Map idle pool, and TraceMoment overlay prompt are all unimplemented. Independent of the Apple blocker; safe to land in 1.0.1 if v1.0 ships first.
 
 ### Device testing (TestFlight, real iPad + iPhone — blocked on $99)
 - [ ] Full quest play-through on real device — golden path
@@ -93,7 +95,7 @@ Capture path that works: open `ios/App/App.xcworkspace` in Xcode → run on iPad
 
 ## 🟡 Recommended (not blocking)
 
-- [ ] Create `CLAUDE.md` documenting project structure for handoff
+- [x] Create `CLAUDE.md` documenting project structure for handoff — *landed 2026-05-31 (commit `210dad6`)*
 - [ ] Add a `typecheck` npm script (`tsc --noEmit`) separate from build
 - [ ] Pre-record short app preview video (15–30s) showing one CVC word being built — Apple Kids apps benefit from this
 - [ ] Track `ios/` more comprehensively in git so native config edits (Info.plist, project.pbxproj) survive a laptop loss — currently only `Info.plist` and `project.pbxproj` are tracked
@@ -106,7 +108,7 @@ Capture path that works: open `ios/App/App.xcworkspace` in Xcode → run on iPad
 - **Apple Kids review:** stricter than standard review. Expect questions about how data is handled, even though the answer is "none collected." Reviewers also play through and may flag overclaims — current metadata says "letter tracing" (accurate); avoid claiming "word tracing" until that feature is back.
 - **First submission turnaround:** budget 1–7 days for App Store review, longer for Kids category.
 - **CocoaPods + path with spaces:** `npx cap sync ios` requires `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8` prefix on this Mac to avoid a Ruby Unicode normalization error. Document this if you ever switch machines.
-- **6 unrecorded-but-needed-later VO slugs:** documented in `docs/Voiceover-Pickup-2026-05.md`. These don't gate v1 submission (they fail silently when files are absent) but worth recording before the 1.0.1 release.
+- **6 unrecorded-but-needed-later VO slugs:** pickup script in `docs/Voiceover-Pickup-2026-06.md` (sent to voice actor 2026-05-31). These also need code wiring (title-screen idle nudge, Quest Map idle pool, TraceMoment prompt). Don't gate v1 submission — fail silently when files are absent — but worth landing both in 1.0.1.
 
 ---
 
@@ -115,6 +117,7 @@ Capture path that works: open `ios/App/App.xcworkspace` in Xcode → run on iPad
 - App Store metadata: [docs/app-store-metadata.md](app-store-metadata.md)
 - VO recording sheet: [docs/VO-Recording-Sheet-V1.md](VO-Recording-Sheet-V1.md)
 - VO pickup script (May session): [docs/Voiceover-Pickup-2026-05.md](Voiceover-Pickup-2026-05.md)
+- VO pickup script (Round 2, sent 2026-05-31): [docs/Voiceover-Pickup-2026-06.md](Voiceover-Pickup-2026-06.md)
 - Privacy policy source: [public/privacy.html](../public/privacy.html)
 - Parent gate component: [src/components/ParentGate.tsx](../src/components/ParentGate.tsx)
 - "For Parents" entry button: [src/screens/QuestMapScreen.tsx](../src/screens/QuestMapScreen.tsx)

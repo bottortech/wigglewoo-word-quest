@@ -34,11 +34,10 @@ import {
 } from "../game/progression";
 import DailyCapModal from "../components/DailyCapModal";
 import FactNarration from "../components/FactNarration";
-import { playEvent } from "../audio/SoundEffects";
+import { playEvent, playRoomWelcome, playLetterSound } from "../audio/SoundEffects";
 import TraceMoment from "../components/handwriting/TraceMoment";
 import { LETTER_PATHS } from "../components/handwriting/letterPaths";
 import { useTraceValidator } from "../components/handwriting/useTraceValidator";
-import { playLetterSound } from "../audio/SoundEffects";
 import "../styles/explore.css";
 
 // =============================================
@@ -93,6 +92,11 @@ const getLetterForRoom = (envId: string): string | null => {
   const start = (getDayIndex() * TRACE_ROOM_ORDER.length) % TRACE_LETTER_ROTATION.length;
   return TRACE_LETTER_ROTATION[(start + roomIdx) % TRACE_LETTER_ROTATION.length];
 };
+
+// Global discovery-room flags — both "first-ever" cues fire once across the
+// whole app lifetime, regardless of which room the kid enters first.
+const FIRST_DISCOVERY_GLOBAL_KEY = "ww_first_discovery_seen";
+const TAP_TO_LISTEN_PLAYED_KEY = "ww_tap_to_listen_played";
 
 interface ExploreScreenProps {
   environmentId: string;
@@ -250,16 +254,36 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   );
   const [, setMiniGamesCompleted] = useState(false);
 
+  // Plays the welcome VO for this discovery-room entry. First-ever entry
+  // (any room) gets the generic welcome-intro line + a one-time tap-to-listen
+  // nudge ~3s later. Every subsequent entry gets the per-room thematic
+  // welcome (welcome-volcano / -castle / -coastal / -geartown / -greenhouse),
+  // with a graceful fallback to the generic discover-welcome if a room id
+  // doesn't have a per-room file yet.
+  const playWelcomeForRoom = useCallback(() => {
+    const isFirstEverDiscovery = !localStorage.getItem(FIRST_DISCOVERY_GLOBAL_KEY);
+    if (isFirstEverDiscovery) {
+      playEvent("welcome-intro");
+      localStorage.setItem(FIRST_DISCOVERY_GLOBAL_KEY, "true");
+    } else {
+      playRoomWelcome(environmentId);
+    }
+    if (!localStorage.getItem(TAP_TO_LISTEN_PLAYED_KEY)) {
+      setTimeout(() => {
+        playEvent("tap-to-listen");
+        localStorage.setItem(TAP_TO_LISTEN_PLAYED_KEY, "true");
+      }, 3000);
+    }
+  }, [environmentId]);
+
   // PARKED — only reachable when MINI_GAMES_ENABLED is flipped on.
   const handleMiniGamesComplete = useCallback(() => {
     setMiniGamesCompleted(true);
     setShowMiniGames(false);
     localStorage.setItem(firstVisitSeenKey, "true");
-    // Welcome VO ("search around for cool facts") fires here — once the
-    // mini-games clear and the kid can actually see the room.
-    playEvent("discover-welcome");
+    playWelcomeForRoom();
     // Do NOT call onComplete here — room completes after viewing 2 facts
-  }, [firstVisitSeenKey]);
+  }, [firstVisitSeenKey, playWelcomeForRoom]);
 
   // Welcome VO on first mount — only when no first-visit experience is
   // covering the room. First-visit welcome plays inside each completion
@@ -271,9 +295,9 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     if (welcomePlayed) return;
     if (showMiniGames) return;
     if (showFirstVisitTrace) return;
-    playEvent("discover-welcome");
+    playWelcomeForRoom();
     setWelcomePlayed(true);
-  }, [showMiniGames, showFirstVisitTrace, welcomePlayed]);
+  }, [showMiniGames, showFirstVisitTrace, welcomePlayed, playWelcomeForRoom]);
 
   // Single entry point for room completion — fires the discover-complete VO,
   // then a brief bridge VO, then exits. Idempotent so both the "narration
@@ -549,7 +573,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const handleFirstVisitTraceComplete = useCallback(() => {
     setShowFirstVisitTrace(false);
     localStorage.setItem(firstVisitSeenKey, "true");
-    playEvent("discover-welcome");
+    playWelcomeForRoom();
     switch (firstVisitTraceConfig?.targetPropId) {
       case "volcano-image":
         handleErupt();
@@ -571,7 +595,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         setLightsOn(true);
         break;
     }
-  }, [firstVisitSeenKey, firstVisitTraceConfig, handleErupt]);
+  }, [firstVisitSeenKey, firstVisitTraceConfig, handleErupt, playWelcomeForRoom]);
 
   // First-visit trace plumbing — SVG positioned over the targeted in-room
   // prop. Validator handles pointer events; on success, the room's existing

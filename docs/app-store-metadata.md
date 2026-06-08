@@ -140,9 +140,9 @@ When App Store Connect asks the questionnaire, every category should be "None" �
 Apple accepts `mailto:` for Support URL — opens the parent's mail client directly. Make sure `support@wigglewoo.app` actually receives mail before submission (Apple reviewers do test it).
 
 Before submission, verify each URL loads in a fresh browser:
-- [ ] `https://wigglewoo.app` → marketing landing
-- [ ] `https://wigglewoo.app/privacy.html` → returns the privacy policy (matches `public/privacy.html` content)
-- [ ] `support@wigglewoo.app` → email arrives in your inbox
+- [x] `https://wigglewoo.app` → marketing landing — *verified 2026-05-31, HTTP 200*
+- [x] `https://wigglewoo.app/privacy.html` → returns the privacy policy — *verified 2026-05-31, HTTP 200, title tag confirmed "Privacy Policy — WiggleWoo's Word Quest"*
+- [ ] `support@wigglewoo.app` → send a test email + confirm it arrives (Apple reviewers do test this)
 
 ---
 

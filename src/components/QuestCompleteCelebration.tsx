@@ -13,6 +13,7 @@
 
 import { useState, useEffect } from "react";
 import wigglewooHero from "../assets/wiggle_woo_hero_stance.png";
+import { playEvent } from "../audio/SoundEffects";
 import "../styles/challenge-mode.css";
 import "./QuestCompleteCelebration.css";
 
@@ -22,6 +23,11 @@ interface QuestCompleteCelebrationProps {
 
 const QuestCompleteCelebration: React.FC<QuestCompleteCelebrationProps> = ({ onDismiss }) => {
   const [visible, setVisible] = useState(true);
+
+  // CVC tier complete VO — fires once on mount alongside the visual celebration.
+  useEffect(() => {
+    playEvent("v1-quest-complete");
+  }, []);
 
   // Auto-dismiss after a longer beat than the standard unlock cards
   // (4.5s vs 2.5s) so the kid has time to actually read the message.
