@@ -66,81 +66,77 @@
 }
 
 /* ==========================================
-   Trace path — warm gold dashed guide
+   Worksheet-style trace layout
    ==========================================
-   Three stacked layers:
-     1. Dim groove   — faint baseline of the full letter
-     2. Pending      — flowing warm-gold dashes (ahead of finger)
-     3. Completed    — static brighter dashes (behind finger),
-                       revealed via SVG mask up to coverage length
-   Tune via CSS vars on .trace-moment__svg. */
-.trace-moment__svg {
-  --trace-dash-length: 4;
-  --trace-gap-length: 4;
-  --trace-flow-speed: 1.2s;
-  /* Dim layer is the faint "groove" of the full letter shape. Hidden by
-     default so the kid sees only the white road-marking dashes before
-     they start tracing. Discovery-Room themes (volcano, coral, etc.)
-     explicitly set their own dim stroke so this transparent default
-     doesn't suppress them. */
-  --trace-dim-color: transparent;
-  /* Pending = white road-marking dashes inside the letter outline,
-     mirroring the dashed style on the alphabet tile icons. */
-  --trace-pending-color: rgba(255, 255, 255, 0.95);
-  --trace-completed-color: #FFC547;
-  --trace-glow-soft: rgba(255, 255, 255, 0.55);
-  --trace-glow-strong: rgba(255, 200, 100, 0.95);
+   Stacked layers (bottom → top):
+     1. Letter outline   — text-rendered bubble letter (background)
+     2. Path guide       — dashed centerline showing stroke direction
+     3. Completed dashes — yellow reveal where the finger has touched
+     4. Stroke arrows    — direction arrow at the end of each stroke
+     5. Stroke markers   — numbered ①②③ circles at each stroke start
+   ========================================== */
+
+/* Bubble-letter body — two stacked strokes of the centerline. The
+   outer is wider and white (the visible outline edge); the inner is
+   narrower and matches the dark trace background so it "cuts a hole"
+   in the white stroke, leaving two parallel white edges with a
+   hollow interior the dashed guide sits inside. */
+.trace-moment__letter-body-outer {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 18;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.45));
 }
 
-/* Dim "groove" path — full letter shape at low opacity */
-.trace-moment__path-dim {
+.trace-moment__letter-body-inner {
   fill: none;
-  stroke: var(--trace-dim-color);
-  stroke-width: 7;
+  /* Matches the trace vignette background. Solid (not transparent) so
+     it fully masks the outer white stroke, otherwise the two edges
+     blend into one band. */
+  stroke: #0a0a14;
+  stroke-width: 13.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-/* Track — always-visible white dashed road markings inside the letter body.
-   Independent of the trace masks so it renders correctly on every browser
-   and from the first frame. Sits between dim (letter body) and pending
-   (trace guide). Dash values are hardcoded (not CSS vars) because the
-   first-visit-trace SVG in ExploreScreen doesn't have .trace-moment__svg
-   on it, so it wouldn't inherit those vars. */
-.trace-moment__path-track {
+/* Dashed direction guide — the centerline the validator samples. Sits
+   inside the hollow interior of the bubble letter so kids see where
+   their finger should travel. Light color to read against the dark
+   interior. */
+.trace-moment__path-guide {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.95);
-  stroke-width: 3;
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 2.2;
   stroke-linecap: butt;
   stroke-linejoin: round;
-  stroke-dasharray: 4 4;
+  stroke-dasharray: 3 3;
 }
 
-/* Pending dashes — hidden. The white track now carries the untraced look;
-   the completed layer still lights up the traced region in warm gold.
-   Pending is left in the JSX so its mask can stay wired without further
-   churn, but visually it adds nothing now. */
-.trace-moment__path-pending {
-  display: none;
-}
-
-/* Completed dashes — warm-gold, revealed by mask behind the finger.
-   Sized to match the white track exactly so the dashes just swap color
-   as the kid traces, with no halo or size jump. */
+/* Completed dashes — warm-gold reveal where the kid has actually
+   traced. Sized to match the guide stroke so it just swaps color as
+   the finger crosses each waypoint. */
 .trace-moment__path-completed {
   fill: none;
-  stroke: var(--trace-completed-color, #FFC547);
-  stroke-width: 3;
+  stroke: #FFC547;
+  stroke-width: 2.6;
   stroke-linecap: butt;
   stroke-linejoin: round;
-  stroke-dasharray: 4 4;
+  stroke-dasharray: 3 3;
 }
 
-@keyframes trace-dash-flow {
-  from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: -8; }
+/* Stroke direction arrows — small arrow heads sitting at the end of
+   each sub-path. Rotated by JS to match the end-tangent. Warm gold
+   so they read against both the white edges and the dark interior. */
+.trace-moment__arrow-head {
+  fill: #FFD86B;
+  stroke: rgba(0, 0, 0, 0.45);
+  stroke-width: 0.4;
+  stroke-linejoin: round;
 }
 
+/* Finger trail spark — bright dot under the kid's pointer. */
 .trace-moment__spark {
   fill: #FFF4D6;
   filter: drop-shadow(0 0 5px #FFC547) drop-shadow(0 0 10px #FFB820);

@@ -1,0 +1,777 @@
+/* ============================================
+   potion-game.css — Potion Lab gameplay styles
+   WiggleWoo's Word Quest — Prototype
+   ============================================ */
+
+/* ── Shell ── */
+.pg-shell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(6px, 1.5vh, 12px) clamp(8px, 2vw, 16px) clamp(4px, 1vh, 8px);
+  box-sizing: border-box;
+  gap: clamp(5px, 1vh, 10px);
+  background: radial-gradient(ellipse at 45% 15%, #1e0d52 0%, #0e0526 60%, #060214 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient glow layers */
+.pg-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 70%, rgba(120, 40, 220, 0.13) 0%, transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(40, 120, 220, 0.10) 0%, transparent 35%),
+    radial-gradient(circle at 50% 92%, rgba(80, 200, 160, 0.08) 0%, transparent 30%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pg-shell > * { position: relative; z-index: 1; }
+
+/* ── Top bar ── */
+.pg-top-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.pg-progress {
+  font-size: clamp(12px, 2vw, 15px);
+  font-weight: 700;
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  letter-spacing: 0.02em;
+}
+
+.pg-lab-label {
+  font-size: clamp(11px, 1.8vw, 14px);
+  font-weight: 800;
+  color: rgba(190, 150, 255, 0.85);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pg-speaker-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: transform 0.15s, background 0.15s;
+  color: #fff;
+  line-height: 1;
+  padding: 0;
+}
+.pg-speaker-btn:active { transform: scale(0.88); }
+.pg-speaker-btn--active {
+  background: rgba(100, 150, 255, 0.22);
+  border-color: rgba(100, 150, 255, 0.6);
+  box-shadow: 0 0 10px rgba(100, 150, 255, 0.35);
+}
+
+/* ── Upper row: image + word slots ── */
+.pg-upper-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2.5vw, 26px);
+  flex-shrink: 0;
+}
+
+.pg-image-wrap {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 2px solid rgba(200, 160, 255, 0.18);
+  padding: 6px;
+  box-shadow: 0 0 18px rgba(140, 80, 255, 0.14);
+  flex-shrink: 0;
+}
+
+/* ── Word slots ── */
+.pg-slots-row {
+  display: flex;
+  gap: clamp(8px, 1.4vw, 14px);
+  align-items: center;
+}
+
+.pg-slot {
+  width: clamp(44px, 6.5vw, 58px);
+  height: clamp(44px, 6.5vw, 58px);
+  border: 2.5px solid rgba(180, 130, 50, 0.45);
+  border-radius: 10px;
+  background: rgba(8, 4, 22, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.55);
+}
+
+/* Brass corner rivets */
+.pg-slot::before,
+.pg-slot::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(200, 160, 50, 0.55);
+  box-shadow: 0 0 3px rgba(255, 200, 50, 0.3);
+}
+.pg-slot::before { top: 4px; left: 4px; }
+.pg-slot::after  { bottom: 4px; right: 4px; }
+
+.pg-slot--active {
+  border-color: rgba(255, 215, 0, 0.82);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 215, 0, 0.38);
+  animation: pg-slot-pulse 1.4s ease-in-out infinite;
+}
+
+.pg-slot--filled {
+  border-color: rgba(100, 230, 160, 0.65);
+  background: rgba(10, 40, 28, 0.92);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(80, 200, 120, 0.2);
+}
+
+.pg-slot__letter {
+  font-size: clamp(22px, 3.8vw, 34px);
+  font-weight: 900;
+  color: #7FFFC4;
+  text-shadow:
+    0 0 10px rgba(80, 255, 160, 0.85),
+    0 0 22px rgba(80, 255, 160, 0.45);
+  animation: pg-letter-appear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  display: inline-block;
+}
+
+@keyframes pg-slot-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.5), 0 0 10px rgba(255, 215, 0, 0.22);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+  50% {
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.5), 0 0 22px rgba(255, 215, 0, 0.58);
+    border-color: rgba(255, 215, 0, 1);
+  }
+}
+
+@keyframes pg-letter-appear {
+  from { transform: scale(0.35) translateY(10px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);       opacity: 1; }
+}
+
+/* ── Beaker zone ── */
+.pg-beaker-zone {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  position: relative;
+}
+
+/* Flask rim — wider rectangle at top */
+.pg-beaker-rim {
+  width: clamp(100px, 16vw, 130px);
+  height: 10px;
+  background: linear-gradient(180deg, rgba(140, 190, 255, 0.4) 0%, rgba(100, 160, 220, 0.2) 100%);
+  border: 2px solid rgba(160, 210, 255, 0.45);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  flex-shrink: 0;
+}
+
+/* ── Beaker ── */
+.pg-beaker {
+  width: clamp(88px, 13.5vw, 115px);
+  height: clamp(110px, 20vh, 155px);
+  border: 2.5px solid rgba(160, 210, 255, 0.38);
+  border-radius: 5px 5px 34px 34px;
+  background: rgba(10, 5, 28, 0.62);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 2px 0 8px rgba(120, 180, 255, 0.07),
+    inset -2px 0 4px rgba(0, 0, 0, 0.35),
+    0 6px 24px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+/* Beaker complete glow */
+.pg-beaker--complete {
+  animation: pg-beaker-complete 1.6s ease-out forwards;
+}
+
+@keyframes pg-beaker-complete {
+  0%   { box-shadow: inset 2px 0 8px rgba(120,180,255,0.07), 0 6px 24px rgba(0,0,0,0.45); }
+  25%  { box-shadow: inset 0 0 20px rgba(255,215,0,0.18), 0 0 70px 18px rgba(255,215,0,0.75), 0 0 110px 35px rgba(255,120,0,0.45); }
+  55%  { box-shadow: inset 0 0 14px rgba(255,200,80,0.2), 0 0 48px 12px rgba(255,215,0,0.55), 0 0 80px 22px rgba(255,120,0,0.32); }
+  100% { box-shadow: inset 0 0 10px rgba(255,200,80,0.14), 0 0 28px 7px rgba(255,215,0,0.4), 0 0 54px 14px rgba(200,100,255,0.28); }
+}
+
+/* Left highlight stripe — glass illusion */
+.pg-beaker__highlight {
+  position: absolute;
+  top: 8px;
+  left: 7px;
+  width: 5px;
+  bottom: 18px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Measurement tick marks — right side */
+.pg-beaker__ticks {
+  position: absolute;
+  top: 18%;
+  right: 9px;
+  bottom: 14%;
+  width: 10px;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0px,
+    transparent 16px,
+    rgba(160, 210, 255, 0.28) 16px,
+    rgba(160, 210, 255, 0.28) 18px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── Beaker liquid ── */
+.pg-beaker__liquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 0 0 32px 32px;
+  /* Spring overshoot so the liquid visibly bounces when it rises */
+  transition: height 0.80s cubic-bezier(0.34, 1.4, 0.64, 1);
+  background: linear-gradient(180deg,
+    rgba(160, 60, 255, 0.88) 0%,
+    rgba(90,  30, 200, 0.96) 50%,
+    rgba(48,  14, 140, 1)    100%
+  );
+  overflow: hidden;
+}
+
+/* Liquid surface shimmer */
+.pg-beaker__liquid::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  animation: pg-liquid-shimmer 2.2s ease-in-out infinite;
+}
+
+@keyframes pg-liquid-shimmer {
+  0%, 100% { opacity: 0.55; transform: scaleX(0.8); }
+  50%       { opacity: 1;    transform: scaleX(1);   }
+}
+
+/* Fill levels */
+.pg-liquid--l0   { height: 14%; }
+.pg-liquid--l1   { height: 38%; }
+.pg-liquid--l2   { height: 62%; }
+.pg-liquid--l3   { height: 83%; }
+.pg-liquid--full {
+  height: 100%;
+  background: linear-gradient(180deg,
+    rgba(255, 210, 80,  0.92) 0%,
+    rgba(200,  80, 255, 0.96) 42%,
+    rgba( 80,  30, 200, 1)    100%
+  );
+}
+
+/* ── Beaker stand ── */
+.pg-beaker-stand {
+  width: clamp(78px, 12vw, 102px);
+  height: 12px;
+  background: linear-gradient(180deg, rgba(100, 80, 38, 0.85) 0%, rgba(68, 52, 22, 0.95) 100%);
+  border-radius: 0 0 5px 5px;
+  position: relative;
+  flex-shrink: 0;
+}
+.pg-beaker-stand::before,
+.pg-beaker-stand::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 5px;
+  height: 24px;
+  background: rgba(100, 80, 38, 0.85);
+  border-radius: 3px;
+}
+.pg-beaker-stand::before { left: 18%;  transform: rotate(-11deg); transform-origin: top center; }
+.pg-beaker-stand::after  { right: 18%; transform: rotate(11deg);  transform-origin: top center; }
+
+/* ── Bubbles inside beaker ── */
+.pg-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  bottom: 6px;
+  animation: pg-bubble-rise 1.6s ease-in infinite;
+  animation-duration: var(--dur, 1.6s);
+  animation-delay: var(--del, 0s);
+  pointer-events: none;
+}
+
+@keyframes pg-bubble-rise {
+  0%   { transform: translateY(0)    scale(1);   opacity: 0.72; }
+  70%  {                                          opacity: 0.48; }
+  100% { transform: translateY(-88px) scale(0.2); opacity: 0;   }
+}
+
+/* ── Completion sparkles ── */
+.pg-sparkle-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.pg-sparkle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px;
+  transform: rotate(var(--sa, 0deg)) translateY(-72px);
+  animation: pg-sparkle-burst 1.1s ease-out var(--sd, 0s) infinite;
+}
+
+/* 4-pointed star via pseudo-elements */
+.pg-sparkle::before,
+.pg-sparkle::after {
+  content: "";
+  position: absolute;
+  background: #FFD700;
+  border-radius: 2px;
+}
+.pg-sparkle::before { width: 100%; height: 30%; top: 35%; left: 0; }
+.pg-sparkle::after  { width: 30%; height: 100%; top: 0;   left: 35%; }
+
+@keyframes pg-sparkle-burst {
+  0%   { opacity: 0; transform: rotate(var(--sa, 0deg)) translateY(-36px) scale(0);   }
+  28%  { opacity: 1; transform: rotate(var(--sa, 0deg)) translateY(-72px) scale(1.3); }
+  68%  { opacity: 0.8; }
+  100% { opacity: 0; transform: rotate(var(--sa, 0deg)) translateY(-88px) scale(0.4); }
+}
+
+/* ── Bottles row ── */
+.pg-bottles-row {
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 22px);
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+
+/* ── Bottle ── */
+.pg-bottle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  position: relative;
+  transform-origin: bottom center;
+  -webkit-tap-highlight-color: transparent;
+  /* Staggered idle bob via --bi */
+  animation-name: pg-bottle-idle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 2.6s;
+  animation-delay: calc(var(--bi, 0) * -0.72s);
+  transition: filter 0.15s;
+}
+
+.pg-bottle:focus-visible {
+  outline: 3px solid #FFD700;
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+@keyframes pg-bottle-idle {
+  0%, 100% { transform: translateY(0)   rotate(0deg);    }
+  50%       { transform: translateY(-5px) rotate(0.5deg); }
+}
+
+/* Cork */
+.pg-bottle__cork {
+  width: 15px;
+  height: 9px;
+  background: linear-gradient(180deg, #C8960E 0%, #8B6612 100%);
+  border-radius: 3px 3px 0 0;
+  border: 1px solid rgba(0,0,0,0.32);
+  flex-shrink: 0;
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.3);
+}
+
+/* Neck */
+.pg-bottle__neck {
+  width: 15px;
+  height: clamp(13px, 2.2vh, 17px);
+  background: var(--bc, #7C3AED);
+  opacity: 0.72;
+  border-left:  1.5px solid rgba(255,255,255,0.3);
+  border-right: 1.5px solid rgba(0,0,0,0.22);
+  flex-shrink: 0;
+}
+
+/* Body */
+.pg-bottle__body {
+  width:  clamp(42px, 6.5vw, 54px);
+  height: clamp(58px, 10.5vh, 78px);
+  border-radius: 5px 5px 20px 20px;
+  border: 2px solid rgba(255,255,255,0.28);
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.22) 0%,
+    rgba(255,255,255,0.04) 30%,
+    transparent 60%,
+    rgba(0,0,0,0.10) 100%
+  );
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset  1px  1px 5px rgba(255,255,255,0.14),
+    inset -1px -1px 4px rgba(0,0,0,0.28);
+}
+
+/* Liquid fill inside bottle */
+.pg-bottle__liquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 62%;
+  border-radius: 0 0 18px 18px;
+  background: var(--bc, #7C3AED);
+  opacity: 0.82;
+}
+
+/* Glass highlight — left stripe */
+.pg-bottle__body::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 6px;
+  width: 4px;
+  bottom: 12px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.30);
+  pointer-events: none;
+}
+
+/* Small bubble inside bottle */
+.pg-bottle__bubble {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.44);
+  left: 22%;
+  bottom: 26%;
+  animation-name: pg-bottle-inner-bubble;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 2.0s;
+  animation-delay: calc(var(--bi, 0) * -0.5s);
+}
+
+@keyframes pg-bottle-inner-bubble {
+  0%, 100% { transform: translateY(0);    opacity: 0.38; }
+  50%       { transform: translateY(-9px); opacity: 0.72; }
+}
+
+/* Letter label */
+.pg-bottle__letter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(18px, 2.9vw, 26px);
+  font-weight: 900;
+  color: #fff;
+  text-shadow:
+    0 1px 4px rgba(0,0,0,0.7),
+    0 0 10px var(--bc, #7C3AED);
+  z-index: 2;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Bottle: escalating hints (mirror GameScreen letter-tile hints) ── */
+.pg-bottle--subtle-hint {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.55));
+}
+
+.pg-bottle--strong-hint {
+  filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.9));
+  animation: pg-bottle-hint-pulse 0.8s ease-in-out infinite !important;
+}
+
+@keyframes pg-bottle-hint-pulse {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.7)); }
+  50%       { filter: drop-shadow(0 0 22px rgba(255, 215, 0, 1));   }
+}
+
+/* ── Bottle: correct pour ── */
+/* Overrides idle transform-origin so the bottle rotates around its centre,
+   making the tilt look like the whole bottle tipping sideways. */
+.pg-bottle--pouring {
+  transform-origin: center center !important;
+  animation: pg-bottle-pour 1.10s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+@keyframes pg-bottle-pour {
+  /* 1. Rise straight up toward the beaker (0 → 25 % = 0 → 275 ms) */
+  0%   { transform: translateY(    0) rotate(  0deg); opacity: 1;    }
+  25%  { transform: translateY(-165px) rotate(  0deg); opacity: 1;   }
+
+  /* 2. Tilt to pour position (25 → 40 % = 275 → 440 ms) */
+  40%  { transform: translateY(-165px) rotate(-60deg); opacity: 1;   }
+
+  /* 3. Hold tilted while liquid pours (40 → 65 % = 440 → 715 ms) */
+  65%  { transform: translateY(-165px) rotate(-60deg); opacity: 1;   }
+
+  /* 4. Return upright, still elevated (65 → 76 % = 715 → 836 ms) */
+  76%  { transform: translateY(-165px) rotate(  0deg); opacity: 0.85; }
+
+  /* 5. Fade out in place — bottle was "used up" (76 → 100 % = 836 → 1100 ms) */
+  100% { transform: translateY(-165px) rotate(  0deg); opacity: 0;   }
+}
+
+/* ── Pour stream — colored liquid falling from bottle to beaker ── */
+/* Rendered as a React element inside .pg-shell when pouringTileId is set.
+   top: 37% places it approximately at the beaker rim for landscape iPad.
+   The drip is in screen coordinates so it always falls straight down
+   regardless of which bottle was tapped. */
+.pg-pour-drip {
+  position: absolute !important;   /* overrides .pg-shell > * { position: relative } */
+  top: 37%;
+  left: calc(50% - 3px);
+  width: 6px;
+  height: 0;
+  transform-origin: top center;
+  background: linear-gradient(180deg, var(--dc, #7C3AED) 10%, transparent 100%);
+  border-radius: 3px;
+  z-index: 12;
+  pointer-events: none;
+  opacity: 0;
+  /* Delay matches the bottle's tilt phase (≈ 440 ms into the 1100 ms animation) */
+  animation: pg-drip-screen 0.58s ease-in 0.44s both;
+}
+
+@keyframes pg-drip-screen {
+  0%   { height:  0;    opacity: 1;   }
+  60%  { height: 68px;  opacity: 1;   }
+  82%  { height: 68px;  opacity: 0.5; }
+  100% { height: 68px;  opacity: 0;   }
+}
+
+/* ── Bottle: wrong tap ── */
+.pg-bottle--wrong {
+  animation: pg-bottle-wrong 0.55s ease-in-out !important;
+  filter: drop-shadow(0 0 8px rgba(255, 55, 55, 0.72));
+}
+
+@keyframes pg-bottle-wrong {
+  0%, 100% { transform: translateX(0)   rotate( 0deg); }
+  15%      { transform: translateX(-7px) rotate(-4deg); }
+  32%      { transform: translateX( 7px) rotate( 4deg); }
+  48%      { transform: translateX(-5px) rotate(-2deg); }
+  64%      { transform: translateX( 5px) rotate( 2deg); }
+  80%      { transform: translateX(-2px);               }
+}
+
+/* Smoke puff on wrong tap */
+.pg-bottle--wrong::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 20px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(200, 190, 210, 0.8);
+  box-shadow:
+    -7px 3px 0 3px rgba(180, 172, 194, 0.65),
+     7px 3px 0 3px rgba(180, 172, 194, 0.65),
+     0   5px 0 4px rgba(168, 160, 182, 0.52);
+  animation: pg-smoke-puff 0.62s ease-out forwards;
+  pointer-events: none;
+  z-index: 20;
+}
+
+@keyframes pg-smoke-puff {
+  0%   { opacity: 0;   transform: translateX(-50%) scale(0.28) translateY(10px); }
+  38%  { opacity: 0.9; transform: translateX(-50%) scale(1)    translateY(0px);  }
+  100% { opacity: 0;   transform: translateX(-50%) scale(1.42) translateY(-18px); }
+}
+
+/* ── Beaker: transforming phase (word-reveal glow) ── */
+/* Replaces --complete once the reveal sequence begins */
+.pg-beaker--transforming {
+  animation: pg-beaker-transform-pulse 0.45s ease-in-out infinite alternate !important;
+}
+
+@keyframes pg-beaker-transform-pulse {
+  from {
+    box-shadow:
+      inset 0 0 18px rgba(127, 255, 196, 0.25),
+      0 0 42px rgba(127, 255, 196, 0.55),
+      0 0 80px rgba(200, 80, 255, 0.30);
+  }
+  to {
+    box-shadow:
+      inset 0 0 36px rgba(255, 255, 255, 0.35),
+      0 0 80px rgba(255, 255, 255, 0.80),
+      0 0 130px rgba(200, 80, 255, 0.55);
+  }
+}
+
+/* ── Word image reveal inside beaker ── */
+.pg-word-reveal {
+  position: absolute;
+  bottom: 12%;
+  left: 50%;
+  transform: translateX(-50%) scale(0) rotate(-8deg);
+  width: 82%;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pg-word-reveal--visible {
+  animation: pg-word-reveal-pop 0.50s cubic-bezier(0.34, 1.5, 0.64, 1) forwards;
+}
+
+@keyframes pg-word-reveal-pop {
+  0%   { transform: translateX(-50%) scale(0)    rotate(-8deg); opacity: 0;    }
+  60%  { transform: translateX(-50%) scale(1.14) rotate( 3deg); opacity: 1;    }
+  100% { transform: translateX(-50%) scale(1)    rotate( 0deg); opacity: 0.92; }
+}
+
+/* ── Professor WiggleWoo ── */
+.pg-professor {
+  position: absolute !important; /* overrides .pg-shell > * { position: relative } */
+  bottom: 2%;
+  left: 1.5%;
+  width: clamp(72px, 13vw, 130px);
+  z-index: 8;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pg-professor img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+}
+
+/* Idle: gentle float */
+.pg-professor--idle img {
+  animation: pg-prof-float 3.2s ease-in-out infinite;
+}
+
+@keyframes pg-prof-float {
+  0%, 100% { transform: translateY(0);   }
+  50%      { transform: translateY(-8px);}
+}
+
+/* Excited: two quick bounces when correct pour fires */
+.pg-professor--excited img {
+  animation: pg-prof-bounce 0.38s ease-out 2 both;
+}
+
+@keyframes pg-prof-bounce {
+  0%,  100% { transform: translateY(0);    }
+  40%        { transform: translateY(-22px);}
+}
+
+/* Wrong: brief horizontal shake */
+.pg-professor--wrong img {
+  animation: pg-prof-shake 0.14s ease-in-out 4 both;
+}
+
+@keyframes pg-prof-shake {
+  0%, 100% { transform: translateX(0);   }
+  25%       { transform: translateX(-9px);}
+  75%       { transform: translateX( 9px);}
+}
+
+/* Celebrate: big spring jump, stays elevated */
+.pg-professor--celebrate img {
+  animation: pg-prof-celebrate 0.65s cubic-bezier(0.34, 1.5, 0.64, 1) both;
+  filter:
+    drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 24px rgba(255, 215, 0, 0.7));
+}
+
+@keyframes pg-prof-celebrate {
+  0%   { transform: translateY(0)    scale(1);    }
+  35%  { transform: translateY(-38px) scale(1.18); }
+  65%  { transform: translateY(-30px) scale(1.12); }
+  100% { transform: translateY(-18px) scale(1.08); }
+}
+
+/* ── Dev toggle — floats above all screens ── */
+.pg-dev-swap-btn {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 9999;
+  background: rgba(80, 44, 180, 0.92);
+  color: #fff;
+  border: 2px solid rgba(190, 140, 255, 0.6);
+  border-radius: 22px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.42);
+  transition: transform 0.14s, box-shadow 0.14s;
+  font-family: "Nunito", system-ui, Arial, sans-serif;
+  letter-spacing: 0.03em;
+  pointer-events: auto;
+}
+.pg-dev-swap-btn:hover  { transform: scale(1.06); box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+.pg-dev-swap-btn:active { transform: scale(0.96); }

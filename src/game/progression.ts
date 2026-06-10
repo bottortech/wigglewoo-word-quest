@@ -649,13 +649,12 @@ export function isLessonOpenerWord(wordIndex: number): boolean {
 
 /** Picks the letter the kid traces on a trace-prep word.
  *
- *  Rotation across the 4 lessons of a quest gives alphabet coverage
- *  through word variety while still anchoring each trace to the word
- *  the kid just heard / is about to build:
- *    Lesson 1 (word 3,  idx 2):  first letter of that word
+ *  Rotates through all positions so every letter in the word gets
+ *  practiced across the quest's 4 lessons:
+ *    Lesson 1 (word 3,  idx 2):  first letter
  *    Lesson 2 (word 7,  idx 6):  middle/vowel letter
  *    Lesson 3 (word 11, idx 10): last letter
- *    Lesson 4 (word 15, idx 14): middle/vowel letter (focus reinforcement)
+ *    Lesson 4 (word 15, idx 14): first letter (cycles back — different word)
  *
  *  Returns lowercase letter, or null when the chosen letter is multi-
  *  character (e.g. a CVVC grapheme like "ai") since the trace data set
@@ -668,11 +667,10 @@ export function getTraceLetterForWord(
   if (wordLetters.length === 0) return null;
   let position: number;
   switch (lessonIndex) {
-    case 0: position = 0; break;
+    case 0:
+    case 3:  default: position = 0; break;
+    case 1: position = Math.floor((wordLetters.length - 1) / 2); break;
     case 2: position = wordLetters.length - 1; break;
-    case 1:
-    case 3:
-    default: position = Math.floor((wordLetters.length - 1) / 2); break;
   }
   const letter = (wordLetters[position] ?? "").toLowerCase();
   if (letter.length !== 1) return null;

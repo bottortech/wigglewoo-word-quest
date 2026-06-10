@@ -80,10 +80,12 @@ import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
 // import BlendingPowerUnlock from "./components/BlendingPowerUnlock";
 import QuestCompleteCelebration from "./components/QuestCompleteCelebration";
 import OnboardingScreen from "./screens/OnboardingScreen";
+import PotionGameScreen from "./screens/PotionGameScreen";
+import LetterGallery from "./components/handwriting/LetterGallery";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "onboarding" | "map" | "game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges";
+type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges";
 
 const ONBOARDING_SEEN_KEY = "ww_onboarding_seen";
 
@@ -203,7 +205,7 @@ export default function App() {
     setWordIndex(selectedWordIndex);
     setArrivedFromWord(null); // clear animation signal
     setTrophyJustCompleted(false);
-    setRoute("game");
+    setRoute("potion-game");
   }, []);
 
   // ---- Select a different quest (from Word Quest Box) ----
@@ -264,17 +266,14 @@ export default function App() {
           return;
         }
 
-        // Just completed node 8 (Lesson 2 mastery)? PARKED for v1: the
-        // half-trophy ceremony used to fire here, but the Phase A
-        // Builder Badge already marks the lesson-2 milestone and the
-        // double celebration was redundant. We silently award tier
-        // "half" so the existing word-16 flow (which routes to phase 2
-        // only when tier === "half") and the map's node-9-16 gate
-        // (which requires tier !== "none") keep working unchanged.
+        // Just completed node 8 (Lesson 2 mastery) → phase 1 trophy room.
         if (completedWordIndex === FIRST_HALF_WORDS - 1) {
           const tp = loadTrophyProgress(activeQuest.id);
           if (tp.tier === "none") {
-            awardTrophyTier(activeQuest.id, "half");
+            setTrophyPhase(1);
+            backgroundMusic.playTrophyTheme();
+            setRoute("trophy-room");
+            return;
           }
         }
 
@@ -613,6 +612,10 @@ export default function App() {
 
       <Stage>
 
+      {new URLSearchParams(window.location.search).get("dev") === "letters" && (
+        <LetterGallery />
+      )}
+
       {route === "onboarding" && (
         <OnboardingScreen onComplete={handleOnboardingComplete} />
       )}
@@ -652,6 +655,18 @@ export default function App() {
         <ScreenGate>
           <GameScreen
             key={`game-${activeQuest.id}-${wordIndex}`}
+            quest={activeQuest}
+            currentWordIndex={wordIndex}
+            onNavigate={handleNavigate}
+            onGoHome={handleGoHome}
+          />
+        </ScreenGate>
+      )}
+
+      {route === "potion-game" && (
+        <ScreenGate>
+          <PotionGameScreen
+            key={`potion-${activeQuest.id}-${wordIndex}`}
             quest={activeQuest}
             currentWordIndex={wordIndex}
             onNavigate={handleNavigate}
@@ -768,6 +783,17 @@ export default function App() {
           onSaveLater={handleSkinUnlockSaveLater}
         />
       )}
+      {/* ── Dev toggle: ?dev=1 in URL to access original GameScreen ── */}
+      {(route === "game" || route === "potion-game") &&
+        new URLSearchParams(window.location.search).get("dev") === "1" && (
+        <button
+          className="pg-dev-swap-btn"
+          onClick={() => setRoute(route === "game" ? "potion-game" : "game")}
+        >
+          {route === "game" ? "🧪 Potion Lab" : "📦 Original"}
+        </button>
+      )}
+
      </OrientationOverlay>
     </LoadingGate>
   );
