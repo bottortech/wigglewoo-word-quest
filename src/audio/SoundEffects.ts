@@ -104,13 +104,20 @@ function pickPhrase(pool: string[]): string {
 // Public API
 // =============================================
 
+// Letters that have a recording in the new "Alphabet Phonemes A-Z" folder.
+// Everything else falls back to the original "new phonetics" recordings.
+// Add "c" here once the VO artist delivers that file.
+const NEW_PHONEME_SET = new Set("abdefghijklmnopqrstuvwxyz".split(""));
+
 export function playLetterSound(letter: string): void {
   const key = letter.toLowerCase();
   if (!/^[a-z]$/.test(key)) return;
   const audio = getChannel("letter");
   audio.pause();
   audio.currentTime = 0;
-  audio.src = `${AUDIO_BASE}/new%20phonetics/${key.toUpperCase()}%20Phoneme_1.wav`;
+  audio.src = NEW_PHONEME_SET.has(key)
+    ? `${AUDIO_BASE}/Alphabet%20Phonemes%20A-Z/Phoneme%20-%20${key.toUpperCase()}_1.wav`
+    : `${AUDIO_BASE}/new%20phonetics/${key.toUpperCase()}%20Phoneme_1.wav`;
   audio.volume = 0.3;
   audio.playbackRate = document.documentElement.classList.contains("slow-phoneme") ? 0.7 : 1.0;
   audio.play().catch(() => {});
@@ -198,8 +205,19 @@ export type EventSlug =
   // Quest completion
   | "v1-quest-complete";           // CVC tier (all 5 vowel quests) complete
 
+const ADDITIONAL_LINES = new Set<EventSlug>([
+  "cross-match-complete", "cross-match-intro",
+  "discover-exit-bridge", "tap-to-listen",
+  "trophy-phase2-intro", "v1-quest-complete",
+  "welcome-castle", "welcome-coastal", "welcome-geartown",
+  "welcome-greenhouse", "welcome-intro", "welcome-volcano",
+]);
+
 export function playEvent(slug: EventSlug): void {
-  play("event", `${AUDIO_BASE}/events/${slug}.m4a`, 0.4);
+  const src = ADDITIONAL_LINES.has(slug)
+    ? `${AUDIO_BASE}/WiggleWooAdditionalLines/${slug}.wav`
+    : `${AUDIO_BASE}/events/${slug}.m4a`;
+  play("event", src, 0.4);
 }
 
 const ROOM_WELCOME_SLUG: Record<string, EventSlug> = {

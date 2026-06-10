@@ -185,10 +185,12 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
         </button>
       )}
 
-      <div className="trace-moment__prompt">Trace the letter</div>
-      {caption && (
-        <div className="trace-moment__caption" aria-live="polite">{caption}</div>
-      )}
+      <div className="trace-moment__header">
+        <span className="trace-moment__prompt">Trace the letter</span>
+        {caption && (
+          <span className="trace-moment__caption" aria-live="polite">{caption}</span>
+        )}
+      </div>
 
       <div className="trace-moment__stage">
         {hasPropSprite && (

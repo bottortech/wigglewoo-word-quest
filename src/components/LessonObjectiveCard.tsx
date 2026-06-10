@@ -13,12 +13,14 @@
 // follow-up. Phase C will surface mastery badges earned so far.
 // =============================================
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import type { CvcWord } from "../game/types";
 import { LESSONS_PER_QUEST } from "../game/types";
-import { playWordSound } from "../audio/SoundEffects";
+import { playWordSound, playEvent } from "../audio/SoundEffects";
 import WordImage from "./WordImage";
 import "../styles/lesson-objective.css";
+
+const TAP_TO_LISTEN_PLAYED_KEY = "ww_tap_to_listen_played";
 
 interface LessonObjectiveCardProps {
   /** 0-based lesson index (0..3). */
@@ -52,6 +54,16 @@ const LessonObjectiveCard: React.FC<LessonObjectiveCardProps> = ({
 }) => {
   const goal = LESSON_GOAL[lessonIndex] ?? LESSON_GOAL[0];
   const focusLabel = getFocusLabel(questTitle);
+
+  // One-time hint VO the first time the lesson card appears
+  useEffect(() => {
+    if (localStorage.getItem(TAP_TO_LISTEN_PLAYED_KEY)) return;
+    const t = setTimeout(() => {
+      playEvent("tap-to-listen");
+      localStorage.setItem(TAP_TO_LISTEN_PLAYED_KEY, "true");
+    }, 1200);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleListen = useCallback(() => {
     playWordSound(exampleWord.word);

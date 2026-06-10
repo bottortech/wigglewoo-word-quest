@@ -71,6 +71,7 @@ import SkinUnlockCelebration from "./components/SkinUnlockCelebration";
 import heroImgDefault from "./assets/wiggle_woo_hero_stance.png";
 import helperImgDefault from "./assets/wigglewoo_helper_transparent.png";
 import { backgroundMusic } from "./audio/BackgroundMusic";
+import { playEvent } from "./audio/SoundEffects";
 import { recordTrophyEarned } from "./game/analytics";
 import trophyTransitionImg from "./assets/trophy.png";
 import "./styles/trophy-transition.css";
@@ -108,7 +109,11 @@ export default function App() {
       backgroundMusic.mute(); // mark as user-muted so tab-refocus won't resume
     }
 
+    // Welcome VO on every startup — short delay so music has time to fade in
+    const welcomeTimer = setTimeout(() => playEvent("welcome-intro"), 1500);
+
     return () => {
+      clearTimeout(welcomeTimer);
       backgroundMusic.destroy();
     };
   }, []);

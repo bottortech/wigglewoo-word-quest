@@ -64,7 +64,8 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     // Single stroke: top-left down, curve at bottom, up to top-right.
     d: "M 25 30 L 25 65 Q 30 78 50 78 Q 75 78 75 65 L 75 30",
     viewBox: "0 0 100 100",
-    startHint: { x: 50, y: 78 },
+    startHint: { x: 25, y: 30 },
+    startHintAngle: 90,
   },
 
   // ---- Common consonants ----
@@ -98,10 +99,12 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     startHint: { x: 40, y: 80 },
   },
   g: {
-    // Bowl counter-clockwise from upper-right, then descender hooking left.
-    d: "M 72 38 Q 50 22 30 38 Q 22 50 30 62 Q 50 72 72 60 L 72 80 Q 72 92 56 92 Q 42 92 38 84",
+    // Bowl counter-clockwise from upper-right, close the right side back to
+    // upper-right, then descender hooking left.
+    d: "M 72 38 Q 50 22 30 38 Q 22 50 30 62 Q 50 72 72 60 Q 76 48 72 38 L 72 80 Q 72 92 56 92 Q 42 92 38 84",
     viewBox: "0 0 100 100",
-    startHint: { x: 50, y: 72 },
+    startHint: { x: 72, y: 38 },
+    startHintAngle: 180,
   },
   h: {
     // Stem from top down, lift, then arch over from middle.
@@ -113,7 +116,8 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     // Tittle (dot) first, then descender stem hooking left.
     d: "M 58 16 Q 66 16 66 22 Q 66 28 58 28 Q 50 28 50 22 Q 50 16 58 16 M 58 36 L 58 78 Q 58 92 42 92 Q 30 92 28 80",
     viewBox: "0 0 100 100",
-    startHint: { x: 42, y: 92 },
+    startHint: { x: 58, y: 36 },
+    startHintAngle: 90,
   },
   k: {
     // Stem top→bottom, then upper diagonal in, then lower diagonal out.
@@ -145,11 +149,10 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     startHint: { x: 25, y: 78 },
   },
   p: {
-    // Two sub-paths: stem from top through baseline into the descender,
-    // then bowl from the top-right of the stem curling right around to
-    // the mid-left. Stem is top-down so the pen starts at the top of
-    // the letter, not at the descender tail.
-    d: "M 28 22 L 28 92 M 56 22 Q 70 22 70 38 Q 70 54 56 54 L 28 54",
+    // Single continuous stroke: up the descender to the top, then curve
+    // right into the bowl and return to mid-stem. One path means the
+    // top junction (stem meets bowl) is naturally filled with no gap.
+    d: "M 28 92 L 28 22 Q 56 22 70 38 Q 70 54 56 54 L 28 54",
     viewBox: "0 0 100 100",
     startHint: { x: 28, y: 92 },
   },
@@ -163,7 +166,8 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     // Serpentine from upper-right curving left, then right, then left.
     d: "M 70 30 Q 50 22 30 30 Q 22 38 30 50 Q 50 58 70 50 Q 78 58 70 70 Q 50 78 30 70",
     viewBox: "0 0 100 100",
-    startHint: { x: 30, y: 70 },
+    startHint: { x: 70, y: 30 },
+    startHintAngle: 180,
   },
   t: {
     // Vertical stem with a small tail at the bottom-right, then crossbar.
@@ -176,12 +180,14 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     // up to top-right.
     d: "M 22 22 L 50 78 L 78 22",
     viewBox: "0 0 100 100",
-    startHint: { x: 50, y: 78 },
+    startHint: { x: 22, y: 22 },
+    startHintAngle: 60,
   },
   w: {
     // Four diagonals zig-zagging across the baseline, top-left to top-right.
     d: "M 18 28 L 32 78 L 50 38 L 68 78 L 82 28",
     viewBox: "0 0 100 100",
-    startHint: { x: 32, y: 78 },
+    startHint: { x: 18, y: 28 },
+    startHintAngle: 75,
   },
 };
