@@ -20,8 +20,6 @@ import { playWordSound, playEvent } from "../audio/SoundEffects";
 import WordImage from "./WordImage";
 import "../styles/lesson-objective.css";
 
-const TAP_TO_LISTEN_PLAYED_KEY = "ww_tap_to_listen_played";
-
 interface LessonObjectiveCardProps {
   /** 0-based lesson index (0..3). */
   lessonIndex: number;
@@ -55,13 +53,9 @@ const LessonObjectiveCard: React.FC<LessonObjectiveCardProps> = ({
   const goal = LESSON_GOAL[lessonIndex] ?? LESSON_GOAL[0];
   const focusLabel = getFocusLabel(questTitle);
 
-  // One-time hint VO the first time the lesson card appears
+  // Hint VO on every lesson card — guides the kid to tap the example word
   useEffect(() => {
-    if (localStorage.getItem(TAP_TO_LISTEN_PLAYED_KEY)) return;
-    const t = setTimeout(() => {
-      playEvent("tap-to-listen");
-      localStorage.setItem(TAP_TO_LISTEN_PLAYED_KEY, "true");
-    }, 1200);
+    const t = setTimeout(() => playEvent("tap-to-listen"), 1200);
     return () => clearTimeout(t);
   }, []);
 

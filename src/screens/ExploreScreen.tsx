@@ -59,6 +59,7 @@ import "../styles/explore.css";
 //   3. Re-record the mini-game VO slugs that were moved to the
 //      Out-of-Scope list in docs/VO-Recording-Sheet-V1.md.
 const MINI_GAMES_ENABLED = false;
+const FIRST_VISIT_TRACE_ENABLED = false;
 
 // ---- Daily letter rotation ----
 // All 5 Discovery Rooms run a first-visit trace; each day pulls 5 consecutive
@@ -243,7 +244,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const firstVisitSeenKey = `ww_first_visit_seen_${environmentId}_${getDayIndex()}`;
   const hasSeenFirstVisit = localStorage.getItem(firstVisitSeenKey) === "true";
   const [showFirstVisitTrace, setShowFirstVisitTrace] = useState(
-    !!onComplete && !hasSeenFirstVisit && !!firstVisitTraceConfig
+    FIRST_VISIT_TRACE_ENABLED && !!onComplete && !hasSeenFirstVisit && !!firstVisitTraceConfig
   );
   // PARKED — gated by MINI_GAMES_ENABLED (false for v1). Even when revived,
   // a room with a firstVisitTraceConfig will still take the trace path; the
@@ -301,14 +302,13 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   }, [needsCompletion, roomJustCompleted, roomCompleteKey, onComplete, onBack]);
 
   /** Routed from `<FactNarration onEnded>`. Fires the per-fact reaction VO
-   *  for every fact (including the completing one) — the room-complete VO
-   *  no longer fires here. Instead it's gated on the kid actively closing
-   *  the fact panel, so they can read/digest at their own pace before the
-   *  completion sequence kicks off. */
+   *  for non-completing facts only. The completing fact skips the reaction so
+   *  discover-complete can play cleanly after the panel closes. */
   const handleFactNarrationEnded = useCallback((_factId: string) => {
     if (roomJustCompleted) return;
+    if (completingFactId !== null) return;
     playEvent("discover-fact-reaction");
-  }, [roomJustCompleted]);
+  }, [roomJustCompleted, completingFactId]);
 
   /** Called when the fact panel closes (X button or backdrop tap). If the
    *  kid has already viewed the threshold-th fact, this is the moment to

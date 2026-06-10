@@ -575,13 +575,19 @@
 }
 
 /* ── Pour stream — colored liquid falling from bottle to beaker ── */
-/* Rendered as a React element inside .pg-shell when pouringTileId is set.
-   top: 37% places it approximately at the beaker rim for landscape iPad.
-   The drip is in screen coordinates so it always falls straight down
-   regardless of which bottle was tapped. */
+/* Pour stream rendered inside .pg-beaker-zone (position: relative).
+   top: 8px sits just past the rim at the beaker opening; left: 50%-3px
+   centers the 6px stream on the beaker regardless of outer layout. */
+.pg-beaker-zone {
+  position: relative;  /* pour drip is absolute inside this */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .pg-pour-drip {
-  position: absolute !important;   /* overrides .pg-shell > * { position: relative } */
-  top: 37%;
+  position: absolute !important;
+  top: 8px;  /* just past the beaker rim — always at the beaker opening */
   left: calc(50% - 3px);
   width: 6px;
   height: 0;
@@ -752,6 +758,123 @@
   100% { transform: translateY(-18px) scale(1.08); }
 }
 
+/* ============================================
+   GAMEPLAY-FIRST LAYOUT
+   Mobile / iPad priority: Picture → Slots → Bottles.
+   Decorations recede; tappable elements grow.
+   ============================================ */
+
+/* ── Game board: fill the full inner viewport with no padding gaps ──
+   machine-viewport's 8px padding and flex centering leave a tan strip
+   at the bottom. Override both here so pg-shell pins edge-to-edge. */
+.machine-world--potion .machine-viewport {
+  padding: 0;
+  justify-content: flex-start;
+}
+
+/* Use flex growth instead of height:100% (more reliable in flex context) */
+.machine-world--potion .pg-shell {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  /* Tighter internal padding so all four gameplay zones fit */
+  padding: clamp(4px, 0.7vh, 8px) clamp(6px, 1.5vw, 12px) clamp(4px, 0.7vh, 8px);
+}
+
+/* ── Hide side machines, pipes, and gear-left in gameplay ──
+   These share classes with PlayNowScreen but .machine-world--potion
+   only exists when PotionGameScreen is mounted. */
+
+.machine-world--potion .bg-gear {
+  opacity: 0.12;
+}
+
+/* ── Professor WiggleWoo — 35 % smaller ──
+   Stays decorative but doesn't eat layout real-estate. */
+.pg-professor {
+  width: clamp(46px, 7vw, 84px);
+}
+
+/* ── Upper row — vertical stack: image prominent on top, slots below ── */
+.pg-upper-row {
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 14px);
+}
+
+/* ── Picture card — larger, more prominent card feel ── */
+.pg-image-wrap {
+  padding: 10px 14px;
+  border-radius: 18px;
+  border-width: 2.5px;
+  box-shadow:
+    0 0 0 1px rgba(200, 160, 255, 0.14),
+    0 0 28px rgba(140, 80, 255, 0.26),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Answer slots — larger hit targets ── */
+.pg-slot {
+  width: clamp(52px, 9.5vw, 72px);
+  height: clamp(52px, 9.5vw, 72px);
+}
+
+.pg-slot__letter {
+  font-size: clamp(28px, 5.5vw, 42px);
+}
+
+/* ── Beaker zone — reduced; no longer grows to fill space ──
+   Stays in normal flow between slots and bottles but is compact
+   so the interaction path feels: slots → (small beaker) → bottles. */
+.pg-beaker-zone {
+  flex: 0 0 auto;
+}
+
+.pg-beaker-rim {
+  width: clamp(68px, 10vw, 86px);
+  height: 8px;
+}
+
+.pg-beaker {
+  width: clamp(58px, 8.5vw, 76px);
+  height: clamp(72px, 12vh, 98px);
+}
+
+.pg-beaker-stand {
+  width: clamp(50px, 8vw, 68px);
+}
+
+/* ── Potion bottles — bigger bodies and letters for easy tapping ── */
+.pg-bottle__cork {
+  width: 18px;
+  height: 11px;
+}
+
+.pg-bottle__neck {
+  width: 18px;
+  height: clamp(14px, 2.5vh, 20px);
+}
+
+.pg-bottle__body {
+  width:  clamp(52px, 9vw, 70px);
+  height: clamp(70px, 13.5vh, 100px);
+}
+
+.pg-bottle__letter {
+  font-size: clamp(24px, 4.5vw, 34px);
+}
+
+.pg-bottles-row {
+  gap: clamp(12px, 2.4vw, 26px);
+}
+
+/* ── Gameplay column: slots → beaker → bottles, stacked vertically ── */
+.pg-gameplay-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(5px, 1vh, 10px);
+}
+
 /* ── Dev toggle — floats above all screens ── */
 .pg-dev-swap-btn {
   position: fixed;
@@ -775,3 +898,155 @@
 }
 .pg-dev-swap-btn:hover  { transform: scale(1.06); box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
 .pg-dev-swap-btn:active { transform: scale(0.96); }
+
+/* ============================================================
+   COMPACT MOBILE — max-height: 500px (iPhone landscape, 852×393)
+   Two-column layout: picture LEFT, gameplay stack RIGHT.
+   This uses the available horizontal space rather than stacking
+   everything vertically — so the beaker can be 45% larger without
+   anything getting cropped.
+
+   Right column budget (slots 44 + beaker 62 + bottles 78 + gaps 12 = 196px)
+   Panel height: ~322px (top:10%, bottom:8%) → 126px spare → centered ✓
+   ============================================================ */
+@media (max-height: 500px) {
+
+  /* ── Expand game panel ── */
+  .machine-world--potion .map-window {
+    top: 10%;
+    bottom: 8%;
+    left: 12%;
+    right: 12%;
+  }
+
+  /* ── Shell: minimal overhead, start from top ── */
+  .pg-shell {
+    gap: 2px;
+    padding: 4px 10px 2px;
+    justify-content: flex-start;
+  }
+
+  /* ── Top bar: HUD row — [Mastery?][⭐ score] … [🔊] ── */
+  .pg-top-bar {
+    height: 18px;
+    flex-shrink: 0;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  /* Mastery badge: inline HUD item, left of star counter */
+  .machine-world--potion .mastery-marker {
+    order: 1;
+    position: static;
+    transform: none;
+    font-size: 9px;
+    padding: 1px 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  /* Star counter: next to mastery badge */
+  .pg-progress {
+    order: 2;
+    font-size: 11px;
+  }
+  /* Speaker: pushed to the far right */
+  .pg-speaker-btn {
+    order: 3;
+    margin-left: auto;
+  }
+
+  /* ── Upper row: fills remaining shell height; pg-shell > * already gives it position:relative ── */
+  .machine-world--potion .pg-upper-row {
+    flex: 1 1 0;
+    min-height: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: 100%;
+  }
+
+  /* ── Picture card: lifted out of flex flow so gameplay-col fills full panel width ── */
+  .pg-image-wrap {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    flex: none;
+    padding: 4px 6px;
+    border-radius: 12px;
+  }
+  .pg-image-wrap > div {
+    width: 105px !important;
+    height: 105px !important;
+  }
+
+  /* ── Gameplay column: tiles+beaker+bottles centered as one group ── */
+  .pg-gameplay-col {
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    padding-top: 0;
+  }
+
+  /* ── Answer slots ── */
+  .pg-slot {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+  }
+  .pg-slot__letter { font-size: 20px; }
+
+  /* ── Extra breathing room between slots and beaker — "mixing zone" feel ── */
+  .pg-beaker-zone { margin-top: 8px; }
+
+  /* ── Beaker: maximised to fill freed space ── */
+  .pg-beaker-rim   { width: 180px; height: 16px; }
+  .pg-beaker       { width: 150px; height: 108px; border-radius: 9px 9px 54px 54px; }
+  .pg-beaker-stand { width: 128px; height: 26px; }
+  .pg-beaker-stand::before,
+  .pg-beaker-stand::after { display: none; }
+
+  /* ── Pour drip: 16px = just past the rim ── */
+  .pg-pour-drip { top: 16px; }
+
+  /* ── Bottles: fully visible, centered under beaker ── */
+  .pg-bottles-row {
+    gap: clamp(10px, 1.8vw, 20px);
+    padding-bottom: 0;
+    justify-content: center;
+  }
+  .pg-bottle__cork   { width: 14px; height: 7px; }
+  .pg-bottle__neck   { width: 14px; height: 9px; }
+  .pg-bottle__body   { width: 46px; height: 62px; border-radius: 4px 4px 16px 16px; }
+  .pg-bottle__letter { font-size: 20px; }
+
+  /* ── Pour animation ── */
+  .pg-bottle--pouring {
+    animation: pg-bottle-pour-compact 1.10s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  }
+
+  /* ── Professor: bottom-right corner guide character ── */
+  .pg-professor {
+    width: 44px;
+    bottom: 3%;
+    right: 2%;
+    top: auto;
+    left: auto;
+    transform: none;
+  }
+
+}
+
+@keyframes pg-bottle-pour-compact {
+  /* Bottles now ~138px below beaker opening; 155px travel gives ~17px overshoot into rim */
+  0%   { transform: translateY(    0) rotate(  0deg); opacity: 1;    }
+  25%  { transform: translateY(-155px) rotate(  0deg); opacity: 1;   }
+  40%  { transform: translateY(-155px) rotate(-60deg); opacity: 1;   }
+  65%  { transform: translateY(-155px) rotate(-60deg); opacity: 1;   }
+  76%  { transform: translateY(-155px) rotate(  0deg); opacity: 0.85; }
+  100% { transform: translateY(-155px) rotate(  0deg); opacity: 0;   }
+}
+

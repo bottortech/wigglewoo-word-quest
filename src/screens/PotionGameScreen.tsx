@@ -434,7 +434,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   // JSX
   // =============================================
   return (
-    <div className="machine-world">
+    <div className="machine-world machine-world--potion">
       <div className="map-window">
         <div className="game-shell-panel" />
 
@@ -469,153 +469,156 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
               {/* ── Build step (potion interaction) ── */}
               {(step === "build" || step === "say-cue") && (
                 <>
-                  {/* Image + word slots */}
+                  {/* Image (left) + gameplay column (right) */}
                   <div className="pg-upper-row">
                     <div className="pg-image-wrap">
                       <WordImage
                         imageKey={currentWord.imageKey}
-                        size={wordLength <= 3 ? 82 : 70}
+                        size={wordLength <= 3 ? 120 : 100}
                       />
                     </div>
 
-                    <div className="pg-slots-row">
-                      {currentWord.letters.map((_, i) => {
-                        const filled = filledSlots[i];
-                        const isNext = i === nextEmptySlot && !filled;
-                        return (
-                          <div
-                            key={i}
-                            className={[
-                              "pg-slot",
-                              filled ? "pg-slot--filled" : "",
-                              isNext ? "pg-slot--active" : "",
-                            ]
-                              .filter(Boolean)
-                              .join(" ")}
-                          >
-                            {filled && (
-                              <span className="pg-slot__letter">
-                                {filled.toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Beaker zone */}
-                  <div className="pg-beaker-zone">
-                    <div className="pg-beaker-rim" />
-                    <div
-                      className={[
-                        "pg-beaker",
-                        isBeakerFull && wordRevealPhase === 0 ? "pg-beaker--complete" : "",
-                        wordRevealPhase >= 1 ? "pg-beaker--transforming" : "",
-                      ].filter(Boolean).join(" ")}
-                    >
-                      <div className="pg-beaker__highlight" />
-                      <div className="pg-beaker__ticks" />
-
-                      <div className={`pg-beaker__liquid pg-liquid--${liqClass}`}>
-                        {bubbles.map((b, i) => (
-                          <div
-                            key={i}
-                            className="pg-bubble"
-                            style={{
-                              left: b.x,
-                              width: `${b.size}px`,
-                              height: `${b.size}px`,
-                              background: b.color,
-                              ["--del" as string]: b.delay,
-                              ["--dur" as string]: b.dur,
-                            }}
-                          />
-                        ))}
-                      </div>
-
-                      {wordRevealPhase > 0 && (
-                        <div
-                          className={`pg-word-reveal${wordRevealPhase >= 2 ? " pg-word-reveal--visible" : ""}`}
-                        >
-                          <WordImage imageKey={currentWord.imageKey} size={62} />
-                        </div>
-                      )}
-
-                      {isBeakerFull && (
-                        <div className="pg-sparkle-ring">
-                          {Array.from({ length: 8 }, (_, i) => (
+                    <div className="pg-gameplay-col">
+                      {/* Answer slots */}
+                      <div className="pg-slots-row">
+                        {currentWord.letters.map((_, i) => {
+                          const filled = filledSlots[i];
+                          const isNext = i === nextEmptySlot && !filled;
+                          return (
                             <div
                               key={i}
-                              className="pg-sparkle"
-                              style={{
-                                ["--sa" as string]: `${i * 45}deg`,
-                                ["--sd" as string]: `${(i * 0.09).toFixed(2)}s`,
-                              }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="pg-beaker-stand" />
-                  </div>
+                              className={[
+                                "pg-slot",
+                                filled ? "pg-slot--filled" : "",
+                                isNext ? "pg-slot--active" : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                            >
+                              {filled && (
+                                <span className="pg-slot__letter">
+                                  {filled.toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
 
-                  {/* Potion bottles */}
-                  <div className="pg-bottles-row">
-                    {availableTiles.map((tile, idx) => {
-                      const color    = bottleColors.get(tile.id) ?? BOTTLE_COLORS[0];
-                      const isPouring = pouringTileId === tile.id;
-                      const isWrong   = wrongTileId   === tile.id;
-                      // Hint classes mirror GameScreen's subtle/strong hint
-                      const isCorrectForNext =
-                        nextEmptySlot >= 0 &&
-                        tile.letter.toLowerCase() ===
-                          currentWord.letters[nextEmptySlot].toLowerCase();
-                      const showSubtleHint = slotAttempts >= 3 && slotAttempts < 5 && isCorrectForNext;
-                      const showStrongHint = slotAttempts >= 5 && isCorrectForNext;
-                      return (
-                        <button
-                          key={tile.id}
+                      {/* Beaker zone */}
+                      <div className="pg-beaker-zone">
+                        <div className="pg-beaker-rim" />
+
+                        {/* Pour stream — inside beaker-zone so left:50% always centers on the beaker */}
+                        {pouringTileId && (
+                          <div
+                            className="pg-pour-drip"
+                            style={{
+                              ["--dc" as string]:
+                                bottleColors.get(pouringTileId) ?? BOTTLE_COLORS[0],
+                            }}
+                          />
+                        )}
+
+                        <div
                           className={[
-                            "pg-bottle",
-                            isPouring ? "pg-bottle--pouring" : "",
-                            isWrong   ? "pg-bottle--wrong"   : "",
-                            showSubtleHint ? "pg-bottle--subtle-hint" : "",
-                            showStrongHint ? "pg-bottle--strong-hint" : "",
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                          style={{
-                            ["--bc" as string]: color,
-                            ["--bi" as string]: idx,
-                          }}
-                          onClick={() => handleTileTap(tile)}
-                          aria-label={`Bottle ${tile.letter.toUpperCase()}`}
+                            "pg-beaker",
+                            isBeakerFull && wordRevealPhase === 0 ? "pg-beaker--complete" : "",
+                            wordRevealPhase >= 1 ? "pg-beaker--transforming" : "",
+                          ].filter(Boolean).join(" ")}
                         >
-                          <div className="pg-bottle__cork" />
-                          <div className="pg-bottle__neck" />
-                          <div className="pg-bottle__body">
-                            <div className="pg-bottle__liquid" />
-                            <div className="pg-bottle__bubble" />
-                            <span className="pg-bottle__letter">
-                              {tile.letter.toUpperCase()}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                          <div className="pg-beaker__highlight" />
+                          <div className="pg-beaker__ticks" />
 
-                  {/* Pour stream */}
-                  {pouringTileId && (
-                    <div
-                      className="pg-pour-drip"
-                      style={{
-                        ["--dc" as string]:
-                          bottleColors.get(pouringTileId) ?? BOTTLE_COLORS[0],
-                      }}
-                    />
-                  )}
+                          <div className={`pg-beaker__liquid pg-liquid--${liqClass}`}>
+                            {bubbles.map((b, i) => (
+                              <div
+                                key={i}
+                                className="pg-bubble"
+                                style={{
+                                  left: b.x,
+                                  width: `${b.size}px`,
+                                  height: `${b.size}px`,
+                                  background: b.color,
+                                  ["--del" as string]: b.delay,
+                                  ["--dur" as string]: b.dur,
+                                }}
+                              />
+                            ))}
+                          </div>
+
+                          {wordRevealPhase > 0 && (
+                            <div
+                              className={`pg-word-reveal${wordRevealPhase >= 2 ? " pg-word-reveal--visible" : ""}`}
+                            >
+                              <WordImage imageKey={currentWord.imageKey} size={62} />
+                            </div>
+                          )}
+
+                          {isBeakerFull && (
+                            <div className="pg-sparkle-ring">
+                              {Array.from({ length: 8 }, (_, i) => (
+                                <div
+                                  key={i}
+                                  className="pg-sparkle"
+                                  style={{
+                                    ["--sa" as string]: `${i * 45}deg`,
+                                    ["--sd" as string]: `${(i * 0.09).toFixed(2)}s`,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="pg-beaker-stand" />
+                      </div>
+
+                      {/* Potion bottles */}
+                      <div className="pg-bottles-row">
+                        {availableTiles.map((tile, idx) => {
+                          const color    = bottleColors.get(tile.id) ?? BOTTLE_COLORS[0];
+                          const isPouring = pouringTileId === tile.id;
+                          const isWrong   = wrongTileId   === tile.id;
+                          const isCorrectForNext =
+                            nextEmptySlot >= 0 &&
+                            tile.letter.toLowerCase() ===
+                              currentWord.letters[nextEmptySlot].toLowerCase();
+                          const showSubtleHint = slotAttempts >= 3 && slotAttempts < 5 && isCorrectForNext;
+                          const showStrongHint = slotAttempts >= 5 && isCorrectForNext;
+                          return (
+                            <button
+                              key={tile.id}
+                              className={[
+                                "pg-bottle",
+                                isPouring ? "pg-bottle--pouring" : "",
+                                isWrong   ? "pg-bottle--wrong"   : "",
+                                showSubtleHint ? "pg-bottle--subtle-hint" : "",
+                                showStrongHint ? "pg-bottle--strong-hint" : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                              style={{
+                                ["--bc" as string]: color,
+                                ["--bi" as string]: idx,
+                              }}
+                              onClick={() => handleTileTap(tile)}
+                              aria-label={`Bottle ${tile.letter.toUpperCase()}`}
+                            >
+                              <div className="pg-bottle__cork" />
+                              <div className="pg-bottle__neck" />
+                              <div className="pg-bottle__body">
+                                <div className="pg-bottle__liquid" />
+                                <div className="pg-bottle__bubble" />
+                                <span className="pg-bottle__letter">
+                                  {tile.letter.toUpperCase()}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Professor WiggleWoo */}
                   <div className={`pg-professor pg-professor--${profState}`}>
