@@ -185,14 +185,15 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
         </button>
       )}
 
-      <div className="trace-moment__header">
-        <span className="trace-moment__prompt">Trace the letter</span>
-        {caption && (
-          <span className="trace-moment__caption" aria-live="polite">{caption}</span>
-        )}
-      </div>
+      <div className="trace-moment__panel">
+        <div className="trace-moment__header">
+          <span className="trace-moment__prompt">Trace the letter</span>
+          {caption && (
+            <span className="trace-moment__caption" aria-live="polite">{caption}</span>
+          )}
+        </div>
 
-      <div className="trace-moment__stage">
+        <div className="trace-moment__stage">
         {hasPropSprite && (
           <div className={`trace-moment__prop ${completed ? "trace-moment__prop--lit" : ""}`}>
             <img
@@ -289,7 +290,8 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
             />
           )}
         </svg>
-      </div>
+        </div>{/* trace-moment__stage */}
+      </div>{/* trace-moment__panel */}
     </div>
   );
 };

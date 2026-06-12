@@ -67,6 +67,12 @@
   background-image: url("../assets/game-play-background.png");
 }
 
+/* Potion game screen — classroom/lab background */
+.machine-world--potion {
+  background-color: #8b7355;
+  background-image: url("/assets/new-gameplay-screen-background.png");
+}
+
 /* ==========================================
    SUBTLE BACKGROUND ANIMATIONS
    Makes the scene feel alive without distraction

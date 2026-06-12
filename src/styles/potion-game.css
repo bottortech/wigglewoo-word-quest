@@ -768,22 +768,61 @@
    machine-viewport's 8px padding and flex centering leave a tan strip
    at the bottom. Override both here so pg-shell pins edge-to-edge. */
 .machine-world--potion .machine-viewport {
+  /* Fill the full map-window — no inset gap */
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 0;
   padding: 0;
   justify-content: flex-start;
 }
+/* Logo ~30% larger in potion lab context — must set width, not just max-width,
+   because max-width won't grow an image smaller than its natural dimensions */
+.machine-world--potion .title-badge {
+  width: 182px;
+  max-width: 182px;
+}
+
+/* Remove vignette + blueprint texture — they were designed for the old panel */
+.machine-world--potion .machine-viewport::before,
+.machine-world--potion .machine-viewport::after { display: none; }
 
 /* Use flex growth instead of height:100% (more reliable in flex context) */
 .machine-world--potion .pg-shell {
   flex: 1 1 0;
   min-height: 0;
   height: auto;
+  background: transparent;
   /* Tighter internal padding so all four gameplay zones fit */
   padding: clamp(4px, 0.7vh, 8px) clamp(6px, 1.5vw, 12px) clamp(4px, 0.7vh, 8px);
 }
+/* Remove ambient glow overlay (was tuned for dark purple bg) */
+.machine-world--potion .pg-shell::before { display: none; }
+/* Remove the parchment panel that fills map-window */
+.machine-world--potion .game-shell-panel { display: none; }
+/* Strip the blue background from map-window itself — position/overflow untouched */
+.machine-world--potion .map-window {
+  background: transparent;
+  background-image: none;
+  border-radius: 0;
+}
 
-/* ── Hide side machines, pipes, and gear-left in gameplay ──
-   These share classes with PlayNowScreen but .machine-world--potion
-   only exists when PotionGameScreen is mounted. */
+/* ── Hanging light — drops from top-center of the lab ── */
+.pg-hanging-light {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(100px, 17.5%, 200px);
+  height: auto;
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* ── Hide machines, pipes, and gears — potion screen uses the open lab scene ── */
+.machine-world--potion .home-machine,
+.machine-world--potion .home-machine-right-wrap,
+.machine-world--potion .home-gear,
+.machine-world--potion .home-pipe,
+.machine-world--potion .bg-gear { display: none; }
 
 .machine-world--potion .bg-gear {
   opacity: 0.12;
@@ -832,6 +871,20 @@
 .pg-beaker-rim {
   width: clamp(68px, 10vw, 86px);
   height: 8px;
+}
+
+/* ── Trace overlay — panel positioned to match the chalkboard inner bounds ──
+   TraceMoment sits as a direct child of machine-world so its backdrop fills
+   the full classroom scene, but the panel is pinned to the inner chalk surface.
+   Percentages come from pixel-measured bounds of new-gameplay-screen-background.png
+   (1448×1086) using background-size: 100% 100%. */
+.machine-world--potion .trace-moment__panel {
+  inset: auto;
+  top: 15%;
+  bottom: 29%;
+  left: 15%;
+  right: 15%;
+  border-radius: 36px;
 }
 
 .pg-beaker {
@@ -911,7 +964,7 @@
    ============================================================ */
 @media (max-height: 500px) {
 
-  /* ── Expand game panel ── */
+  /* ── Restore original map-window inset (transparency handled in GAMEPLAY-FIRST block) ── */
   .machine-world--potion .map-window {
     top: 10%;
     bottom: 8%;
@@ -1028,13 +1081,13 @@
     animation: pg-bottle-pour-compact 1.10s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
   }
 
-  /* ── Professor: bottom-right corner guide character ── */
+  /* ── Professor: bottom-right corner ── */
   .pg-professor {
     width: 44px;
     bottom: 3%;
     right: 2%;
-    top: auto;
     left: auto;
+    top: auto;
     transform: none;
   }
 
@@ -1048,5 +1101,77 @@
   65%  { transform: translateY(-155px) rotate(-60deg); opacity: 1;   }
   76%  { transform: translateY(-155px) rotate(  0deg); opacity: 0.85; }
   100% { transform: translateY(-155px) rotate(  0deg); opacity: 0;   }
+}
+
+/* ── Vertical books — bottom-right of classroom ── */
+.pg-books--vertical {
+  position: absolute;
+  right: 1.5%;
+  bottom: 12%;
+  width: clamp(70px, 13%, 160px);
+  height: auto;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ── Wooden bookshelf — mounted on the top-right wall ──
+   Open wall-mounted plank design: no back panel or enclosing box.
+   Books rest on a thin plank with two triangular bracket supports below.
+   Wood tones matched to the classroom desk (#c8902e / #9b6b1a / #7a5010). */
+.pg-bookshelf {
+  position: absolute;
+  top: 6%;
+  right: 0;
+  width: clamp(110px, 17%, 210px);
+  z-index: 4;
+  pointer-events: none;
+  /* Open flex column: books → plank → brackets, no background fill */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Books sit directly against the wall background */
+.pg-bookshelf__books {
+  width: 90%;
+  height: auto;
+  display: block;
+  align-self: flex-end;
+  filter: drop-shadow(-3px 4px 8px rgba(0, 0, 0, 0.45));
+}
+
+/* Thin shelf plank — the only structural element */
+.pg-bookshelf__plank {
+  height: clamp(6px, 1.1vh, 10px);
+  background: linear-gradient(180deg,
+    rgba(255, 218, 130, 0.4) 0%,
+    #c8902e 20%,
+    #9b6b1a 58%,
+    #7a5010 100%
+  );
+  border-radius: 3px 0 0 3px;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 222, 130, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Row of two bracket supports flush under the plank */
+.pg-bookshelf__brackets {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 12%;
+}
+
+/* Triangular corbel bracket — hypotenuse slopes from top-right (wall) to
+   bottom-left (free end), matching classic wall-shelf hardware */
+.pg-bookshelf__bracket {
+  width: clamp(10px, 1.5vw, 14px);
+  height: clamp(14px, 2.2vh, 20px);
+  background: linear-gradient(145deg, #b07825 0%, #7a4e0e 65%, #5c3a0a 100%);
+  clip-path: polygon(100% 0%, 100% 100%, 0% 100%);
+  border-radius: 0 0 2px 0;
+  box-shadow: -1px 2px 5px rgba(0, 0, 0, 0.4);
 }
 

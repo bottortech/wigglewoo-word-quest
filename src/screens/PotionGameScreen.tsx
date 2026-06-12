@@ -51,7 +51,6 @@ import {
   recordLessonMastery,
 } from "../game/progression";
 import { getParentPrompt } from "../game/parentPrompts";
-import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import gear1 from "../assets/gear1.png";
 import gear2 from "../assets/gear2.png";
 import gear3 from "../assets/gear3.png";
@@ -658,16 +657,6 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
             />
           )}
 
-          {/* ── Trace prep (word-3 of each lesson) ── */}
-          {step === "trace-prep" && traceLetter && (
-            <TraceMoment
-              letter={traceLetter}
-              caption={`for ${currentWord.word.toUpperCase()}`}
-              onComplete={handleTracePrepComplete}
-              onSkip={handleTracePrepComplete}
-            />
-          )}
-
           {/* ── Say-it-out-loud cue (after audio on lesson openers) ── */}
           {step === "say-cue" && (
             <SayItOutLoudCue
@@ -699,6 +688,37 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
       </div>
       {/* end map-window */}
 
+      {/* ── Trace prep — direct child of machine-world so it can fill the chalkboard frame ── */}
+      {step === "trace-prep" && traceLetter && (
+        <TraceMoment
+          letter={traceLetter}
+          caption={`for ${currentWord.word.toUpperCase()}`}
+          onComplete={handleTracePrepComplete}
+          onSkip={handleTracePrepComplete}
+        />
+      )}
+
+      {/* ── Hanging light — centered at top of lab scene ── */}
+      <img
+        src="/assets/hanging-light.png"
+        alt=""
+        className="pg-hanging-light"
+        draggable={false}
+      />
+
+      {/* ── Bookshelf — mounted on top-right wall ── */}
+      <div className="pg-bookshelf" aria-hidden="true">
+        <img src="/assets/books-horizontally.png" alt="" className="pg-bookshelf__books" draggable={false} />
+        <div className="pg-bookshelf__plank" />
+        <div className="pg-bookshelf__brackets">
+          <div className="pg-bookshelf__bracket" />
+          <div className="pg-bookshelf__bracket" />
+        </div>
+      </div>
+
+      {/* ── Vertical books — bottom-right corner ── */}
+      <img src="/assets/books-vertically.png" alt="" className="pg-books--vertical" draggable={false} />
+
       {/* ── Outer machine decorations ── */}
       <img src={gear2} alt="" className="bg-gear bg-gear-1" draggable={false} />
       <img src={gear3} alt="" className="bg-gear bg-gear-2" draggable={false} />
@@ -723,7 +743,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
       </div>
 
       <img
-        src={badgeLogo}
+        src="/assets/word-lab-logo.png"
         alt="WiggleWoo's Word Quest — Go Home"
         className="title-badge title-badge--clickable"
         draggable={false}
