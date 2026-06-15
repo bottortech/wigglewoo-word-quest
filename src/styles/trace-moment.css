@@ -14,8 +14,9 @@
   animation: trace-fade-in 250ms ease-out both;
 }
 
-/* Panel fills the blue frame (map-window) edge-to-edge.
-   map-window clips to its own border-radius so no extra rounding needed here. */
+/* Panel fills its containing block (position:absolute;inset:0 by default).
+   In the potion game, .machine-world--potion overrides bounds to position
+   the panel on the Green Teaching Chalkboard (desk easel) area. */
 .trace-moment__panel {
   position: absolute;
   inset: 0;

@@ -157,11 +157,10 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   const lessonIndex     = getLessonIndex(currentWordIndex);
 
   const traceLetter = useMemo<string | null>(() => {
-    if (!isTracePrepWord(currentWordIndex)) return null;
     const candidate = getTraceLetterForWord(lessonIndex, currentWord.letters);
     if (!candidate) return null;
     return LETTER_PATHS[candidate] ? candidate : null;
-  }, [currentWordIndex, lessonIndex, currentWord.letters]);
+  }, [lessonIndex, currentWord.letters]);
 
   const [step, setStep] = useState<GameStep>(() => {
     if (showLessonIntro) return "lesson-intro";
@@ -179,6 +178,8 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   const [usedTileIds,   setUsedTileIds]   = useState<Set<string>>(new Set());
   const [liquidLevel,   setLiquidLevel]   = useState(0);
   const [pouringTileId, setPouringTileId] = useState<string | null>(null);
+  const [pourSide,     setPourSide]     = useState<"left" | "right">("left");
+  const [isPracticeTrace, setIsPracticeTrace] = useState(false);
   const [wrongTileId,   setWrongTileId]   = useState<string | null>(null);
   const [lockedOut,     setLockedOut]     = useState(false);
   const [audioActive,   setAudioActive]   = useState(false);
@@ -301,9 +302,13 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
   // ---- Tap handler ----
   const handleTileTap = useCallback(
-    (tile: LetterTile) => {
+    (tile: LetterTile, bottleIdx: number, totalBottles: number) => {
       if (step !== "build" || lockedOut || pouringTileId !== null) return;
       if (nextEmptySlot === -1) return;
+
+      // Pour toward the beaker: left-side bottles tilt right, right-side bottles tilt left
+      const midpoint = (totalBottles - 1) / 2;
+      setPourSide(bottleIdx < midpoint ? "right" : "left");
 
       playLetterSound(tile.letter);
 
@@ -397,6 +402,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
   const handleLessonIntroComplete = useCallback(() => {
     if (isTracePrepWord(currentWordIndex) && traceLetter) {
+      setIsPracticeTrace(false); // mandatory — no back button
       setStep("trace-prep");
     } else {
       setStep("build");
@@ -404,8 +410,15 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   }, [currentWordIndex, traceLetter]);
 
   const handleTracePrepComplete = useCallback(() => {
+    setIsPracticeTrace(false);
     setStep("build");
   }, []);
+
+  const handlePracticeBoardClick = useCallback(() => {
+    if (step !== "build" || !traceLetter) return;
+    setIsPracticeTrace(true); // voluntary — show back button
+    setStep("trace-prep");
+  }, [step, traceLetter]);
 
   const handleSayCueDismiss = useCallback(() => {
     setStep("build");
@@ -599,8 +612,11 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
                               style={{
                                 ["--bc" as string]: color,
                                 ["--bi" as string]: idx,
+                                ...(isPouring
+                                  ? { ["--pour-deg" as string]: pourSide === "right" ? "60deg" : "-60deg" }
+                                  : {}),
                               }}
-                              onClick={() => handleTileTap(tile)}
+                              onClick={() => handleTileTap(tile, idx, availableTiles.length)}
                               aria-label={`Bottle ${tile.letter.toUpperCase()}`}
                             >
                               <div className="pg-bottle__cork" />
@@ -629,7 +645,20 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
             </div>
           </div>
 
-          {/* ── Celebration overlay ── */}
+        </div>
+      </div>
+      {/* end map-window */}
+
+      {/* ── Blue Gameplay Chalkboard overlay zone ──
+          All modal / lesson screens render here, bounded to the Blue Gameplay Chalkboard.
+          Each overlay component uses position:absolute;inset:0 and fills this div,
+          which is sized and clipped to the Blue Gameplay Chalkboard inner bounds. */}
+      {(step === "celebrate" ||
+        step === "lesson-intro" ||
+        step === "say-cue" ||
+        step === "mastery-unlock" ||
+        step === "parent-prompt") && (
+        <div className="pg-overlay-zone">
           {step === "celebrate" && (
             <CelebrationOverlay
               type={getCelebrationTypeForWord(currentWordIndex, quest.words.length)}
@@ -646,8 +675,6 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
               }
             />
           )}
-
-          {/* ── Lesson intro (words 0/4/8/12) ── */}
           {step === "lesson-intro" && (
             <LessonObjectiveCard
               lessonIndex={getLessonIndex(currentWordIndex)}
@@ -656,16 +683,12 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
               onContinue={handleLessonIntroComplete}
             />
           )}
-
-          {/* ── Say-it-out-loud cue (after audio on lesson openers) ── */}
           {step === "say-cue" && (
             <SayItOutLoudCue
               word={currentWord.word}
               onDismiss={handleSayCueDismiss}
             />
           )}
-
-          {/* ── Mastery unlock (after words 3/7/11/15) ── */}
           {step === "mastery-unlock" && (
             <MasteryBadgeUnlock
               lessonIndex={getLessonIndex(currentWordIndex)}
@@ -673,8 +696,6 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
               onContinue={handleMasteryUnlockComplete}
             />
           )}
-
-          {/* ── Parent prompt (after every mastery unlock) ── */}
           {step === "parent-prompt" && (
             <ParentPrompt
               prompt={getParentPrompt(
@@ -685,10 +706,9 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
             />
           )}
         </div>
-      </div>
-      {/* end map-window */}
+      )}
 
-      {/* ── Trace prep — direct child of machine-world so it can fill the chalkboard frame ── */}
+      {/* ── Green Teaching Chalkboard — TraceMoment renders on the expanded desk easel during trace-prep ── */}
       {step === "trace-prep" && traceLetter && (
         <TraceMoment
           letter={traceLetter}
@@ -696,6 +716,17 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
           onComplete={handleTracePrepComplete}
           onSkip={handleTracePrepComplete}
         />
+      )}
+
+      {/* ── Practice trace back button — only shown when trace was opened voluntarily ── */}
+      {step === "trace-prep" && isPracticeTrace && (
+        <button
+          className="pg-trace-back-btn"
+          onClick={handleTracePrepComplete}
+          aria-label="Go back to game"
+        >
+          ✕
+        </button>
       )}
 
       {/* ── Hanging light — centered at top of lab scene ── */}
@@ -718,6 +749,50 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
       {/* ── Vertical books — bottom-right corner ── */}
       <img src="/assets/books-vertically.png" alt="" className="pg-books--vertical" draggable={false} />
+
+      {/* ── Potion shelf — mounted on left wall ── */}
+      <div className="pg-potion-shelf" aria-hidden="true">
+        <div className="pg-potion-shelf__row">
+          <img src="/assets/red-potion.png"    alt="" className="pg-shelf-potion" draggable={false} />
+          <img src="/assets/blue-potion.png"   alt="" className="pg-shelf-potion" draggable={false} />
+          <img src="/assets/purple-potion.png" alt="" className="pg-shelf-potion" draggable={false} />
+          <img src="/assets/gold-potion.png"   alt="" className="pg-shelf-potion" draggable={false} />
+          <img src="/assets/green-potion.png"  alt="" className="pg-shelf-potion" draggable={false} />
+        </div>
+        <div className="pg-potion-shelf__plank" />
+        <div className="pg-potion-shelf__brackets">
+          <div className="pg-potion-shelf__bracket" />
+          <div className="pg-potion-shelf__bracket" />
+        </div>
+      </div>
+
+      {/* ── Green Teaching Chalkboard — desk easel; clickable for voluntary letter practice ── */}
+      <div
+        className={`pg-green-chalkboard${step === "trace-prep" ? " pg-green-chalkboard--active" : ""}`}
+        onClick={handlePracticeBoardClick}
+        role={traceLetter && step === "build" ? "button" : undefined}
+        aria-label={traceLetter && step === "build" ? "Practice tracing letters" : undefined}
+        tabIndex={traceLetter && step === "build" ? 0 : -1}
+      >
+        <img
+          src="/assets/green-chalk-board.png"
+          alt=""
+          className="pg-green-chalkboard__img"
+          draggable={false}
+        />
+        {traceLetter && step !== "trace-prep" && (
+          <span className="pg-green-chalkboard__cta" aria-hidden="true">
+            Trace the letter
+          </span>
+        )}
+      </div>
+
+      {/* ── Desk potions — clustered by the bottom-right books ── */}
+      <img src="/assets/dark-purple-potion.png"  alt="" className="pg-desk-potion pg-desk-potion--1" draggable={false} />
+      <img src="/assets/golden-honey-potion.png" alt="" className="pg-desk-potion pg-desk-potion--2" draggable={false} />
+      <img src="/assets/green-leaf-potion.png"   alt="" className="pg-desk-potion pg-desk-potion--3" draggable={false} />
+      <img src="/assets/love-potion.png"         alt="" className="pg-desk-potion pg-desk-potion--4" draggable={false} />
+      <img src="/assets/teal-potion.png"         alt="" className="pg-desk-potion pg-desk-potion--5" draggable={false} />
 
       {/* ── Outer machine decorations ── */}
       <img src={gear2} alt="" className="bg-gear bg-gear-1" draggable={false} />

@@ -561,11 +561,12 @@
   0%   { transform: translateY(    0) rotate(  0deg); opacity: 1;    }
   25%  { transform: translateY(-165px) rotate(  0deg); opacity: 1;   }
 
-  /* 2. Tilt to pour position (25 → 40 % = 275 → 440 ms) */
-  40%  { transform: translateY(-165px) rotate(-60deg); opacity: 1;   }
+  /* 2. Tilt toward the beaker — direction set by --pour-deg on the element.
+        Positive = tilt right (left-side bottles), negative = tilt left (right-side). */
+  40%  { transform: translateY(-165px) rotate(var(--pour-deg, -60deg)); opacity: 1;   }
 
   /* 3. Hold tilted while liquid pours (40 → 65 % = 440 → 715 ms) */
-  65%  { transform: translateY(-165px) rotate(-60deg); opacity: 1;   }
+  65%  { transform: translateY(-165px) rotate(var(--pour-deg, -60deg)); opacity: 1;   }
 
   /* 4. Return upright, still elevated (65 → 76 % = 715 → 836 ms) */
   76%  { transform: translateY(-165px) rotate(  0deg); opacity: 0.85; }
@@ -774,11 +775,10 @@
   padding: 0;
   justify-content: flex-start;
 }
-/* Logo ~30% larger in potion lab context — must set width, not just max-width,
-   because max-width won't grow an image smaller than its natural dimensions */
+/* Logo enlarged in potion lab context */
 .machine-world--potion .title-badge {
-  width: 182px;
-  max-width: 182px;
+  width: 220px;
+  max-width: 220px;
 }
 
 /* Remove vignette + blueprint texture — they were designed for the old panel */
@@ -873,18 +873,193 @@
   height: 8px;
 }
 
-/* ── Trace overlay — panel positioned to match the chalkboard inner bounds ──
-   TraceMoment sits as a direct child of machine-world so its backdrop fills
-   the full classroom scene, but the panel is pinned to the inner chalk surface.
-   Percentages come from pixel-measured bounds of new-gameplay-screen-background.png
-   (1448×1086) using background-size: 100% 100%. */
-.machine-world--potion .trace-moment__panel {
-  inset: auto;
+/* ── Blue Gameplay Chalkboard overlay zone — lesson/modal screens bounded to the frame ──
+   All overlay components use position:absolute;inset:0 relative to their parent.
+   Placing them inside this div keeps them inside the Blue Gameplay Chalkboard frame.
+   overflow:hidden + border-radius clip anything that would otherwise escape. */
+.machine-world--potion .pg-overlay-zone {
+  position: absolute;
   top: 15%;
   bottom: 29%;
   left: 15%;
   right: 15%;
   border-radius: 36px;
+  overflow: hidden;
+  z-index: 20;
+}
+
+/* ── Green Teaching Chalkboard — TraceMoment during trace-prep ──
+   Panel is styled and positioned to match the green-chalk-board.png asset:
+   portrait orientation, warm oak wooden frame, muted green slate surface,
+   thicker bottom edge to echo the stand/ledge in the image.
+   The vignette is shifted to spotlight the left side where the board lives.
+   The prop image fades out (--active opacity:0) so the panel IS the visual board. */
+
+/* Spotlight the left-side teaching area instead of center-screen */
+.machine-world--potion .trace-moment__vignette {
+  background:
+    radial-gradient(ellipse at 25% 50%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.78) 60%),
+    rgba(0,0,0,0.42);
+}
+
+.machine-world--potion .trace-moment__panel {
+  inset: auto;
+  top: 9%;
+  bottom: 7%;
+  left: 4%;
+  right: 52%;
+
+  /* No border here — wooden frame is drawn by .trace-moment::after above everything */
+  border: none;
+  border-radius: 0;
+
+  /* Muted green slate surface */
+  background: #3a5438;
+  backdrop-filter: none;
+
+  /* Inner slate texture only — outer frame shadows live on trace-moment::after */
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, 0.45),
+    inset 2px 2px 10px rgba(0, 0, 0, 0.22),
+    inset -1px -1px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Subtle lighting gradient — mimics the slight sheen on the felt slate */
+.machine-world--potion .trace-moment__panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 18% 18%, rgba(255,255,255,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 82% 82%, rgba(0,0,0,0.14) 0%, transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+/* Wooden frame — rendered ABOVE all trace-moment content (z-index: 51 within
+   trace-moment's stacking context). Hollow interior so the slate and letter show through.
+   pointer-events: none so finger touches still reach the trace canvas below. */
+.machine-world--potion .trace-moment::after {
+  content: '';
+  position: absolute;
+  top: 9%;
+  bottom: 7%;
+  left: 4%;
+  right: 52%;
+  z-index: 51;
+  pointer-events: none;
+  border: clamp(12px, 1.8vmin, 20px) solid #8B5E1A;
+  border-bottom-width: clamp(16px, 2.6vmin, 26px);
+  border-radius: 5px;
+  background: transparent;
+  box-shadow:
+    0 0 0 2px #5c3a0a,
+    0 0 0 4px rgba(90, 55, 10, 0.25),
+    0 12px 30px rgba(0, 0, 0, 0.65),
+    0 28px 55px rgba(0, 0, 0, 0.38),
+    -3px 0 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Ensure header and stage sit above the ::before pseudo-element */
+.machine-world--potion .trace-moment__header,
+.machine-world--potion .trace-moment__stage {
+  position: relative;
+  z-index: 1;
+}
+
+/* Header: chalk-on-board style — clear the sci-fi pill and show plain chalk text.
+   !important is needed because bundle order can let trace-moment.css win the cascade
+   for same-specificity properties despite our selector having higher specificity. */
+.machine-world--potion .trace-moment__header {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: clamp(6px, 1vmin, 10px) clamp(8px, 1.4vmin, 16px) clamp(8px, 1.2vmin, 12px);
+}
+
+/* Chalk-white instruction text — softer glow, more hand-written feel */
+.machine-world--potion .trace-moment__prompt {
+  color: rgba(238, 232, 215, 0.90);
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.60);
+  font-size: clamp(12px, 2vmin, 17px);
+  letter-spacing: 0.07em;
+}
+
+/* Caption (e.g. "for BOX") — warm chalk yellow, no space-glow */
+.machine-world--potion .trace-moment__caption {
+  color: rgba(240, 215, 130, 0.86);
+  text-shadow:
+    0 0 3px rgba(240, 215, 100, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.62);
+  font-size: clamp(10px, 1.6vmin, 13px);
+  letter-spacing: 0.10em;
+}
+
+/* Word prop image — not rendered in potion context (no dimSrc/activeSrc passed),
+   but kept hidden as insurance if props are ever added. */
+.machine-world--potion .trace-moment__prop {
+  display: none;
+}
+
+/* Letter interior stroke — the inner stroke is #0a0a14 by default to match the
+   dark sci-fi background. On green slate it creates a visible dark oval inside the
+   letter. Match the slate color so the letter still looks hollow correctly. */
+.machine-world--potion .trace-moment__letter-body-inner {
+  stroke: #3a5438;
+}
+
+/* SVG: force square so the letter fills the slate instead of floating
+   in a tall portrait stage (letter is naturally constrained by width) */
+.machine-world--potion .trace-moment__svg {
+  width: 82%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+/* Skip button: stays at default position (top-right of machine-world, in the dimmed
+   room area). z-index:52 puts it above the trace-moment::after frame (z-index:51). */
+.machine-world--potion .trace-moment__skip {
+  z-index: 52;
+}
+
+/* ── Practice trace back button ──
+   Shown only for voluntary traces (clicking the green chalkboard during gameplay).
+   Sits above trace-moment (z-index: 50) at the top-right corner of the board panel. */
+.pg-trace-back-btn {
+  position: absolute;
+  top: calc(9% + 8px);
+  right: calc(52% + 8px);
+  z-index: 55;
+  width: clamp(28px, 4vmin, 36px);
+  height: clamp(28px, 4vmin, 36px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(12px, 1.8vmin, 16px);
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pg-trace-back-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.pg-trace-back-btn:active {
+  transform: scale(0.94);
 }
 
 .pg-beaker {
@@ -1093,6 +1268,55 @@
 
 }
 
+/* ── Lesson objective card — compact layout for the Blue Gameplay Chalkboard frame ──
+   The Blue Gameplay Chalkboard interior is ~56% of screen height. The default card is
+   designed for a full-height panel and overflows. These overrides mirror
+   the max-height:500px landscape rules but scoped to the potion context
+   so no other screen is affected. */
+.machine-world--potion .pg-overlay-zone .lesson-objective__card {
+  gap: clamp(4px, 0.9vh, 8px);
+  padding: clamp(10px, 1.6vh, 16px) clamp(16px, 3vw, 28px);
+}
+
+.machine-world--potion .pg-overlay-zone .lesson-objective__focus {
+  font-size: clamp(22px, 4.8vh, 36px);
+}
+
+.machine-world--potion .pg-overlay-zone .lesson-objective__goal {
+  font-size: clamp(14px, 2.6vh, 20px);
+}
+
+.machine-world--potion .pg-overlay-zone .lesson-objective__sub {
+  font-size: clamp(11px, 1.9vh, 14px);
+}
+
+/* Example word card: switch to side-by-side to save ~80px of vertical space */
+.machine-world--potion .pg-overlay-zone .lesson-objective__example {
+  flex-direction: row;
+  gap: clamp(8px, 1.2vw, 14px);
+  padding: clamp(6px, 1vh, 10px) clamp(12px, 2vw, 18px);
+  margin: 0;
+}
+
+.machine-world--potion .pg-overlay-zone .lesson-objective__example-image {
+  width:  clamp(52px, 9.5vh, 84px);
+  height: clamp(52px, 9.5vh, 84px);
+  flex-shrink: 0;
+}
+
+.machine-world--potion .pg-overlay-zone .lesson-objective__example-word {
+  font-size: clamp(18px, 3.8vh, 28px);
+}
+
+.machine-world--potion .pg-overlay-zone .lesson-objective__example-listen {
+  font-size: clamp(10px, 1.6vh, 13px);
+}
+
+.machine-world--potion .pg-overlay-zone .lesson-objective__continue {
+  padding: clamp(8px, 1.3vh, 12px) clamp(22px, 4vw, 36px);
+  font-size: clamp(14px, 2.6vh, 18px);
+}
+
 @keyframes pg-bottle-pour-compact {
   /* Bottles now ~138px below beaker opening; 155px travel gives ~17px overshoot into rim */
   0%   { transform: translateY(    0) rotate(  0deg); opacity: 1;    }
@@ -1112,6 +1336,8 @@
   height: auto;
   pointer-events: none;
   z-index: 4;
+  transform: rotate(-4deg);
+  transform-origin: bottom left;
 }
 
 /* ── Wooden bookshelf — mounted on the top-right wall ──
@@ -1131,12 +1357,14 @@
   align-items: stretch;
 }
 
-/* Books sit directly against the wall background */
+/* Books sit directly against the wall background — slight settle tilt */
 .pg-bookshelf__books {
   width: 90%;
   height: auto;
   display: block;
   align-self: flex-end;
+  transform: rotate(2deg);
+  transform-origin: bottom center;
   filter: drop-shadow(-3px 4px 8px rgba(0, 0, 0, 0.45));
 }
 
@@ -1173,5 +1401,163 @@
   clip-path: polygon(100% 0%, 100% 100%, 0% 100%);
   border-radius: 0 0 2px 0;
   box-shadow: -1px 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* ══════════════════════════════════════════════════════════
+   POTION SHELF — left-wall mirror of the book shelf
+   ══════════════════════════════════════════════════════════ */
+
+/* Container: flush against left edge, starts below the logo */
+.pg-potion-shelf {
+  position: absolute;
+  top: 18%;
+  left: 0;
+  width: clamp(100px, 15%, 185px);
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  /* Right side panel + ambient wall shadow (mirror of bookshelf's left-side shadow) */
+  box-shadow:
+    8px 0 0 #3a2208,
+    16px 0 28px rgba(0, 0, 0, 0.5),
+    inset -2px 0 0 rgba(255, 200, 100, 0.1);
+}
+
+/* Row of potion bottles sitting upright on the shelf — centered, tightly grouped */
+.pg-potion-shelf__row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 4px 2px 0;
+  gap: 0;
+}
+
+.pg-shelf-potion {
+  height: clamp(36px, 6.5vh, 62px);
+  width: auto;
+  flex-shrink: 0;
+  margin: 0 -16px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+/* Thin shelf plank — same palette as the book shelf */
+.pg-potion-shelf__plank {
+  height: clamp(6px, 1.1vh, 10px);
+  background: linear-gradient(180deg,
+    rgba(255, 218, 130, 0.4) 0%,
+    #c8902e 20%,
+    #9b6b1a 58%,
+    #7a5010 100%
+  );
+  /* Free end on the right, wall flush on the left */
+  border-radius: 0 3px 3px 0;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 222, 130, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.pg-potion-shelf__brackets {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 12%;
+}
+
+/* Bracket mirror: top-LEFT attaches to wall, hypotenuse slopes to bottom-right */
+.pg-potion-shelf__bracket {
+  width: clamp(10px, 1.5vw, 14px);
+  height: clamp(14px, 2.2vh, 20px);
+  background: linear-gradient(225deg, #b07825 0%, #7a4e0e 65%, #5c3a0a 100%);
+  clip-path: polygon(0% 0%, 100% 100%, 0% 100%);
+  border-radius: 0 0 0 2px;
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* ══════════════════════════════════════════════════════════
+   DESK POTIONS — scattered along the classroom desk surface
+   Positioned below the Blue Gameplay Chalkboard frame (bottom 0–12% of scene).
+   ══════════════════════════════════════════════════════════ */
+
+.pg-desk-potion {
+  position: absolute;
+  height: clamp(54px, 9vh, 88px);
+  width: auto;
+  z-index: 4;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45));
+}
+
+/* Tight cluster anchored right — sitting on desk beside the books */
+.pg-desk-potion--1 { bottom: 12%;  right: 23%; }
+.pg-desk-potion--2 { bottom: 13%;  right: 21%; }
+.pg-desk-potion--3 { bottom: 12%;  right: 19%; }
+.pg-desk-potion--4 { bottom: 13%;  right: 17%; }
+.pg-desk-potion--5 { bottom: 12%;  right: 15%; }
+
+/* ── Green Teaching Chalkboard — desk easel, bottom-left of scene ──
+   At rest: small angled easel on the desk; clickable on any word that has a
+   traceable letter. Active (trace-prep): fades out; the TraceMoment CSS panel
+   becomes the visual chalkboard. */
+.pg-green-chalkboard {
+  position: absolute;
+  bottom: 12%;
+  left: 2%;
+  top: auto;
+  width: clamp(80px, 18%, 210px);
+  transform: rotate(-4deg);
+  transform-origin: bottom left;
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity   0.25s ease;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.pg-green-chalkboard__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(3px 5px 10px rgba(0, 0, 0, 0.5));
+  transition: filter 0.2s ease;
+}
+
+/* Chalk-white label — positioned in the center of the green slate area */
+.pg-green-chalkboard__cta {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72%;
+  text-align: center;
+  color: rgba(238, 232, 212, 0.82);
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(10px, 1.8vmin, 15px);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.25),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Hover: straighten slightly and lift — signals it's tappable */
+.pg-green-chalkboard:not(.pg-green-chalkboard--active):hover {
+  transform: rotate(-2deg) scale(1.06);
+}
+
+.pg-green-chalkboard:not(.pg-green-chalkboard--active):hover .pg-green-chalkboard__img {
+  filter: drop-shadow(4px 7px 14px rgba(0, 0, 0, 0.6)) brightness(1.08);
+}
+
+/* During trace-prep the CSS-rendered panel IS the visual chalkboard — fade the prop out */
+.pg-green-chalkboard--active {
+  opacity: 0;
+  pointer-events: none;
 }
 
