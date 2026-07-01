@@ -219,6 +219,7 @@ export default function SchoolconomyApp() {
                 quest={quest}
                 currentWordIndex={wordIndex}
                 onNavigate={handleQuestNavigate}
+                skipLessonIntro
               />
             </ScreenGate>
           )}

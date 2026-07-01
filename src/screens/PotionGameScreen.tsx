@@ -129,6 +129,8 @@ interface PotionGameScreenProps {
   currentWordIndex: number;
   onNavigate: (target: "next-word" | "quest-map" | "quest-summary") => void;
   onGoHome?: () => void;
+  /** Skip the lesson-intro card (schoolconomy — go straight to building) */
+  skipLessonIntro?: boolean;
 }
 
 // =============================================
@@ -139,6 +141,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   currentWordIndex,
   onNavigate,
   onGoHome,
+  skipLessonIntro = false,
 }) => {
   const currentWord: CvcWord = quest.words[currentWordIndex];
   const wordLength = currentWord.letters.length;
@@ -174,7 +177,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   }, [currentWord]);
 
   const [step, setStep] = useState<GameStep>(() => {
-    if (showLessonIntro) return "lesson-intro";
+    if (showLessonIntro && !skipLessonIntro) return "lesson-intro";
     if (isTracePrepWord(currentWordIndex)) {
       const candidate = getTraceLetterForWord(lessonIndex, currentWord.letters);
       if (candidate && LETTER_PATHS[candidate]) return "trace-prep";
