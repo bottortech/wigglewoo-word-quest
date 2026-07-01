@@ -800,8 +800,16 @@
 .machine-world--potion .pg-shell::before { display: none; }
 /* Remove the parchment panel that fills map-window */
 .machine-world--potion .game-shell-panel { display: none; }
-/* Strip the blue background from map-window itself — position/overflow untouched */
+/* Ensure map-window is correctly positioned even when questmap.css is not
+   bundled (e.g. schoolconomy build which never loads QuestMapScreen/GameScreen).
+   These values mirror the base .map-window rule in questmap.css exactly. */
 .machine-world--potion .map-window {
+  position: absolute;
+  top: 21%;
+  bottom: 13%;
+  left: 16%;
+  right: 16%;
+  overflow: hidden;
   background: transparent;
   background-image: none;
   border-radius: 0;
