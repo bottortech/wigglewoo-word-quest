@@ -158,12 +158,6 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   const showLessonIntro = isLessonStart(currentWordIndex);
   const lessonIndex     = getLessonIndex(currentWordIndex);
 
-  const traceLetter = useMemo<string | null>(() => {
-    const candidate = getTraceLetterForWord(lessonIndex, currentWord.letters);
-    if (!candidate) return null;
-    return LETTER_PATHS[candidate] ? candidate : null;
-  }, [lessonIndex, currentWord.letters]);
-
   // Ordered sequence of letters to trace: first → vowel → last consonant.
   // Filters out any letter that lacks a path (graceful degradation).
   const traceSequence = useMemo<string[]>(() => {
