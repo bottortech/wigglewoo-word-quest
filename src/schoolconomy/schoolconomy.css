@@ -1,0 +1,150 @@
+/* =============================================
+   Schoolconomy-edition styles — welcome + completion screens
+   ============================================= */
+
+/* Welcome layout — the schoolconomy welcome stacks an extra points
+   callout between the logo and the Begin Quest button, so the standard
+   home-overlay spacing pushes the logo up to the top edge and the
+   button down past the visible area on short viewports. Tighten the
+   gap and add top/bottom padding so the column has breathing room. */
+.sc-welcome {
+  padding: clamp(24px, 6vh, 64px) 12px clamp(28px, 7vh, 72px);
+  gap: clamp(8px, 1.6vh, 22px);
+}
+
+.sc-welcome .home-logo {
+  width: clamp(160px, calc(240px * var(--u, 1)), 320px);
+}
+
+.sc-welcome .home-logo-glow {
+  width: clamp(140px, calc(210px * var(--u, 1)), 280px);
+  height: clamp(140px, calc(210px * var(--u, 1)), 280px);
+}
+
+.sc-welcome .sc-points-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 213, 74, 0.4);
+  margin: 0;
+  color: #fff;
+  font-weight: 600;
+  font-size: clamp(13px, 1.8vh, 16px);
+}
+
+/* Short / phone-landscape viewports — collapse the callout to one row,
+   shrink the logo, and drop the keyboard hint so logo + callout +
+   button all stay on screen. */
+@media (max-height: 500px) {
+  .sc-welcome {
+    padding: 10px 16px;
+    gap: 6px;
+  }
+  .sc-welcome .home-logo {
+    width: clamp(110px, 24vh, 170px);
+  }
+  .sc-welcome .home-logo-glow {
+    width: clamp(95px, 22vh, 150px);
+    height: clamp(95px, 22vh, 150px);
+  }
+  .sc-welcome .sc-points-callout {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 6px 12px;
+    font-size: 12px;
+    gap: 14px;
+  }
+  .sc-welcome .home-hint {
+    display: none;
+  }
+}
+
+.sc-points-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sc-points-row--bonus {
+  color: #ffd54a;
+}
+
+.sc-points-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* ---- Completion screen ---- */
+
+.sc-completion-title {
+  color: #fff;
+  font-size: 36px;
+  font-weight: 800;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+.sc-completion-card {
+  background: rgba(0, 0, 0, 0.65);
+  border: 2px solid rgba(255, 213, 74, 0.5);
+  border-radius: 18px;
+  padding: 18px 24px;
+  min-width: 320px;
+  max-width: 92vw;
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.sc-points-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sc-points-line:last-of-type {
+  border-bottom: none;
+}
+
+.sc-points-line strong {
+  color: #ffd54a;
+  font-size: 20px;
+}
+
+.sc-points-line--muted {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.sc-points-line--muted strong {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.sc-points-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 2px solid rgba(255, 213, 74, 0.5);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.sc-points-total strong {
+  color: #ffd54a;
+  font-size: 26px;
+}
+
+.sc-completion-handoff {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  margin: 0 0 18px;
+  text-align: center;
+}
