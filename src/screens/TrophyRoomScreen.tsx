@@ -32,6 +32,8 @@ interface TrophyRoomScreenProps {
   phase?: 1 | 2;
   /** View-only mode — no card game, trophy in display case */
   viewOnly?: boolean;
+  /** Hide the early-exit button (used by schoolconomy to prevent leaving mid-session) */
+  hideEarlyExit?: boolean;
 }
 
 interface Card {
@@ -166,6 +168,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
   onExit,
   phase = 1,
   viewOnly = false,
+  hideEarlyExit = false,
 }) => {
   // Initialize cards — pair count scales with tier; words scoped to phase
   const pairCount = PAIRS_PER_TIER[quest.patternType] || 3;
@@ -488,8 +491,8 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
           >
             <img src={continueQuestBtn} alt="Return to Map" draggable={false} />
           </button>
-        ) : !showCelebration ? (
-          <button 
+        ) : !showCelebration && !hideEarlyExit ? (
+          <button
             className="trophy-room__continue-btn"
             onClick={onExit}
             aria-label="Continue Quest"

@@ -59,7 +59,6 @@ import "../styles/explore.css";
 //   3. Re-record the mini-game VO slugs that were moved to the
 //      Out-of-Scope list in docs/VO-Recording-Sheet-V1.md.
 const MINI_GAMES_ENABLED = false;
-const FIRST_VISIT_TRACE_ENABLED = false;
 
 // ---- Daily letter rotation ----
 // All 5 Discovery Rooms run a first-visit trace; each day pulls 5 consecutive
@@ -104,6 +103,10 @@ interface ExploreScreenProps {
   onBack: () => void;
   /** Called once on first visit when used as discovery room reward */
   onComplete?: () => void;
+  /** Skip the first-visit letter-trace overlay (schoolconomy keeps session focused) */
+  skipFirstVisitTrace?: boolean;
+  /** Override the number of facts required to trigger room completion (default 2) */
+  factsToComplete?: number;
 }
 
 // ---- Sub-components ----
@@ -193,7 +196,7 @@ const HotspotPopup: React.FC<{
 
 // ---- Main component ----
 
-const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, onBack, onComplete }) => {
+const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, onBack, onComplete, skipFirstVisitTrace = false, factsToComplete }) => {
   const env: EnvironmentConfig | undefined = ENVIRONMENTS[environmentId];
 
   // Progressive fact unlocking — based on vowel quest completions
@@ -210,7 +213,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const isRoomAlreadyComplete = localStorage.getItem(roomCompleteKey) === "true";
   const [factsViewedThisVisit, setFactsViewedThisVisit] = useState<Set<string>>(new Set());
   const [roomJustCompleted, setRoomJustCompleted] = useState(false);
-  const FACTS_REQUIRED = 2;
+  const FACTS_REQUIRED = factsToComplete ?? 2;
   const needsCompletion = !!onComplete && !isRoomAlreadyComplete;
 
   // The fact whose narration finishing should trigger discover-complete
@@ -244,7 +247,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const firstVisitSeenKey = `ww_first_visit_seen_${environmentId}_${getDayIndex()}`;
   const hasSeenFirstVisit = localStorage.getItem(firstVisitSeenKey) === "true";
   const [showFirstVisitTrace, setShowFirstVisitTrace] = useState(
-    FIRST_VISIT_TRACE_ENABLED && !!onComplete && !hasSeenFirstVisit && !!firstVisitTraceConfig
+    !skipFirstVisitTrace && !!onComplete && !hasSeenFirstVisit && !!firstVisitTraceConfig
   );
   // PARKED — gated by MINI_GAMES_ENABLED (false for v1). Even when revived,
   // a room with a firstVisitTraceConfig will still take the trace path; the
