@@ -1,0 +1,74 @@
+/* Invisible volunteer tap zone — bottom-right corner */
+.demo-reset-zone {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 80px;
+  height: 80px;
+  z-index: 9998;
+  background: transparent;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fullscreen scrim behind the dialog */
+.demo-reset-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.demo-reset-dialog {
+  background: #fff;
+  border-radius: 24px;
+  padding: 36px 44px;
+  text-align: center;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
+  max-width: 400px;
+  width: 88%;
+}
+
+.demo-reset-dialog__msg {
+  font-size: 24px;
+  font-weight: 800;
+  color: #3e2723;
+  margin: 0 0 10px;
+}
+
+.demo-reset-dialog__sub {
+  font-size: 15px;
+  color: #795548;
+  margin: 0 0 28px;
+  line-height: 1.4;
+}
+
+.demo-reset-dialog__actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.demo-reset-dialog__btn {
+  padding: 14px 36px;
+  border: none;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.demo-reset-dialog__btn--cancel {
+  background: #eeeeee;
+  color: #666;
+}
+
+.demo-reset-dialog__btn--confirm {
+  background: #e53935;
+  color: #fff;
+}

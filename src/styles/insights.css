@@ -647,3 +647,55 @@
   max-width: 700px;
   margin: 0 auto;
 }
+
+/* ---- Letter Practice section ---- */
+.insights-section {
+  margin: 20px 0 8px;
+}
+.insights-section__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #4e342e;
+  margin: 0 0 2px;
+}
+.insights-section__sub {
+  font-size: 12px;
+  color: #8D6E63;
+  margin: 0 0 10px;
+}
+
+.insights-letter-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.insights-letter-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid #e0d5cc;
+  border-radius: 10px;
+  padding: 8px 10px 6px;
+  min-width: 52px;
+  gap: 2px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.insights-letter-card__glyph {
+  font-size: 22px;
+  font-weight: 900;
+  color: #3e2723;
+  line-height: 1;
+}
+
+.insights-letter-card__rate {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.insights-letter-card__count {
+  font-size: 10px;
+  color: #9e9e9e;
+}

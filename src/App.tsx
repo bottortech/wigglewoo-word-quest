@@ -80,6 +80,7 @@ import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
 // Re-import + re-fire when CVCC ships in 1.1.
 // import BlendingPowerUnlock from "./components/BlendingPowerUnlock";
 import QuestCompleteCelebration from "./components/QuestCompleteCelebration";
+import DemoResetZone from "./components/DemoResetZone";
 import OnboardingScreen from "./screens/OnboardingScreen";
 import PotionGameScreen from "./screens/PotionGameScreen";
 import LetterGallery from "./components/handwriting/LetterGallery";
@@ -380,6 +381,53 @@ export default function App() {
     setTimeout(() => setRoute("map"), 50);
   }, []);
 
+  // ---- Demo Reset (volunteer hidden corner tap) ----
+  // Clears all per-session game progress but preserves ww_settings so
+  // volunteer audio/display preferences survive between children.
+  const handleDemoReset = useCallback(() => {
+    const keysToRemove = [
+      "wigglewoo-cvc-progress",
+      "wigglewoo-global-progress",
+      "wigglewoo-trophy-progress",
+      "wigglewoo-trophy-all",
+      "wigglewoo-discovery-all",
+      "wigglewoo-crossmatch-all",
+      "wigglewoo-node-ratings",
+      "wigglewoo-trophy-unlock-seen",
+      "wigglewoo-skins",
+      "wigglewoo-active-skin",
+      "ww_env_visited",
+      "ww_factProgress",
+      "ww_learning_analytics",
+      "ww_dev_unlock",
+      "ww_placement",
+      "ww_placement_tiers",
+      ONBOARDING_SEEN_KEY,
+      "ww_v1_quest_complete_seen",
+    ];
+    for (const key of keysToRemove) {
+      localStorage.removeItem(key);
+    }
+    resetPlacement();
+
+    const defaultQuest = CVC_QUESTS[0];
+    setActiveQuest(defaultQuest);
+    saveGlobalProgress({ activeQuestId: defaultQuest.id });
+    setArrivedFromWord(null);
+    setTrophyJustCompleted(false);
+    setWordIndex(0);
+    setWardrobeOpen(false);
+    setMapRevision((r) => r + 1);
+    setSkinRevision((r) => r + 1);
+    setShowQuestComplete(false);
+    setShowChallengeUnlock(false);
+    setUnlockedSkinId(null);
+    setHasNewSkin(false);
+    setExploreEnvId(null);
+    setCrossMatchCheckpoint(null);
+    setRoute("home");
+  }, []);
+
   // ---- Enter Trophy Room ----
   // Phase is chosen from current tier: none → phase 1, half → phase 2.
   // (Map's trophy node only goes "active" when tier === "none", so the
@@ -545,6 +593,7 @@ export default function App() {
   }, []);
 
   const handleDiscoveryRoomExit = useCallback(() => {
+    backgroundMusic.restoreMainTheme();
     setExploreEnvId(null);
     setArrivedFromWord(null);
 
@@ -798,6 +847,8 @@ export default function App() {
           {route === "game" ? "🧪 Potion Lab" : "📦 Original"}
         </button>
       )}
+
+      <DemoResetZone onReset={handleDemoReset} />
 
      </OrientationOverlay>
     </LoadingGate>

@@ -76,19 +76,19 @@ const NODE_POSITIONS = [
   { x: 18, y: 77 },   // 2 — LOCKED
   { x: 10, y: 67 },   // 3 — LOCKED
   { x: 28, y: 67 },   // 4 — LOCKED
-  { x: 35, y: 78 },   // 5 — LOCKED
+  { x: 47, y: 72 },   // 5 — LOCKED
   { x: 60, y: 94 },   // 6
   { x: 79, y: 90 },   // 7 — LOCKED
   { x: 67, y: 74 },   // 8
   // Top row (nodes 9-16, left to right) - y=30% (within 8-92% safe zone)
   { x: 37, y: 58 },   // 9 — LOCKED
-  { x: 14, y: 51 },   // 10 — LOCKED
+  { x: 18, y: 51 },   // 10 — LOCKED
   { x: 23, y: 30 },   // 11 — LOCKED
   { x: 37, y: 31 },   // 12 — LOCKED
   { x: 45, y: 17 },   // 13 — LOCKED
-  { x: 62, y: 39 },   // 14 — LOCKED
+  { x: 62, y: 37 },   // 14 — LOCKED
   { x: 78, y: 22 },   // 15 — LOCKED
-  { x: 86, y: 48 },   // 16 — LOCKED
+  { x: 86, y: 51 },   // 16 — LOCKED
 ];
 
 // Trophy node position — ~65% along the curve between node 8 and node 9
@@ -1146,6 +1146,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       </div>
       {/* end map-window */}
 
+      <div className="machine-canvas">
       {/* ==== OUTER UI — outside the blue frame ==== */}
 
       {/* Mechanical environment */}
@@ -1482,6 +1483,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           onCancel={handleParentGateCancel}
         />
       )}
+      </div>{/* machine-canvas */}
     </div>
   );
 };

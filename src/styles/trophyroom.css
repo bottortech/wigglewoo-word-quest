@@ -262,12 +262,13 @@
    ========================================== */
 .trophy-room__wigglewoo {
   position: absolute;
-  right: calc(-118px * var(--u));
+  left: calc(-118px * var(--u));
   bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
+  transform: scaleX(-1);
 }
 
 .trophy-room__wigglewoo-img {

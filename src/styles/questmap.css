@@ -975,7 +975,7 @@
   left: calc(3% + 70px);
   transform: translateX(-50%);
   z-index: 9;
-  margin-top: 143px;
+  margin-top: 297px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2182,14 +2182,14 @@
 
   /* 1. Logo — larger, aligned with left column */
   .title-badge {
-    max-width: calc(90px + 34px * var(--u, 1));
+    max-width: calc(108px + 41px * var(--u, 1));
     left: 3.5%;
     margin-bottom: 16px;
   }
 
   /* 2. Trophy showcase — 16px more space below logo */
   .trophy-showcase {
-    margin-top: 176px;
+    margin-top: 330px;
   }
 
   /* 3. Wardrobe — directly under trophy showcase */
@@ -2201,10 +2201,10 @@
     top: 68%;
   }
 
-  /* 4. Quest panel — wider, aligned horizontally with trophy */
+  /* 4. Quest panel — aligned vertically with trophy showcase */
   .word-quest-box {
     width: 160px;
-    top: 22%;
+    top: calc(2% + 330px);
   }
 
   /* 5. Discovery room cards — ~25% larger */
@@ -2220,7 +2220,7 @@
    ========================================== */
 .discovery-preview-row {
   position: absolute;
-  top: clamp(2px, 1vh, 8px);
+  top: clamp(10px, 1.5vh, 16px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -2231,8 +2231,8 @@
 
 .discovery-preview {
   position: relative;
-  width: clamp(58px, 7.5vw, 85px);
-  height: clamp(58px, 7.5vw, 85px);
+  width: clamp(70px, 9vw, 102px);
+  height: clamp(70px, 9vw, 102px);
   border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.4);
   background: rgba(0, 0, 0, 0.15);

@@ -13,7 +13,7 @@
 // Pure CSS animations only (see potion-game.css).
 // =============================================
 
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { Quest, CvcWord, LetterTile } from "../game/types";
 import { buildLetterBank } from "../game/state";
 import { getCelebrationTypeForWord } from "../game/triggers";
@@ -39,6 +39,8 @@ import {
   recordTimeSpent,
 } from "../game/analytics";
 import { recordWordCompletion } from "../game/learningAnalytics";
+import { recordTraceEvent } from "../game/traceAnalytics";
+import type { LetterPosition } from "../game/traceAnalytics";
 import { questIdToVowelId } from "../game/wordData";
 import {
   saveNodeRating,
@@ -162,6 +164,21 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
     return LETTER_PATHS[candidate] ? candidate : null;
   }, [lessonIndex, currentWord.letters]);
 
+  // Ordered sequence of letters to trace: first → vowel → last consonant.
+  // Filters out any letter that lacks a path (graceful degradation).
+  const traceSequence = useMemo<string[]>(() => {
+    const { letters } = currentWord;
+    if (letters.length === 0) return [];
+    const positions = [
+      letters[0],
+      letters[Math.floor((letters.length - 1) / 2)],
+      letters[letters.length - 1],
+    ];
+    return positions
+      .map(l => (l ?? "").toLowerCase())
+      .filter(l => l.length === 1 && !!LETTER_PATHS[l]);
+  }, [currentWord]);
+
   const [step, setStep] = useState<GameStep>(() => {
     if (showLessonIntro) return "lesson-intro";
     if (isTracePrepWord(currentWordIndex)) {
@@ -180,6 +197,13 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   const [pouringTileId, setPouringTileId] = useState<string | null>(null);
   const [pourSide,     setPourSide]     = useState<"left" | "right">("left");
   const [isPracticeTrace, setIsPracticeTrace] = useState(false);
+  const [traceSeqIndex,   setTraceSeqIndex]   = useState(0);
+  const [hasTraceStar,    setHasTraceStar]    = useState(false);
+
+  // Refs for trace analytics — no re-render needed
+  const letterStartTimeRef   = useRef<number>(Date.now());
+  const wordAttemptCountsRef = useRef<Record<string, number>>({});
+
   const [wrongTileId,   setWrongTileId]   = useState<string | null>(null);
   const [lockedOut,     setLockedOut]     = useState(false);
   const [audioActive,   setAudioActive]   = useState(false);
@@ -195,6 +219,13 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   const sayCueTimerRef      = useRef<ReturnType<typeof setTimeout>>(undefined);
   const audioStartTimerRef  = useRef<ReturnType<typeof setTimeout>>(undefined);
   const nodeStartTime       = useRef(Date.now());
+
+  // Reset star when word changes
+  useEffect(() => { setHasTraceStar(false); }, [currentWord.word]);
+  // Stamp start time whenever a new letter is shown in the trace sequence
+  useEffect(() => {
+    if (step === "trace-prep") letterStartTimeRef.current = Date.now();
+  }, [step, traceSeqIndex]);
 
   // Derived
   const nextEmptySlot = useMemo(
@@ -401,24 +432,73 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   }, [navigateAfterWord]);
 
   const handleLessonIntroComplete = useCallback(() => {
-    if (isTracePrepWord(currentWordIndex) && traceLetter) {
+    if (isTracePrepWord(currentWordIndex) && traceSequence.length > 0) {
       setIsPracticeTrace(false); // mandatory — no back button
+      setTraceSeqIndex(0);
       setStep("trace-prep");
     } else {
       setStep("build");
     }
-  }, [currentWordIndex, traceLetter]);
+  }, [currentWordIndex, traceSequence.length]);
 
+  // Shared helper — records one letter trace event to analytics.
+  const recordLetterEvent = useCallback((seqIdx: number, completed: boolean, hintUsed: boolean) => {
+    const letter = traceSequence[seqIdx];
+    if (!letter) return;
+    const pos: LetterPosition =
+      seqIdx === 0 ? "first" :
+      seqIdx === traceSequence.length - 1 ? "last" :
+      "vowel";
+    const wordKey = currentWord.word;
+    const attemptNum = (wordAttemptCountsRef.current[wordKey] ?? 0);
+    recordTraceEvent({
+      childId:              null,
+      timestamp:            letterStartTimeRef.current,
+      lessonIndex,
+      difficultyLevel:      lessonIndex,
+      questId:              quest.id,
+      word:                 currentWord.word,
+      letter,
+      letterPosition:       pos,
+      sessionAttemptNumber: attemptNum,
+      completed,
+      completionPct:        completed ? 100 : 0,
+      timeSpentMs:          Date.now() - letterStartTimeRef.current,
+      hintUsed,
+      device:               navigator.platform || "unknown",
+    });
+  }, [traceSequence, currentWord.word, lessonIndex, quest.id]);
+
+  // Exit the entire trace sequence (back button or onSkip from TraceMoment).
   const handleTracePrepComplete = useCallback(() => {
+    recordLetterEvent(traceSeqIndex, false, true);
     setIsPracticeTrace(false);
+    setTraceSeqIndex(0);
     setStep("build");
-  }, []);
+  }, [recordLetterEvent, traceSeqIndex]);
+
+  // Advance to the next letter; award star + exit when all done.
+  const handleTraceStepComplete = useCallback(() => {
+    recordLetterEvent(traceSeqIndex, true, false);
+    const next = traceSeqIndex + 1;
+    if (next < traceSequence.length) {
+      setTraceSeqIndex(next);
+    } else {
+      setHasTraceStar(true);
+      setIsPracticeTrace(false);
+      setTraceSeqIndex(0);
+      setStep("build");
+    }
+  }, [recordLetterEvent, traceSeqIndex, traceSequence.length]);
 
   const handlePracticeBoardClick = useCallback(() => {
-    if (step !== "build" || !traceLetter) return;
+    if (step !== "build" || traceSequence.length === 0) return;
+    const wordKey = currentWord.word;
+    wordAttemptCountsRef.current[wordKey] = (wordAttemptCountsRef.current[wordKey] ?? 0) + 1;
     setIsPracticeTrace(true); // voluntary — show back button
+    setTraceSeqIndex(0);
     setStep("trace-prep");
-  }, [step, traceLetter]);
+  }, [step, traceSequence.length, currentWord.word]);
 
   const handleSayCueDismiss = useCallback(() => {
     setStep("build");
@@ -442,11 +522,27 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
   const profSrc = profState === "celebrate" ? wigglewooCelebrate : wigglewooIdle;
 
+  // ── Canvas scale: keep the 1366×1024 design canvas uniformly fitted to the
+  //    current viewport. The CSS fixed-canvas rule uses var(--potion-scale).
+  const sceneRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const DESIGN_W = 1366;
+    const DESIGN_H = 1024;
+    const update = () => {
+      const s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+      sceneRef.current?.style.setProperty("--potion-scale", s.toFixed(4));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, []);
+
   // =============================================
   // JSX
   // =============================================
   return (
-    <div className="machine-world machine-world--potion">
+    <div ref={sceneRef} className="machine-world machine-world--potion">
       <div className="map-window">
         <div className="game-shell-panel" />
 
@@ -709,11 +805,12 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
       )}
 
       {/* ── Green Teaching Chalkboard — TraceMoment renders on the expanded desk easel during trace-prep ── */}
-      {step === "trace-prep" && traceLetter && (
+      {step === "trace-prep" && traceSequence.length > 0 && (
         <TraceMoment
-          letter={traceLetter}
+          key={`${currentWord.word}-${traceSeqIndex}`}
+          letter={traceSequence[traceSeqIndex] ?? traceSequence[0]}
           caption={`for ${currentWord.word.toUpperCase()}`}
-          onComplete={handleTracePrepComplete}
+          onComplete={handleTraceStepComplete}
           onSkip={handleTracePrepComplete}
         />
       )}
@@ -739,40 +836,22 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
       {/* ── Bookshelf — mounted on top-right wall ── */}
       <div className="pg-bookshelf" aria-hidden="true">
-        <img src="/assets/books-horizontally.png" alt="" className="pg-bookshelf__books" draggable={false} />
-        <div className="pg-bookshelf__plank" />
-        <div className="pg-bookshelf__brackets">
-          <div className="pg-bookshelf__bracket" />
-          <div className="pg-bookshelf__bracket" />
-        </div>
+        <img src="/assets/books-horizontally with shelf.png" alt="" className="pg-bookshelf__books" draggable={false} />
       </div>
 
       {/* ── Vertical books — bottom-right corner ── */}
       <img src="/assets/books-vertically.png" alt="" className="pg-books--vertical" draggable={false} />
 
       {/* ── Potion shelf — mounted on left wall ── */}
-      <div className="pg-potion-shelf" aria-hidden="true">
-        <div className="pg-potion-shelf__row">
-          <img src="/assets/red-potion.png"    alt="" className="pg-shelf-potion" draggable={false} />
-          <img src="/assets/blue-potion.png"   alt="" className="pg-shelf-potion" draggable={false} />
-          <img src="/assets/purple-potion.png" alt="" className="pg-shelf-potion" draggable={false} />
-          <img src="/assets/gold-potion.png"   alt="" className="pg-shelf-potion" draggable={false} />
-          <img src="/assets/green-potion.png"  alt="" className="pg-shelf-potion" draggable={false} />
-        </div>
-        <div className="pg-potion-shelf__plank" />
-        <div className="pg-potion-shelf__brackets">
-          <div className="pg-potion-shelf__bracket" />
-          <div className="pg-potion-shelf__bracket" />
-        </div>
-      </div>
+      <img src="/assets/poison-bottles-w-shelf.png" alt="" className="pg-potion-shelf" draggable={false} aria-hidden={true} />
 
       {/* ── Green Teaching Chalkboard — desk easel; clickable for voluntary letter practice ── */}
       <div
         className={`pg-green-chalkboard${step === "trace-prep" ? " pg-green-chalkboard--active" : ""}`}
         onClick={handlePracticeBoardClick}
-        role={traceLetter && step === "build" ? "button" : undefined}
-        aria-label={traceLetter && step === "build" ? "Practice tracing letters" : undefined}
-        tabIndex={traceLetter && step === "build" ? 0 : -1}
+        role={traceSequence.length > 0 && step === "build" ? "button" : undefined}
+        aria-label={traceSequence.length > 0 && step === "build" ? "Practice tracing letters" : undefined}
+        tabIndex={traceSequence.length > 0 && step === "build" ? 0 : -1}
       >
         <img
           src="/assets/green-chalk-board.png"
@@ -780,10 +859,13 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
           className="pg-green-chalkboard__img"
           draggable={false}
         />
-        {traceLetter && step !== "trace-prep" && (
+        {traceSequence.length > 0 && step !== "trace-prep" && (
           <span className="pg-green-chalkboard__cta" aria-hidden="true">
-            Trace the letter
+            Trace<br />the<br />letter
           </span>
+        )}
+        {hasTraceStar && (
+          <span className="pg-green-chalkboard__star" aria-hidden="true">★</span>
         )}
       </div>
 

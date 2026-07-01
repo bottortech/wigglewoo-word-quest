@@ -777,8 +777,10 @@
 }
 /* Logo enlarged in potion lab context */
 .machine-world--potion .title-badge {
-  width: 220px;
-  max-width: 220px;
+  width: 320px;
+  max-width: 320px;
+  top: 0.5%;
+  left: -3.5%;
 }
 
 /* Remove vignette + blueprint texture — they were designed for the old panel */
@@ -791,8 +793,8 @@
   min-height: 0;
   height: auto;
   background: transparent;
-  /* Tighter internal padding so all four gameplay zones fit */
-  padding: clamp(4px, 0.7vh, 8px) clamp(6px, 1.5vw, 12px) clamp(4px, 0.7vh, 8px);
+  padding: 0 clamp(6px, 1.5vw, 12px) clamp(4px, 0.7vh, 8px);
+  gap: 0;
 }
 /* Remove ambient glow overlay (was tuned for dark purple bg) */
 .machine-world--potion .pg-shell::before { display: none; }
@@ -814,7 +816,7 @@
   width: clamp(100px, 17.5%, 200px);
   height: auto;
   pointer-events: none;
-  z-index: 6;
+  z-index: 12;
 }
 
 /* ── Hide machines, pipes, and gears — potion screen uses the open lab scene ── */
@@ -834,10 +836,24 @@
   width: clamp(46px, 7vw, 84px);
 }
 
+/* HUD stays readable above the gameplay group when margin-top pulls it up */
+.machine-world--potion .pg-top-bar {
+  position: relative;
+  z-index: 2;
+}
+.machine-world--potion .pg-progress {
+  font-size: 17px;
+  margin-left: 10px;
+}
+.machine-world--potion .pg-speaker-btn {
+  margin-right: 10px;
+}
+
 /* ── Upper row — vertical stack: image prominent on top, slots below ── */
 .pg-upper-row {
   flex-direction: column;
-  gap: clamp(8px, 1.4vh, 14px);
+  gap: clamp(24px, 3.2vh, 34px);
+  margin-top: -25px;
 }
 
 /* ── Picture card — larger, more prominent card feel ── */
@@ -851,10 +867,50 @@
     0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-/* ── Answer slots — larger hit targets ── */
+/* ── Answer slots — larger hit targets + tactile depth ── */
 .pg-slot {
   width: clamp(52px, 9.5vw, 72px);
   height: clamp(52px, 9.5vw, 72px);
+  /* Gloss highlight fades out in the lower 55% — center stays readable */
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.03) 35%,
+      transparent               55%
+    ),
+    rgba(8, 4, 22, 0.82);
+  box-shadow:
+    inset 0  1px 1px rgba(255, 255, 255, 0.16), /* top bevel highlight  */
+    inset 0 -2px 3px rgba(0,   0,   0,   0.45), /* bottom edge shadow   */
+    inset 0  4px 10px rgba(0,  0,   0,   0.55), /* deep inner shadow    */
+    0 2px 5px rgba(0, 0, 0, 0.55);              /* outer drop shadow    */
+}
+
+/* Active slot: keep bevel structure, swap colour accent */
+.machine-world--potion .pg-slot--active {
+  box-shadow:
+    inset 0  1px 1px rgba(255, 255, 255, 0.16),
+    inset 0 -2px 3px rgba(0,   0,   0,   0.45),
+    inset 0  4px 10px rgba(0,  0,   0,   0.50),
+    0 0 18px rgba(255, 215, 0, 0.40),
+    0 2px 5px rgba(0,   0,   0,   0.55);
+}
+
+/* Filled slot: green tint bevel */
+.machine-world--potion .pg-slot--filled {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.07) 0%,
+      rgba(255, 255, 255, 0.02) 35%,
+      transparent               55%
+    ),
+    rgba(10, 40, 28, 0.92);
+  box-shadow:
+    inset 0  1px 1px rgba(255, 255, 255, 0.14),
+    inset 0 -2px 3px rgba(0,   0,   0,   0.40),
+    inset 0  4px 8px  rgba(0,  0,   0,   0.45),
+    0 0 10px rgba(80, 200, 120, 0.22),
+    0 2px 5px rgba(0, 0,   0,   0.45);
 }
 
 .pg-slot__letter {
@@ -866,6 +922,7 @@
    so the interaction path feels: slots → (small beaker) → bottles. */
 .pg-beaker-zone {
   flex: 0 0 auto;
+  margin-top: 25px;
 }
 
 .pg-beaker-rim {
@@ -886,6 +943,53 @@
   border-radius: 36px;
   overflow: hidden;
   z-index: 20;
+}
+
+/* Chalk dust: faint light haze at all four edges + corner smudge patches.
+   z-index 0 keeps it below pg-shell children (z-index 1). */
+.machine-world--potion .pg-overlay-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    /* Edge haze — top / bottom / left / right */
+    radial-gradient(ellipse 90% 42% at 50% 0%,   rgba(255,255,255,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 90% 42% at 50% 100%, rgba(255,255,255,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 32% 90% at 0%   50%, rgba(255,255,255,0.05) 0%, transparent 65%),
+    radial-gradient(ellipse 32% 90% at 100% 50%, rgba(255,255,255,0.05) 0%, transparent 65%),
+    /* Corner smudge patches */
+    radial-gradient(ellipse 26% 20% at  3%  6%,  rgba(255,255,255,0.06) 0%, transparent 100%),
+    radial-gradient(ellipse 20% 17% at 97%  5%,  rgba(255,255,255,0.05) 0%, transparent 100%),
+    radial-gradient(ellipse 24% 19% at  2% 95%,  rgba(255,255,255,0.05) 0%, transparent 100%),
+    radial-gradient(ellipse 18% 15% at 98% 96%,  rgba(255,255,255,0.06) 0%, transparent 100%);
+}
+
+/* Chalk wipe streaks: near-horizontal lines visible only at the perimeter.
+   The radial mask keeps the center 35% of the board completely clear. */
+.machine-world--potion .pg-overlay-zone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    -1deg,
+    transparent          0px,
+    transparent          13px,
+    rgba(255,255,255,0.04) 13px,
+    rgba(255,255,255,0.04) 14.5px,
+    transparent          14.5px,
+    transparent          30px,
+    rgba(255,255,255,0.025) 30px,
+    rgba(255,255,255,0.025) 31px,
+    transparent          31px
+  );
+  -webkit-mask-image: radial-gradient(ellipse 62% 58% at 50% 50%, transparent 35%, black 85%);
+  mask-image:         radial-gradient(ellipse 62% 58% at 50% 50%, transparent 35%, black 85%);
 }
 
 /* ── Green Teaching Chalkboard — TraceMoment during trace-prep ──
@@ -1137,6 +1241,12 @@
    Right column budget (slots 44 + beaker 62 + bottles 78 + gaps 12 = 196px)
    Panel height: ~322px (top:10%, bottom:8%) → 126px spare → centered ✓
    ============================================================ */
+
+/* iPad and larger — keep image card below the HUD bar */
+.machine-world--potion .pg-upper-row {
+  margin-top: 0;
+}
+
 @media (max-height: 500px) {
 
   /* ── Restore original map-window inset (transparency handled in GAMEPLAY-FIRST block) ── */
@@ -1266,6 +1376,21 @@
     transform: none;
   }
 
+  /* ── Logo: moderate shrink so HUD elements have breathing room ── */
+  .machine-world--potion .title-badge {
+    width: 140px;
+    max-width: 140px;
+  }
+
+  /* ── HUD row: offset to clear the logo's right edge regardless of viewport width ──
+     Logo sits at left:2% and is 140px wide → right edge at (2vw + 140px).
+     pg-top-bar starts at map-window left (12vw) + pg-shell padding (10px).
+     Needed clearance = (2vw + 140px) − (12vw + 10px) = 130px − 10vw.
+     max(0px, ...) prevents negative padding on very wide screens. */
+  .machine-world--potion .pg-top-bar {
+    padding-left: max(0px, calc(130px - 10vw));
+  }
+
 }
 
 /* ── Lesson objective card — compact layout for the Blue Gameplay Chalkboard frame ──
@@ -1332,10 +1457,10 @@
   position: absolute;
   right: 1.5%;
   bottom: 12%;
-  width: clamp(70px, 13%, 160px);
+  width: clamp(77px, 14%, 176px);
   height: auto;
   pointer-events: none;
-  z-index: 4;
+  z-index: 12;
   transform: rotate(-4deg);
   transform-origin: bottom left;
 }
@@ -1346,10 +1471,10 @@
    Wood tones matched to the classroom desk (#c8902e / #9b6b1a / #7a5010). */
 .pg-bookshelf {
   position: absolute;
-  top: 6%;
-  right: 0;
-  width: clamp(110px, 17%, 210px);
-  z-index: 4;
+  top: 18%;
+  right: -1.5%;
+  width: clamp(115px, 17%, 228px);
+  z-index: 12;
   pointer-events: none;
   /* Open flex column: books → plank → brackets, no background fill */
   display: flex;
@@ -1359,12 +1484,9 @@
 
 /* Books sit directly against the wall background — slight settle tilt */
 .pg-bookshelf__books {
-  width: 90%;
+  width: 100%;
   height: auto;
   display: block;
-  align-self: flex-end;
-  transform: rotate(2deg);
-  transform-origin: bottom center;
   filter: drop-shadow(-3px 4px 8px rgba(0, 0, 0, 0.45));
 }
 
@@ -1407,22 +1529,15 @@
    POTION SHELF — left-wall mirror of the book shelf
    ══════════════════════════════════════════════════════════ */
 
-/* Container: flush against left edge, starts below the logo */
+/* Potion shelf — single combined image (bottles + shelf baked in) */
 .pg-potion-shelf {
   position: absolute;
   top: 18%;
-  left: 0;
-  width: clamp(100px, 15%, 185px);
-  z-index: 4;
+  left: -1.5%;
+  width: clamp(115px, 17%, 228px);
+  height: auto;
+  z-index: 12;
   pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  /* Right side panel + ambient wall shadow (mirror of bookshelf's left-side shadow) */
-  box-shadow:
-    8px 0 0 #3a2208,
-    16px 0 28px rgba(0, 0, 0, 0.5),
-    inset -2px 0 0 rgba(255, 200, 100, 0.1);
 }
 
 /* Row of potion bottles sitting upright on the shelf — centered, tightly grouped */
@@ -1486,7 +1601,7 @@
   position: absolute;
   height: clamp(54px, 9vh, 88px);
   width: auto;
-  z-index: 4;
+  z-index: 12;
   pointer-events: none;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45));
 }
@@ -1513,8 +1628,9 @@
   transition:
     transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
     opacity   0.25s ease;
-  z-index: 5;
+  z-index: 15;
   cursor: pointer;
+  outline: none;
 }
 
 .pg-green-chalkboard__img {
@@ -1525,7 +1641,7 @@
   transition: filter 0.2s ease;
 }
 
-/* Chalk-white label — positioned in the center of the green slate area */
+/* Chalk-white label — stacked vertically in the center of the green slate area */
 .pg-green-chalkboard__cta {
   position: absolute;
   top: 44%;
@@ -1535,15 +1651,35 @@
   text-align: center;
   color: rgba(238, 232, 212, 0.82);
   font-family: "Nunito", Arial, sans-serif;
-  font-size: clamp(10px, 1.8vmin, 15px);
+  font-size: clamp(11px, 2vmin, 17px);
   font-weight: 800;
   letter-spacing: 0.05em;
-  line-height: 1.35;
+  line-height: 1.55;
   text-shadow:
     0 0 4px rgba(255, 255, 255, 0.25),
     0 1px 2px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   user-select: none;
+}
+
+/* Chalk star — awarded when all 3 letters are traced successfully */
+.pg-green-chalkboard__star {
+  position: absolute;
+  top: 8%;
+  right: 17%;
+  font-size: clamp(13px, 2.2vmin, 18px);
+  color: rgba(255, 240, 90, 0.90);
+  text-shadow:
+    0 0 6px rgba(255, 220, 0, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  user-select: none;
+  animation: trace-star-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes trace-star-pop {
+  from { transform: scale(0) rotate(-30deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
 }
 
 /* Hover: straighten slightly and lift — signals it's tappable */

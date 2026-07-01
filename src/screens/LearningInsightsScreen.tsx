@@ -9,6 +9,8 @@
 import React, { useMemo, useState, useCallback } from "react";
 import { getOverallSummary, resetAnalytics } from "../game/learningAnalytics";
 import type { OverallSummary, VowelSummary, MasteryLevel } from "../game/learningAnalytics";
+import { getLetterTraceSummaries, resetTraceAnalytics } from "../game/traceAnalytics";
+import type { LetterTraceSummary } from "../game/traceAnalytics";
 import { loadSettings, updateSetting, applySettingsToDOM } from "../game/settings";
 import type { AppSettings } from "../game/settings";
 import { backgroundMusic } from "../audio/BackgroundMusic";
@@ -35,9 +37,11 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
 
   const summary: OverallSummary = useMemo(() => getOverallSummary(), [resetKey]);
+  const traceSummaries: LetterTraceSummary[] = useMemo(() => getLetterTraceSummaries(), [resetKey]);
 
   const handleReset = () => {
     resetAnalytics();
+    resetTraceAnalytics();
     setResetKey((k) => k + 1);
     setShowResetConfirm(false);
   };
@@ -132,6 +136,28 @@ const LearningInsightsScreen: React.FC<LearningInsightsScreenProps> = ({ onClose
                 </span>
               ))}
             </div>
+
+            {/* ── Letter Practice (handwriting trace) ── */}
+            {traceSummaries.length > 0 && (
+              <div className="insights-section">
+                <h3 className="insights-section__title">Letter Practice</h3>
+                <p className="insights-section__sub">
+                  Letters your child has traced — sorted by most practiced
+                </p>
+                <div className="insights-letter-grid">
+                  {traceSummaries.map((ls) => (
+                    <div key={ls.letter} className="insights-letter-card">
+                      <span className="insights-letter-card__glyph">{ls.letter.toUpperCase()}</span>
+                      <span className="insights-letter-card__rate"
+                        style={{ color: ls.successRate >= 80 ? "#38b764" : ls.successRate >= 50 ? "#FFA726" : "#EF5350" }}>
+                        {ls.successRate}%
+                      </span>
+                      <span className="insights-letter-card__count">{ls.totalAttempts}×</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Per-vowel breakdown */}
             <div className="insights-vowel-list">

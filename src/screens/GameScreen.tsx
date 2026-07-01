@@ -443,6 +443,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
   // =============================================
   return (
     <div className="machine-world">
+      <div className="machine-canvas">
       {/* Blue rounded frame */}
       <div className="map-window">
         <div className="game-shell-panel" />
@@ -696,6 +697,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
       <span className="machine-bolt machine-bolt--tr" />
       <span className="machine-bolt machine-bolt--bl" />
       <span className="machine-bolt machine-bolt--br" />
+      </div>{/* machine-canvas */}
     </div>
   );
 };

@@ -342,7 +342,7 @@ const TrophyRoomScreen: React.FC<TrophyRoomScreenProps> = ({
   }, [cards, flippedIds, isChecking]);
 
   return (
-    <div 
+    <div
       className="trophy-room"
       style={{ backgroundImage: `url(${trophyRoomBg})` }}
     >

@@ -34,17 +34,21 @@ const DECO_ITEMS: DecoItem[] = [
   { src: "/assets/land-fill-5.png", x: 48, y: 35, w: 32 },
   // Bottom-right (greenhouse area)
   { src: "/assets/land-fill-6.png", x: 58, y: 55, w: 36 },
+  // Center-left bridge land — connects upper-left cluster to center (nodes 4, 5, 9)
+  { src: "/assets/land-fill-3.png", x: 18, y: 42, w: 38 },
+  // Right-side bridge — connects industrial tech city to glass dome
+  { src: "/assets/land-fill-2.png", x: 64, y: 24, w: 28 },
   // Bridge — connecting village to land above it
-  { src: "/assets/bridge.png", x: 9, y: 70, w: 18, z: 6, extra: "island-layer__item--bridge-left" },
+  { src: "/assets/bridge.png", x: 43, y: 58, w: 26, z: 6, extra: "island-layer__item--bridge-left" },
   // Bridge — connecting center to right
   { src: "/assets/bridge.png", x: 46, y: 25, w: 20, z: 6, extra: "island-layer__item--bridge-right" },
   // Vehicles
-  { src: "/assets/land-vehicle-1.png", x: 30, y: 52, w: 9 },
-  { src: "/assets/land-vehicle-2.png", x: 72, y: 48, w: 7 },
+  { src: "/assets/land-vehicle-1.png", x: 30, y: 52, w: 10.89 },
+  { src: "/assets/land-vehicle-2.png", x: 72, y: 46, w: 8.94 },
   // Submarine — left side in the water
-  { src: "/assets/submarine.png", x: 28, y: 72, w: 11, extra: "island-layer__item--submarine" },
+  { src: "/assets/submarine.png", x: 45, y: 74, w: 11, extra: "island-layer__item--submarine" },
   // Shipwreck — in the water between nodes 6 and 7
-  { src: "/assets/shipwreck.png", x: 55, y: 68, w: 14, extra: "island-layer__item--shipwreck" },
+  { src: "/assets/shipwreck.png", x: 55, y: 71, w: 14, z: 7, extra: "island-layer__item--shipwreck" },
 ];
 
 // ---- Explorable landmarks ----

@@ -67,10 +67,22 @@
   background-image: url("../assets/game-play-background.png");
 }
 
-/* Potion game screen — classroom/lab background */
+/* Potion game screen — classroom/lab background.
+   Always fills the full stage (overrides base 3:2 contain behavior) so no
+   colour gap appears at the bottom on iPad Pro landscape (4:3 viewport).
+   background-size:cover scales the image proportionally; no distortion. */
 .machine-world--potion {
   background-color: #8b7355;
   background-image: url("/assets/new-gameplay-screen-background.png");
+  background-size: cover;
+  background-position: center center;
+  /* Fill full stage at every viewport size */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: unset;
 }
 
 /* ==========================================
@@ -291,10 +303,83 @@
   }
 }
 
+/* ── machine-canvas: inner 3:2 content area ──────────────────────────────────
+   Sits directly inside .machine-world.  On normal screens it's a transparent
+   passthrough (same dimensions as machine-world).  On iPad Pro landscape
+   (max-aspect-ratio: 3/2) machine-world expands to fill the viewport for the
+   background while machine-canvas preserves the original 3:2 layout so all
+   percentage positions stay identical to before. */
+.machine-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── iPad Pro landscape (wider than 1024px but aspect ratio ≤ 3:2) ──────────
+   On a 4:3 viewport (1366×1024) the base 3:2 box is only 910px tall, leaving
+   a 114px gap at the bottom.  Separate the background layer (machine-world,
+   full viewport) from the content layer (machine-canvas, 3:2). */
+@media (min-width: 1025px) and (max-aspect-ratio: 3/2) {
+  /* Background fills the full viewport */
+  .machine-world {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: unset;
+    height: 100%;
+    max-height: none;
+    background-size: 100% 100%;
+  }
+
+  /* Content stays at the original 3:2 ratio — positions/sizes unchanged */
+  .machine-canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    max-height: 100%;
+  }
+}
+
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   .machine-world::before,
   .machine-world::after {
     animation: none;
   }
+}
+
+/* ── Potion screen: fixed 1366×1024 design canvas + uniform scale ────────────
+   All room elements, map-window, overlays, and the background art are sized as
+   percentages of this fixed canvas — producing exactly the iPad Pro master layout
+   on every viewport via a single CSS scale transform.
+
+   Selector specificity is (0,2,0) — beats every generic .machine-world rule
+   above (0,1,0) so media-query overrides (inset:0, height:100% etc.) cannot
+   clobber the canvas dimensions.
+
+   --potion-scale is written by PotionGameScreen's ResizeObserver:
+     min(viewport_w / 1366, viewport_h / 1024)
+   On iPad Pro 1366×1024 this evaluates to exactly 1 — layout unchanged. */
+.machine-world.machine-world--potion {
+  position: absolute;
+  width: 1366px;
+  height: 1024px;
+  inset: unset;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(var(--potion-scale, 1));
+  transform-origin: center center;
+  max-height: none;
+  aspect-ratio: unset;
+}
+
+/* Fill the full viewport behind the scaled canvas with the same lab background
+   image so no solid bars appear on wider screens. The fixed canvas sits on top;
+   on iPad Pro (scale = 1) the canvas covers the stage entirely so this is
+   invisible — no visual change to the iPad layout. */
+.quest-stage:has(.machine-world--potion) {
+  background-color: #8b7355;
+  background-image: url("/assets/new-gameplay-screen-background.png");
+  background-size: cover;
+  background-position: center center;
 }
