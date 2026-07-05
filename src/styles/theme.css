@@ -376,8 +376,9 @@
 /* Fill the full viewport behind the scaled canvas with the same lab background
    image so no solid bars appear on wider screens. The fixed canvas sits on top;
    on iPad Pro (scale = 1) the canvas covers the stage entirely so this is
-   invisible — no visual change to the iPad layout. */
-.quest-stage:has(.machine-world--potion) {
+   invisible — no visual change to the iPad layout.
+   Target: .stage-wrapper (the actual outermost ancestor in DOM — no .quest-stage is rendered). */
+.stage-wrapper:has(.machine-world--potion) {
   background-color: #8b7355;
   background-image: url("/assets/new-gameplay-screen-background.png");
   background-size: cover;
