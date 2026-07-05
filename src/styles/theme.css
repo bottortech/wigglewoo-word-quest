@@ -348,21 +348,23 @@
   }
 }
 
-/* ── Potion screen: fixed 1366×1024 design canvas + uniform scale ────────────
-   All room elements, map-window, overlays, and the background art are sized as
-   percentages of this fixed canvas — producing exactly the iPad Pro master layout
-   on every viewport via a single CSS scale transform.
+/* ── Potion screen: one coordinate system, height-based scale ────────────────
+   Canvas height is always 1024px; PotionGameScreen's ResizeObserver sets:
+     --potion-scale = viewport_h / 1024      (fill height exactly)
+     style.width    = viewport_w / scale px  (fill width exactly, no bars)
 
-   Selector specificity is (0,2,0) — beats every generic .machine-world rule
-   above (0,1,0) so media-query overrides (inset:0, height:100% etc.) cannot
-   clobber the canvas dimensions.
+   The canvas always covers the full viewport (no gaps, no blue bars).
+   background-size:cover on the canvas scales the lab image by the same factor
+   as percentage-positioned assets — they stay locked to each other at all sizes.
 
-   --potion-scale is written by PotionGameScreen's ResizeObserver:
-     min(viewport_w / 1366, viewport_h / 1024)
-   On iPad Pro 1366×1024 this evaluates to exactly 1 — layout unchanged. */
+   iPad (1366×1024): s=1, canvasW=1366px — unchanged master layout.
+   Desktop (1440×900): s≈0.879, canvasW≈1638px — more lab shown horizontally.
+   iPhone landscape (852×393): s≈0.384, canvasW≈2219px — scene cropped at sides.
+
+   Specificity (0,2,0) overrides generic .machine-world rules (0,1,0). */
 .machine-world.machine-world--potion {
   position: absolute;
-  width: 1366px;
+  width: 1366px; /* JS overrides via inline style: viewport_w / --potion-scale */
   height: 1024px;
   inset: unset;
   top: 50%;
@@ -373,14 +375,8 @@
   aspect-ratio: unset;
 }
 
-/* Fill the full viewport behind the scaled canvas with the same lab background
-   image so no solid bars appear on wider screens. The fixed canvas sits on top;
-   on iPad Pro (scale = 1) the canvas covers the stage entirely so this is
-   invisible — no visual change to the iPad layout.
-   Target: .stage-wrapper (the actual outermost ancestor in DOM — no .quest-stage is rendered). */
+/* Warm fallback behind the canvas — canvas always fills the viewport so this
+   is only visible during first paint or sub-pixel rounding. */
 .stage-wrapper:has(.machine-world--potion) {
   background-color: #8b7355;
-  background-image: url("/assets/new-gameplay-screen-background.png");
-  background-size: cover;
-  background-position: center center;
 }
