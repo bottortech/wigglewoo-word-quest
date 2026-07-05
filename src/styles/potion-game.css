@@ -768,18 +768,6 @@
 
 /* ── Design tokens — iPad / desktop defaults ── */
 .machine-world--potion {
-  /* ── Scene-level tokens — tune these per device, never per asset ──────────
-     --scene-scale:   multiplier on the JS contain-scale (1 = unchanged).
-                      Raise to zoom in (crops scene edges), lower to zoom out (wider bars).
-     --scene-x/y:     translate offset in CSS px, applied to the canvas center.
-                      Negative --scene-y shifts the scene upward (shows more gear at top).
-     --content-scale: scale applied to .pg-upper-row gameplay area (image card, slots, beaker,
-                      bottles). Does not affect professor or overlay screens. 1 = no change. */
-  --scene-scale:    1;
-  --scene-x:        0px;
-  --scene-y:        0px;
-  --content-scale:  1;
-
   /* Professor */
   --pg-prof-w:      clamp(92px, 14vw, 168px);
   --pg-prof-bottom: 2%;
@@ -840,12 +828,6 @@
   background: transparent;
   padding: 0 clamp(6px, 1.5vw, 12px) clamp(4px, 0.7vh, 8px);
   gap: 0;
-}
-/* Content-scale: scales gameplay area (lesson card, slots, beaker, bottles).
-   Professor and overlay screens are unaffected — they are outside this element. */
-.machine-world--potion .pg-upper-row {
-  transform: scale(var(--content-scale, 1));
-  transform-origin: center top;
 }
 /* Remove ambient glow overlay (was tuned for dark purple bg) */
 .machine-world--potion .pg-shell::before { display: none; }
@@ -1244,27 +1226,6 @@
 .pg-dev-swap-btn:active { transform: scale(0.96); }
 
 /* ============================================================
-   DESKTOP — wider than 4:3, e.g. 1440×900 (16:10), 1920×1080 (16:9)
-   iPad Pro landscape (1366×1024) is exactly 4:3 — it does NOT match
-   min-aspect-ratio: 16/10, so the default tokens apply there unchanged.
-   ============================================================ */
-
-@media (min-width: 1200px) and (min-aspect-ratio: 16/10) {
-  .machine-world--potion {
-    /* ── Scene tokens for desktop — tune these, not individual assets ── */
-    /* Contain scale on 1440×900 ≈ 0.879. Full 1366×1024 scene is visible;
-       bars (~119px each side) fill with warm lab-wall color (#8b7355).
-       --scene-scale: raise above 1 to zoom in (reduces bars, crops scene edges).
-       --scene-y: negative values shift scene up (shows more top gear area).
-       --content-scale: reduce below 1 to shrink lesson card / slots / beaker. */
-    --scene-scale:   1;
-    --scene-x:       0px;
-    --scene-y:       0px;
-    --content-scale: 1;
-  }
-}
-
-/* ============================================================
    COMPACT MOBILE — max-height: 500px (iPhone landscape, 852×393)
    Two-column layout: picture LEFT, gameplay stack RIGHT.
    This uses the available horizontal space rather than stacking
@@ -1279,15 +1240,6 @@
 
   /* ── Phone landscape tokens — override design tokens for compact layout ── */
   .machine-world--potion {
-    /* ── Scene tokens for phone landscape ── */
-    /* Contain scale on 852×393 ≈ 0.384. Full scene visible; bars (~164px each side).
-       --scene-scale: raise to reduce bars (will crop scene top/bottom slightly).
-       --content-scale: reduce to fit lesson card / slots comfortably. */
-    --scene-scale:   1;
-    --scene-x:       0px;
-    --scene-y:       0px;
-    --content-scale: 1;
-
     --pg-prof-w:      88px;
     --pg-prof-bottom: 3%;
     --pg-prof-left:   auto;
@@ -1309,6 +1261,14 @@
     --pg-bottle-fs:   20px;
   }
 
+
+  /* ── Restore original map-window inset (transparency handled in GAMEPLAY-FIRST block) ── */
+  .machine-world--potion .map-window {
+    top: 10%;
+    bottom: 8%;
+    left: 12%;
+    right: 12%;
+  }
 
   /* ── Shell: minimal overhead, start from top ── */
   .pg-shell {
