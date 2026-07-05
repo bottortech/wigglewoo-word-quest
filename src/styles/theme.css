@@ -348,35 +348,44 @@
   }
 }
 
-/* ── Potion screen: one coordinate system, height-based scale ────────────────
-   Canvas height is always 1024px; PotionGameScreen's ResizeObserver sets:
-     --potion-scale = viewport_h / 1024      (fill height exactly)
-     style.width    = viewport_w / scale px  (fill width exactly, no bars)
+/* ── Potion screen: token-based scene system ─────────────────────────────────
+   The 1366×1024 design canvas is the single source of truth.
+   JS (PotionGameScreen) computes the base contain-scale and writes to :root:
+     --potion-scale  = min(vw/1366, vh/1024)  — fits full scene in viewport
+     --potion-bg-size = canvas visual W×H     — stage-wrapper background match
+     --potion-bg-pos  = calc(50%+x) …        — pans background with scene
 
-   The canvas always covers the full viewport (no gaps, no blue bars).
-   background-size:cover on the canvas scales the lab image by the same factor
-   as percentage-positioned assets — they stay locked to each other at all sizes.
+   CSS media queries in potion-game.css set device-level art tokens on
+   .machine-world--potion (inherited by this rule via the cascade):
+     --scene-scale   ×  --potion-scale  = actual transform scale
+     --scene-x / --scene-y              = translate offset (pan the scene)
+     --content-scale                    = applied to pg-upper-row gameplay content
 
-   iPad (1366×1024): s=1, canvasW=1366px — unchanged master layout.
-   Desktop (1440×900): s≈0.879, canvasW≈1638px — more lab shown horizontally.
-   iPhone landscape (852×393): s≈0.384, canvasW≈2219px — scene cropped at sides.
-
-   Specificity (0,2,0) overrides generic .machine-world rules (0,1,0). */
+   Specificity (0,2,0) overrides generic .machine-world rules (0,1,0).
+   iPad (1366×1024): s=1, no pan — master layout unchanged. */
 .machine-world.machine-world--potion {
   position: absolute;
-  width: 1366px; /* JS overrides via inline style: viewport_w / --potion-scale */
+  width: 1366px;
   height: 1024px;
   inset: unset;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(var(--potion-scale, 1));
+  transform:
+    translate(calc(-50% + var(--scene-x, 0px)), calc(-50% + var(--scene-y, 0px)))
+    scale(calc(var(--potion-scale, 1) * var(--scene-scale, 1)));
   transform-origin: center center;
   max-height: none;
   aspect-ratio: unset;
 }
 
-/* Warm fallback behind the canvas — canvas always fills the viewport so this
-   is only visible during first paint or sub-pixel rounding. */
+/* Stage-wrapper background: same lab image at same visual scale as canvas.
+   JS writes --potion-bg-size / --potion-bg-pos to :root so the image aligns
+   seamlessly at the canvas boundary. Beyond the image's natural extent the
+   background-color (#8b7355) fills — warm lab walls, never blue. */
 .stage-wrapper:has(.machine-world--potion) {
   background-color: #8b7355;
+  background-image: url("/assets/new-gameplay-screen-background.png");
+  background-size: var(--potion-bg-size, 1366px 1024px);
+  background-position: var(--potion-bg-pos, center center);
+  background-repeat: no-repeat;
 }
