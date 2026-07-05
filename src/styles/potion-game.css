@@ -109,8 +109,8 @@
 }
 
 .pg-slot {
-  width: clamp(44px, 6.5vw, 58px);
-  height: clamp(44px, 6.5vw, 58px);
+  width: var(--pg-slot-sz, clamp(44px, 6.5vw, 58px));
+  height: var(--pg-slot-sz, clamp(44px, 6.5vw, 58px));
   border: 2.5px solid rgba(180, 130, 50, 0.45);
   border-radius: 10px;
   background: rgba(8, 4, 22, 0.82);
@@ -148,7 +148,7 @@
 }
 
 .pg-slot__letter {
-  font-size: clamp(22px, 3.8vw, 34px);
+  font-size: var(--pg-slot-fs, clamp(22px, 3.8vw, 34px));
   font-weight: 900;
   color: #7FFFC4;
   text-shadow:
@@ -188,8 +188,8 @@
 
 /* Flask rim — wider rectangle at top */
 .pg-beaker-rim {
-  width: clamp(100px, 16vw, 130px);
-  height: 10px;
+  width: var(--pg-rim-w, clamp(100px, 16vw, 130px));
+  height: var(--pg-rim-h, 10px);
   background: linear-gradient(180deg, rgba(140, 190, 255, 0.4) 0%, rgba(100, 160, 220, 0.2) 100%);
   border: 2px solid rgba(160, 210, 255, 0.45);
   border-bottom: none;
@@ -199,8 +199,8 @@
 
 /* ── Beaker ── */
 .pg-beaker {
-  width: clamp(88px, 13.5vw, 115px);
-  height: clamp(110px, 20vh, 155px);
+  width: var(--pg-beaker-w, clamp(88px, 13.5vw, 115px));
+  height: var(--pg-beaker-h, clamp(110px, 20vh, 155px));
   border: 2.5px solid rgba(160, 210, 255, 0.38);
   border-radius: 5px 5px 34px 34px;
   background: rgba(10, 5, 28, 0.62);
@@ -307,8 +307,8 @@
 
 /* ── Beaker stand ── */
 .pg-beaker-stand {
-  width: clamp(78px, 12vw, 102px);
-  height: 12px;
+  width: var(--pg-stand-w, clamp(78px, 12vw, 102px));
+  height: var(--pg-stand-h, 12px);
   background: linear-gradient(180deg, rgba(100, 80, 38, 0.85) 0%, rgba(68, 52, 22, 0.95) 100%);
   border-radius: 0 0 5px 5px;
   position: relative;
@@ -429,8 +429,8 @@
 
 /* Cork */
 .pg-bottle__cork {
-  width: 15px;
-  height: 9px;
+  width: var(--pg-cork-w, 15px);
+  height: var(--pg-cork-h, 9px);
   background: linear-gradient(180deg, #C8960E 0%, #8B6612 100%);
   border-radius: 3px 3px 0 0;
   border: 1px solid rgba(0,0,0,0.32);
@@ -440,8 +440,8 @@
 
 /* Neck */
 .pg-bottle__neck {
-  width: 15px;
-  height: clamp(13px, 2.2vh, 17px);
+  width: var(--pg-neck-w, 15px);
+  height: var(--pg-neck-h, clamp(13px, 2.2vh, 17px));
   background: var(--bc, #7C3AED);
   opacity: 0.72;
   border-left:  1.5px solid rgba(255,255,255,0.3);
@@ -451,8 +451,8 @@
 
 /* Body */
 .pg-bottle__body {
-  width:  clamp(42px, 6.5vw, 54px);
-  height: clamp(58px, 10.5vh, 78px);
+  width:  var(--pg-bottle-w, clamp(42px, 6.5vw, 54px));
+  height: var(--pg-bottle-h, clamp(58px, 10.5vh, 78px));
   border-radius: 5px 5px 20px 20px;
   border: 2px solid rgba(255,255,255,0.28);
   background: linear-gradient(
@@ -521,7 +521,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: clamp(18px, 2.9vw, 26px);
+  font-size: var(--pg-bottle-fs, clamp(18px, 2.9vw, 26px));
   font-weight: 900;
   color: #fff;
   text-shadow:
@@ -698,9 +698,10 @@
 /* ── Professor WiggleWoo ── */
 .pg-professor {
   position: absolute !important; /* overrides .pg-shell > * { position: relative } */
-  bottom: 2%;
-  left: 1.5%;
-  width: clamp(144px, 26vw, 260px);
+  bottom: var(--pg-prof-bottom, 2%);
+  left:   var(--pg-prof-left, 1.5%);
+  right:  var(--pg-prof-right, auto);
+  width:  var(--pg-prof-w, clamp(92px, 14vw, 168px));
   z-index: 8;
   pointer-events: none;
   user-select: none;
@@ -764,6 +765,38 @@
    Mobile / iPad priority: Picture → Slots → Bottles.
    Decorations recede; tappable elements grow.
    ============================================ */
+
+/* ── Design tokens — iPad / desktop defaults ── */
+.machine-world--potion {
+  /* Professor */
+  --pg-prof-w:      clamp(92px, 14vw, 168px);
+  --pg-prof-bottom: 2%;
+  --pg-prof-left:   1.5%;
+  --pg-prof-right:  auto;
+  /* Slots */
+  --pg-slot-sz:     clamp(52px, 9.5vw, 72px);
+  --pg-slot-fs:     clamp(28px, 5.5vw, 42px);
+  /* Beaker rim */
+  --pg-rim-w:       clamp(68px, 10vw, 86px);
+  --pg-rim-h:       8px;
+  /* Beaker */
+  --pg-beaker-w:    clamp(58px, 8.5vw, 76px);
+  --pg-beaker-h:    clamp(72px, 12vh, 98px);
+  /* Beaker stand */
+  --pg-stand-w:     clamp(50px, 8vw, 68px);
+  --pg-stand-h:     12px;
+  /* Bottle cork */
+  --pg-cork-w:      18px;
+  --pg-cork-h:      11px;
+  /* Bottle neck */
+  --pg-neck-w:      18px;
+  --pg-neck-h:      clamp(14px, 2.5vh, 20px);
+  /* Bottle body */
+  --pg-bottle-w:    clamp(52px, 9vw, 70px);
+  --pg-bottle-h:    clamp(70px, 13.5vh, 100px);
+  /* Bottle letter */
+  --pg-bottle-fs:   clamp(24px, 4.5vw, 34px);
+}
 
 /* ── Game board: fill the full inner viewport with no padding gaps ──
    machine-viewport's 8px padding and flex centering leave a tan strip
@@ -838,12 +871,7 @@
   opacity: 0.12;
 }
 
-/* ── Professor WiggleWoo — gameplay size ── */
-.pg-professor {
-  width: clamp(92px, 14vw, 168px);
-}
-
-/* HUD stays readable above the gameplay group when margin-top pulls it up */
+/* HUD stays readable above the gameplay group */
 .machine-world--potion .pg-top-bar {
   position: relative;
   z-index: 2;
@@ -860,7 +888,6 @@
 .pg-upper-row {
   flex-direction: column;
   gap: clamp(24px, 3.2vh, 34px);
-  margin-top: -25px;
 }
 
 /* ── Picture card — larger, more prominent card feel ── */
@@ -876,8 +903,6 @@
 
 /* ── Answer slots — larger hit targets + tactile depth ── */
 .pg-slot {
-  width: clamp(52px, 9.5vw, 72px);
-  height: clamp(52px, 9.5vw, 72px);
   /* Gloss highlight fades out in the lower 55% — center stays readable */
   background:
     linear-gradient(180deg,
@@ -920,21 +945,12 @@
     0 2px 5px rgba(0, 0,   0,   0.45);
 }
 
-.pg-slot__letter {
-  font-size: clamp(28px, 5.5vw, 42px);
-}
-
 /* ── Beaker zone — reduced; no longer grows to fill space ──
    Stays in normal flow between slots and bottles but is compact
    so the interaction path feels: slots → (small beaker) → bottles. */
 .pg-beaker-zone {
   flex: 0 0 auto;
   margin-top: 25px;
-}
-
-.pg-beaker-rim {
-  width: clamp(68px, 10vw, 86px);
-  height: 8px;
 }
 
 /* ── Blue Gameplay Chalkboard overlay zone — lesson/modal screens bounded to the frame ──
@@ -1173,35 +1189,6 @@
   transform: scale(0.94);
 }
 
-.pg-beaker {
-  width: clamp(58px, 8.5vw, 76px);
-  height: clamp(72px, 12vh, 98px);
-}
-
-.pg-beaker-stand {
-  width: clamp(50px, 8vw, 68px);
-}
-
-/* ── Potion bottles — bigger bodies and letters for easy tapping ── */
-.pg-bottle__cork {
-  width: 18px;
-  height: 11px;
-}
-
-.pg-bottle__neck {
-  width: 18px;
-  height: clamp(14px, 2.5vh, 20px);
-}
-
-.pg-bottle__body {
-  width:  clamp(52px, 9vw, 70px);
-  height: clamp(70px, 13.5vh, 100px);
-}
-
-.pg-bottle__letter {
-  font-size: clamp(24px, 4.5vw, 34px);
-}
-
 .pg-bottles-row {
   gap: clamp(12px, 2.4vw, 26px);
 }
@@ -1249,12 +1236,31 @@
    Panel height: ~322px (top:10%, bottom:8%) → 126px spare → centered ✓
    ============================================================ */
 
-/* iPad and larger — keep image card below the HUD bar */
-.machine-world--potion .pg-upper-row {
-  margin-top: 0;
-}
-
 @media (max-height: 500px) {
+
+  /* ── Phone landscape tokens — override design tokens for compact layout ── */
+  .machine-world--potion {
+    --pg-prof-w:      88px;
+    --pg-prof-bottom: 3%;
+    --pg-prof-left:   auto;
+    --pg-prof-right:  2%;
+    --pg-slot-sz:     44px;
+    --pg-slot-fs:     20px;
+    --pg-rim-w:       180px;
+    --pg-rim-h:       16px;
+    --pg-beaker-w:    150px;
+    --pg-beaker-h:    108px;
+    --pg-stand-w:     128px;
+    --pg-stand-h:     26px;
+    --pg-cork-w:      14px;
+    --pg-cork-h:      7px;
+    --pg-neck-w:      14px;
+    --pg-neck-h:      9px;
+    --pg-bottle-w:    46px;
+    --pg-bottle-h:    62px;
+    --pg-bottle-fs:   20px;
+  }
+
 
   /* ── Restore original map-window inset (transparency handled in GAMEPLAY-FIRST block) ── */
   .machine-world--potion .map-window {
@@ -1336,51 +1342,31 @@
     padding-top: 0;
   }
 
-  /* ── Answer slots ── */
-  .pg-slot {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-  }
-  .pg-slot__letter { font-size: 20px; }
+  /* ── Answer slots — shape only; size from token ── */
+  .pg-slot { border-radius: 8px; }
 
   /* ── Extra breathing room between slots and beaker — "mixing zone" feel ── */
   .pg-beaker-zone { margin-top: 8px; }
 
-  /* ── Beaker: maximised to fill freed space ── */
-  .pg-beaker-rim   { width: 180px; height: 16px; }
-  .pg-beaker       { width: 150px; height: 108px; border-radius: 9px 9px 54px 54px; }
-  .pg-beaker-stand { width: 128px; height: 26px; }
+  /* ── Beaker: shape only; size from token ── */
+  .pg-beaker       { border-radius: 9px 9px 54px 54px; }
   .pg-beaker-stand::before,
   .pg-beaker-stand::after { display: none; }
 
   /* ── Pour drip: 16px = just past the rim ── */
   .pg-pour-drip { top: 16px; }
 
-  /* ── Bottles: fully visible, centered under beaker ── */
+  /* ── Bottles: shape only; size from token ── */
   .pg-bottles-row {
     gap: clamp(10px, 1.8vw, 20px);
     padding-bottom: 0;
     justify-content: center;
   }
-  .pg-bottle__cork   { width: 14px; height: 7px; }
-  .pg-bottle__neck   { width: 14px; height: 9px; }
-  .pg-bottle__body   { width: 46px; height: 62px; border-radius: 4px 4px 16px 16px; }
-  .pg-bottle__letter { font-size: 20px; }
+  .pg-bottle__body { border-radius: 4px 4px 16px 16px; }
 
   /* ── Pour animation ── */
   .pg-bottle--pouring {
     animation: pg-bottle-pour-compact 1.10s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-  }
-
-  /* ── Professor: bottom-right corner ── */
-  .pg-professor {
-    width: 88px;
-    bottom: 3%;
-    right: 2%;
-    left: auto;
-    top: auto;
-    transform: none;
   }
 
   /* ── Logo: moderate shrink so HUD elements have breathing room ── */
