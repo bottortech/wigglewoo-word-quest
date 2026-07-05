@@ -516,14 +516,15 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
   const profSrc = profState === "celebrate" ? wigglewooCelebrate : wigglewooIdle;
 
-  // ── Canvas scale: keep the 1366×1024 design canvas uniformly fitted to the
-  //    current viewport. The CSS fixed-canvas rule uses var(--potion-scale).
+  // ── Canvas scale: fill viewport width exactly. The 1366×1024 canvas overflows
+  //    vertically on non-4:3 viewports; quest-stage overflow:hidden crops the edges.
+  //    Background-size:cover on the fixed canvas stays at the same scale everywhere,
+  //    so all percentage-positioned assets remain locked to the lab image.
   const sceneRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const DESIGN_W = 1366;
-    const DESIGN_H = 1024;
     const update = () => {
-      const s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+      const s = window.innerWidth / DESIGN_W;
       sceneRef.current?.style.setProperty("--potion-scale", s.toFixed(4));
     };
     update();
