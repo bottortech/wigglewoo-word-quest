@@ -1262,14 +1262,6 @@
   }
 
 
-  /* ── Restore original map-window inset (transparency handled in GAMEPLAY-FIRST block) ── */
-  .machine-world--potion .map-window {
-    top: 10%;
-    bottom: 8%;
-    left: 12%;
-    right: 12%;
-  }
-
   /* ── Shell: minimal overhead, start from top ── */
   .pg-shell {
     gap: 2px;

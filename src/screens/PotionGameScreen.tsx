@@ -519,15 +519,21 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
   const profSrc = profState === "celebrate" ? wigglewooCelebrate : wigglewooIdle;
 
-  // ── Canvas scale: keep the 1366×1024 design canvas uniformly fitted to the
-  //    current viewport. The CSS fixed-canvas rule uses var(--potion-scale).
+  // ── One coordinate system: scale to fill viewport height, extend canvas width
+  //    so the scene covers the full viewport at every device size.
+  //    background-size:cover on the variable-width canvas scales the lab image
+  //    by the same factor as percentage-positioned assets — one locked scene.
+  //    iPad (1366×1024): s=1, canvasW=1366px — unchanged.
+  //    Desktop (1440×900): s≈0.879, canvasW≈1638px — more lab width shown.
+  //    iPhone landscape (852×393): s≈0.384, canvasW≈2219px — lab scene cropped.
   const sceneRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    const DESIGN_W = 1366;
     const DESIGN_H = 1024;
     const update = () => {
-      const s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
-      sceneRef.current?.style.setProperty("--potion-scale", s.toFixed(4));
+      const s = window.innerHeight / DESIGN_H;
+      if (!sceneRef.current) return;
+      sceneRef.current.style.setProperty("--potion-scale", s.toFixed(4));
+      sceneRef.current.style.width = `${(window.innerWidth / s).toFixed(1)}px`;
     };
     update();
     const ro = new ResizeObserver(update);
