@@ -516,49 +516,20 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
   const profSrc = profState === "celebrate" ? wigglewooCelebrate : wigglewooIdle;
 
-  // ── Scene token system — device-level art direction via CSS, not per-asset patches.
-  //    JS computes the base contain-scale (fits full 1366×1024 scene in the viewport)
-  //    and writes --potion-scale to :root.  CSS media queries on .machine-world--potion
-  //    declare --scene-scale / --scene-x / --scene-y / --content-scale per device class.
-  //    The canvas transform = scale(--potion-scale × --scene-scale) + translate(--scene-x, --scene-y).
-  //    JS also reads those CSS tokens and writes --potion-bg-size / --potion-bg-pos to :root
-  //    so the stage-wrapper background matches the canvas background scale exactly —
-  //    seamless at the canvas boundary, warm-color fill beyond the image's natural extent.
+  // ── Canvas scale: keep the 1366×1024 design canvas uniformly fitted to the
+  //    current viewport. The CSS fixed-canvas rule uses var(--potion-scale).
   const sceneRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const DESIGN_W = 1366;
     const DESIGN_H = 1024;
-    const root = document.documentElement;
     const update = () => {
-      const el = sceneRef.current;
-      if (!el) return;
-      // Contain scale: fit entire 1366×1024 design canvas inside the viewport
       const s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
-      // Read device-level art tokens from canvas element (CSS media queries set these)
-      const cs = getComputedStyle(el);
-      const sceneScale = parseFloat(cs.getPropertyValue("--scene-scale").trim()) || 1;
-      const sceneX = cs.getPropertyValue("--scene-x").trim() || "0px";
-      const sceneY = cs.getPropertyValue("--scene-y").trim() || "0px";
-      const actual = s * sceneScale;
-      // Write computed values to :root — canvas transform and stage-wrapper background use them
-      root.style.setProperty("--potion-scale", s.toFixed(4));
-      root.style.setProperty("--potion-bg-size",
-        `${Math.round(DESIGN_W * actual)}px ${Math.round(DESIGN_H * actual)}px`);
-      root.style.setProperty("--potion-bg-pos",
-        `calc(50% + ${sceneX}) calc(50% + ${sceneY})`);
-      // Clear any inline width left by a prior approach
-      el.style.removeProperty("width");
-      el.style.removeProperty("--potion-scale");
+      sceneRef.current?.style.setProperty("--potion-scale", s.toFixed(4));
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(document.documentElement);
-    return () => {
-      ro.disconnect();
-      root.style.removeProperty("--potion-scale");
-      root.style.removeProperty("--potion-bg-size");
-      root.style.removeProperty("--potion-bg-pos");
-    };
+    return () => ro.disconnect();
   }, []);
 
   // =============================================
