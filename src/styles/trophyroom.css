@@ -12,7 +12,15 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: cover;
+  /* Height stays pinned to cover's tight axis (no vertical gap on typical
+     iPad aspect ratios); width is pulled back as far as it can go — down to
+     exactly 100%, the no-gap floor — from cover's original overflow, to
+     reveal as much of the scene on the sides as possible without the whole
+     image shrinking uniformly (a true uniform zoom-out would always gap one
+     axis under background-size, since cover is already the minimum no-gap
+     scale). This is the floor: going any lower requires a fallback color
+     behind the image to cover the resulting edge gap. */
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
   display: flex;
@@ -72,13 +80,13 @@
   justify-content: center;
   position: relative;
   z-index: 50;
-  transform: translateY(calc(4px * var(--uv)));
+  transform: translateY(calc(14px * var(--uv)));
   animation: title-glow 3s ease-in-out infinite;
 }
 
 .trophy-room__title-img {
   max-width: 85%;
-  width: calc(280px * var(--u));
+  width: calc(336px * var(--u));
   height: auto;
   filter: drop-shadow(0 calc(4px * var(--u)) calc(12px * var(--u)) rgba(255, 215, 0, 0.4));
 }
@@ -216,7 +224,7 @@
   justify-content: center;
   gap: calc(12px * var(--u));
   margin-top: calc(-8px * var(--uv));
-  transform: translateX(10%) translateY(-18%);
+  transform: translateX(10%) translateY(-14%);
   position: relative;
 }
 
@@ -262,7 +270,7 @@
    ========================================== */
 .trophy-room__wigglewoo {
   position: absolute;
-  left: calc(-118px * var(--u));
+  right: calc(-196px * var(--u));
   bottom: 0;
   display: flex;
   align-items: center;
@@ -315,7 +323,7 @@
 }
 
 .trophy-room__continue-btn img {
-  width: calc(170px * var(--u));
+  width: calc(204px * var(--u));
   max-width: 90%;
   height: auto;
   display: block;
@@ -791,7 +799,7 @@
 /* ---- Desktop — raise title for better centering ---- */
 @media (min-width: 700px) and (min-height: 500px) {
   .trophy-room__title-area {
-    transform: translateY(calc(-14px * var(--uv)));
+    transform: translateY(calc(-4px * var(--uv)));
   }
 }
 
@@ -818,7 +826,7 @@
 
   /* Grid: up with the trophy, maintain gap */
   .trophy-room__cards-row {
-    transform: translateX(10%) translateY(calc(-18% - 22px));
+    transform: translateX(10%) translateY(calc(-14% - 22px));
   }
 
   /* Card spacing */
@@ -837,7 +845,7 @@
   }
 
   .trophy-room__continue-btn img {
-    width: calc(140px * var(--u));
+    width: calc(168px * var(--u));
   }
 }
 

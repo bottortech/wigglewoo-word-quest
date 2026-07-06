@@ -1301,26 +1301,26 @@
   opacity: 0;
 }
 
-.bubble-img--1 { left: 12%; bottom: 5%;  width: 10%; animation: bubble-rise 9s ease-in 0s infinite; }
-.bubble-img--2 { left: 35%; bottom: 3%;  width: 8%;  animation: bubble-rise 11s ease-in 2s infinite; }
-.bubble-img--3 { left: 55%; bottom: 8%;  width: 12%; animation: bubble-rise 8s ease-in 4s infinite; }
-.bubble-img--4 { left: 72%; bottom: 4%;  width: 7%;  animation: bubble-rise 10s ease-in 1.5s infinite; }
-.bubble-img--5 { left: 10%; bottom: 8%;  width: 9%;  animation: bubble-rise 11s ease-in 0.5s infinite; }
-.bubble-img--6 { left: 22%; bottom: 6%;  width: 8%;  animation: bubble-rise 9s ease-in 1s infinite; }
-.bubble-img--7 { left: 42%; bottom: 5%;  width: 10%; animation: bubble-rise 8.5s ease-in 0s infinite; }
-.bubble-img--8 { left: 63%; bottom: 4%;  width: 8%;  animation: bubble-rise 10s ease-in 0.5s infinite; }
-.bubble-img--9 { left: 85%; bottom: 7%;  width: 9%;  animation: bubble-rise 9.5s ease-in 1s infinite; }
+.bubble-img--1 { left: 12%; bottom: 5%;  width: 12.5%; animation: bubble-rise 9s ease-in 0s infinite; }
+.bubble-img--2 { left: 35%; bottom: 3%;  width: 10%;   animation: bubble-rise 11s ease-in 2s infinite; }
+.bubble-img--3 { left: 55%; bottom: 8%;  width: 15%;   animation: bubble-rise 8s ease-in 4s infinite; }
+.bubble-img--4 { left: 72%; bottom: 4%;  width: 8.75%; animation: bubble-rise 10s ease-in 1.5s infinite; }
+.bubble-img--5 { left: 10%; bottom: 8%;  width: 11.25%; animation: bubble-rise 11s ease-in 0.5s infinite; }
+.bubble-img--6 { left: 22%; bottom: 6%;  width: 10%;   animation: bubble-rise 9s ease-in 1s infinite; }
+.bubble-img--7 { left: 42%; bottom: 5%;  width: 12.5%; animation: bubble-rise 8.5s ease-in 0s infinite; }
+.bubble-img--8 { left: 63%; bottom: 4%;  width: 10%;   animation: bubble-rise 10s ease-in 0.5s infinite; }
+.bubble-img--9 { left: 85%; bottom: 7%;  width: 11.25%; animation: bubble-rise 9.5s ease-in 1s infinite; }
 
 /* Foreground bubbles — larger, closer to camera */
-.bubble-img--fg1 { left: 5%;  bottom: 2%;  width: 18%; z-index: 8; animation: bubble-rise-fg 10s ease-in 0s infinite; }
-.bubble-img--fg2 { left: 48%; bottom: 1%;  width: 22%; z-index: 8; animation: bubble-rise-fg 12s ease-in 3s infinite; }
-.bubble-img--fg3 { left: 78%; bottom: 3%;  width: 16%; z-index: 8; animation: bubble-rise-fg 9s ease-in 1.5s infinite; }
+.bubble-img--fg1 { left: 5%;  bottom: 2%;  width: 22.5%; z-index: 8; animation: bubble-rise-fg 10s ease-in 0s infinite; }
+.bubble-img--fg2 { left: 48%; bottom: 1%;  width: 27.5%; z-index: 8; animation: bubble-rise-fg 12s ease-in 3s infinite; }
+.bubble-img--fg3 { left: 78%; bottom: 3%;  width: 20%;   z-index: 8; animation: bubble-rise-fg 9s ease-in 1.5s infinite; }
 
 /* Very close bubbles — biggest, right up front */
-.bubble-img--close1 { left: 15%; bottom: 0%;  width: 28%; z-index: 12; animation: bubble-rise-close 8s ease-in 0.5s infinite; }
-.bubble-img--close2 { left: 40%; bottom: 1%;  width: 32%; z-index: 12; animation: bubble-rise-close 11s ease-in 4s infinite; }
-.bubble-img--close3 { left: 65%; bottom: 0%;  width: 26%; z-index: 12; animation: bubble-rise-close 9.5s ease-in 2s infinite; }
-.bubble-img--close4 { left: 90%; bottom: 2%;  width: 30%; z-index: 12; animation: bubble-rise-close 10s ease-in 6s infinite; }
+.bubble-img--close1 { left: 15%; bottom: 0%;  width: 35%;   z-index: 12; animation: bubble-rise-close 8s ease-in 0.5s infinite; }
+.bubble-img--close2 { left: 40%; bottom: 1%;  width: 40%;   z-index: 12; animation: bubble-rise-close 11s ease-in 4s infinite; }
+.bubble-img--close3 { left: 65%; bottom: 0%;  width: 32.5%; z-index: 12; animation: bubble-rise-close 9.5s ease-in 2s infinite; }
+.bubble-img--close4 { left: 90%; bottom: 2%;  width: 37.5%; z-index: 12; animation: bubble-rise-close 10s ease-in 6s infinite; }
 
 @keyframes bubble-rise-close {
   0%   { opacity: 0; transform: translateY(0) translateX(0) scale(1); }

@@ -811,7 +811,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
       id: "hanging-light-3",
       src: "/assets/discovery rooms/geartown-workshop/hanging light off-3.png",
       x: 79,
-      y: -45,
+      y: -19,
       width: 8,
       anchor: "top",
     },
@@ -950,7 +950,7 @@ const TECH_CITY_ENV: EnvironmentConfig = {
       id: "blueprint",
       src: "/assets/discovery rooms/geartown-workshop/blueprint-lights-off.png",
       x: 56,
-      y: 70,
+      y: 57,
       width: 30,
       factPanel: {
         title: "Blueprints",
@@ -1038,8 +1038,15 @@ const TECH_CITY_ENV: EnvironmentConfig = {
       id: "geartown-logo",
       src: "/assets/discovery rooms/geartown-workshop/logo-no-smoke.png",
       x: 56,
-      y: 35,
-      width: 23,
+      y: 27,
+      width: 26.5,
+    },
+    {
+      id: "robot-parts",
+      src: "/assets/discovery rooms/geartown-workshop/robot-parts.png",
+      x: 24,
+      y: 32,
+      width: 24,
     },
     {
       id: "wigglewoo",
@@ -1116,8 +1123,8 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
       id: "oxygen-machine",
       src: "/assets/discovery rooms/greenhouse-domes/oxygen-machine.png",
       x: 16,
-      y: 48,
-      width: 18,
+      y: 56,
+      width: 21.6,
       factPanel: {
         title: "Oxygen Machine",
         items: [
