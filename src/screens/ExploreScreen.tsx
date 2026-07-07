@@ -932,6 +932,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
               "explore-prop--interactive",
               hasFact ? "explore-prop--has-fact" : "",
               isDiscovered ? "explore-prop--fact-discovered" : "",
+              isVolcanoImage ? "volcano-glow" : "",
             ].filter(Boolean).join(" ")}
             style={{
               position: "absolute",

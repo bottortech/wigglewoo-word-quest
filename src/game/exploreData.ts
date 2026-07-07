@@ -205,7 +205,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
       id: "lava-pit",
       src: "/assets/discovery rooms/rumble-peak-volcano/lava-pit.png",
       x: 50,
-      y: 100,
+      y: 92,
       width: 26,
       factPanel: {
         title: "Lava Pit",
@@ -249,7 +249,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
       id: "erupt-button",
       src: "/assets/discovery rooms/rumble-peak-volcano/erupt-button-red.png",
       x: 50,
-      y: 74,
+      y: 68,
       width: 14,
     },
     {
@@ -399,7 +399,7 @@ const CASTLE_ENV: EnvironmentConfig = {
       id: "treasure-box",
       src: "/assets/discovery rooms/stonewall-castle/closed-treasure-box.png",
       x: 15,
-      y: 115,
+      y: 108,
       width: 22,
       factPanel: {
         title: "Medieval Treasure",

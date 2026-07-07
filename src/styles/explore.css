@@ -1143,6 +1143,32 @@
   }
 }
 
+/* ---- Volcano ambient glow — persistent, unlike the generic discovery-hint
+ * glow (.explore-prop--has-fact) which fades out once the fact panel's
+ * been fully read. This one stays on regardless, since it represents the
+ * volcano's own heat rather than a "tap me" hint. Placed after the
+ * .explore-prop--fact-discovered reset above so it wins the cascade tie on
+ * shared specificity once a prop carries both classes. */
+.volcano-glow > img {
+  animation: volcano-glow-pulse 5s ease-in-out infinite;
+}
+
+@keyframes volcano-glow-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 calc(5px * var(--u, 1)) rgba(255, 140, 60, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 calc(11px * var(--u, 1)) rgba(255, 100, 30, 0.55));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .volcano-glow > img {
+    animation: none;
+    filter: drop-shadow(0 0 calc(7px * var(--u, 1)) rgba(255, 110, 40, 0.45));
+  }
+}
+
 /* ---- Eruption — volcano overlays & animations ---- */
 
 /* Full-viewport erupted background (crossfade via opacity transition) */

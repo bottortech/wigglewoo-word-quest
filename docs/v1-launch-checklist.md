@@ -56,9 +56,16 @@ Target: iOS App Store, Kids 4+ category
 ### Code / build (do at archive time)
 - [ ] Increment `CURRENT_PROJECT_VERSION` in Xcode for each TestFlight upload (currently `1`)
 - [ ] Run `npx cap sync ios` after final web build, before archiving (use `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8` prefix to dodge the CocoaPods Ruby encoding bug on this Mac)
-- [ ] *(optional)* Wire + record the remaining 6 VO slugs (`trace-prompt`, `play-now-nudge`, `idle-tap-gear`, `idle-pickup`, `idle-another-word`, `idle-keep-reading`) — pickup script sent to voice actor on 2026-05-31 (see [docs/Voiceover-Pickup-2026-06.md](Voiceover-Pickup-2026-06.md)). Not in code yet either: title-screen idle timer, Quest Map idle pool, and TraceMoment overlay prompt are all unimplemented. Independent of the Apple blocker; safe to land in 1.0.1 if v1.0 ships first.
+- [ ] *(optional)* Wire + record the remaining 6 VO slugs — pickup script sent to voice actor on 2026-05-31 (see [docs/Voiceover-Pickup-2026-06.md](Voiceover-Pickup-2026-06.md)). **Verified 2026-07-07: neither the audio files nor the calling code exist yet** — the pickup doc's note that "these slugs are wired into the code" is inaccurate/aspirational. Both the recording *and* the feature code (title-screen idle timer, Quest Map idle pool, TraceMoment overlay prompt) still need to happen. Independent of the Apple blocker; safe to land in 1.0.1 if v1.0 ships first.
+  - [ ] `trace-prompt.wav` — "Trace the letter with your finger!" — fires ~400ms after the first-visit letter-trace overlay opens
+  - [ ] `play-now-nudge.wav` — "Tap Play Now when you're ready!" — title screen, ~8s idle
+  - [ ] `idle-tap-gear.wav` — "Tap a gear when you're ready!" — Quest Map idle pool (~20s idle, random pick)
+  - [ ] `idle-pickup.wav` — "Pick up where you left off!" — Quest Map idle pool
+  - [ ] `idle-another-word.wav` — "Ready for another word?" — Quest Map idle pool
+  - [ ] `idle-keep-reading.wav` — "Let's keep reading!" — Quest Map idle pool
 
-### Device testing (TestFlight, real iPad + iPhone — blocked on $99)
+### Device testing (TestFlight, real iPad + iPhone)
+*(Previously noted as "blocked on $99" — Apple Developer Program enrollment is now paid and active as of 2026-05-31, so this is no longer blocked. Remaining blocker is just getting hands on a physical iPad — borrowing one temporarily is fine, no purchase required. Simulator can't substitute for these: silent-mode audio, real touch input, and OS interruptions don't replicate there.)*
 - [ ] Full quest play-through on real device — golden path
 - [ ] Force-quit mid-quest → relaunch → verify progression persists
 - [ ] Verify "👋 For Parents" button position is fine in landscape on iPhone + iPad
