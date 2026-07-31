@@ -1,0 +1,24 @@
+{
+  "name": "WiggleWoo's Word Quest",
+  "short_name": "WiggleWoo",
+  "description": "A phonics adventure game for K–1st graders",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#3a8fd6",
+  "theme_color": "#3a8fd6",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "1024x1536",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "1024x1536",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
