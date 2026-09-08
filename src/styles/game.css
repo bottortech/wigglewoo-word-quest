@@ -156,7 +156,10 @@
   top: 2%;
   left: 2%;
   z-index: 10;
-  max-width: 140px;
+  /* --umin (not --u alone) so the badge shrinks on short/square
+     viewports too, instead of only reacting to width and relying on
+     the min-height:500 desktop gate below to catch the rest. */
+  max-width: clamp(80px, calc(108px * var(--umin)), 140px);
   height: auto;
   user-select: none;
   -webkit-user-select: none;
@@ -189,10 +192,10 @@
   border-radius: 8px;
 }
 
-/* ---- Desktop: shrink badge so it clears the glass frame ---- */
+/* ---- Desktop: nudge badge up so it clears the glass frame ----
+   (sizing now lives in the base rule above via --umin) */
 @media (min-width: 700px) and (min-height: 500px) {
   .title-badge {
-    max-width: calc(80px + 28px * var(--u));
     top: 1%;
   }
 }
@@ -212,10 +215,16 @@
    ========================================== */
 .word-quest-box {
   position: absolute;
-  top: 10%;
-  right: 2%;
+  /* Was 10% — too close under the Badges/For Parents pill buttons
+     (top-right corner, ~12px + their own height). Pushed down for
+     clear breathing room. */
+  top: 17%;
+  right: 0.5%;
   z-index: 10;
-  width: 120px;
+  /* Narrowed back down now that the vowel rows are just a letter box +
+     stars (label text and challenge badge removed) — the wider
+     168px-cap version was overlapping the map's rounded frame. */
+  width: clamp(100px, calc(120px * var(--umin)), 136px);
   background: linear-gradient(180deg, #FFFDE7 0%, #FFF9C4 100%);
   border: 3px solid #8D6E63;
   border-radius: 12px;
@@ -260,7 +269,14 @@
   font-weight: 700;
   color: #FFF;
   text-shadow: 0 1px 1px rgba(0,0,0,0.3);
-  white-space: nowrap;
+  /* Was nowrap, which combined with the box's own overflow:hidden
+     silently clipped long titles like "Sound Builders Quests" — more
+     noticeable now the box is narrower. Wrap at word boundaries
+     instead; the header has no fixed height so it just grows. */
+  white-space: normal;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
 }
 
 .word-quest-box__content {
@@ -369,6 +385,7 @@
 .word-quest-box__vowel-btn {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   text-align: left;
 }
@@ -390,12 +407,6 @@
 .word-quest-box__vowel-btn--active .word-quest-box__vowel-letter {
   background: #C8E6C9;
   border-color: #4CAF50;
-}
-
-.word-quest-box__vowel-label {
-  flex: 1;
-  font-size: 11px;
-  white-space: nowrap;
 }
 
 /* ---- Responsive: scale down Word Quest Box on mobile ---- */

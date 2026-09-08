@@ -4,7 +4,10 @@
 
 .lesson-objective {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 600;
   display: flex;
   align-items: center;
@@ -131,6 +134,40 @@
   opacity: 0.75;
 }
 
+/* Wrapper gives the hand pointer a positioning anchor around the
+   example button without affecting the button's own layout/hit area. */
+.lesson-objective__example-wrap {
+  position: relative;
+}
+
+/* Hand pointer — points at the example word, same visual language as
+   the onboarding hand (bob animation, drop shadow) but statically
+   anchored since this button never moves. */
+.lesson-objective__hand {
+  position: absolute;
+  right: clamp(-42px, -7vw, -22px);
+  top: 50%;
+  /* Emoji points up by default — rotate -90deg so it points left,
+     toward the button it sits beside. */
+  transform: translateY(-50%) rotate(-90deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.lesson-objective__hand-inner {
+  display: inline-block;
+  font-size: clamp(32px, 6vh, 48px);
+  line-height: 1;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.3));
+  transform-origin: top center;
+  animation: lesson-objective-hand-bob 1.4s ease-in-out infinite;
+}
+
+@keyframes lesson-objective-hand-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
 /* Continue button — warm orange, matches existing onboarding's "Let's Go!" */
 .lesson-objective__continue {
   padding: clamp(10px, 1.8vh, 14px) clamp(28px, 5vw, 44px);
@@ -177,6 +214,7 @@
   }
   .lesson-objective__example-word { font-size: clamp(18px, 4vh, 26px); }
   .lesson-objective__example-listen { font-size: 10px; }
+  .lesson-objective__hand-inner { font-size: 28px; }
   .lesson-objective__continue {
     padding: 6px 22px;
     font-size: clamp(14px, 3vh, 18px);

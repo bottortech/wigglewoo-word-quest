@@ -43,7 +43,10 @@
    Warm lab-parchment surface with subtle grain + inset depth. */
 .game-shell-panel {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: linear-gradient(180deg, #ece5d4 0%, #e2dacb 50%, #d9d0c0 100%);
   box-shadow:
     inset 0 3px 12px rgba(80, 55, 30, 0.18),
@@ -54,7 +57,10 @@
 .game-shell-panel::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background-image:
     repeating-conic-gradient(
       rgba(120, 90, 50, 0.03) 0% 25%,
@@ -69,7 +75,10 @@
 .game-shell-panel::after {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   box-shadow: inset 0 0 60px rgba(80, 55, 30, 0.10);
   pointer-events: none;
@@ -82,7 +91,10 @@
    ========================================== */
 .quest-map-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   overflow: visible;
   touch-action: manipulation;
   z-index: 5;
@@ -887,22 +899,27 @@
   bottom: 2%;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #BCAAA4;
-  border-radius: 20px;
-  padding: 8px 20px;
+  /* Smaller + more subdued than the rest of the map UI — this is a
+     rarely-needed reset action, not something that should compete for
+     attention. Position is unchanged. */
+  background: rgba(255, 255, 255, 0.65);
+  border: 1.5px solid rgba(188, 170, 164, 0.6);
+  border-radius: 16px;
+  padding: 5px 14px;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: #5D4037;
+  color: #8D7A72;
   cursor: pointer;
   z-index: 15;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  opacity: 0.85;
   transition: all 0.15s ease;
 }
 
 .map-restart-btn:hover {
   background: #FFF;
+  opacity: 1;
   transform: translateX(-50%) translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -972,10 +989,13 @@
 .trophy-showcase {
   position: absolute;
   top: 2%;
-  left: calc(3% + 70px);
+  left: calc(3% + 40px);
   transform: translateX(-50%);
   z-index: 9;
-  margin-top: 297px;
+  /* Was 297px — now that the glass case actually renders at its real
+     height (see trophy-showcase.css case-height fix), that put it
+     right up against .wardrobe-map-btn below. Nudged up for clearance. */
+  margin-top: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2220,19 +2240,19 @@
    ========================================== */
 .discovery-preview-row {
   position: absolute;
-  top: clamp(10px, 1.5vh, 16px);
+  top: clamp(10px, calc(14px * var(--umin)), 16px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 18px;
+  gap: calc(14px * var(--umin));
   z-index: 50;
   pointer-events: auto;
 }
 
 .discovery-preview {
   position: relative;
-  width: clamp(70px, 9vw, 102px);
-  height: clamp(70px, 9vw, 102px);
+  width: clamp(46px, calc(68px * var(--umin)), 68px);
+  height: clamp(46px, calc(68px * var(--umin)), 68px);
   border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.4);
   background: rgba(0, 0, 0, 0.15);
@@ -2329,7 +2349,10 @@
 /* Decode unlock overlay + modal */
 .decode-unlock-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 500;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
@@ -2461,7 +2484,10 @@
 /* Dim overlay behind everything except character */
 .onboarding-dim {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0, 0, 0, 0.15);
   z-index: 40;
   cursor: pointer;

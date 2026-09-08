@@ -26,6 +26,19 @@ export interface Hotspot {
   emoji: string;          // visual marker
 }
 
+/** A quick, playful comprehension check shown after a fact's narration
+ *  finishes. Derived directly from that fact's own `core` text — never
+ *  introduces new educational content, just checks it landed. */
+export interface ComprehensionQuestion {
+  /** Short question derived from the fact just heard, e.g. "What do cats
+   *  use to help sense things around them?" */
+  prompt: string;
+  /** Answer choices, correct answer included at any position. */
+  choices: string[];
+  /** Index into `choices` of the correct answer. */
+  correctIndex: number;
+}
+
 /** An item inside a fact panel (e.g. a single rock type) */
 export interface FactItem {
   id: string;
@@ -39,6 +52,8 @@ export interface FactItem {
   audioSrc?: string;
   /** Minimum vowel quest completions needed to unlock this fact (default 1) */
   unlockAt?: number;
+  /** Post-narration comprehension check, built from this fact's own text */
+  question?: ComprehensionQuestion;
 }
 
 /** A tappable panel attached to a scene prop */
@@ -127,8 +142,8 @@ export const ENVIRONMENT_QUEST_MAP: Record<string, string> = Object.fromEntries(
 export const ENVIRONMENT_EMOJI: Record<string, string> = {
   "valcano": "\u{1F30B}",
   "castle-island": "\u{1F3F0}",
-  "small-coastal-village": "\u{1F3D8}\uFE0F",
-  "industrial-tech-city": "\u2699\uFE0F",
+  "small-coastal-village": "\u{1F3D8}️",
+  "industrial-tech-city": "⚙️",
   "glass-dome": "\u{1F33F}",
 };
 
@@ -158,6 +173,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Deep under the ground, rock gets so hot it melts! It pushes up and builds a volcano.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file90_DesignsByBee_HowVolcanosForm_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "What happens to rock deep underground that helps build a volcano?",
+              choices: ["It melts", "It freezes", "It floats away"],
+              correctIndex: 0,
+            },
           },
           {
             id: "eruption-power",
@@ -166,6 +186,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "When a volcano erupts, it can shoot ash higher than airplanes! Some eruptions are super loud.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file91_DesignsByBee_EruptionPower_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "What can a volcano shoot up higher than airplanes?",
+              choices: ["Ash", "Water", "Snow"],
+              correctIndex: 0,
+            },
           },
           {
             id: "dormant-volcanoes",
@@ -174,6 +199,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Some volcanoes are sleeping! They haven't erupted in a long, long time — but they could wake up one day. Some have napped for hundreds of years!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file92_DesignsByBee_SleepingVolcanoes_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "What do we call a volcano that hasn't erupted in a long time?",
+              choices: ["Sleeping", "Broken", "Empty"],
+              correctIndex: 0,
+            },
           },
           {
             id: "volcanic-soil",
@@ -182,6 +212,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "After a volcano erupts, the soil around it becomes super good for growing things! That's why farmers love living near volcanoes — their fruits and veggies grow really well.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file93_DesignsByBee_VolcanicSoil_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "Why do farmers love living near volcanoes?",
+              choices: ["The soil is great for growing things", "The soil is too hot to farm", "There is no soil at all"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -217,6 +252,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Lava is SO hot it can melt rock! Yellow lava is the hottest, and red lava is a little cooler.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file95_DesignsByBee_SuperHotLava_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "Which color lava is the hottest?",
+              choices: ["Yellow", "Red", "Blue"],
+              correctIndex: 0,
+            },
           },
           {
             id: "lava-types",
@@ -225,6 +265,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Some lava is thick and slow like honey. Other lava is runny and fast!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file96_DesignsByBee_LavaTypes_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "What is thick, slow lava like?",
+              choices: ["Honey", "Water", "Ice"],
+              correctIndex: 0,
+            },
           },
           {
             id: "lava-glow",
@@ -233,6 +278,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Lava glows because it's so hot—it makes its own light! At night, it can light up the sky.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file97_DesignsByBee_LavaGlow_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "Why does lava glow?",
+              choices: ["Because it's so hot", "Because it's cold", "Because it's wet"],
+              correctIndex: 0,
+            },
           },
           {
             id: "lava-gas",
@@ -241,6 +291,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Volcanoes let out stinky gas that smells like rotten eggs — pee-yew! They also puff out big clouds of steam, just like a giant kettle.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file98_DesignsByBee_StinkyGas_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "What does the stinky gas from a volcano smell like?",
+              choices: ["Rotten eggs", "Flowers", "Fresh bread"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -268,6 +323,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Lava rock forms when hot lava cools fast. It has tiny holes—like a frozen sponge!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file100_DesignsByBee_LavaRock_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What does lava rock look like inside?",
+              choices: ["A frozen sponge with tiny holes", "A smooth marble", "A solid brick"],
+              correctIndex: 0,
+            },
           },
           {
             id: "molten-lava",
@@ -276,6 +336,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Lava is so hot it can melt gold! The brighter it glows, the hotter it is.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file101_DesignsByBee_GlowingLava_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "What does a brighter glow in lava tell you?",
+              choices: ["It's hotter", "It's cooler", "It's older"],
+              correctIndex: 0,
+            },
           },
           {
             id: "crystals",
@@ -284,6 +349,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Volcanoes help make sparkly crystals! Hot water underground cools down slowly and turns into shiny gems.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file102_DesignsByBee_Crystals_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What does hot underground water slowly turn into?",
+              choices: ["Shiny gems", "Mud", "Steam"],
+              correctIndex: 0,
+            },
           },
           {
             id: "cooled-rock",
@@ -292,6 +362,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "When lava hits the ocean, it cools super fast and turns into shiny black glass!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file103_DesignsByBee_CooledRock_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "What does lava turn into when it hits the ocean?",
+              choices: ["Shiny black glass", "Soft sand", "White foam"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -303,7 +378,7 @@ const VOLCANO_ENV: EnvironmentConfig = {
       y: 90,
       width: 22,
       factPanel: {
-        title: "Earth\u2019s Layers",
+        title: "Earth’s Layers",
         items: [
           {
             id: "crust",
@@ -312,6 +387,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "The ground we walk on is called the crust — it's like the skin on an apple! It's the thinnest layer of the Earth.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file105_DesignsByBee_Crust_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What is Earth's crust compared to?",
+              choices: ["The skin on an apple", "The core of an apple", "A soft blanket"],
+              correctIndex: 0,
+            },
           },
           {
             id: "mantle",
@@ -320,6 +400,11 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Under the crust is the mantle — the thickest layer! The rock here is so hot it moves very slowly, like thick, gooey honey.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file106_DesignsByBee_Mantle_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "What does the hot rock in the mantle move like?",
+              choices: ["Thick, gooey honey", "Fast river water", "Cold ice"],
+              correctIndex: 0,
+            },
           },
           {
             id: "outer-core",
@@ -328,14 +413,24 @@ const VOLCANO_ENV: EnvironmentConfig = {
             core: "Deep inside Earth, there's hot, swirly metal moving around like a giant soup!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file107_DesignsByBee_OuterCore_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What is swirling around deep inside Earth?",
+              choices: ["Hot, swirly metal", "Cold rock", "Ice water"],
+              correctIndex: 0,
+            },
           },
           {
             id: "inner-core",
             name: "Inner Core",
-            emoji: "\u2B50",
+            emoji: "⭐",
             core: "The center of Earth is super, super hot — like a giant glowing ball!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file108_DesignsByBee_InnerCore_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "What is the very center of Earth like?",
+              choices: ["A giant glowing ball", "A frozen block of ice", "An empty space"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -411,6 +506,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "Long ago, people made coins by pressing pictures into metal!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file111_DesignsByBee_GoldCoins_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "How did people long ago make coins?",
+              choices: ["By pressing pictures into metal", "By painting on paper", "By baking clay"],
+              correctIndex: 0,
+            },
           },
           {
             id: "gemstones",
@@ -419,6 +519,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "Kings and queens loved sparkly gems! People believed some gems had special powers.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file112_DesignsByBee_Gemstones_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "What did people believe some gems had?",
+              choices: ["Special powers", "Bad luck", "No value at all"],
+              correctIndex: 0,
+            },
           },
           {
             id: "treasure-chests",
@@ -427,14 +532,24 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "Treasure chests had big locks and were hidden in secret rooms! Some castles even had secret tunnels.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file113_DesignsByBee_TreasureChest_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "Where were treasure chests sometimes hidden?",
+              choices: ["In secret rooms", "On the roof", "In the kitchen"],
+              correctIndex: 0,
+            },
           },
           {
             id: "trade-and-barter",
             name: "Trading",
-            emoji: "\u2696\uFE0F",
+            emoji: "⚖️",
             core: "People used to trade things instead of money — like apples for bread!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file114_DesignsByBee_Trading_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "What did people trade before they used money?",
+              choices: ["Things like apples for bread", "Only gold coins", "Nothing at all"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -451,10 +566,15 @@ const CASTLE_ENV: EnvironmentConfig = {
           {
             id: "excalibur",
             name: "Excalibur",
-            emoji: "\u2694\uFE0F",
-            core: "The legend says only the true King of England could pull the magical sword from the stone. A young boy named Arthur did it \u2014 and became king!",
+            emoji: "⚔️",
+            core: "The legend says only the true King of England could pull the magical sword from the stone. A young boy named Arthur did it — and became king!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file116_DesignsByBee_Excalibur_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "Who pulled the magical sword from the stone in the legend?",
+              choices: ["A young boy named Arthur", "A brave knight", "An old king"],
+              correctIndex: 0,
+            },
           },
           {
             id: "blacksmith",
@@ -463,14 +583,24 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "Swords were made by heating metal in a hot fire and hammering it into shape. It took days to make just one!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file117_DesignsByBee_TheBlacksmith_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "How did a blacksmith shape a sword?",
+              choices: ["By heating and hammering metal", "By carving wood", "By painting stone"],
+              correctIndex: 0,
+            },
           },
           {
             id: "types-of-swords",
             name: "Types of Swords",
-            emoji: "\u{1F5E1}\uFE0F",
+            emoji: "\u{1F5E1}️",
             core: "Knights had different swords! Some were big and heavy, and some were so long you needed two hands!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file118_DesignsByBee_TypesOfSwords_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "Why did some swords need two hands to hold?",
+              choices: ["Because they were so long", "Because they were too light", "Because they were made of paper"],
+              correctIndex: 0,
+            },
           },
           {
             id: "knighting-ceremony",
@@ -479,6 +609,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "A knight had a special ceremony to become a royal protector!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file119_DesignsByBee_BecomingAKnight_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "What did a knight become after the special ceremony?",
+              choices: ["A royal protector", "A castle builder", "A farmer"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -499,6 +634,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "People used feathers to write! They dipped them in ink—this was called a quill.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file121_DesignsByBee_FeatherPens_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What did people dip in ink to write long ago?",
+              choices: ["A feather", "A stick", "A rock"],
+              correctIndex: 0,
+            },
           },
           {
             id: "scroll-making",
@@ -507,6 +647,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "Long ago, people wrote on long rolls of paper called scrolls. Every single letter had to be written by hand — it took a really long time!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file122_DesignsByBee_ScrollMaking_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "What were long rolls of paper called?",
+              choices: ["Scrolls", "Books", "Maps"],
+              correctIndex: 0,
+            },
           },
           {
             id: "castle-builders",
@@ -515,14 +660,24 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "It could take 10 to 20 years to build a castle! Workers stacked heavy stones to make walls and towers.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file123_DesignsByBee_CastleBuilders_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What did workers stack to build castle walls?",
+              choices: ["Heavy stones", "Wood logs", "Bricks of ice"],
+              correctIndex: 0,
+            },
           },
           {
             id: "knight-armor",
-            name: "Knight\u2019s Armour",
-            emoji: "\u{1F6E1}\uFE0F",
+            name: "Knight’s Armour",
+            emoji: "\u{1F6E1}️",
             core: "A suit of armour was as heavy as a big dog! Knights had to practice moving and fighting in all that metal since they were little kids.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file124_DesignsByBee_KnightsArmor_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "What was a suit of armour as heavy as?",
+              choices: ["A big dog", "A feather", "A small cat"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -543,6 +698,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "Boys started training to be knights at age 7. They learned step by step until they became knights!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file126_DesignsByBee_KnightTraining_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "At what age did boys start training to become knights?",
+              choices: ["Age 7", "Age 20", "Age 1"],
+              correctIndex: 0,
+            },
           },
           {
             id: "horse-power",
@@ -551,6 +711,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "A knight's horse was one of the strongest horses around. It carried the knight and all that heavy armor!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file127_DesignsByBee_HorsePower_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "What did a knight's strong horse carry?",
+              choices: ["The knight and heavy armor", "Only food", "Nothing at all"],
+              correctIndex: 0,
+            },
           },
           {
             id: "coat-of-arms",
@@ -559,6 +724,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "Every knight had a special shield design called a coat of arms. It helped people tell who was who during battles when everyone wore helmets!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file128_DesignsByBee_CoatOfArms_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What helped people tell knights apart during battle?",
+              choices: ["A coat of arms", "A loud voice", "A tall hat"],
+              correctIndex: 0,
+            },
           },
           {
             id: "knights-code",
@@ -567,6 +737,11 @@ const CASTLE_ENV: EnvironmentConfig = {
             core: "Knights had special rules — always be brave, honest, and kind. They promised to help people!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file129_DesignsByBee_KnightsCode_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "What did knights promise to always be?",
+              choices: ["Brave, honest, and kind", "Silent, sneaky, and fast", "Loud, mean, and tall"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -628,6 +803,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Giant clams can grow over 1 metre wide! Some live for over 100 years.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file132_DesignsByBee_GiantClams_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "How wide can a giant clam grow?",
+              choices: ["Over 1 metre wide", "Only 1 centimetre wide", "As big as a house"],
+              correctIndex: 0,
+            },
           },
           {
             id: "pearls",
@@ -636,6 +816,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "When a grain of sand gets inside a clam, the clam wraps it in smooth layers. Over time, it becomes a pearl!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file133_DesignsByBee_MakingPearls_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "What does a clam wrap around a grain of sand?",
+              choices: ["Smooth layers", "Sharp rocks", "Seaweed"],
+              correctIndex: 0,
+            },
           },
           {
             id: "shell-homes",
@@ -644,6 +829,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "A clam's shell is like its house! It adds new layers as it grows — just like tree rings.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file134_DesignsByBee_ShellHomes_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "What is a clam's shell like?",
+              choices: ["Its house", "A boat", "A hat"],
+              correctIndex: 0,
+            },
           },
           {
             id: "filter-feeders",
@@ -652,6 +842,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Clams suck in water to catch tiny food. One clam can clean a whole bathtub of water each day!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file135_DesignsByBee_HowClamsEat_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "How much water can one clam clean in a day?",
+              choices: ["A whole bathtub", "A single cup", "A whole ocean"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -672,14 +867,24 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Coral reefs are like underwater rainforests! Even though they're small, they are home to so many fish and sea creatures.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file136_DesignsByBee_CoralReefs_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "What are coral reefs like?",
+              choices: ["Underwater rainforests", "Empty deserts", "Frozen icebergs"],
+              correctIndex: 0,
+            },
           },
           {
             id: "village-life",
             name: "Seaside Living",
-            emoji: "\u{1F3D6}\uFE0F",
+            emoji: "\u{1F3D6}️",
             core: "People have lived by the sea for thousands of years! They built homes near the water to catch fish and explore the ocean.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file137_DesignsByBee_SeasideLiving_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "Why did people build homes near the water?",
+              choices: ["To catch fish and explore the ocean", "To hide from animals", "To grow cactus"],
+              correctIndex: 0,
+            },
           },
           {
             id: "tides",
@@ -688,6 +893,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "The moon pulls the ocean water up and down each day. When the water goes out, you can find little sea creatures!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file138_DesignsByBee_OceanTides_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "What pulls the ocean water up and down each day?",
+              choices: ["The moon", "The wind", "The sun"],
+              correctIndex: 0,
+            },
           },
           {
             id: "sea-creatures",
@@ -696,6 +906,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "The ocean is full of amazing animals! There are many we still haven't discovered yet.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file139_DesignsByBee_SeaCreatures_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "Have people discovered every animal in the ocean?",
+              choices: ["No, many are still undiscovered", "Yes, every single one", "There are no animals in the ocean"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -712,10 +927,15 @@ const VILLAGE_ENV: EnvironmentConfig = {
           {
             id: "three-hearts",
             name: "Three Hearts",
-            emoji: "\u{2764}\uFE0F",
+            emoji: "\u{2764}️",
             core: "Octopuses have three hearts! And guess what — their blood is blue, not red! How cool is that?",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file141_DesignsByBee_ThreeHearts_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What color is an octopus's blood?",
+              choices: ["Blue", "Red", "Green"],
+              correctIndex: 0,
+            },
           },
           {
             id: "camouflage",
@@ -724,6 +944,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Octopuses can change their color in less than a second! They hide by looking like rocks or coral.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file142_DesignsByBee_MasterOfDisguise_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "How fast can an octopus change color?",
+              choices: ["In less than a second", "In one whole day", "It never changes color"],
+              correctIndex: 0,
+            },
           },
           {
             id: "smart-creatures",
@@ -732,6 +957,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Octopuses are super smart! They can solve puzzles and even open jars all by themselves.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file143_DesignsByBee_SuperSmart_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What can a smart octopus do all by itself?",
+              choices: ["Open jars", "Fly a kite", "Ride a bike"],
+              correctIndex: 0,
+            },
           },
           {
             id: "eight-arms",
@@ -740,6 +970,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "An octopus has eight arms with suckers! It can feel and taste with them.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file144_DesignsByBee_EightArms_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "How many arms does an octopus have?",
+              choices: ["Eight", "Four", "Two"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -760,6 +995,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Coral looks like rock, but it's alive! It's made of lots of tiny animals.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file146_DesignsByBee_LivingCoral_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What is coral actually made of?",
+              choices: ["Lots of tiny animals", "Solid rock", "Plastic"],
+              correctIndex: 0,
+            },
           },
           {
             id: "coral-archways",
@@ -768,6 +1008,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Ocean waves slowly carve holes through coral walls and make cool archways! Fish love swimming through them like underwater doorways.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file147_DesignsByBee_NaturalArchways_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "What carves holes through coral walls to make archways?",
+              choices: ["Ocean waves", "Strong wind", "Falling rain"],
+              correctIndex: 0,
+            },
           },
           {
             id: "reef-colours",
@@ -776,6 +1021,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Coral has tiny helpers that give it color. When they leave, it turns white!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file148_DesignsByBee_ReefColours_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What happens to coral's color when its tiny helpers leave?",
+              choices: ["It turns white", "It turns purple", "It turns black"],
+              correctIndex: 0,
+            },
           },
           {
             id: "reef-life",
@@ -784,6 +1034,11 @@ const VILLAGE_ENV: EnvironmentConfig = {
             core: "Coral reefs are like busy underwater cities! So many fish and crabs live there.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file149_DesignsByBee_ReefLife_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "What are coral reefs compared to?",
+              choices: ["Busy underwater cities", "Quiet empty deserts", "Tall mountains"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -830,10 +1085,15 @@ const TECH_CITY_ENV: EnvironmentConfig = {
           {
             id: "how-gears-work",
             name: "How Gears Work",
-            emoji: "\u2699\uFE0F",
+            emoji: "⚙️",
             core: "When one gear turns, it makes another gear turn too — like teamwork!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file152_DesignsByBee_HowGearsWork_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "What happens when one gear turns?",
+              choices: ["It makes another gear turn too", "It stops all the gears", "It breaks the machine"],
+              correctIndex: 0,
+            },
           },
           {
             id: "gear-ratios",
@@ -842,22 +1102,37 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Some gears spin fast, and some spin slow — it depends on their size!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file153_DesignsByBee_BigAndSmallGears_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "What decides if a gear spins fast or slow?",
+              choices: ["Its size", "Its color", "Its smell"],
+              correctIndex: 0,
+            },
           },
           {
             id: "simple-machines",
             name: "Simple Machines",
-            emoji: "\u{1F6E0}\uFE0F",
+            emoji: "\u{1F6E0}️",
             core: "Gears help us do things that are too hard with just our hands! Ramps and levers help too.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file154_DesignsByBee_SimpleMachines_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "Besides gears, what else helps us do hard jobs?",
+              choices: ["Ramps and levers", "Books and pencils", "Shoes and hats"],
+              correctIndex: 0,
+            },
           },
           {
             id: "clockwork",
             name: "Clockwork",
-            emoji: "\u{1F570}\uFE0F",
+            emoji: "\u{1F570}️",
             core: "Before batteries, clocks ran on gears! You wound them up with a key to make them tick.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file155_DesignsByBee_Clockwork_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "What did old clocks use before batteries?",
+              choices: ["Gears", "Solar panels", "Water"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -918,6 +1193,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Tools like wrenches and screwdrivers help your hands do things they can't do alone!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file157_DesignsByBee_HandTools_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "What do tools like wrenches help your hands do?",
+              choices: ["Things they can't do alone", "Nothing at all", "Only lift heavy rocks"],
+              correctIndex: 0,
+            },
           },
           {
             id: "measuring-tools",
@@ -926,6 +1206,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Rulers help builders measure things. This helps everything fit just right!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file158_DesignsByBee_MeasuringTools_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "What do rulers help builders do?",
+              choices: ["Measure things", "Paint walls", "Cut wires"],
+              correctIndex: 0,
+            },
           },
           {
             id: "safety-first",
@@ -934,6 +1219,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "In a workshop, you wear goggles and gloves to stay safe! Safety gear protects you.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file159_DesignsByBee_SafetyFirst_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "What do you wear in a workshop to stay safe?",
+              choices: ["Goggles and gloves", "A swimsuit", "Slippers"],
+              correctIndex: 0,
+            },
           },
           {
             id: "right-tool",
@@ -942,6 +1232,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Using the right tool makes things easier! A hammer is for nails, and a saw cuts wood.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file160_DesignsByBee_TheRightTool_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "What tool is used for nails?",
+              choices: ["A hammer", "A saw", "A ruler"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -962,6 +1257,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Blueprints are like recipes that show how to build things!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file162_DesignsByBee_WhatAreBlueprints_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What are blueprints like?",
+              choices: ["Recipes for building things", "Storybooks", "Maps of the ocean"],
+              correctIndex: 0,
+            },
           },
           {
             id: "why-blue",
@@ -970,6 +1270,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Blueprints used to be blue with white lines. That's how they got their name!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file163_DesignsByBee_WhyAreTheyBlue_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "What color were blueprints, giving them their name?",
+              choices: ["Blue", "Red", "Green"],
+              correctIndex: 0,
+            },
           },
           {
             id: "technical-drawing",
@@ -978,6 +1283,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Builders draw pictures from every side — the top, the front, and the side!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file164_DesignsByBee_DrawingPlans_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "From how many sides do builders draw pictures?",
+              choices: ["Every side — top, front, and side", "Just the top", "Just the back"],
+              correctIndex: 0,
+            },
           },
           {
             id: "modern-blueprints",
@@ -986,6 +1296,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Builders can look at plans and spin them around to see every side!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file165_DesignsByBee_ComputerPlans_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "What can builders do with plans on a computer?",
+              choices: ["Spin them around to see every side", "Eat them", "Fold them into a hat"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -1006,6 +1321,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Energy helps things move and work. Without it, nothing would go!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file167_DesignsByBee_WhatIsEnergy_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What does energy help things do?",
+              choices: ["Move and work", "Sleep and rest", "Disappear"],
+              correctIndex: 0,
+            },
           },
           {
             id: "electricity",
@@ -1014,6 +1334,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Electricity travels through wires to power things. It moves super fast!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file168_DesignsByBee_Electricity_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "What does electricity travel through?",
+              choices: ["Wires", "Water", "Air balloons"],
+              correctIndex: 0,
+            },
           },
           {
             id: "batteries-and-cells",
@@ -1022,6 +1347,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "Batteries store energy for later. That's how toys work without being plugged in!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file169_DesignsByBee_Batteries_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What do batteries do?",
+              choices: ["Store energy for later", "Make loud noises", "Turn into gears"],
+              correctIndex: 0,
+            },
           },
           {
             id: "renewable-energy",
@@ -1030,6 +1360,11 @@ const TECH_CITY_ENV: EnvironmentConfig = {
             core: "We can get energy from the sun and the wind! They never run out.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file170_DesignsByBee_EnergyFromNature_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "Where can we get energy that never runs out?",
+              choices: ["The sun and the wind", "Old batteries", "Ice cubes"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -1091,14 +1426,24 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "Every flower starts as a tiny seed! Inside is a baby plant ready to grow.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file173_DesignsByBee_Seed_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "What is inside a tiny seed?",
+              choices: ["A baby plant", "A rock", "A drop of water"],
+              correctIndex: 0,
+            },
           },
           {
             id: "photosynthesis",
             name: "Sunlight Power",
-            emoji: "\u2600\uFE0F",
+            emoji: "☀️",
             core: "Plants use sunlight to make their own food!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file174_DesignsByBee_SunlightPower_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "What do plants use to make their own food?",
+              choices: ["Sunlight", "Moonlight", "Snow"],
+              correctIndex: 0,
+            },
           },
           {
             id: "bloom",
@@ -1107,6 +1452,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "When flowers bloom, they open their petals. Bees and butterflies help make new seeds.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file175_DesignsByBee_Blooming_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "Who helps flowers make new seeds?",
+              choices: ["Bees and butterflies", "Birds and fish", "Ants and worms"],
+              correctIndex: 0,
+            },
           },
           {
             id: "roots",
@@ -1115,6 +1465,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "Roots work like underground straws, sucking up water from the soil! Some roots stretch wider than the tree above.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file176_DesignsByBee_Roots_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "What are roots like?",
+              choices: ["Underground straws", "Tiny hats", "Balloons"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -1131,10 +1486,15 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
           {
             id: "photosynthesis-process",
             name: "Plant Power",
-            emoji: "\u2600\uFE0F",
+            emoji: "☀️",
             core: "Plants help make the air we breathe! They use sunlight to make fresh oxygen.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file178_DesignsByBee_PlantPower_take2.wav",
             unlockAt: 1,
+            question: {
+              prompt: "What do plants make using sunlight?",
+              choices: ["Fresh oxygen", "Rainwater", "Soil"],
+              correctIndex: 0,
+            },
           },
           {
             id: "carbon-dioxide",
@@ -1143,6 +1503,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "When you breathe out, plants use that air to grow. You help each other!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file179_DesignsByBee_BreathingTogether_take2.wav",
             unlockAt: 3,
+            question: {
+              prompt: "What do plants use when you breathe out?",
+              choices: ["The air you breathe out", "Your food", "Your shadow"],
+              correctIndex: 0,
+            },
           },
           {
             id: "chlorophyll",
@@ -1151,6 +1516,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "Plants are green because they catch sunlight in their leaves! It helps them make food.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file180_DesignsByBee_WhyPlantsAreGreen_take2.wav",
             unlockAt: 5,
+            question: {
+              prompt: "Why are plants green?",
+              choices: ["They catch sunlight in their leaves", "They are always cold", "They are painted"],
+              correctIndex: 0,
+            },
           },
           {
             id: "glucose",
@@ -1159,6 +1529,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "Plants make their own food using sunlight. It helps them grow big and strong!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file181_DesignsByBee_PlantFood_take2.wav",
             unlockAt: 7,
+            question: {
+              prompt: "What helps plants grow big and strong?",
+              choices: ["The food they make from sunlight", "Loud music", "Cold ice"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -1179,6 +1554,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "When a seed gets water, it starts to grow! A root goes down, and a stem grows up.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file183_DesignsByBee_Germination_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What makes a seed start to grow?",
+              choices: ["Water", "Wind", "Sand"],
+              correctIndex: 0,
+            },
           },
           {
             id: "watering",
@@ -1187,6 +1567,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "Plants drink water through their roots. Some trees move a LOT of water every day!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file184_DesignsByBee_Watering_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "How do plants drink water?",
+              choices: ["Through their roots", "Through their leaves", "Through their flowers"],
+              correctIndex: 0,
+            },
           },
           {
             id: "soil",
@@ -1195,14 +1580,24 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "Soil is full of tiny living things! They help turn old leaves into food for plants.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file185_DesignsByBee_Soil_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What do tiny living things in soil turn old leaves into?",
+              choices: ["Food for plants", "Rocks", "Water"],
+              correctIndex: 0,
+            },
           },
           {
             id: "seed-travel",
             name: "Seed Travel",
-            emoji: "\u{1F32C}\uFE0F",
+            emoji: "\u{1F32C}️",
             core: "Seeds travel in cool ways! Some fly on the wind, some float on water, and some stick to animals.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file186_DesignsByBee_SeedTravel_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "How can seeds travel to new places?",
+              choices: ["On the wind, on water, or stuck to animals", "Only by walking", "Only underground"],
+              correctIndex: 0,
+            },
           },
         ],
       },
@@ -1223,6 +1618,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "Each ring in a tree shows one year of growth! Some trees are thousands of years old.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file188_DesignsByBee_AgeRings_take2.wav",
             unlockAt: 2,
+            question: {
+              prompt: "What does each ring in a tree show?",
+              choices: ["One year of growth", "One day of rain", "One flower bloom"],
+              correctIndex: 0,
+            },
           },
           {
             id: "bark",
@@ -1231,6 +1631,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "Bark is like a tree's armor! It keeps the tree safe from bugs and bad weather.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file189_DesignsByBee_Bark_take2.wav",
             unlockAt: 4,
+            question: {
+              prompt: "What is bark like for a tree?",
+              choices: ["Armor that keeps it safe", "A soft blanket", "A tasty snack"],
+              correctIndex: 0,
+            },
           },
           {
             id: "sapwood",
@@ -1239,6 +1644,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "The wood inside a tree carries water from the roots up to the leaves — like a big straw!",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file190_DesignsByBee_Sapwood_take2.wav",
             unlockAt: 6,
+            question: {
+              prompt: "What does sapwood carry up to the leaves?",
+              choices: ["Water", "Sunlight", "Sand"],
+              correctIndex: 0,
+            },
           },
           {
             id: "heartwood",
@@ -1247,6 +1657,11 @@ const GLASS_DOME_ENV: EnvironmentConfig = {
             core: "The center of a tree is strong and sturdy! It helps hold the tree up.",
             audioSrc: "/assets/discovery rooms/DiscoverRoomFacts_take2/file191_DesignsByBee_Heartwood_take2.wav",
             unlockAt: 8,
+            question: {
+              prompt: "What does the strong center of a tree do?",
+              choices: ["Helps hold it up", "Makes it grow leaves", "Makes it smell nice"],
+              correctIndex: 0,
+            },
           },
         ],
       },

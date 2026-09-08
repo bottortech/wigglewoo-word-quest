@@ -7,6 +7,10 @@
 
 import "./WaterBaseLayer.css";
 
-const WaterBaseLayer: React.FC = () => <div className="water-base-layer" />;
+const WaterBaseLayer: React.FC = () => (
+  <div className="water-base-layer">
+    <div className="water-base-layer__scroll" />
+  </div>
+);
 
 export default WaterBaseLayer;

@@ -5,7 +5,10 @@
 
 .trace-moment {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 50;
   display: flex;
   align-items: center;
@@ -19,7 +22,10 @@
    the panel on the Green Teaching Chalkboard (desk easel) area. */
 .trace-moment__panel {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 1;
   display: flex;
   flex-direction: column;
@@ -32,7 +38,10 @@
 
 .trace-moment__vignette {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background:
     radial-gradient(circle at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.78) 70%),
     rgba(0,0,0,0.55);
@@ -53,7 +62,10 @@
 
 .trace-moment__prop {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -203,6 +215,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
+  z-index: 2;
   background: rgba(255,255,255,0.08);
   color: #fff;
   border: 1px solid rgba(255,255,255,0.18);
@@ -222,6 +235,96 @@
 }
 
 .trace-moment__skip:hover { opacity: 1; }
+
+/* Replay ("show me again") button — mirrors the skip button's corner
+ * placement but on the left, and uses the circular-icon-button
+ * convention established by FactNarration/pg-speaker-btn elsewhere in
+ * the app rather than skip's pill shape, since this is a replay/toggle
+ * affordance, not a dismiss action. */
+.trace-moment__replay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 200, 100, 0.16);
+  border: 1.5px solid rgba(255, 200, 100, 0.4);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.trace-moment__replay:hover { background: rgba(255, 200, 100, 0.3); transform: scale(1.08); }
+.trace-moment__replay:active { transform: scale(0.95); }
+
+.trace-moment__replay--active {
+  background: rgba(255, 200, 100, 0.32);
+  animation: trace-replay-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes trace-replay-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 197, 71, 0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(255, 197, 71, 0); }
+}
+
+/* Phase hint — "Watch first!" / "Your turn!" / "Great job!" — sits under
+ * the caption in the same glowing banner. */
+.trace-moment__phase-hint {
+  color: #d8f0ff;
+  font-size: clamp(11px, 2vmin, 15px);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 10px rgba(120, 210, 255, 0.5), 0 2px 4px rgba(0,0,0,0.55);
+}
+
+/* Demo pointer — the animated dot showing correct stroke motion during
+ * the Watch phase. Distinct cool-blue "ghost hand" look, deliberately
+ * different from the warm-gold finger spark used during live tracing,
+ * so kids can tell "watching" apart from "my turn." */
+.trace-moment__demo-pointer {
+  fill: #eaf6ff;
+  filter:
+    drop-shadow(0 0 5px #7fd4ff)
+    drop-shadow(0 0 12px #4ec3ff)
+    drop-shadow(0 0 22px rgba(78, 195, 255, 0.6));
+  pointer-events: none;
+}
+
+/* Start indicator — pulsing ring + dot + direction arrow at the active
+ * stroke's true starting point. Hops between strokes during both the
+ * demo and live tracing (JS swaps which stroke it's anchored to). */
+.trace-moment__start-indicator {
+  animation: trace-start-flicker 2s ease-in-out infinite;
+}
+
+.trace-moment__start-ring {
+  fill: none;
+  stroke: #ffd9a8;
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 2px #ff8a3a);
+  animation: trace-start-ring 1.6s ease-out infinite;
+}
+
+@keyframes trace-start-ring {
+  0%   { r: 2;  opacity: 0.95; }
+  100% { r: 12; opacity: 0; }
+}
+
+.trace-moment__start-dot {
+  fill: #ffe6c0;
+  filter: drop-shadow(0 0 2px #ff8a3a);
+}
+
+@keyframes trace-start-flicker {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.9; }
+}
 
 /* Success burst — applied to the completed dashes when the trace
    finishes. Freezes the dash flow on the pending layer too. */

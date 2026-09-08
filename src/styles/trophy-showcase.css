@@ -17,6 +17,16 @@
 .glass-display--medium { width: calc(90px * var(--u)); }
 .glass-display--large  { width: calc(140px * var(--u)); }
 
+/* Explicit case height per size (width * 4/3, matching the aspect-ratio
+   below) — aspect-ratio alone isn't supported on the Chrome 81/87
+   WebViews these tablets ship, where it silently resolves to ~0 height
+   and collapses the whole glass case to a sliver. Keeping aspect-ratio
+   too costs nothing on browsers where it works; this explicit value is
+   what actually renders on-device. */
+.glass-display--small  .glass-display__case { height: calc(93.33px * var(--u)); }
+.glass-display--medium .glass-display__case { height: calc(120px * var(--u)); }
+.glass-display--large  .glass-display__case { height: calc(186.67px * var(--u)); }
+
 /* --- Spotlight beam --- */
 .glass-display__spotlight {
   position: absolute;
@@ -147,6 +157,10 @@
 
 /* Tier: none — locked silhouette */
 .glass-display__trophy-img--none {
+  /* Slightly larger than the base 190% so the silhouette fills the
+     case better — case/badge/position are untouched, this only scales
+     the image itself. */
+  width: 210%;
   opacity: 0.5;
   filter:
     grayscale(0.6)
@@ -183,7 +197,10 @@
 
 .glass-display__trophy-img--half-fill {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   /* Show only the bottom 50% — gives a clear "filling up" feel inside the
    * ghost outline. clip-path is widely supported and unambiguous. */
   clip-path: inset(50% 0 0 0);

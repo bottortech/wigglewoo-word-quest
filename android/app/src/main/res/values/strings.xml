@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">WiggleWoo\'s Word Quest</string>
+    <string name="title_activity_main">WiggleWoo\'s Word Quest</string>
+    <string name="package_name">com.bottortech.wigglewoo</string>
+    <string name="custom_url_scheme">com.bottortech.wigglewoo</string>
+</resources>

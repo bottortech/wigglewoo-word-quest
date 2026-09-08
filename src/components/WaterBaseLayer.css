@@ -12,55 +12,80 @@
 
 .water-base-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
 
   /* Uniform bright turquoise base — peeks through the texture's
      translucent edges */
   background-color: #3a9fd4;
 
-  /* Stylized water texture (water-layer.png is ~2:1 aspect, painted
-     with built-in caustic ripples and tiny gleams). Tile size picked
-     so the repeat isn't obvious at typical map zoom — tune if the
-     pattern reads as too small/large on real device. */
-  background-image: url("/assets/water-layer.png");
-  background-repeat: repeat;
-  background-size: 600px 300px;
-  background-position: 0 0;
-
-  /* Horizontal current — one full tile every 60s. A touch faster
-     than the previous 90s so the flow is perceptible, but still
-     reads as gentle river current, not arcade scroll. */
-  animation: water-base-drift 60s linear infinite;
-
-  /* Light brightness/saturation lift to harmonize with island
-     shoreline tones; gentler than before since the new texture
-     is already vibrant. */
-  filter: brightness(1.05) saturate(1.10);
+  /* filter + mask-image disabled on Android as a diagnostic/perf test:
+     both force this already tiled+animated full-viewport layer onto an
+     expensive isolated compositor path, and were suspected contributors
+     to the WebView GPU tile budget being exceeded on lower-end devices.
+     TEMPORARY: shape reverts to a full rectangle instead of the river
+     outline until confirmed and a cheaper shape approach is chosen.
+  filter: brightness(1.05) saturate(1.10); */
 
   /* River mask — shapes where water is visible */
-  mask-image: url("/assets/river_mask.png");
+  /* mask-image: url("/assets/river_mask.png");
   -webkit-mask-image: url("/assets/river_mask.png");
   mask-size: cover;
   -webkit-mask-size: cover;
   mask-position: center;
-  -webkit-mask-position: center;
+  -webkit-mask-position: center; */
 }
 
-@keyframes water-base-drift {
-  0%   { background-position: 0 0; }
-  100% { background-position: 600px 0; }
+/* Scrolling child, not the full-viewport layer itself — animates
+   transform (GPU-compositable, no repaint) instead of background-position
+   (forces a full repaint every frame). The original background-position
+   version of this animation was exceeding the WebView GPU compositor's
+   tile memory budget on lower-end Android devices and caused the whole
+   page to fail to paint; this element is deliberately kept plain (no
+   filter/mask) to keep its compositor-layer cost as low as possible.
+   Extends one tile-width (600px) past the right edge so the seam never
+   shows as it slides left and loops.
+
+   2026-08-13: on re-test, this transform version still logged "tile
+   memory limits exceeded" plus 700ms-1.7s frame stalls and one visibly
+   corrupted tile near the map's trophy icon on the Tab A7 Lite — same
+   failure class as the original crash, just less severe. Kept anyway
+   per explicit user sign-off (visually fine, risk accepted) after
+   reviewing that evidence. If it ever regresses to a full blank-page
+   failure like the original bug, revert to a static (non-scrolling)
+   background here first before investigating further. */
+.water-base-layer__scroll {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% + 600px);
+  background-image: url("/assets/water-layer.png");
+  background-repeat: repeat;
+  background-size: 600px 300px;
+  background-position: 0 0;
+  will-change: transform;
+  animation: water-base-drift-transform 60s linear infinite;
+}
+
+@keyframes water-base-drift-transform {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-600px); }
 }
 
 /* Ambient toggle — freeze animation when ambient is off */
-.quest-map-overlay:not(.ambient-on) .water-base-layer {
+.quest-map-overlay:not(.ambient-on) .water-base-layer__scroll {
   animation: none;
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .water-base-layer {
+  .water-base-layer__scroll {
     animation: none;
   }
 }

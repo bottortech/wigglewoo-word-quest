@@ -37,7 +37,8 @@ import {
   areImageWordsComplete,
 } from "./game/wordData";
 import { DEFAULT_QUEST_ID } from "./game/questIds";
-import { QUEST_ENVIRONMENT_MAP } from "./game/exploreData";
+import { QUEST_ENVIRONMENT_MAP, ENVIRONMENTS } from "./game/exploreData";
+import { IS_KIOSK_BUILD, KIOSK_WORD_INDICES } from "./game/kioskMode";
 import {
   loadQuestProgress,
   advanceWord,
@@ -64,7 +65,7 @@ import {
   resetCrossMatchProgress,
 } from "./game/progression";
 import { FIRST_HALF_WORDS } from "./game/types";
-import { unlockSkinForEnvironment, initDefaultSkinPaths } from "./game/skins";
+import { unlockSkinForEnvironment, initDefaultSkinPaths, getActiveSkinEnvironmentId } from "./game/skins";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, CVVC_QUEST_IDS } from "./game/questIds";
 import WardrobeModal from "./components/WardrobeModal";
 import SkinUnlockCelebration from "./components/SkinUnlockCelebration";
@@ -112,6 +113,26 @@ export default function App() {
 
     // Welcome VO on every startup — short delay so music has time to fade in
     const welcomeTimer = setTimeout(() => playEvent("welcome-intro"), 1500);
+
+    // Kiosk mode: force the active quest's trophy tier to exactly "half"
+    // on every launch, so the shortened 4-game sequence always routes to
+    // the phase-2 trophy room (see handleNavigate's quest-summary branch,
+    // which only fires trophy-room when tier === "half" exactly — "full"
+    // or "none" both skip straight to discovery).
+    //
+    // Two bugs this guards against, both observed from stale localStorage
+    // left over by non-kiosk testing/dev play on the same device:
+    //   1. Must target whatever quest is ACTUALLY active (globalProg,
+    //      read just below) — not a hardcoded CVC_QUESTS[0] — otherwise a
+    //      drifted active quest never gets seeded at all.
+    //   2. Must reset before awarding — awardTrophyTier only upgrades,
+    //      never downgrades, so if the active quest was previously played
+    //      to "full" tier, awarding "half" on top of it is a no-op and
+    //      the trophy room still gets skipped.
+    if (IS_KIOSK_BUILD) {
+      resetTrophyProgress(globalProg.activeQuestId);
+      awardTrophyTier(globalProg.activeQuestId, "half");
+    }
 
     return () => {
       clearTimeout(welcomeTimer);
@@ -165,6 +186,14 @@ export default function App() {
   // All 16 words passed to screens — decode gating handled in QuestMapScreen
   void getImageWords; void getDecodeWords;
 
+  // Kiosk mode: index into KIOSK_WORD_INDICES for the current child's session
+  const [kioskStep, setKioskStep] = useState(0);
+  // True while the wardrobe modal is open specifically as the mandatory
+  // kiosk intro step (every child picks a character before the map) —
+  // distinguishes that from the map's own "open wardrobe" button, which
+  // should just close normally. See handleCloseWardrobe.
+  const [kioskWardrobeIntro, setKioskWardrobeIntro] = useState(false);
+
   // If saved quest is from an unloaded chunk (CVCC/CVVC), load it
   useEffect(() => {
     if (activeQuest) return; // already resolved
@@ -183,7 +212,13 @@ export default function App() {
   // ---- Home Screen → Onboarding (first launch) or Map ----
   const handlePlay = useCallback(() => {
     if (loadSettings().backgroundMusic) backgroundMusic.play();
-    if (localStorage.getItem(ONBOARDING_SEEN_KEY) === "true") {
+    if (IS_KIOSK_BUILD && localStorage.getItem(ONBOARDING_SEEN_KEY) === "true") {
+      // Kiosk mode: every child picks a character first (wardrobe intro),
+      // then sees the map once — see handleCloseWardrobe for the
+      // continuation into "map".
+      setKioskWardrobeIntro(true);
+      setWardrobeOpen(true);
+    } else if (localStorage.getItem(ONBOARDING_SEEN_KEY) === "true") {
       setRoute("map");
     } else {
       setRoute("onboarding");
@@ -201,6 +236,13 @@ export default function App() {
     localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
     // V1 ships CVC only — see App.tsx clamp above for the 1.1 path.
     localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
+    if (IS_KIOSK_BUILD) {
+      // Wardrobe intro comes right after onboarding, before the map —
+      // see handleCloseWardrobe for the continuation into "map".
+      setKioskWardrobeIntro(true);
+      setWardrobeOpen(true);
+      return;
+    }
     setRoute("map");
   }, []);
 
@@ -237,6 +279,21 @@ export default function App() {
         const updated = advanceWord(progress);
         setWordIndex(updated.currentWordIndex);
       } else if (target === "quest-map") {
+        // Kiosk mode: chain straight into the next core game instead of
+        // returning to the map. The final kiosk game plays the quest's real
+        // last word, so it never reaches this branch — PotionGameScreen
+        // routes it to "quest-summary" instead (handled below).
+        if (IS_KIOSK_BUILD && kioskStep < KIOSK_WORD_INDICES.length - 1) {
+          advanceWord(progress);
+          const nextStep = kioskStep + 1;
+          setKioskStep(nextStep);
+          setWordIndex(KIOSK_WORD_INDICES[nextStep]);
+          setArrivedFromWord(null);
+          setTrophyJustCompleted(false);
+          setRoute("potion-game");
+          return;
+        }
+
         // Level done → advance, route to trophy phase 1 if just finished node 8,
         // otherwise go back to map.
         advanceWord(progress);
@@ -315,7 +372,7 @@ export default function App() {
         }
       }
     },
-    [activeQuest?.id]
+    [activeQuest?.id, kioskStep]
   );
 
   // ---- Restart current quest ----
@@ -362,6 +419,7 @@ export default function App() {
       "ww_placement",
       "ww_placement_tiers",
       ONBOARDING_SEEN_KEY,
+      ...Object.keys(ENVIRONMENTS).map((envId) => `ww_room_complete_${envId}`),
     ];
     for (const key of keysToRemove) {
       localStorage.removeItem(key);
@@ -381,10 +439,12 @@ export default function App() {
     setTimeout(() => setRoute("map"), 50);
   }, []);
 
-  // ---- Demo Reset (volunteer hidden corner tap) ----
+  // ---- Demo Reset (volunteer hidden corner tap; also used by kiosk auto-reset) ----
   // Clears all per-session game progress but preserves ww_settings so
   // volunteer audio/display preferences survive between children.
-  const handleDemoReset = useCallback(() => {
+  // keepOnboarding: kiosk mode passes true so the intro doesn't replay for
+  // every child handoff — the staff-facing hidden 3-tap reset always clears it.
+  const handleDemoReset = useCallback((keepOnboarding = false) => {
     const keysToRemove = [
       "wigglewoo-cvc-progress",
       "wigglewoo-global-progress",
@@ -402,8 +462,12 @@ export default function App() {
       "ww_dev_unlock",
       "ww_placement",
       "ww_placement_tiers",
-      ONBOARDING_SEEN_KEY,
+      ...(keepOnboarding ? [] : [ONBOARDING_SEEN_KEY]),
       "ww_v1_quest_complete_seen",
+      // Per-room "already complete" flags (ExploreScreen.tsx) — not cleared
+      // here, a room's 2-fact auto-completion would never re-fire on a
+      // later visit to that same room, which kiosk mode depends on every time.
+      ...Object.keys(ENVIRONMENTS).map((envId) => `ww_room_complete_${envId}`),
     ];
     for (const key of keysToRemove) {
       localStorage.removeItem(key);
@@ -417,6 +481,7 @@ export default function App() {
     setTrophyJustCompleted(false);
     setWordIndex(0);
     setWardrobeOpen(false);
+    setKioskWardrobeIntro(false);
     setMapRevision((r) => r + 1);
     setSkinRevision((r) => r + 1);
     setShowQuestComplete(false);
@@ -425,6 +490,10 @@ export default function App() {
     setHasNewSkin(false);
     setExploreEnvId(null);
     setCrossMatchCheckpoint(null);
+    setKioskStep(0);
+    if (IS_KIOSK_BUILD) {
+      awardTrophyTier(defaultQuest.id, "half");
+    }
     setRoute("home");
   }, []);
 
@@ -482,7 +551,14 @@ export default function App() {
       // skip path so tier reaches "full" even if they tapped Continue before
       // finishing the match — keeps tier and quest state consistent.
       awardTrophyTier(activeQuest.id, "full");
-      const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
+      // Kiosk mode: send the child to the discovery room matching the
+      // WiggleWoo character they picked in the wardrobe intro, not the one
+      // tied to whatever quest they played. Only falls back to a random
+      // pick if they kept the default/unthemed "Classic WiggleWoo" (which
+      // has no matching room).
+      const envId = IS_KIOSK_BUILD
+        ? getActiveSkinEnvironmentId() ?? Object.keys(ENVIRONMENTS)[Math.floor(Math.random() * Object.keys(ENVIRONMENTS).length)]
+        : QUEST_ENVIRONMENT_MAP[activeQuest.id];
       if (envId) {
         markEnvironmentVisited(envId);
         backgroundMusic.playDiscoveryTheme(envId);
@@ -568,6 +644,10 @@ export default function App() {
 
   const handleDiscoveryRoomComplete = useCallback(() => {
     if (!activeQuest) return;
+    // Kiosk mode's room is randomly picked, not tied to activeQuest — the
+    // per-quest skin-unlock mapping below wouldn't make sense here, and the
+    // session resets right after anyway, so there's nothing to persist.
+    if (IS_KIOSK_BUILD) return;
     completeDiscoveryRoom(activeQuest.id);
     const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
     if (envId) {
@@ -597,6 +677,12 @@ export default function App() {
     setExploreEnvId(null);
     setArrivedFromWord(null);
 
+    // Kiosk mode: hand off to the next child instead of chaining quests.
+    if (IS_KIOSK_BUILD) {
+      handleDemoReset(true);
+      return;
+    }
+
     // After discovery room → auto-advance to next vowel quest
     if (activeQuest) {
       const next = getNextAutoAdvanceQuest(activeQuest.id);
@@ -617,7 +703,7 @@ export default function App() {
 
     setMapRevision((r) => r + 1);
     setRoute("map");
-  }, [activeQuest?.id]);
+  }, [activeQuest?.id, handleDemoReset]);
 
   // ---- Enter Discovery Room from map node ----
   const handleEnterDiscoveryRoom = useCallback(() => {
@@ -642,7 +728,17 @@ export default function App() {
 
   const handleCloseWardrobe = useCallback(() => {
     setWardrobeOpen(false);
-  }, []);
+    if (kioskWardrobeIntro) {
+      // Mandatory kiosk intro step just finished — continue into the map
+      // (shown once per child) instead of just closing back to nothing.
+      setKioskWardrobeIntro(false);
+      setKioskStep(0);
+      setWordIndex(KIOSK_WORD_INDICES[0]);
+      setArrivedFromWord(null);
+      setTrophyJustCompleted(false);
+      setRoute("map");
+    }
+  }, [kioskWardrobeIntro]);
 
   const handleSkinChanged = useCallback(() => {
     setSkinRevision((r) => r + 1);
@@ -817,6 +913,7 @@ export default function App() {
         isOpen={wardrobeOpen}
         onClose={handleCloseWardrobe}
         onSkinChanged={handleSkinChanged}
+        requireContinue={kioskWardrobeIntro}
       />
 
       {showChallengeUnlock && activeQuest && (

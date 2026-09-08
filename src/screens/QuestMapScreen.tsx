@@ -41,7 +41,6 @@ import "../styles/game.css";
 import "../styles/home.css";
 import "../styles/questmap.css";
 import "../styles/challenge-mode.css";
-import { isChallengeUnlocked } from "../game/progression";
 
 // ---- ErrorBoundary (safety net) ----
 interface EBProps { children: React.ReactNode }
@@ -1245,7 +1244,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             </button>
           )}
           <span className="word-quest-box__title">
-            {questBoxView === "types" ? "Quest Type" : `${effectiveQuestTypes.find(t => t.id === selectedQuestType)?.label ?? selectedQuestType} Quests`}
+            {questBoxView === "types" ? "Quest Type" : effectiveQuestTypes.find(t => t.id === selectedQuestType)?.label ?? selectedQuestType}
           </span>
         </div>
         <div className="word-quest-box__content">
@@ -1292,9 +1291,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                     } ${!isUnlocked ? "word-quest-box__vowel-btn--locked" : ""}`}
                     onClick={() => isUnlocked && handleVowelSelect(track.id)}
                     disabled={!isUnlocked}
+                    aria-label={track.label}
                   >
                     <span className="word-quest-box__vowel-letter">{track.vowel}</span>
-                    <span className="word-quest-box__vowel-label">{track.label}</span>
                     {mastery && (
                       <span
                         className="quest-mastery-stars"
@@ -1312,9 +1311,6 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                       </span>
                     )}
                     {!isUnlocked && <span className="word-quest-box__lock">🔒</span>}
-                    {isUnlocked && isChallengeUnlocked(track.id) && (
-                      <span className="challenge-star-badge" title="Challenge Mode available">⭐</span>
-                    )}
                   </button>
                 );
               })}

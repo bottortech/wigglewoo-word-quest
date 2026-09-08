@@ -77,22 +77,27 @@ const LessonObjectiveCard: React.FC<LessonObjectiveCardProps> = ({
         <p className="lesson-objective__goal">{goal.title}</p>
         <p className="lesson-objective__sub">{goal.sub}</p>
 
-        <button
-          type="button"
-          className="lesson-objective__example"
-          onClick={handleListen}
-          aria-label={`Tap to hear ${exampleWord.word}`}
-        >
-          <div className="lesson-objective__example-image">
-            <WordImage imageKey={exampleWord.imageKey} size={140} />
+        <div className="lesson-objective__example-wrap">
+          <button
+            type="button"
+            className="lesson-objective__example"
+            onClick={handleListen}
+            aria-label={`Tap to hear ${exampleWord.word}`}
+          >
+            <div className="lesson-objective__example-image">
+              <WordImage imageKey={exampleWord.imageKey} size={140} />
+            </div>
+            <div className="lesson-objective__example-word">
+              {exampleWord.word.toUpperCase()}
+            </div>
+            <div className="lesson-objective__example-listen" aria-hidden="true">
+              🔊 Tap to listen
+            </div>
+          </button>
+          <div className="lesson-objective__hand" aria-hidden="true">
+            <span className="lesson-objective__hand-inner">👆</span>
           </div>
-          <div className="lesson-objective__example-word">
-            {exampleWord.word.toUpperCase()}
-          </div>
-          <div className="lesson-objective__example-listen" aria-hidden="true">
-            🔊 Tap to listen
-          </div>
-        </button>
+        </div>
 
         <button
           type="button"

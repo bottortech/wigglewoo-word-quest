@@ -34,10 +34,12 @@ import {
 } from "../game/progression";
 import DailyCapModal from "../components/DailyCapModal";
 import FactNarration from "../components/FactNarration";
+import ComprehensionQuestion from "../components/ComprehensionQuestion";
 import { playEvent, playRoomWelcome, playLetterSound } from "../audio/SoundEffects";
 import TraceMoment from "../components/handwriting/TraceMoment";
 import { LETTER_PATHS } from "../components/handwriting/letterPaths";
 import { useTraceValidator } from "../components/handwriting/useTraceValidator";
+import { IS_KIOSK_BUILD } from "../game/kioskMode";
 import "../styles/explore.css";
 
 // =============================================
@@ -108,7 +110,13 @@ interface ExploreScreenProps {
 
 // ---- Sub-components ----
 
-/** Fact panel — bottom sheet with 2-col grid of tappable fact items */
+/** Fact panel — centered overlay. Opens on a 2x2 grid of big rounded fact
+ *  cards (game-menu style, room dimmed but visible behind); tapping one
+ *  transitions to a larger centered card with narration on the left and
+ *  the comprehension question on the right, plus a Back to Facts button.
+ *  Always exactly 4 items per panel, so a 2x2 grid — not a literal radial
+ *  layout — is what actually reads as "centered" and stays robust across
+ *  both event tablets without per-item-count layout math. */
 const FactPanelSheet: React.FC<{
   panel: FactPanel;
   onClose: () => void;
@@ -117,57 +125,82 @@ const FactPanelSheet: React.FC<{
   onFactNarrationEnded?: (factId: string) => void;
 }> = ({ panel, onClose, onFactViewed, onFactNarrationEnded }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [lockedToast] = useState<string | null>(null);
+  // Which fact's comprehension question (if any) is currently showing —
+  // set once that fact's narration finishes, cleared whenever a different
+  // item is expanded so a stale question can't flash before new audio plays.
+  const [questionFactId, setQuestionFactId] = useState<string | null>(null);
+
+  const activeItem = expandedId ? panel.items.find((i) => i.id === expandedId) ?? null : null;
+
+  const handleSelectFact = useCallback((item: FactItem) => {
+    onFactViewed?.(item.id);
+    setQuestionFactId(null);
+    setExpandedId(item.id);
+  }, [onFactViewed]);
+
+  const handleBackToFacts = useCallback(() => {
+    setExpandedId(null);
+    setQuestionFactId(null);
+  }, []);
 
   return (
     <>
       <div className="fact-panel-backdrop" onClick={onClose} />
-      <div className="fact-panel">
-        <div className="fact-panel__handle" />
-        <button className="fact-panel__close" onClick={onClose} aria-label="Close">
+      <div className="fact-overlay">
+        <button className="fact-overlay__close" onClick={onClose} aria-label="Close">
           ✕
         </button>
-        <h3 className="fact-panel__title">{panel.title}</h3>
-        <div className="fact-panel__grid">
-          {panel.items.map((item: FactItem) => {
-            const isLocked = false; // All facts accessible
-            const isExpanded = expandedId === item.id;
-            return (
-              <div
-                key={item.id}
-                className={[
-                  "fact-panel__item",
-                  isExpanded ? "fact-panel__item--expanded" : "",
-                  isLocked ? "fact-panel__item--locked" : "",
-                ].filter(Boolean).join(" ")}
-                onClick={() => {
-                  if (!isExpanded) {
-                    onFactViewed?.(item.id);
-                  }
-                  setExpandedId(isExpanded ? null : item.id);
-                }}
-              >
-                <div className="fact-panel__item-header">
-                  <span className="fact-panel__item-emoji">{isLocked ? "🔒" : item.emoji}</span>
-                  <span className="fact-panel__item-name">{isLocked ? "???" : item.name}</span>
+
+        {!activeItem ? (
+          <div key="grid" className="fact-overlay__selection">
+            <h3 className="fact-overlay__title">{panel.title}</h3>
+            <div className="fact-overlay__grid">
+              {panel.items.map((item: FactItem) => (
+                <button
+                  key={item.id}
+                  className="fact-card"
+                  onClick={() => handleSelectFact(item)}
+                >
+                  <span className="fact-card__emoji">{item.emoji}</span>
+                  <span className="fact-card__name">{item.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div key={activeItem.id} className="fact-overlay__expanded">
+            <button className="fact-expanded__back" onClick={handleBackToFacts}>
+              ← Back to Facts
+            </button>
+            <div className="fact-expanded__columns">
+              <div className="fact-expanded__col fact-expanded__col--left">
+                <div className="fact-expanded__header">
+                  <span className="fact-expanded__emoji">{activeItem.emoji}</span>
+                  <span className="fact-expanded__name">{activeItem.name}</span>
                 </div>
-                {isExpanded && !isLocked && (
-                  <>
-                    <p className="fact-panel__item-fact">{item.core}</p>
-                    <FactNarration
-                      text={item.core}
-                      audioSrc={item.audioSrc}
-                      autoPlay
-                      onEnded={() => onFactNarrationEnded?.(item.id)}
-                    />
-                  </>
+                <FactNarration
+                  text={activeItem.core}
+                  titleText={activeItem.name}
+                  audioSrc={activeItem.audioSrc}
+                  autoPlay
+                  onEnded={() => {
+                    onFactNarrationEnded?.(activeItem.id);
+                    if (activeItem.question) setQuestionFactId(activeItem.id);
+                  }}
+                />
+              </div>
+              <div className="fact-expanded__col fact-expanded__col--right">
+                {activeItem.question && questionFactId === activeItem.id ? (
+                  <ComprehensionQuestion question={activeItem.question} />
+                ) : (
+                  <div className="fact-expanded__listening">
+                    <span className="fact-expanded__listening-emoji">🎧</span>
+                    <span>Listen for the question…</span>
+                  </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-        {lockedToast && (
-          <div className="fact-panel__locked-toast">{lockedToast}</div>
+            </div>
+          </div>
         )}
       </div>
     </>
@@ -210,6 +243,10 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const isRoomAlreadyComplete = localStorage.getItem(roomCompleteKey) === "true";
   const [factsViewedThisVisit, setFactsViewedThisVisit] = useState<Set<string>>(new Set());
   const [roomJustCompleted, setRoomJustCompleted] = useState(false);
+  // Kiosk builds: instead of auto-resetting ~3.5s after the 2nd fact with no
+  // visible cue, hold on an explicit "turn's over" screen until a staff
+  // member/parent taps Next Player — see triggerRoomComplete below.
+  const [kioskTurnComplete, setKioskTurnComplete] = useState(false);
   const FACTS_REQUIRED = 2;
   const needsCompletion = !!onComplete && !isRoomAlreadyComplete;
 
@@ -296,10 +333,27 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     // room is fading out. Total dwell before exit = ~3.5s.
     setTimeout(() => playEvent("discover-exit-bridge"), 2200);
     setTimeout(() => {
+      if (IS_KIOSK_BUILD) {
+        // Hold here — kioskTurnComplete's "Next Player" button is what
+        // actually calls onComplete/onBack (below), once someone taps it.
+        setKioskTurnComplete(true);
+        return;
+      }
       onComplete?.();
       onBack();
     }, 3500);
   }, [needsCompletion, roomJustCompleted, roomCompleteKey, onComplete, onBack]);
+
+  // Kiosk-only: "Next Player" tap — hands off to the next child. Resets
+  // ALL session/progress state via onComplete (no-op in kiosk, see
+  // App.tsx handleDiscoveryRoomComplete) + onBack (App.tsx
+  // handleDiscoveryRoomExit's kiosk branch calls handleDemoReset(true),
+  // which clears every piece of saved progress and remounts back at
+  // Home — so no answers/score/selections carry into the next turn).
+  const handleKioskNextPlayer = useCallback(() => {
+    onComplete?.();
+    onBack();
+  }, [onComplete, onBack]);
 
   /** Routed from `<FactNarration onEnded>`. Fires the per-fact reaction VO
    *  for non-completing facts only. The completing fact skips the reaction so
@@ -1164,8 +1218,26 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         </div>
       )}
 
-      {/* Room Complete overlay */}
-      {roomJustCompleted && (
+      {/* Room Complete overlay — kiosk builds swap to the "turn's over,
+          tap Next Player" variant once the dwell/VO finishes (see
+          triggerRoomComplete); normal builds never set kioskTurnComplete
+          and keep the original auto-advancing card. */}
+      {kioskTurnComplete ? (
+        <div className="explore-room-complete explore-room-complete--kiosk">
+          <div className="explore-room-complete__card">
+            <span className="explore-room-complete__icon">🎉</span>
+            <h2 className="explore-room-complete__title">Great Job!</h2>
+            <p className="explore-room-complete__sub">Your turn is complete!</p>
+            <button
+              type="button"
+              className="explore-next-player-btn"
+              onClick={handleKioskNextPlayer}
+            >
+              Next Player
+            </button>
+          </div>
+        </div>
+      ) : roomJustCompleted && (
         <div className="explore-room-complete">
           <div className="explore-room-complete__card">
             <span className="explore-room-complete__icon">🎉</span>

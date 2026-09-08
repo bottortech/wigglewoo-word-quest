@@ -35,7 +35,10 @@
    Background matches the scene so no dark bars are visible. */
 .quest-stage {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -78,7 +81,10 @@
   background-position: center center;
   /* Fill full stage at every viewport size */
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   max-height: none;
@@ -295,7 +301,10 @@
        regardless of aspect ratio. The background image
        stretches via background-size: 100% 100%. */
     position: absolute;
-    inset: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     aspect-ratio: auto;
     width: 100%;
     height: 100%;
@@ -324,7 +333,10 @@
   /* Background fills the full viewport */
   .machine-world {
     position: absolute;
-    inset: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     aspect-ratio: unset;
     height: 100%;
     max-height: none;
@@ -364,7 +376,10 @@
   position: absolute;
   width: 1366px;
   height: 1024px;
-  inset: unset;
+  top: unset;
+  right: unset;
+  bottom: unset;
+  left: unset;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(var(--potion-scale, 1));

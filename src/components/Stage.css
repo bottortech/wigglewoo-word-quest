@@ -10,7 +10,10 @@
 /* Outer wrapper fills viewport */
 .stage-wrapper {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   overflow: hidden;
   /* Match machine-world background so no gutters are visible
      if Chrome renders sub-pixel gaps around the game frame */
@@ -20,9 +23,13 @@
 /* The stage itself: always full viewport */
 .stage {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   overflow: hidden;
   /* Base scaling unit: updated by JS ResizeObserver */
   --u: 1;
   --uv: 1;
+  --umin: 1;
 }

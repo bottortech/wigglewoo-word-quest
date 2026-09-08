@@ -85,12 +85,16 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     startHint: { x: 84, y: 78 },
   },
   d: {
-    // Single continuous stroke: top of stem, down to baseline, curl left
-    // into the bowl going counter-clockwise, back up to where bowl meets
-    // stem at mid-height. Natural "stem-first" handwriting for lowercase d.
-    d: "M 75 22 L 75 78 Q 30 78 30 65 Q 30 50 75 50",
+    // Two strokes, matching the standard K-1 "Magic C, up like a
+    // helicopter, and back down" instruction: (1) the bowl, starting
+    // upper-right and sweeping counter-clockwise — same Magic-C direction
+    // as a/c/g/o/q; (2) the tall stem, top to bottom. Deliberately NOT a
+    // mirror of "b" (which is stem-first) — using a different motor
+    // pattern for b vs d is a standard technique for reducing b/d
+    // reversals in early readers, on top of matching the taught method.
+    d: "M 75 50 Q 30 50 30 65 Q 30 78 75 78 M 75 22 L 75 78",
     viewBox: "0 0 100 100",
-    startHint: { x: 75, y: 78 },
+    startHint: { x: 75, y: 50 },
   },
   f: {
     // Hook at the top curling left + vertical stem, then horizontal crossbar.
@@ -120,8 +124,12 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     startHintAngle: 90,
   },
   k: {
-    // Stem top→bottom, then upper diagonal in, then lower diagonal out.
-    d: "M 30 22 L 30 78 M 70 30 L 30 54 M 42 50 L 72 78",
+    // Stem top→bottom, then BOTH diagonals starting at the stem and
+    // kicking outward (matches standard instruction — pencil starts
+    // touching the line and moves away from it, never the reverse).
+    // The upper diagonal previously ran the wrong way (outer corner
+    // in to the stem); now consistent with the lower diagonal.
+    d: "M 30 22 L 30 78 M 30 54 L 70 30 M 42 50 L 72 78",
     viewBox: "0 0 100 100",
     startHint: { x: 30, y: 78 },
   },
@@ -149,12 +157,25 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     startHint: { x: 25, y: 78 },
   },
   p: {
-    // Single continuous stroke: up the descender to the top, then curve
-    // right into the bowl and return to mid-stem. One path means the
-    // top junction (stem meets bowl) is naturally filled with no gap.
-    d: "M 28 92 L 28 22 Q 56 22 70 38 Q 70 54 56 54 L 28 54",
+    // Two strokes: (1) the stem, top of the x-height down through the
+    // descender — was previously encoded bottom-to-top, which is
+    // backwards (every other vertical stroke in this file pulls DOWN,
+    // matching standard instruction: pencil strokes pull down, never
+    // push up); (2) the bowl, starting back at the stem's top and
+    // curving right into it, same shape as before. Two strokes (not
+    // one continuous path) because the bowl sits well above where the
+    // descender ends, unlike "b" whose bowl continues directly from
+    // the baseline with no pen lift needed.
+    d: "M 28 22 L 28 92 M 28 22 Q 56 22 70 38 Q 70 54 56 54 L 28 54",
     viewBox: "0 0 100 100",
-    startHint: { x: 28, y: 92 },
+    startHint: { x: 28, y: 22 },
+  },
+  q: {
+    // Bowl shaped exactly like "a" (open three-quarter circle), but with
+    // the stem extended past the baseline into a descender.
+    d: "M 65 28 Q 25 28 25 50 Q 25 72 65 72 M 65 28 L 65 92",
+    viewBox: "0 0 100 100",
+    startHint: { x: 65, y: 92 },
   },
   r: {
     // Stem from top down, then small hook at the top.
@@ -189,5 +210,27 @@ export const LETTER_PATHS: Record<string, LetterPath> = {
     viewBox: "0 0 100 100",
     startHint: { x: 18, y: 28 },
     startHintAngle: 75,
+  },
+  x: {
+    // Two crossing diagonals, top-left→bottom-right then top-right→bottom-left.
+    d: "M 25 25 L 75 75 M 75 25 L 25 75",
+    viewBox: "0 0 100 100",
+    startHint: { x: 25, y: 25 },
+    startHintAngle: 45,
+  },
+  y: {
+    // Short left diagonal down to the crossing point, long right diagonal
+    // continuing through it into a descender tip (bottom-left).
+    d: "M 22 26 L 50 58 M 78 26 L 20 92",
+    viewBox: "0 0 100 100",
+    startHint: { x: 22, y: 26 },
+    startHintAngle: 50,
+  },
+  z: {
+    // Single continuous stroke: top bar, diagonal down, bottom bar.
+    d: "M 25 30 L 72 30 L 25 72 L 72 72",
+    viewBox: "0 0 100 100",
+    startHint: { x: 25, y: 30 },
+    startHintAngle: 0,
   },
 };

@@ -32,8 +32,16 @@ const Stage: React.FC<StageProps> = ({ children }) => {
       const h = el.clientHeight;
       // --u = 1/932 of stage width (landscape base)
       // --uv = 1/430 of stage height
-      el.style.setProperty("--u", `${w / DESIGN_W}`);
-      el.style.setProperty("--uv", `${h / DESIGN_H}`);
+      // --umin = the smaller of the two, so elements sized off it never
+      // overflow on viewports that are shorter/more-square than the
+      // 932x430 design reference (e.g. smaller Android tablets) — a
+      // single shared unit instead of repeating min(var(--u), var(--uv))
+      // in every stylesheet.
+      const u = w / DESIGN_W;
+      const uv = h / DESIGN_H;
+      el.style.setProperty("--u", `${u}`);
+      el.style.setProperty("--uv", `${uv}`);
+      el.style.setProperty("--umin", `${Math.min(u, uv)}`);
       el.style.setProperty("--stage-w", `${w}px`);
       el.style.setProperty("--stage-h", `${h}px`);
       if (!ready) setReady(true);

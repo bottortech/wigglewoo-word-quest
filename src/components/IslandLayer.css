@@ -5,7 +5,10 @@
 
 .island-layer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 3;
   pointer-events: none;
   transform: scale(1.12);
@@ -133,7 +136,10 @@
 
 .island-layer__free-explore-glow {
   position: absolute;
-  inset: -12% -8% -8% -8%;
+  top: -12%;
+  right: -8%;
+  bottom: -8%;
+  left: -8%;
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,

@@ -6,7 +6,10 @@
 /* Unlock overlay — fullscreen celebration */
 .challenge-unlock-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -162,10 +165,4 @@
 
 .challenge-mode-toggle__star {
   font-size: 13px;
-}
-
-/* Star badge on quest vowel buttons (unlocked challenge) */
-.challenge-star-badge {
-  font-size: 10px;
-  margin-left: auto;
 }

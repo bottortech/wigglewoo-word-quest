@@ -8,7 +8,10 @@
 
 .water-ambient {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 1;
   pointer-events: none;
   overflow: hidden;
@@ -25,7 +28,10 @@
    ========================================== */
 .water-ambient__shimmer {
   position: absolute;
-  inset: -20%;          /* oversized so edges don't flash */
+  top: -20%;
+  right: -20%;
+  bottom: -20%;
+  left: -20%;          /* oversized so edges don't flash */
   opacity: 0.10;
   mix-blend-mode: soft-light;
   will-change: transform;
@@ -59,7 +65,10 @@
    ========================================== */
 .water-ambient__sheen {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
   opacity: 0.10;
   mix-blend-mode: overlay;
@@ -73,14 +82,23 @@
   );
   background-size: 220% 100%;
   background-repeat: no-repeat;
+  background-position: 50% 0;
+  /* sheen-pan disabled on Android: animating background-position forces
+     a full repaint every frame (compositor can't handle it like
+     transform/opacity), and combined with the full-viewport mask below
+     it was contributing to exceeding the WebView GPU compositor's tile
+     memory budget on lower-end devices. The static sheen highlight is
+     still visible, just not panning.
   animation: sheen-pan 50s linear infinite;
-  will-change: background-position;
+  will-change: background-position; */
+  /* mask-image disabled on Android as a perf diagnostic — full-viewport
+     bitmap masks are GPU-expensive; suspected tile-budget contributor.
   mask-image: url("/assets/river_mask.png");
   -webkit-mask-image: url("/assets/river_mask.png");
   mask-size: cover;
   -webkit-mask-size: cover;
   mask-position: center;
-  -webkit-mask-position: center;
+  -webkit-mask-position: center; */
 }
 
 @keyframes sheen-pan {
@@ -99,7 +117,10 @@
    ========================================== */
 .water-ambient__haze {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
   mix-blend-mode: screen;
   background: radial-gradient(
@@ -110,12 +131,14 @@
   );
   animation: haze-breathe 24s ease-in-out infinite;
   will-change: opacity, transform;
+  /* mask-image disabled on Android as a perf diagnostic — see
+     WaterAmbientLayer.css .water-ambient__sheen for rationale.
   mask-image: url("/assets/river_mask.png");
   -webkit-mask-image: url("/assets/river_mask.png");
   mask-size: cover;
   -webkit-mask-size: cover;
   mask-position: center;
-  -webkit-mask-position: center;
+  -webkit-mask-position: center; */
 }
 
 @keyframes haze-breathe {
@@ -130,7 +153,10 @@
    ========================================== */
 .water-ambient__bubbles {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 .bubble {

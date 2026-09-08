@@ -22,7 +22,10 @@
 .pg-shell::before {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background:
     radial-gradient(circle at 15% 70%, rgba(120, 40, 220, 0.13) 0%, transparent 40%),
     radial-gradient(circle at 85% 30%, rgba(40, 120, 220, 0.10) 0%, transparent 35%),
@@ -422,6 +425,16 @@
   border-radius: 6px;
 }
 
+/* Some Android WebView versions mark a plain tap as :focus-visible,
+   which showed as a gold square flashing on every bottle tap. Once
+   the input-modality tracker (src/utils/inputModality.ts) confirms
+   the current interaction is pointer-driven, suppress the ring here
+   — keyboard/switch users are unaffected since that attribute is only
+   ever set to "pointer" after an actual pointer/touch event. */
+html[data-input-modality="pointer"] .pg-bottle:focus-visible {
+  outline: none;
+}
+
 @keyframes pg-bottle-idle {
   0%, 100% { transform: translateY(0)   rotate(0deg);    }
   50%       { transform: translateY(-5px) rotate(0.5deg); }
@@ -701,7 +714,7 @@
   bottom: var(--pg-prof-bottom, 2%);
   left:   var(--pg-prof-left, 1.5%);
   right:  var(--pg-prof-right, auto);
-  width:  var(--pg-prof-w, clamp(92px, 14vw, 168px));
+  width:  var(--pg-prof-w, clamp(118px, 18vw, 215px));
   z-index: 8;
   pointer-events: none;
   user-select: none;
@@ -768,8 +781,9 @@
 
 /* ── Design tokens — iPad / desktop defaults ── */
 .machine-world--potion {
-  /* Professor */
-  --pg-prof-w:      clamp(92px, 14vw, 168px);
+  /* Professor — was clamp(92px, 14vw, 168px); bumped ~28% now that it
+     shows the kid's chosen wardrobe skin, not just a fixed decoration. */
+  --pg-prof-w:      clamp(118px, 18vw, 215px);
   --pg-prof-bottom: 2%;
   --pg-prof-left:   1.5%;
   --pg-prof-right:  auto;
@@ -791,9 +805,11 @@
   /* Bottle neck */
   --pg-neck-w:      18px;
   --pg-neck-h:      clamp(14px, 2.5vh, 20px);
-  /* Bottle body */
-  --pg-bottle-w:    clamp(52px, 9vw, 70px);
-  --pg-bottle-h:    clamp(70px, 13.5vh, 100px);
+  /* Bottle body — --umin (not vw/vh alone) so bottle size tracks
+     whichever of width/height is tighter, instead of only reacting to
+     width and crowding together on shorter/more-square viewports. */
+  --pg-bottle-w:    clamp(52px, calc(70px * var(--umin)), 70px);
+  --pg-bottle-h:    clamp(70px, calc(100px * var(--umin)), 100px);
   /* Bottle letter */
   --pg-bottle-fs:   clamp(24px, 4.5vw, 34px);
 }
@@ -812,7 +828,7 @@
 .machine-world--potion .title-badge {
   width: 320px;
   max-width: 320px;
-  top: 0.5%;
+  top: 14%;
   left: -3.5%;
 }
 
@@ -965,7 +981,10 @@
 .machine-world--potion .pg-overlay-zone::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
@@ -987,7 +1006,10 @@
 .machine-world--potion .pg-overlay-zone::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
@@ -1022,11 +1044,17 @@
 }
 
 .machine-world--potion .trace-moment__panel {
-  inset: auto;
-  top: 9%;
-  bottom: 7%;
-  left: 4%;
-  right: 52%;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  /* Centered chalkboard instead of a left-44%-only sliver — must stay in
+     sync with the identical bounds on .trace-moment::after below, which
+     draws the wooden frame wrapping this panel. */
+  top: 14%;
+  bottom: 14%;
+  left: 14%;
+  right: 14%;
 
   /* No border here — wooden frame is drawn by .trace-moment::after above everything */
   border: none;
@@ -1047,7 +1075,10 @@
 .machine-world--potion .trace-moment__panel::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background:
     radial-gradient(ellipse at 18% 18%, rgba(255,255,255,0.06) 0%, transparent 55%),
     radial-gradient(ellipse at 82% 82%, rgba(0,0,0,0.14) 0%, transparent 45%);
@@ -1062,10 +1093,11 @@
 .machine-world--potion .trace-moment::after {
   content: '';
   position: absolute;
-  top: 9%;
-  bottom: 7%;
-  left: 4%;
-  right: 52%;
+  /* Kept identical to .trace-moment__panel above so the frame wraps it. */
+  top: 14%;
+  bottom: 14%;
+  left: 14%;
+  right: 14%;
   z-index: 51;
   pointer-events: none;
   border: clamp(12px, 1.8vmin, 20px) solid #8B5E1A;
@@ -1106,7 +1138,7 @@
   text-shadow:
     0 0 4px rgba(255, 255, 255, 0.18),
     0 1px 2px rgba(0, 0, 0, 0.60);
-  font-size: clamp(12px, 2vmin, 17px);
+  font-size: clamp(15px, 2.8vmin, 23px);
   letter-spacing: 0.07em;
 }
 
@@ -1116,7 +1148,7 @@
   text-shadow:
     0 0 3px rgba(240, 215, 100, 0.18),
     0 1px 2px rgba(0, 0, 0, 0.62);
-  font-size: clamp(10px, 1.6vmin, 13px);
+  font-size: clamp(13px, 2.2vmin, 18px);
   letter-spacing: 0.10em;
 }
 
@@ -1136,9 +1168,15 @@
 /* SVG: force square so the letter fills the slate instead of floating
    in a tall portrait stage (letter is naturally constrained by width) */
 .machine-world--potion .trace-moment__svg {
-  width: 82%;
-  height: auto;
-  aspect-ratio: 1 / 1;
+  /* vmin guarantees a true square without relying on the CSS
+     aspect-ratio property, which isn't supported on these tablets'
+     WebView (Chrome 81/87, below Chrome 88) — there, `height: auto` +
+     `aspect-ratio: 1/1` could size the SVG incorrectly, letting some
+     letter paths render outside the visible chalkboard. */
+  width: 88vmin;
+  height: 88vmin;
+  max-width: 97%;
+  max-height: 97%;
 }
 
 /* Skip button: stays at default position (top-right of machine-world, in the dimmed
@@ -1182,7 +1220,7 @@
 }
 
 .pg-bottles-row {
-  gap: clamp(12px, 2.4vw, 26px);
+  gap: clamp(12px, calc(26px * var(--umin)), 26px);
 }
 
 /* ── Gameplay column: slots → beaker → bottles, stacked vertically ── */
@@ -1440,8 +1478,8 @@
 /* ── Vertical books — bottom-right of classroom ── */
 .pg-books--vertical {
   position: absolute;
-  right: 1.5%;
-  bottom: 12%;
+  right: 2.5%;
+  bottom: 21%;
   width: clamp(77px, 14%, 176px);
   height: auto;
   pointer-events: none;
@@ -1456,7 +1494,7 @@
    Wood tones matched to the classroom desk (#c8902e / #9b6b1a / #7a5010). */
 .pg-bookshelf {
   position: absolute;
-  top: 18%;
+  top: 27%;
   right: -1.5%;
   width: clamp(115px, 17%, 228px);
   z-index: 12;
@@ -1517,7 +1555,7 @@
 /* Potion shelf — single combined image (bottles + shelf baked in) */
 .pg-potion-shelf {
   position: absolute;
-  top: 18%;
+  top: 27%;
   left: -1.5%;
   width: clamp(115px, 17%, 228px);
   height: auto;
@@ -1592,11 +1630,11 @@
 }
 
 /* Tight cluster anchored right — sitting on desk beside the books */
-.pg-desk-potion--1 { bottom: 12%;  right: 23%; }
-.pg-desk-potion--2 { bottom: 13%;  right: 21%; }
-.pg-desk-potion--3 { bottom: 12%;  right: 19%; }
-.pg-desk-potion--4 { bottom: 13%;  right: 17%; }
-.pg-desk-potion--5 { bottom: 12%;  right: 15%; }
+.pg-desk-potion--1 { bottom: 21%;  right: 21%; }
+.pg-desk-potion--2 { bottom: 22%;  right: 19%; }
+.pg-desk-potion--3 { bottom: 21%;  right: 17%; }
+.pg-desk-potion--4 { bottom: 22%;  right: 15%; }
+.pg-desk-potion--5 { bottom: 21%;  right: 13%; }
 
 /* ── Green Teaching Chalkboard — desk easel, bottom-left of scene ──
    At rest: small angled easel on the desk; clickable on any word that has a
@@ -1636,10 +1674,10 @@
   text-align: center;
   color: rgba(238, 232, 212, 0.82);
   font-family: "Nunito", Arial, sans-serif;
-  font-size: clamp(11px, 2vmin, 17px);
+  font-size: clamp(14px, 3vmin, 22px);
   font-weight: 800;
   letter-spacing: 0.05em;
-  line-height: 1.55;
+  line-height: 1.4;
   text-shadow:
     0 0 4px rgba(255, 255, 255, 0.25),
     0 1px 2px rgba(0, 0, 0, 0.5);

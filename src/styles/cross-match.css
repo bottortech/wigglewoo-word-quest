@@ -146,7 +146,10 @@
 .cross-match__picture-card::before {
   content: "";
   position: absolute;
-  inset: calc(-10px * var(--u));
+  top: calc(-10px * var(--u));
+  right: calc(-10px * var(--u));
+  bottom: calc(-10px * var(--u));
+  left: calc(-10px * var(--u));
   border: calc(2px * var(--u)) dashed rgba(255, 224, 138, 0.28);
   border-radius: 50%;
   pointer-events: none;
@@ -239,7 +242,10 @@
 /* SVG line layer — sits above cards, never intercepts pointer events */
 .cross-match__lines {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -299,7 +305,10 @@
 /* Scanlines overlay — fine horizontal stripes baked into the screen */
 .cross-match__monitor-scanlines {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: repeating-linear-gradient(
     180deg,
     rgba(0, 0, 0, 0) 0px,
@@ -314,7 +323,10 @@
 /* Brief flicker that pulses brighter when a phrase appears */
 .cross-match__monitor-flicker {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(94, 255, 141, 0.05);
   pointer-events: none;
   opacity: 0;
@@ -506,7 +518,10 @@
 /* Celebration banner */
 .cross-match__celebration {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -9,6 +9,8 @@
 //   - Asset path resolution for map + game screen
 // =============================================
 
+import { IS_KIOSK_BUILD } from "./kioskMode";
+
 const SKINS_KEY = "wigglewoo-skins";
 const ACTIVE_SKIN_KEY = "wigglewoo-active-skin";
 
@@ -83,6 +85,12 @@ export const SKIN_REGISTRY: SkinDef[] = [
 // ---- Persistence ----
 
 function loadUnlockedSet(): Set<string> {
+  // Kiosk build: every skin is available so kids can pick any look right
+  // away, instead of the normal "finish this quest's discovery room"
+  // unlock — normal (App Store) builds are unaffected.
+  if (IS_KIOSK_BUILD) {
+    return new Set(SKIN_REGISTRY.map((s) => s.skinId));
+  }
   try {
     const raw = localStorage.getItem(SKINS_KEY);
     if (raw) return new Set(JSON.parse(raw));
@@ -154,6 +162,17 @@ export function getActiveSkinAssets(): { heroImg: string; helperImg: string } {
   }
   // Fallback to default if skin not found
   return { heroImg: defaultHeroImg, helperImg: defaultHelperImg };
+}
+
+/** The discovery-room environment matching the currently active skin, or
+ *  null if the active skin is the default (no themed room) or unrecognized.
+ *  Single source of truth for "which room goes with this character" —
+ *  callers should use this instead of re-deriving the mapping themselves. */
+export function getActiveSkinEnvironmentId(): string | null {
+  const skinId = getActiveSkinId();
+  if (skinId === DEFAULT_SKIN_ID) return null;
+  const def = SKIN_REGISTRY.find((s) => s.skinId === skinId);
+  return def ? def.environmentId : null;
 }
 
 // ---- Skin unlock from discovery room ----

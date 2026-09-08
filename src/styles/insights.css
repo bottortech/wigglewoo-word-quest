@@ -5,7 +5,10 @@
 /* ---- Parent Gate Overlay ---- */
 .parent-gate-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 1000;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
@@ -94,7 +97,10 @@
 /* ---- Insights Screen (landscape single-page) ---- */
 .insights-screen {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 900;
   background: linear-gradient(160deg, #1a2a4a 0%, #0d1929 100%);
   color: #e8e4dc;
@@ -318,7 +324,10 @@
 
 .insights-vowel-row__bar-text {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;

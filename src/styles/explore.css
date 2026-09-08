@@ -9,7 +9,10 @@
 /* ---- Full-viewport environment container ---- */
 .explore-screen {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   background-size: 100% 100%;
@@ -431,7 +434,10 @@
 /* ---- Hotspot container ---- */
 .explore-hotspots {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 10;
   pointer-events: none;
 }
@@ -631,7 +637,10 @@
 /* ---- Fact popup backdrop ---- */
 .explore-popup-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
@@ -770,7 +779,10 @@
 /* Room Complete overlay */
 .explore-room-complete {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 500;
   display: flex;
   align-items: center;
@@ -820,6 +832,34 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.8);
   margin: 0;
+}
+
+/* Kiosk "Next Player" button — same warm-orange language as the
+   lesson-objective and wardrobe-intro "Let's Go!" buttons elsewhere. */
+.explore-next-player-btn {
+  display: block;
+  margin: 18px auto 0;
+  padding: clamp(10px, 1.8vh, 14px) clamp(28px, 5vw, 44px);
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(16px, 3vh, 22px);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.explore-next-player-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 22px rgba(255, 152, 0, 0.5);
+}
+
+.explore-next-player-btn:active {
+  transform: scale(0.95);
 }
 
 .explore-hint {
@@ -902,7 +942,10 @@
 
 .butterfly-frame--alt {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 @keyframes butterfly-float {
@@ -926,7 +969,10 @@
 /* ---- Fact panel — bottom sheet ---- */
 .fact-panel-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0,0,0,0.45);
   z-index: 9000;
   animation: popup-backdrop-in 0.2s ease-out;
@@ -957,6 +1003,204 @@
   transform: scale(0.95);
 }
 
+/* ==========================================
+   Fact overlay — centered, room visible dimmed behind it. Replaces the
+   old bottom-sheet .fact-panel (kept below, now unused, in case anything
+   still references it). No vertical scrolling anywhere in here by
+   design — everything is sized with vmin/clamp() against the shorter of
+   the two event tablets (Tab A7 Lite, ~704px landscape viewport) rather
+   than fixed pixel values.
+   ========================================== */
+
+.fact-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3vmin, 32px);
+  pointer-events: none; /* re-enabled by the two direct children below */
+}
+
+.fact-overlay__close {
+  position: absolute;
+  top: clamp(12px, 2vmin, 20px);
+  right: clamp(12px, 2vmin, 20px);
+  z-index: 1;
+  width: clamp(32px, 5vmin, 40px);
+  height: clamp(32px, 5vmin, 40px);
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.85);
+  font-size: clamp(14px, 2.2vmin, 17px);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  pointer-events: auto;
+}
+.fact-overlay__close:hover { background: rgba(255,255,255,0.25); }
+
+.fact-overlay__selection,
+.fact-overlay__expanded {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ---- Selection view: 2x2 grid of big fact cards ---- */
+.fact-overlay__selection {
+  gap: clamp(14px, 2.4vmin, 26px);
+  animation: fact-overlay-pop-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.fact-overlay__title {
+  color: #ffb347;
+  font-size: clamp(18px, 3vmin, 26px);
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.fact-overlay__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(14px, 2.4vmin, 28px);
+}
+
+.fact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1vmin, 10px);
+  width: clamp(140px, 20vmin, 210px);
+  height: clamp(120px, 17vmin, 170px);
+  border-radius: 24px;
+  background: linear-gradient(145deg, #4a2410 0%, #2a0e04 100%);
+  border: 2px solid rgba(255,160,60,0.4);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,200,100,0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease-out, border-color 0.15s, box-shadow 0.15s;
+  padding: 0 10px;
+}
+.fact-card:hover {
+  transform: scale(1.05);
+  border-color: rgba(255,180,80,0.75);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,100,0.2);
+}
+.fact-card:active { transform: scale(0.95); }
+
+.fact-card__emoji {
+  font-size: clamp(30px, 5.2vmin, 44px);
+  line-height: 1;
+}
+
+.fact-card__name {
+  color: #fff;
+  font-size: clamp(13px, 2vmin, 16px);
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* ---- Expanded view: back button + two columns ---- */
+.fact-overlay__expanded {
+  gap: clamp(10px, 1.6vmin, 16px);
+  width: min(94vw, 1080px);
+  max-height: 92vh;
+  animation: fact-overlay-pop-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.fact-expanded__back {
+  align-self: flex-start;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 999px;
+  padding: clamp(6px, 1vmin, 9px) clamp(14px, 2vmin, 18px);
+  font-size: clamp(12px, 1.8vmin, 15px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.fact-expanded__back:hover { background: rgba(255,255,255,0.2); }
+
+.fact-expanded__columns {
+  display: flex;
+  gap: clamp(14px, 2.6vmin, 28px);
+  width: 100%;
+  align-items: stretch;
+}
+
+.fact-expanded__col {
+  flex: 1 1 0;
+  min-width: 0;
+  background: linear-gradient(180deg, #3d1a0a 0%, #2a0e04 100%);
+  border: 2px solid rgba(255,140,50,0.35);
+  border-radius: 20px;
+  padding: clamp(14px, 2.2vmin, 24px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,200,100,0.12);
+  max-height: 74vh;
+  overflow: hidden;
+}
+
+.fact-expanded__header {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.4vmin, 12px);
+  margin-bottom: clamp(8px, 1.4vmin, 14px);
+  flex-shrink: 0;
+}
+
+.fact-expanded__emoji {
+  font-size: clamp(28px, 4.2vmin, 36px);
+  line-height: 1;
+}
+
+.fact-expanded__name {
+  color: #ffb347;
+  font-size: clamp(16px, 2.4vmin, 21px);
+  font-weight: 800;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.fact-expanded__listening {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.4vmin, 12px);
+  color: rgba(255,255,255,0.5);
+  font-size: clamp(13px, 1.8vmin, 15px);
+  font-weight: 600;
+  text-align: center;
+}
+
+.fact-expanded__listening-emoji {
+  font-size: clamp(34px, 5.4vmin, 48px);
+  opacity: 0.7;
+}
+
+@keyframes fact-overlay-pop-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ---- Old bottom-sheet fact panel — unused now that facts open in the
+   centered overlay above, kept only because FactNarration still renders
+   .fact-panel__item-fact / .fact-narration-btn (shared, still live). ---- */
 .fact-panel {
   position: fixed;
   bottom: 0;
@@ -1108,6 +1352,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
 }
 
 .fact-panel__item-emoji {
@@ -1123,9 +1368,9 @@
 }
 
 .fact-panel__item-fact {
-  margin: 10px 0 0;
+  margin: 0 0 clamp(8px, 1.4vmin, 14px);
   color: rgba(255,255,255,0.85);
-  font-size: 13px;
+  font-size: clamp(14px, 2.1vmin, 18px);
   font-weight: 500;
   line-height: 1.5;
   text-align: left;
@@ -1141,6 +1386,73 @@
     opacity: 1;
     max-height: 200px;
   }
+}
+
+/* Read-along word highlighting inside .fact-panel__item-fact */
+.fact-word {
+  transition: color 0.15s, text-shadow 0.15s;
+}
+
+.fact-word--active {
+  color: #ffd27a;
+  text-shadow: 0 0 8px rgba(255, 180, 60, 0.6);
+  font-weight: 700;
+}
+
+/* ---- Comprehension question — appears after a fact's narration ends ---- */
+.comprehension-question {
+  margin: 14px 0 0;
+  padding: 12px;
+  background: rgba(255, 180, 60, 0.1);
+  border: 1.5px solid rgba(255, 180, 60, 0.3);
+  border-radius: 12px;
+  animation: fact-item-expand 0.2s ease-out;
+}
+
+.comprehension-question__prompt {
+  margin: 0 0 10px;
+  color: #ffd27a;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.comprehension-question__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comprehension-question__choice {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.25);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.comprehension-question__choice:active {
+  transform: scale(0.98);
+}
+
+.comprehension-question__choice--correct {
+  background: rgba(90, 200, 100, 0.35);
+  border-color: rgba(120, 220, 130, 0.8);
+}
+
+.comprehension-question__choice--wrong {
+  background: rgba(220, 90, 90, 0.3);
+  border-color: rgba(230, 120, 120, 0.7);
+}
+
+.comprehension-question__choice:disabled {
+  cursor: default;
 }
 
 /* ---- Volcano ambient glow — persistent, unlike the generic discovery-hint
@@ -1174,7 +1486,10 @@
 /* Full-viewport erupted background (crossfade via opacity transition) */
 .eruption-bg-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background-size: cover;
   background-position: center 40%;
   background-repeat: no-repeat;
@@ -1199,7 +1514,10 @@
 /* Bubbling lava overlay inside lava pit */
 .lava-bubbling-overlay {
   position: absolute;
-  inset: 10%;
+  top: 10%;
+  right: 10%;
+  bottom: 10%;
+  left: 10%;
   width: 80%;
   height: 80%;
   object-fit: cover;
@@ -1226,7 +1544,10 @@
 /* Quake wrapper — shakes entire room on eruption */
 .volcano-room-root {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 0;
 }
 
@@ -1314,7 +1635,10 @@
 /* ---- Coral Cove: Bubbles ---- */
 .coral-bubbles {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
   z-index: 1;
   overflow: hidden;
@@ -1422,7 +1746,10 @@
  */
 .geartown-dust {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
   /* z-index 1: above the room background, below all interactive props
      (.explore-prop sits at z-index 2). */
@@ -1546,7 +1873,10 @@
 /* Lava pit — invisible clickable overlay */
 .lava-pit-hotspot {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: none;
   border: none;
   cursor: pointer;
@@ -1563,7 +1893,10 @@
 
 .fact-card-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0,0,0,0.55);
   display: flex;
   align-items: center;
@@ -1902,7 +2235,10 @@
 /* ---- Bubbles — coral cove village ---- */
 .bubbles-container {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 1;
@@ -1946,7 +2282,10 @@
 /* ---- Powered animation — "Power It Up" reward ---- */
 .powered-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 190;
   pointer-events: none;
   animation: powered-flash 1.5s ease-out forwards;

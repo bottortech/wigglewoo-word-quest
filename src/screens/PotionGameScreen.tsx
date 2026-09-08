@@ -53,6 +53,7 @@ import {
   recordLessonMastery,
 } from "../game/progression";
 import { getParentPrompt } from "../game/parentPrompts";
+import { getActiveSkinAssets } from "../game/skins";
 import gear1 from "../assets/gear1.png";
 import gear2 from "../assets/gear2.png";
 import gear3 from "../assets/gear3.png";
@@ -62,9 +63,6 @@ import gaugeImg from "../assets/guage.png";
 import needleImg from "../assets/needle_guage_pin.png";
 import pipe1 from "../assets/pipe1.png";
 import pipe2 from "../assets/pipe2.png";
-// Professor WiggleWoo sprites — swap when final sprites confirmed
-import wigglewooIdle from "../assets/wigglewoo_idle_transparent.png";
-import wigglewooCelebrate from "../assets/wigglewoo_celebration_transparent.png";
 import "../styles/game.css";
 import "../styles/potion-game.css";
 
@@ -142,6 +140,15 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 }) => {
   const currentWord: CvcWord = quest.words[currentWordIndex];
   const wordLength = currentWord.letters.length;
+
+  // The "Professor" persona standing in the lab (pg-professor below) is
+  // this screen's WiggleWoo — always shows the kid's equipped wardrobe
+  // skin (Classic included), so it stays consistent with the Quest Map
+  // and Trophy Room. There's no separate per-skin "celebrate" pose (only
+  // the bundled Classic character has one), so the celebrate moment reuses
+  // the same image with the existing bounce animation instead of a
+  // distinct cheering pose — an accepted trade-off.
+  const skinAssets = useMemo(() => getActiveSkinAssets(), []);
 
   const letterBank: LetterTile[] = useMemo(
     () => buildLetterBank(currentWord, quest.patternType),
@@ -514,7 +521,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
     }));
   }, [liquidLevel, isBeakerFull]);
 
-  const profSrc = profState === "celebrate" ? wigglewooCelebrate : wigglewooIdle;
+  const profSrc = skinAssets.heroImg;
 
   // ── Canvas scale: fill viewport width exactly. The 1366×1024 canvas overflows
   //    vertically on non-4:3 viewports; quest-stage overflow:hidden crops the edges.
@@ -726,9 +733,9 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
                     </div>
                   </div>
 
-                  {/* Professor WiggleWoo */}
+                  {/* WiggleWoo — shows the kid's equipped wardrobe skin */}
                   <div className={`pg-professor pg-professor--${profState}`}>
-                    <img src={profSrc} alt="Professor WiggleWoo" draggable={false} />
+                    <img src={profSrc} alt="WiggleWoo" draggable={false} />
                   </div>
                 </>
               )}
