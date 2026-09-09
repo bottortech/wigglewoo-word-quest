@@ -202,6 +202,11 @@ export type EventSlug =
   // Cross-match (Quick Review) — drag-line word→picture mini-game
   | "cross-match-intro"            // "Drag the word to its picture!"
   | "cross-match-complete"         // "Great matching!"
+  // Word-Tac-Toe mini-game
+  | "word-tac-toe-intro"           // "Let's play Word Tac Toe!"
+  | "word-tac-toe-win"             // child gets three in a row
+  | "word-tac-toe-lose"            // WiggleWoo (CPU) gets three in a row — gentle, no penalty tone
+  | "word-tac-toe-tie"             // board fills with no winner
   // Quest completion
   | "v1-quest-complete";           // CVC tier (all 5 vowel quests) complete
 
@@ -211,6 +216,7 @@ const ADDITIONAL_LINES = new Set<EventSlug>([
   "trophy-phase2-intro", "v1-quest-complete",
   "welcome-castle", "welcome-coastal", "welcome-geartown",
   "welcome-greenhouse", "welcome-intro", "welcome-volcano",
+  "word-tac-toe-intro", "word-tac-toe-win", "word-tac-toe-lose", "word-tac-toe-tie",
 ]);
 
 export function playEvent(slug: EventSlug): void {

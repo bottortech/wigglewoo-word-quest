@@ -341,6 +341,8 @@ interface QuestMapScreenProps {
   onOpenInsights?: () => void;
   /** Phase C: opens the cross-quest skill-badge gallery. */
   onOpenBadges?: () => void;
+  /** Opens the Word-Tac-Toe mini-game. */
+  onOpenWordTacToe?: () => void;
   onExplore?: (envId: string) => void;
   onOpenWardrobe?: () => void;
   hasNewSkin?: boolean;
@@ -362,6 +364,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   onEnterDiscoveryRoom,
   onOpenInsights,
   onOpenBadges,
+  onOpenWordTacToe,
   onExplore,
 
   onOpenWardrobe,
@@ -1345,6 +1348,18 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         >
           <span className="badges-btn__star" aria-hidden="true">★</span>
           <span className="badges-btn__label">Badges</span>
+        </button>
+      )}
+
+      {/* Word-Tac-Toe — kid-reachable mini-game entry, no parental gate */}
+      {!showOnboardingArrow && onOpenWordTacToe && (
+        <button
+          className="word-tac-toe-btn"
+          onClick={onOpenWordTacToe}
+          aria-label="Play Word Tac Toe"
+        >
+          <span className="word-tac-toe-btn__icon" aria-hidden="true">✕⭕</span>
+          <span className="word-tac-toe-btn__label">Word Tac Toe</span>
         </button>
       )}
 

@@ -84,11 +84,12 @@ import QuestCompleteCelebration from "./components/QuestCompleteCelebration";
 import DemoResetZone from "./components/DemoResetZone";
 import OnboardingScreen from "./screens/OnboardingScreen";
 import PotionGameScreen from "./screens/PotionGameScreen";
+import WordTacToeScreen from "./screens/WordTacToeScreen";
 import LetterGallery from "./components/handwriting/LetterGallery";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges";
+type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges" | "word-tac-toe";
 
 const ONBOARDING_SEEN_KEY = "ww_onboarding_seen";
 
@@ -188,6 +189,12 @@ export default function App() {
 
   // Kiosk mode: index into KIOSK_WORD_INDICES for the current child's session
   const [kioskStep, setKioskStep] = useState(0);
+  // True while a Word-Tac-Toe interlude is showing as a forced kiosk beat
+  // (as opposed to a voluntary main-build visit via the Quest Map pill).
+  // Declared here (before handleNavigate) rather than near the other
+  // Word-Tac-Toe handlers below, since handleNavigate's kiosk branch reads
+  // it and needs it in scope already — same reasoning as kioskStep above.
+  const [kioskWordTacToeActive, setKioskWordTacToeActive] = useState(false);
   // True while the wardrobe modal is open specifically as the mandatory
   // kiosk intro step (every child picks a character before the map) —
   // distinguishes that from the map's own "open wardrobe" button, which
@@ -290,6 +297,16 @@ export default function App() {
           setWordIndex(KIOSK_WORD_INDICES[nextStep]);
           setArrivedFromWord(null);
           setTrophyJustCompleted(false);
+          // Detour through Word-Tac-Toe right after kiosk's 2nd word —
+          // shows off a genuinely different mechanic partway through the
+          // run instead of just repeating potion games. wordIndex/kioskStep
+          // are already advanced above, so completing it continues
+          // straight into potion-game at the (already-set) next word.
+          if (nextStep === 2) {
+            setKioskWordTacToeActive(true);
+            setRoute("word-tac-toe");
+            return;
+          }
           // Detour through a Cross-Match review of the 3 words just played
           // right before the transition into the final (4th) kiosk word —
           // the one spot in the short kiosk session with 3 already-played
@@ -560,6 +577,20 @@ export default function App() {
     setRoute("map");
   }, [activeQuest?.id, crossMatchCheckpoint, kioskCrossMatchActive]);
 
+  // ---- Word-Tac-Toe ----
+  // (kioskWordTacToeActive itself is declared earlier, alongside kioskStep —
+  // handleNavigate's kiosk branch needs it in scope before this point.)
+  const handleOpenWordTacToe = useCallback(() => setRoute("word-tac-toe"), []);
+
+  const handleCloseWordTacToe = useCallback(() => setRoute("map"), []);
+
+  // wordIndex/kioskStep are already advanced before entering Word-Tac-Toe
+  // (same trick as Cross-Match above), so completing it just routes on.
+  const handleWordTacToeComplete = useCallback(() => {
+    setKioskWordTacToeActive(false);
+    setRoute("potion-game");
+  }, []);
+
   const handleTrophyRoomComplete = useCallback(() => {
     if (!activeQuest) return;
     const awarded = awardTrophyTier(activeQuest.id, trophyPhase === 2 ? "full" : "half");
@@ -820,6 +851,7 @@ export default function App() {
             onEnterDiscoveryRoom={handleEnterDiscoveryRoom}
             onOpenInsights={handleOpenInsights}
             onOpenBadges={handleOpenBadges}
+            onOpenWordTacToe={handleOpenWordTacToe}
             onExplore={handleExplore}
             onOpenWardrobe={handleOpenWardrobe}
             hasNewSkin={hasNewSkin}
@@ -887,6 +919,17 @@ export default function App() {
                 : activeQuest.words.slice(crossMatchCheckpoint! - 4, crossMatchCheckpoint!)
             }
             onComplete={handleCrossMatchComplete}
+          />
+        </ScreenGate>
+      )}
+
+      {route === "word-tac-toe" && activeQuest && (
+        <ScreenGate>
+          <WordTacToeScreen
+            key={`wtt-${activeQuest.id}`}
+            words={activeQuest.words}
+            onComplete={kioskWordTacToeActive ? handleWordTacToeComplete : handleCloseWordTacToe}
+            onBack={kioskWordTacToeActive ? undefined : handleCloseWordTacToe}
           />
         </ScreenGate>
       )}
