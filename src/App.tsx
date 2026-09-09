@@ -290,6 +290,17 @@ export default function App() {
           setWordIndex(KIOSK_WORD_INDICES[nextStep]);
           setArrivedFromWord(null);
           setTrophyJustCompleted(false);
+          // Detour through a Cross-Match review of the 3 words just played
+          // right before the transition into the final (4th) kiosk word —
+          // the one spot in the short kiosk session with 3 already-played
+          // words to review, so a kid gets to feel this game mode too.
+          // wordIndex/kioskStep are already advanced above, so completing
+          // the review just continues straight into potion-game.
+          if (nextStep === KIOSK_WORD_INDICES.length - 1) {
+            setKioskCrossMatchActive(true);
+            setRoute("cross-match");
+            return;
+          }
           setRoute("potion-game");
           return;
         }
@@ -490,6 +501,7 @@ export default function App() {
     setHasNewSkin(false);
     setExploreEnvId(null);
     setCrossMatchCheckpoint(null);
+    setKioskCrossMatchActive(false);
     setKioskStep(0);
     if (IS_KIOSK_BUILD) {
       awardTrophyTier(defaultQuest.id, "half");
@@ -522,15 +534,31 @@ export default function App() {
   // Active cross-match checkpoint (1-indexed word number, 4 or 12). null when
   // no cross-match is in progress.
   const [crossMatchCheckpoint, setCrossMatchCheckpoint] = useState<number | null>(null);
+  // Kiosk-only: true while a Cross-Match review is inserted between the 3rd
+  // kiosk word and the final word, so a kid gets to feel a different game
+  // mode within their short session. Doesn't use crossMatchCheckpoint's
+  // checkpoint-number scheme (kiosk isn't reviewing a real 4-word slice,
+  // just the words it already played) or its localStorage bookkeeping
+  // (kiosk progress is wiped every turn anyway) — see the kiosk branch in
+  // handleNavigate and the render site below for the two spots this
+  // branches from the normal cross-match path.
+  const [kioskCrossMatchActive, setKioskCrossMatchActive] = useState(false);
 
-  // ---- Cross-match completed → mark + return to map ----
+  // ---- Cross-match completed → mark + return to map (or, in kiosk mode,
+  // continue the chain into the final word — wordIndex/kioskStep were
+  // already advanced before entering cross-match, so this just routes on). ----
   const handleCrossMatchComplete = useCallback(() => {
+    if (kioskCrossMatchActive) {
+      setKioskCrossMatchActive(false);
+      setRoute("potion-game");
+      return;
+    }
     if (!activeQuest || crossMatchCheckpoint === null) return;
     markCrossMatchComplete(activeQuest.id, crossMatchCheckpoint);
     setCrossMatchCheckpoint(null);
     setMapRevision((r) => r + 1);
     setRoute("map");
-  }, [activeQuest?.id, crossMatchCheckpoint]);
+  }, [activeQuest?.id, crossMatchCheckpoint, kioskCrossMatchActive]);
 
   const handleTrophyRoomComplete = useCallback(() => {
     if (!activeQuest) return;
@@ -849,11 +877,15 @@ export default function App() {
         </ScreenGate>
       )}
 
-      {route === "cross-match" && crossMatchCheckpoint !== null && (
+      {route === "cross-match" && (kioskCrossMatchActive || crossMatchCheckpoint !== null) && activeQuest && (
         <ScreenGate>
           <CrossMatchScreen
-            key={`cm-${activeQuest.id}-${crossMatchCheckpoint}`}
-            words={activeQuest.words.slice(crossMatchCheckpoint - 4, crossMatchCheckpoint)}
+            key={`cm-${activeQuest.id}-${kioskCrossMatchActive ? "kiosk" : crossMatchCheckpoint}`}
+            words={
+              kioskCrossMatchActive
+                ? KIOSK_WORD_INDICES.slice(0, 3).map((i) => activeQuest.words[i])
+                : activeQuest.words.slice(crossMatchCheckpoint! - 4, crossMatchCheckpoint!)
+            }
             onComplete={handleCrossMatchComplete}
           />
         </ScreenGate>

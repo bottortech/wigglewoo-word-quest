@@ -27,16 +27,20 @@ const CROSSMATCH_KEY = "wigglewoo-crossmatch-all";
 
 /** Cross-match review checkpoints (1-indexed word numbers).
  *
- *  PARKED for the curriculum redesign: the Phase A lesson loop puts
- *  a Mastery Check at words 4 / 8 / 12 / 16, which overlaps with the
- *  cross-match review at words 4 and 12. Two assessments back-to-back
- *  at the same boundary was confusing for kids, so the checkpoint
- *  list is empty for v1.
- *
- *  CrossMatchScreen and its plumbing remain intact in case we want to
- *  re-enable the format as an optional "extra review" feature later —
- *  just repopulate this array with the word numbers (e.g. [4, 12]). */
-export const CROSSMATCH_CHECKPOINTS: readonly number[] = [];
+ *  Re-enabled at word 4 only (2026-09-08), scoped deliberately narrow:
+ *   - Word 4 is image-mode in every tier (CVC, CVCC, Magic-E, CVVC,
+ *     Advanced), so the picture-matching mechanic always has real
+ *     artwork to show. Word 12 was NOT re-added — CVCC/Magic-E/CVVC/
+ *     Advanced quests switch to "decode" mode (no picture asset) by
+ *     word 9, so a word-12 checkpoint would silently degrade to
+ *     text-only matching for every tier except plain CVC.
+ *   - Word 4 also coincides with a Mastery Check (the Phase A lesson
+ *     loop mastery-checks at words 4/8/12/16), which is exactly the
+ *     "two assessments back-to-back" overlap this was originally
+ *     parked over — kept anyway per explicit request; watch for that
+ *     pacing feeling crowded in playtesting and drop back to [] (or
+ *     move to a non-mastery-check word) if so. */
+export const CROSSMATCH_CHECKPOINTS: readonly number[] = [4];
 
 /** Persisted progress for a single quest */
 export interface QuestProgress {

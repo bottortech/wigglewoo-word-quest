@@ -143,6 +143,24 @@ const FactPanelSheet: React.FC<{
     setQuestionFactId(null);
   }, []);
 
+  // After a correct comprehension-question answer, hold on the "That's
+  // right!" celebration briefly so the kid actually sees it, then return
+  // to the fact-selection grid automatically — one less tap, and it puts
+  // them right back where they can pick another fact.
+  const correctAnswerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleQuestionCorrect = useCallback(() => {
+    if (correctAnswerTimerRef.current) clearTimeout(correctAnswerTimerRef.current);
+    correctAnswerTimerRef.current = setTimeout(() => {
+      correctAnswerTimerRef.current = null;
+      handleBackToFacts();
+    }, 1800);
+  }, [handleBackToFacts]);
+  useEffect(() => {
+    return () => {
+      if (correctAnswerTimerRef.current) clearTimeout(correctAnswerTimerRef.current);
+    };
+  }, []);
+
   return (
     <>
       <div className="fact-panel-backdrop" onClick={onClose} />
@@ -191,7 +209,7 @@ const FactPanelSheet: React.FC<{
               </div>
               <div className="fact-expanded__col fact-expanded__col--right">
                 {activeItem.question && questionFactId === activeItem.id ? (
-                  <ComprehensionQuestion question={activeItem.question} />
+                  <ComprehensionQuestion question={activeItem.question} onCorrect={handleQuestionCorrect} />
                 ) : (
                   <div className="fact-expanded__listening">
                     <span className="fact-expanded__listening-emoji">🎧</span>
