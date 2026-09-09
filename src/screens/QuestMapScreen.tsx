@@ -26,8 +26,7 @@ import { loadCvccQuests, loadCvvcQuests, loadMagicEQuests, loadAdvancedQuests, a
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import trophyIcon from "../assets/trophy.png";
-import wigglewooX from "../assets/wigglewoo_X.png";
-import wigglewooO from "../assets/wigglewoo_O.png";
+import wordTacToeLogo from "../assets/transparent-word-tac-toe-logo.png";
 import GlassDisplayCase from "../components/GlassDisplayCase";
 import UnlockModal from "../components/UnlockModal";
 import ParentGate from "../components/ParentGate";
@@ -401,6 +400,22 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   const progress = useMemo(() => loadQuestProgress(quest.id), [quest.id]);
   const trophyProgress = useMemo(() => loadTrophyProgress(quest.id), [quest.id]);
   const discoveryProgress = useMemo(() => loadDiscoveryProgress(quest.id), [quest.id]);
+
+  // ---- Word-Tac-Toe discoverability nudge ----
+  // A kid can otherwise finish all 16 words and never notice the button.
+  // Shows once, first map load after the Phase-1 Trophy is earned (so the
+  // nudge doesn't compete for attention before they've seen a trophy room
+  // at all) — separate flag/mechanism from the onboarding arrow above,
+  // same "show once ever" pattern, dismissed by tapping the button itself.
+  const [showWttNudge, setShowWttNudge] = useState(() => {
+    if (localStorage.getItem("ww_wtt_nudge_seen") === "true") return false;
+    return trophyProgress.tier !== "none";
+  });
+
+  const handleWttNudgeDismiss = useCallback(() => {
+    localStorage.setItem("ww_wtt_nudge_seen", "true");
+    setShowWttNudge(false);
+  }, []);
 
   // Count image vs decode words
   const imageWordCount = useMemo(() =>
@@ -1354,26 +1369,31 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       )}
 
       {/* Word-Tac-Toe — kid-reachable mini-game entry, no parental gate.
-          Deliberately oversized/animated vs. Badges/For Parents — this is
-          a bonus GAME, not a menu option, and should read that way at a
-          glance. Sits in the open pocket below the Quest Type panel so it
-          doesn't crowd the map, the panel, or the top-right utility
-          buttons. */}
+          Uses the pre-made word-tac-toe-logo art (mascot + title + stars +
+          its own "Tap to Play!" button, all baked into the image) instead
+          of a hand-built CSS card — simpler and matches the approved art
+          direction directly. Sits in the open pocket below the Quest Type
+          panel so it doesn't crowd the map, the panel, or the top-right
+          utility buttons. */}
       {!showOnboardingArrow && onOpenWordTacToe && (
-        <button
-          className="word-tac-toe-btn"
-          onClick={onOpenWordTacToe}
-          aria-label="Play Word Tac Toe"
-        >
-          <span className="word-tac-toe-btn__sparkle word-tac-toe-btn__sparkle--1" aria-hidden="true">✨</span>
-          <span className="word-tac-toe-btn__sparkle word-tac-toe-btn__sparkle--2" aria-hidden="true">✨</span>
-          <span className="word-tac-toe-btn__title">Word<br />Tac Toe</span>
-          <span className="word-tac-toe-btn__marks" aria-hidden="true">
-            <img src={wigglewooX} alt="" className="word-tac-toe-btn__mark word-tac-toe-btn__mark--x" draggable={false} />
-            <img src={wigglewooO} alt="" className="word-tac-toe-btn__mark word-tac-toe-btn__mark--o" draggable={false} />
-          </span>
-          <span className="word-tac-toe-btn__cta">Tap to Play!</span>
-        </button>
+        <div className="word-tac-toe-btn-wrap">
+          <button
+            className="word-tac-toe-btn"
+            onClick={() => {
+              if (showWttNudge) handleWttNudgeDismiss();
+              onOpenWordTacToe();
+            }}
+            aria-label="Play Word Tac Toe"
+          >
+            <img src={wordTacToeLogo} alt="Word Tac Toe" className="word-tac-toe-btn__logo" draggable={false} />
+          </button>
+          {showWttNudge && (
+            <div className="word-tac-toe-nudge" aria-hidden="true">
+              <div className="word-tac-toe-nudge__arrow">▲</div>
+              <div className="word-tac-toe-nudge__label">New game!</div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* DEV CONTROLS — collapsible, hidden by default */}

@@ -27,20 +27,25 @@ const CROSSMATCH_KEY = "wigglewoo-crossmatch-all";
 
 /** Cross-match review checkpoints (1-indexed word numbers).
  *
- *  Re-enabled at word 4 only (2026-09-08), scoped deliberately narrow:
- *   - Word 4 is image-mode in every tier (CVC, CVCC, Magic-E, CVVC,
- *     Advanced), so the picture-matching mechanic always has real
- *     artwork to show. Word 12 was NOT re-added — CVCC/Magic-E/CVVC/
- *     Advanced quests switch to "decode" mode (no picture asset) by
- *     word 9, so a word-12 checkpoint would silently degrade to
- *     text-only matching for every tier except plain CVC.
+ *  Re-enabled at word 4 (2026-09-08), joined by word 12 (2026-09-09) —
+ *  words 5-16 previously got zero spaced review.
+ *   - Word 12 is safe ONLY because v1 clamps play to CVC quests
+ *     (`ww_placement_tiers` forced to `["CVC"]` in App.tsx — CVCC is
+ *     parked for 1.1). Every CVC quest (QUEST_SHORT_A/I/O/U/E in
+ *     wordData.ts) keeps `mode: "image"` for all 16 words, so word 12
+ *     always has real artwork. CVCC/Magic-E/CVVC/Advanced quests switch
+ *     to "decode" mode (no picture asset) by word 9 — if that clamp is
+ *     ever lifted for v1.1, a word-12 checkpoint would silently degrade
+ *     to text-only matching for those tiers. Re-verify this before
+ *     removing the CVC-only clamp.
  *   - Word 4 also coincides with a Mastery Check (the Phase A lesson
  *     loop mastery-checks at words 4/8/12/16), which is exactly the
  *     "two assessments back-to-back" overlap this was originally
  *     parked over — kept anyway per explicit request; watch for that
  *     pacing feeling crowded in playtesting and drop back to [] (or
- *     move to a non-mastery-check word) if so. */
-export const CROSSMATCH_CHECKPOINTS: readonly number[] = [4];
+ *     move to a non-mastery-check word) if so. Word 12 has the same
+ *     overlap with its own Mastery Check — same caveat applies. */
+export const CROSSMATCH_CHECKPOINTS: readonly number[] = [4, 12];
 
 /** Persisted progress for a single quest */
 export interface QuestProgress {
