@@ -26,6 +26,8 @@ import { loadCvccQuests, loadCvvcQuests, loadMagicEQuests, loadAdvancedQuests, a
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
 import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import trophyIcon from "../assets/trophy.png";
+import wigglewooX from "../assets/wigglewoo_X.png";
+import wigglewooO from "../assets/wigglewoo_O.png";
 import GlassDisplayCase from "../components/GlassDisplayCase";
 import UnlockModal from "../components/UnlockModal";
 import ParentGate from "../components/ParentGate";
@@ -1351,15 +1353,26 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         </button>
       )}
 
-      {/* Word-Tac-Toe — kid-reachable mini-game entry, no parental gate */}
+      {/* Word-Tac-Toe — kid-reachable mini-game entry, no parental gate.
+          Deliberately oversized/animated vs. Badges/For Parents — this is
+          a bonus GAME, not a menu option, and should read that way at a
+          glance. Sits in the open pocket below the Quest Type panel so it
+          doesn't crowd the map, the panel, or the top-right utility
+          buttons. */}
       {!showOnboardingArrow && onOpenWordTacToe && (
         <button
           className="word-tac-toe-btn"
           onClick={onOpenWordTacToe}
           aria-label="Play Word Tac Toe"
         >
-          <span className="word-tac-toe-btn__icon" aria-hidden="true">✕⭕</span>
-          <span className="word-tac-toe-btn__label">Word Tac Toe</span>
+          <span className="word-tac-toe-btn__sparkle word-tac-toe-btn__sparkle--1" aria-hidden="true">✨</span>
+          <span className="word-tac-toe-btn__sparkle word-tac-toe-btn__sparkle--2" aria-hidden="true">✨</span>
+          <span className="word-tac-toe-btn__title">Word<br />Tac Toe</span>
+          <span className="word-tac-toe-btn__marks" aria-hidden="true">
+            <img src={wigglewooX} alt="" className="word-tac-toe-btn__mark word-tac-toe-btn__mark--x" draggable={false} />
+            <img src={wigglewooO} alt="" className="word-tac-toe-btn__mark word-tac-toe-btn__mark--o" draggable={false} />
+          </span>
+          <span className="word-tac-toe-btn__cta">Tap to Play!</span>
         </button>
       )}
 

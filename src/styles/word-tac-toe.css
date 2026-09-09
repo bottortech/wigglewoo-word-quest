@@ -116,77 +116,14 @@
    Screen 2 — The board
    ============================================= */
 
-.wtt__topbar {
-  display: flex;
-  align-items: center;
-  gap: calc(14px * var(--u));
-  padding: calc(18px * var(--uv)) calc(64px * var(--u)) 0 calc(20px * var(--u));
-  z-index: 5;
-}
-
-.wtt__portrait {
-  flex-shrink: 0;
-  width: calc(64px * var(--u));
-  height: calc(64px * var(--u));
-  border-radius: 50%;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 calc(3px * var(--u)) calc(8px * var(--u)) rgba(62, 39, 35, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: box-shadow 0.2s ease;
-}
-
-.wtt__portrait img {
-  width: 82%;
-  height: 82%;
-  object-fit: contain;
-}
-
-.wtt__portrait--cpu { animation: wtt-portrait-bob 1s ease-in-out infinite; }
-
-@keyframes wtt-portrait-bob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(calc(-4px * var(--uv))); }
-}
-
-.wtt__speech {
-  position: relative;
-  background: #fff;
-  border: calc(3px * var(--u)) solid #37897F;
-  border-radius: calc(20px * var(--u));
-  padding: calc(10px * var(--uv)) calc(20px * var(--u));
-  font-weight: 800;
-  font-size: calc(19px * var(--u));
-  color: #2E6F67;
-  flex: 1;
-  max-width: calc(520px * var(--u));
-}
-
-.wtt__speech::before {
-  content: "";
-  position: absolute;
-  left: calc(-14px * var(--u));
-  top: 50%;
-  transform: translateY(-50%);
-  border: calc(10px * var(--u)) solid transparent;
-  border-right-color: #37897F;
-}
-
-.wtt__speech::after {
-  content: "";
-  position: absolute;
-  left: calc(-9px * var(--u));
-  top: 50%;
-  transform: translateY(-50%);
-  border: calc(8px * var(--u)) solid transparent;
-  border-right-color: #fff;
-}
-
+/* Streak chip — floats top-right alongside the close button (was inside
+   the now-removed top instruction bar). All instructions/prompts now
+   live in the permanent right-side panel instead. */
 .wtt__streak-chip {
-  margin-left: auto;
-  flex-shrink: 0;
+  position: absolute;
+  top: calc(16px * var(--uv));
+  right: calc(72px * var(--u));
+  z-index: 5;
   background: linear-gradient(180deg, #FFE9A8 0%, #F5C542 100%);
   border: calc(3px * var(--u)) solid #C99A00;
   color: #5C4400;
@@ -204,15 +141,36 @@
   to   { transform: scale(1); opacity: 1; }
 }
 
+/* ---- Stage — persistent side-by-side split. The board column and the
+   challenge panel are both always on screen; only the panel's CONTENT
+   swaps (idle / challenge / brief correct-feedback). Nothing here dims,
+   scales, or covers the board — this was the whole point of the redesign
+   (previously a bottom drawer scaled the board down to 94%/55% opacity
+   whenever a challenge was open, which read as "board → modal → board"
+   instead of one screen). ---- */
+
 .wtt__stage {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
+  gap: calc(18px * var(--u));
   position: relative;
   min-height: 0;
-  padding-bottom: calc(24px * var(--uv));
-  transition: transform 0.25s ease, filter 0.25s ease;
+  /* Extra top padding clears the floating streak-chip/close button (no
+     longer reserved by a top instruction bar); generous, roughly-even
+     top/bottom padding is what actually gives the board + panel their
+     "breathing room" and keeps them vertically balanced now that this
+     is the only thing on screen besides those two corner controls. */
+  padding: calc(64px * var(--uv)) calc(24px * var(--u)) calc(32px * var(--uv));
+}
+
+.wtt__board-col {
+  flex: 0 1 58%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ---- Board — a warm game-mat panel, not gray boxes ---- */
@@ -224,12 +182,6 @@
   padding: calc(16px * var(--u));
   box-shadow: 0 calc(10px * var(--u)) calc(24px * var(--u)) rgba(120, 80, 20, 0.25),
               inset 0 0 0 calc(3px * var(--u)) rgba(255, 255, 255, 0.35);
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-
-.wtt__board--dimmed {
-  transform: scale(0.94) translateY(calc(-10px * var(--uv)));
-  opacity: 0.55;
 }
 
 .wtt__grid {
@@ -289,47 +241,98 @@
   to   { transform: scale(1); opacity: 1; }
 }
 
-/* ---- Drawer — opens out of the board's bottom edge, not a dark modal ---- */
+/* ---- Right panel — persistent, always visible alongside the board.
+   Same cream/teal-border treatment the old drawer used, just docked as
+   its own column instead of floating over the board. Content inside
+   swaps (idle / challenge / correct-feedback) but the panel itself never
+   moves, resizes, or disappears — that's what keeps this reading as one
+   screen instead of board → modal → board. ---- */
 
-.wtt__drawer {
-  position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: calc(16px * var(--uv));
-  background: #FFF6E4;
-  border: calc(4px * var(--u)) solid #37897F;
-  border-radius: calc(22px * var(--u)) calc(22px * var(--u)) calc(16px * var(--u)) calc(16px * var(--u));
-  box-shadow: 0 calc(-6px * var(--u)) calc(20px * var(--u)) rgba(62, 39, 35, 0.18);
-  padding: calc(18px * var(--uv)) calc(24px * var(--u));
+.wtt__panel {
+  flex: 0 1 42%;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(16px * var(--uv));
-  z-index: 20;
-  animation: wtt-drawer-up 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
-}
-
-/* Drawer "handle" — a self-contained pill straddling the drawer's own top
-   border, styled from the drawer's own colors. Reads as a handle on the
-   drawer itself rather than a tab reaching for the board above (which sits
-   at a different, dimmed/scaled position and doesn't line up reliably),
-   so it looks correct regardless of board size or position. */
-.wtt__drawer::before {
-  content: "";
-  position: absolute;
-  top: calc(-9px * var(--u));
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(64px * var(--u));
-  height: calc(18px * var(--u));
+  justify-content: center;
   background: #FFF6E4;
   border: calc(4px * var(--u)) solid #37897F;
-  border-radius: 999px;
+  border-radius: calc(22px * var(--u));
+  box-shadow: 0 calc(6px * var(--u)) calc(20px * var(--u)) rgba(62, 39, 35, 0.18),
+              inset 0 0 0 calc(3px * var(--u)) rgba(255, 255, 255, 0.5);
+  padding: calc(18px * var(--u)) calc(20px * var(--u));
 }
 
-@keyframes wtt-drawer-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+/* Idle state — waiting for the child to tap a square. */
+.wtt__panel-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(14px * var(--uv));
+}
+
+.wtt__panel-idle-mascot {
+  width: calc(110px * var(--u));
+  height: auto;
+  filter: drop-shadow(0 calc(4px * var(--u)) calc(10px * var(--u)) rgba(0, 0, 0, 0.22));
+  animation: wtt-idle-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes wtt-idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(calc(-6px * var(--uv))); }
+}
+
+.wtt__panel-idle-text {
+  font-size: calc(19px * var(--u));
+  font-weight: 800;
+  color: #2E6F67;
+  text-align: center;
+}
+
+/* Challenge state — same prompt/options content as before, now laid out
+   as a vertical stack sized to fit the panel column. */
+.wtt__panel-challenge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(14px * var(--uv));
+  width: 100%;
+  animation: wtt-panel-pop 0.2s ease-out;
+}
+
+@keyframes wtt-panel-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.wtt__panel-question {
+  font-size: calc(17px * var(--u));
+  font-weight: 800;
+  color: #2E6F67;
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* Correct-feedback state — brief pause between answering and the mark
+   actually placing. */
+.wtt__panel-feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(10px * var(--uv));
+  animation: wtt-panel-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.wtt__panel-feedback-icon {
+  font-size: calc(48px * var(--u));
+}
+
+.wtt__panel-feedback--correct span:last-child {
+  font-size: calc(22px * var(--u));
+  font-weight: 900;
+  color: #2E6F67;
 }
 
 .wtt__prompt {
@@ -338,36 +341,36 @@
 }
 
 .wtt__prompt-letter {
-  font-size: calc(40px * var(--u));
+  font-size: calc(34px * var(--u));
   font-weight: 900;
   color: #3E2723;
-  width: calc(48px * var(--u));
+  width: calc(40px * var(--u));
   text-align: center;
   border-bottom: calc(4px * var(--u)) solid #E07A00;
 }
 
 .wtt__prompt-picture {
-  width: calc(120px * var(--u));
-  height: calc(120px * var(--u));
+  width: calc(96px * var(--u));
+  height: calc(96px * var(--u));
   object-fit: contain;
   filter: drop-shadow(0 calc(4px * var(--u)) calc(10px * var(--u)) rgba(0, 0, 0, 0.25));
 }
 
 .wtt__options {
   display: flex;
-  gap: calc(20px * var(--u));
+  gap: calc(14px * var(--u));
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .wtt__option {
-  width: calc(92px * var(--u));
-  height: calc(92px * var(--u));
+  width: calc(78px * var(--u));
+  height: calc(78px * var(--u));
   border-radius: 50%;
   border: none;
   background: linear-gradient(160deg, #6FC9BE, #2E6F67);
   color: #fff;
-  font-size: calc(32px * var(--u));
+  font-size: calc(28px * var(--u));
   font-weight: 900;
   cursor: pointer;
   transition: transform 0.15s ease;
@@ -387,12 +390,12 @@
 .wtt__option:active { transform: scale(0.9); }
 
 .wtt__option--word {
-  border-radius: calc(16px * var(--u));
+  border-radius: calc(14px * var(--u));
   width: auto;
-  min-width: calc(120px * var(--u));
-  height: calc(66px * var(--u));
-  padding: 0 calc(18px * var(--u));
-  font-size: calc(22px * var(--u));
+  min-width: calc(92px * var(--u));
+  height: calc(54px * var(--u));
+  padding: 0 calc(12px * var(--u));
+  font-size: calc(17px * var(--u));
 }
 
 .wtt__option--wrong {

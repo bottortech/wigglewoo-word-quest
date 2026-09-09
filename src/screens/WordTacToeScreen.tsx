@@ -152,6 +152,10 @@ const WordTacToeScreen: React.FC<WordTacToeScreenProps> = ({ words, onComplete, 
   const [wrongOption, setWrongOption] = useState<number | null>(null);
   const [result, setResult] = useState<GameResult>(null);
   const [streak, setStreak] = useState(0);
+  // Brief "Correct!" pause in the side panel before the mark actually
+  // places — gives the answer a visible moment to land instead of the
+  // mark just appearing instantly on tap.
+  const [correctFeedback, setCorrectFeedback] = useState(false);
 
   // Intro VO, once the child has committed to a mark and play begins.
   useEffect(() => {
@@ -203,21 +207,26 @@ const WordTacToeScreen: React.FC<WordTacToeScreenProps> = ({ words, onComplete, 
     if (!challenge || activeCell === null || !childMark || !cpuMark) return;
     if (optionIndex === challenge.correctIndex) {
       playSuccessPhrase();
-      const next = [...board];
-      next[activeCell] = childMark;
-      setBoard(next);
-      setChallenge(null);
-      setActiveCell(null);
-      setStreak((s) => (wrongAttemptsRef.current === 0 ? s + 1 : 0));
-      const winner = checkWinner(next);
-      if (winner === childMark) {
-        setResult("win");
-      } else if (next.every((c) => c !== null)) {
-        setResult("tie");
-      } else {
-        setTurn("cpu");
-        runCpuTurn(next, cpuMark, childMark);
-      }
+      setCorrectFeedback(true);
+      const cellIndex = activeCell;
+      setTimeout(() => {
+        setCorrectFeedback(false);
+        const next = [...board];
+        next[cellIndex] = childMark;
+        setBoard(next);
+        setChallenge(null);
+        setActiveCell(null);
+        setStreak((s) => (wrongAttemptsRef.current === 0 ? s + 1 : 0));
+        const winner = checkWinner(next);
+        if (winner === childMark) {
+          setResult("win");
+        } else if (next.every((c) => c !== null)) {
+          setResult("tie");
+        } else {
+          setTurn("cpu");
+          runCpuTurn(next, cpuMark, childMark);
+        }
+      }, 700);
     } else {
       playEvent("wrong-gentle");
       setWrongOption(optionIndex);
@@ -310,93 +319,106 @@ const WordTacToeScreen: React.FC<WordTacToeScreenProps> = ({ words, onComplete, 
   // ---- Screen 2: the board ----
   return (
     <div className="wtt">
+      {streak >= 2 && (
+        <div className="wtt__streak-chip" key={streak}>⭐ {streak} in a row!</div>
+      )}
       {onBack && (
         <button className="wtt__back-btn" onClick={onBack} aria-label="Back to map">✕</button>
       )}
 
-      <div className="wtt__topbar">
-        <div className={`wtt__portrait wtt__portrait--${turn}`}>
-          {speakingMark && <img src={MARK_ASSET[speakingMark]} alt="" draggable={false} />}
-        </div>
-        <div className="wtt__speech">{instructionText}</div>
-        {streak >= 2 && (
-          <div className="wtt__streak-chip" key={streak}>⭐ {streak} in a row!</div>
-        )}
-      </div>
-
       <div className="wtt__stage">
-        <div className={`wtt__board ${challenge ? "wtt__board--dimmed" : ""}`}>
-          <div className="wtt__grid">
-            {board.map((cell, i) => (
-              <button
-                key={i}
-                className={[
-                  "wtt__cell",
-                  cell ? "wtt__cell--filled" : "wtt__cell--empty",
-                  activeCell === i ? "wtt__cell--active" : "",
-                ].filter(Boolean).join(" ")}
-                onClick={() => handleCellTap(i)}
-                disabled={cell !== null || turn !== "child" || result !== null}
-                aria-label={cell ? `Square ${i + 1}, ${cell}` : `Square ${i + 1}, empty`}
-              >
-                {cell && <img src={MARK_ASSET[cell]} alt={cell} className="wtt__piece" draggable={false} />}
-              </button>
-            ))}
+        <div className="wtt__board-col">
+          <div className="wtt__board">
+            <div className="wtt__grid">
+              {board.map((cell, i) => (
+                <button
+                  key={i}
+                  className={[
+                    "wtt__cell",
+                    cell ? "wtt__cell--filled" : "wtt__cell--empty",
+                    activeCell === i ? "wtt__cell--active" : "",
+                  ].filter(Boolean).join(" ")}
+                  onClick={() => handleCellTap(i)}
+                  disabled={cell !== null || turn !== "child" || result !== null}
+                  aria-label={cell ? `Square ${i + 1}, ${cell}` : `Square ${i + 1}, empty`}
+                >
+                  {cell && <img src={MARK_ASSET[cell]} alt={cell} className="wtt__piece" draggable={false} />}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {challenge && (
-        <div className="wtt__drawer">
-          {challenge.type === "missing-letter" ? (
-            <>
-              <div className="wtt__prompt">
-                {challenge.word.letters.map((l, i) => (
-                  <span key={i} className="wtt__prompt-letter">
-                    {i === challenge.blankIndex ? "_" : l.toUpperCase()}
-                  </span>
-                ))}
-              </div>
-              <div className="wtt__options">
-                {challenge.options.map((opt, i) => (
-                  !eliminated.has(i) && (
-                    <button
-                      key={i}
-                      className={["wtt__option", wrongOption === i ? "wtt__option--wrong" : ""].join(" ")}
-                      onClick={() => handleOptionTap(i)}
-                    >
-                      {opt.toUpperCase()}
-                    </button>
-                  )
-                ))}
-              </div>
-            </>
+        {/* Right side panel — always present, never covers the board.
+            Three internal states: idle (waiting for a tap), the active
+            challenge, and a brief "Correct!" pause before the mark places. */}
+        <div className="wtt__panel">
+          {correctFeedback ? (
+            <div className="wtt__panel-feedback wtt__panel-feedback--correct">
+              <span className="wtt__panel-feedback-icon">✅</span>
+              <span>Correct!</span>
+            </div>
+          ) : challenge ? (
+            <div className="wtt__panel-challenge">
+              <div className="wtt__panel-question">{instructionText}</div>
+              {challenge.type === "missing-letter" ? (
+                <>
+                  <div className="wtt__prompt">
+                    {challenge.word.letters.map((l, i) => (
+                      <span key={i} className="wtt__prompt-letter">
+                        {i === challenge.blankIndex ? "_" : l.toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="wtt__options">
+                    {challenge.options.map((opt, i) => (
+                      !eliminated.has(i) && (
+                        <button
+                          key={i}
+                          className={["wtt__option", wrongOption === i ? "wtt__option--wrong" : ""].join(" ")}
+                          onClick={() => handleOptionTap(i)}
+                        >
+                          {opt.toUpperCase()}
+                        </button>
+                      )
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <img
+                    className="wtt__prompt-picture"
+                    src={`/assets/words/${challenge.word.word}.png`}
+                    alt=""
+                    draggable={false}
+                    onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
+                  />
+                  <div className="wtt__options wtt__options--words">
+                    {challenge.options.map((opt, i) => (
+                      !eliminated.has(i) && (
+                        <button
+                          key={i}
+                          className={["wtt__option", "wtt__option--word", wrongOption === i ? "wtt__option--wrong" : ""].join(" ")}
+                          onClick={() => handleOptionTap(i)}
+                        >
+                          {opt.toUpperCase()}
+                        </button>
+                      )
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
-            <>
-              <img
-                className="wtt__prompt-picture"
-                src={`/assets/words/${challenge.word.word}.png`}
-                alt=""
-                draggable={false}
-                onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
-              />
-              <div className="wtt__options wtt__options--words">
-                {challenge.options.map((opt, i) => (
-                  !eliminated.has(i) && (
-                    <button
-                      key={i}
-                      className={["wtt__option", "wtt__option--word", wrongOption === i ? "wtt__option--wrong" : ""].join(" ")}
-                      onClick={() => handleOptionTap(i)}
-                    >
-                      {opt.toUpperCase()}
-                    </button>
-                  )
-                ))}
-              </div>
-            </>
+            <div className="wtt__panel-idle">
+              {speakingMark && (
+                <img src={MARK_ASSET[speakingMark]} alt="" className="wtt__panel-idle-mascot" draggable={false} />
+              )}
+              <span className="wtt__panel-idle-text">{instructionText}</span>
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {result && (
         <div className="wtt__celebration" aria-live="polite">
