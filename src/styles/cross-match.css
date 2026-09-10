@@ -31,18 +31,25 @@
 }
 
 /* Word & picture columns are positioned absolutely so they fall *inside*
- * the panels painted into the background image. Top-anchored under the
- * header pill, centered horizontally, fixed gap between items.
- * Coordinates measured against the 1536x1024 background:
+ * the panels painted into the background image. The column box spans the
+ * usable content area — below the WORDS/PICTURES header pill down to the
+ * panel's inner bottom edge (not the painted panel's outer/floor edge,
+ * which sits lower than where cards should ever reach) — and centers its
+ * item group vertically within that box, so a 3-item or 4-item round both
+ * sit around the content area's middle instead of hugging the top or
+ * drifting toward the floor. Centered horizontally, fixed gap between
+ * items. Coordinates measured against the 1536x1024 background:
  *   WORDS panel interior  ≈ x 34–53%, y 34–94%  → center 43.5%
  *   PICTURES panel interior ≈ x 57–77%, y 34–94%  → center 67%
  */
 .cross-match__column {
   position: absolute;
-  top: 30%;
+  top: 33%;
+  bottom: 10%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   z-index: 2;
 }
 
