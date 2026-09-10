@@ -7,7 +7,7 @@
 // be closed at any time regardless of whether this was answered.
 // =============================================
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type { ComprehensionQuestion as ComprehensionQuestionData } from "../game/exploreData";
 import { playSuccessPhrase, playRetryPhrase } from "../audio/SoundEffects";
 
@@ -21,10 +21,22 @@ const ComprehensionQuestion: React.FC<ComprehensionQuestionProps> = ({ question,
   const [selected, setSelected] = useState<number | null>(null);
   const [solved, setSolved] = useState(false);
 
+  // Every authored question has correctIndex: 0 (the data always writes the
+  // right answer first) — shuffle once per question so it isn't the same
+  // button every time, and re-derive correctIndex against the new order.
+  const choices = useMemo(() => {
+    const withFlag = question.choices.map((text, i) => ({ text, isCorrect: i === question.correctIndex }));
+    for (let i = withFlag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [withFlag[i], withFlag[j]] = [withFlag[j], withFlag[i]];
+    }
+    return withFlag;
+  }, [question]);
+
   const handleChoice = useCallback((idx: number) => {
     if (solved) return;
     setSelected(idx);
-    if (idx === question.correctIndex) {
+    if (choices[idx].isCorrect) {
       setSolved(true);
       playSuccessPhrase();
       onCorrect?.();
@@ -34,7 +46,7 @@ const ComprehensionQuestion: React.FC<ComprehensionQuestionProps> = ({ question,
       // choice flashes red, then the child can pick again freely.
       setTimeout(() => setSelected((s) => (s === idx ? null : s)), 700);
     }
-  }, [solved, question.correctIndex, onCorrect]);
+  }, [solved, choices, onCorrect]);
 
   return (
     <div className="comprehension-question">
@@ -42,8 +54,7 @@ const ComprehensionQuestion: React.FC<ComprehensionQuestionProps> = ({ question,
         {solved ? "That's right! 🎉" : question.prompt}
       </p>
       <div className="comprehension-question__choices">
-        {question.choices.map((choice, idx) => {
-          const isCorrect = idx === question.correctIndex;
+        {choices.map(({ text: choice, isCorrect }, idx) => {
           const isSelected = selected === idx;
           const state = solved && isCorrect ? "correct" : isSelected && !isCorrect ? "wrong" : "";
           return (
@@ -51,10 +62,12 @@ const ComprehensionQuestion: React.FC<ComprehensionQuestionProps> = ({ question,
               key={idx}
               className={["comprehension-question__choice", state && `comprehension-question__choice--${state}`]
                 .filter(Boolean).join(" ")}
+              style={{ animationDelay: `${idx * 0.3}s` }}
               onClick={() => handleChoice(idx)}
               disabled={solved}
             >
-              {choice}
+              <span className="comprehension-question__choice-text">{choice}</span>
+              {state === "correct" && <span className="comprehension-question__choice-icon" aria-hidden="true">✓</span>}
             </button>
           );
         })}
