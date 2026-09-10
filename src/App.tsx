@@ -72,11 +72,11 @@ import SkinUnlockCelebration from "./components/SkinUnlockCelebration";
 import heroImgDefault from "./assets/wiggle_woo_hero_stance.png";
 import helperImgDefault from "./assets/wigglewoo_helper_transparent.png";
 import { backgroundMusic } from "./audio/BackgroundMusic";
-import { playEvent } from "./audio/SoundEffects";
+import { playEvent, type EventSlug } from "./audio/SoundEffects";
 import { recordTrophyEarned } from "./game/analytics";
-import trophyTransitionImg from "./assets/trophy.png";
-import "./styles/trophy-transition.css";
 import ChallengeModeUnlock from "./components/ChallengeModeUnlock";
+import MilestoneCelebration from "./components/MilestoneCelebration";
+import type { CelebrationTier } from "./game/celebrationVariants";
 // PARKED for v1 — Blending Power celebration is replaced by QuestCompleteCelebration.
 // Re-import + re-fire when CVCC ships in 1.1.
 // import BlendingPowerUnlock from "./components/BlendingPowerUnlock";
@@ -89,7 +89,7 @@ import LetterGallery from "./components/handwriting/LetterGallery";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "trophy-transition" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges" | "word-tac-toe";
+type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges" | "word-tac-toe";
 
 const ONBOARDING_SEEN_KEY = "ww_onboarding_seen";
 
@@ -182,6 +182,34 @@ export default function App() {
 
   // Start on Play Now screen
   const [route, setRoute] = useState<Route>("home");
+
+  // ---- Shared milestone celebration (trophy earned / Discovery Room unlock) ----
+  // Reserved for the two biggest cross-screen moments — everyday per-answer
+  // feedback and per-game wins are NOT routed through here (see
+  // MilestoneCelebration embedded directly in ExploreScreen/CrossMatchScreen/
+  // WordTacToeScreen for those smaller, screen-owned celebrations). This one
+  // is a thin wrapper around the transition that was already happening: the
+  // celebration plays, then `next()` performs the exact same state update +
+  // setRoute the app already did before this feature existed. Declared here
+  // (before handleNavigate) since handleNavigate's trophy/discovery branches
+  // need it in scope already — same reasoning as kioskStep below.
+  const [celebrationRequest, setCelebrationRequest] = useState<{
+    tier: CelebrationTier;
+    eventSlug?: EventSlug;
+    next: () => void;
+  } | null>(null);
+  const triggerCelebration = useCallback(
+    (tier: CelebrationTier, next: () => void, eventSlug?: EventSlug) => {
+      setCelebrationRequest({ tier, eventSlug, next });
+    },
+    []
+  );
+  const handleCelebrationDone = useCallback(() => {
+    const next = celebrationRequest?.next;
+    setCelebrationRequest(null);
+    next?.();
+  }, [celebrationRequest]);
+
   const [activeQuest, setActiveQuest] = useState<Quest | null>(resolvedInitial);
   const [wordIndex, setWordIndex] = useState<number>(0);
   // All 16 words passed to screens — decode gating handled in QuestMapScreen
@@ -371,9 +399,15 @@ export default function App() {
         if (completedWordIndex === FIRST_HALF_WORDS - 1) {
           const tp = loadTrophyProgress(activeQuest.id);
           if (tp.tier === "none") {
-            setTrophyPhase(1);
-            backgroundMusic.playTrophyTheme();
-            setRoute("trophy-room");
+            triggerCelebration(
+              "trophy",
+              () => {
+                setTrophyPhase(1);
+                backgroundMusic.playTrophyTheme();
+                setRoute("trophy-room");
+              },
+              "celebrate-milestone-trophy"
+            );
             return;
           }
         }
@@ -389,19 +423,33 @@ export default function App() {
         const tp = loadTrophyProgress(activeQuest.id);
         if (tp.tier === "half") {
           // Phase 2 trophy room → exit will route to discovery
-          setTrophyPhase(2);
-          backgroundMusic.playTrophyTheme();
-          setRoute("trophy-room");
+          triggerCelebration(
+            "trophy",
+            () => {
+              setTrophyPhase(2);
+              backgroundMusic.playTrophyTheme();
+              setRoute("trophy-room");
+            },
+            "celebrate-milestone-trophy"
+          );
           return;
         }
 
-        // tier === "full" (migrated) or "none" (edge): go straight to discovery
+        // tier === "full" (migrated) or "none" (edge): go straight to discovery —
+        // this is a genuine first arrival at the room, so it still gets the
+        // "unlock" celebration even though it skipped the trophy room this time.
         const envId = QUEST_ENVIRONMENT_MAP[activeQuest.id];
         if (envId) {
-          markEnvironmentVisited(envId);
-          backgroundMusic.playDiscoveryTheme(envId);
-          setExploreEnvId(envId);
-          setRoute("discovery-room");
+          triggerCelebration(
+            "unlock",
+            () => {
+              markEnvironmentVisited(envId);
+              backgroundMusic.playDiscoveryTheme(envId);
+              setExploreEnvId(envId);
+              setRoute("discovery-room");
+            },
+            "celebrate-milestone-unlock"
+          );
         } else {
           // No discovery room mapped → go to map
           setArrivedFromWord(completedWordIndex);
@@ -410,7 +458,7 @@ export default function App() {
         }
       }
     },
-    [activeQuest?.id, kioskStep]
+    [activeQuest?.id, kioskStep, triggerCelebration]
   );
 
   // ---- Restart current quest ----
@@ -543,10 +591,16 @@ export default function App() {
   const handleEnterTrophyRoom = useCallback(() => {
     if (!activeQuest) return;
     const tp = loadTrophyProgress(activeQuest.id);
-    setTrophyPhase(tp.tier === "none" ? 1 : 2);
-    backgroundMusic.playTrophyTheme();
-    setRoute("trophy-room");
-  }, [activeQuest?.id]);
+    triggerCelebration(
+      "trophy",
+      () => {
+        setTrophyPhase(tp.tier === "none" ? 1 : 2);
+        backgroundMusic.playTrophyTheme();
+        setRoute("trophy-room");
+      },
+      "celebrate-milestone-trophy"
+    );
+  }, [activeQuest?.id, triggerCelebration]);
 
   // ---- Enter Trophy Room (view-only, from quest map showcase click) ----
   const handleViewTrophyRoom = useCallback(() => {
@@ -654,10 +708,16 @@ export default function App() {
         ? getActiveSkinEnvironmentId() ?? Object.keys(ENVIRONMENTS)[Math.floor(Math.random() * Object.keys(ENVIRONMENTS).length)]
         : QUEST_ENVIRONMENT_MAP[activeQuest.id];
       if (envId) {
-        markEnvironmentVisited(envId);
-        backgroundMusic.playDiscoveryTheme(envId);
-        setExploreEnvId(envId);
-        setRoute("discovery-room");
+        triggerCelebration(
+          "unlock",
+          () => {
+            markEnvironmentVisited(envId);
+            backgroundMusic.playDiscoveryTheme(envId);
+            setExploreEnvId(envId);
+            setRoute("discovery-room");
+          },
+          "celebrate-milestone-unlock"
+        );
         return;
       }
     }
@@ -665,7 +725,7 @@ export default function App() {
     backgroundMusic.restoreMainTheme();
     setMapRevision((r) => r + 1);
     setRoute("map");
-  }, [trophyPhase, activeQuest?.id]);
+  }, [trophyPhase, activeQuest?.id, triggerCelebration]);
 
   // ---- Open/close Learning Insights ----
   const handleOpenInsights = useCallback(() => setRoute("insights"), []);
@@ -999,20 +1059,6 @@ export default function App() {
         </ScreenGate>
       )}
 
-      {route === "trophy-transition" && (
-        <div className="trophy-transition-overlay">
-          <div className="trophy-transition__spinner">
-            <img
-              src={trophyTransitionImg}
-              alt="Trophy"
-              className="trophy-transition__trophy-img"
-              draggable={false}
-            />
-          </div>
-          <h2 className="trophy-transition__text">🌟 Invention Powered Up! 🌟</h2>
-        </div>
-      )}
-
       </Stage>
 
       {route === "insights" && (
@@ -1052,6 +1098,16 @@ export default function App() {
           onSaveLater={handleSkinUnlockSaveLater}
         />
       )}
+
+      {celebrationRequest && (
+        <MilestoneCelebration
+          key={celebrationRequest.tier}
+          tier={celebrationRequest.tier}
+          eventSlug={celebrationRequest.eventSlug}
+          onDone={handleCelebrationDone}
+        />
+      )}
+
       {/* ── Dev toggle: ?dev=1 in URL to access original GameScreen ── */}
       {(route === "game" || route === "potion-game") &&
         new URLSearchParams(window.location.search).get("dev") === "1" && (

@@ -31,6 +31,7 @@ import { playWordSound, playSuccessPhrase, playEvent } from "../audio/SoundEffec
 import continueQuestBtn from "../assets/cont_quest.png";
 import wigglewooX from "../assets/wigglewoo_X.png";
 import wigglewooO from "../assets/wigglewoo_O.png";
+import MilestoneCelebration from "../components/MilestoneCelebration";
 import "../styles/word-tac-toe.css";
 
 interface WordTacToeScreenProps {
@@ -246,6 +247,15 @@ const WordTacToeScreen: React.FC<WordTacToeScreenProps> = ({ words, onComplete, 
     }
   }, [challenge, activeCell, board, childMark, cpuMark, runCpuTurn]);
 
+  // Brief shared full-screen flash layered on top of the in-scene result
+  // banner — a consistent "activity" tier moment across all mini-games,
+  // separate from (and shorter than) the existing 4.5s auto-exit/Continue
+  // flow below, which is unaffected by this. Shown for any result (win,
+  // lose, or tie) — this celebrates finishing the game, not just winning.
+  // Derived from `result` directly (not toggled on via an effect) — only
+  // its dismissal is ever set, from the overlay's own onDone callback.
+  const [activityFlashDismissed, setActivityFlashDismissed] = useState(false);
+
   // End-of-game VO + auto-exit (mirrors CrossMatchScreen's celebration timer).
   const autoExitRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -427,6 +437,10 @@ const WordTacToeScreen: React.FC<WordTacToeScreenProps> = ({ words, onComplete, 
             <img src={continueQuestBtn} alt="Continue" draggable={false} />
           </button>
         </div>
+      )}
+
+      {result && !activityFlashDismissed && (
+        <MilestoneCelebration tier="activity" onDone={() => setActivityFlashDismissed(true)} />
       )}
     </div>
   );

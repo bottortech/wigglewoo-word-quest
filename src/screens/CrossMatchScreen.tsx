@@ -17,6 +17,7 @@ import {
 } from "../audio/SoundEffects";
 import continueQuestBtn from "../assets/cont_quest.png";
 import { getActiveSkinAssets } from "../game/skins";
+import MilestoneCelebration from "../components/MilestoneCelebration";
 import "../styles/cross-match.css";
 
 type WigglewooReaction = "idle" | "watching" | "happy" | "encourage" | "celebrate";
@@ -160,6 +161,14 @@ const CrossMatchScreen: React.FC<CrossMatchScreenProps> = ({ words, onComplete }
   // only triggers the state flip; the completion timer lives in its own
   // effect below — keeping them separate avoids the timer being cancelled
   // by the very state change it depends on.)
+  // Brief shared full-screen flash layered on top of the in-scene banner
+  // below — a consistent "activity" tier moment across all mini-games,
+  // separate from (and shorter than) the existing celebration UI's own
+  // 6s auto-exit/Continue Quest flow, which is unaffected by this. Derived
+  // from `showCelebration` directly — only its dismissal is ever set, from
+  // the overlay's own onDone callback.
+  const [activityFlashDismissed, setActivityFlashDismissed] = useState(false);
+
   useEffect(() => {
     if (matched.size === words.length && !showCelebration) {
       setShowCelebration(true);
@@ -462,6 +471,10 @@ const CrossMatchScreen: React.FC<CrossMatchScreenProps> = ({ words, onComplete }
         <div className="cross-match__celebration" aria-live="polite">
           <span className="cross-match__celebration-text">🌟 Nice work! 🌟</span>
         </div>
+      )}
+
+      {showCelebration && !activityFlashDismissed && (
+        <MilestoneCelebration tier="activity" onDone={() => setActivityFlashDismissed(true)} />
       )}
 
       {/* Reserved bottom bar — always present so the columns shrink to fit

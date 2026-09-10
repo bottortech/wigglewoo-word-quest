@@ -35,6 +35,7 @@ import {
 import DailyCapModal from "../components/DailyCapModal";
 import FactNarration from "../components/FactNarration";
 import ComprehensionQuestion from "../components/ComprehensionQuestion";
+import MilestoneCelebration from "../components/MilestoneCelebration";
 import { playEvent, playRoomWelcome, playLetterSound } from "../audio/SoundEffects";
 import TraceMoment from "../components/handwriting/TraceMoment";
 import { LETTER_PATHS } from "../components/handwriting/letterPaths";
@@ -121,9 +122,21 @@ const FactPanelSheet: React.FC<{
   panel: FactPanel;
   onClose: () => void;
   ambientColor: string;
+  /** True once the kid has *finished* the room's required fact count this
+   *  visit (narration + question, where applicable — see onFactViewed).
+   *  Read via a ref internally (see roomCompleteRef below): "Back to Facts"
+   *  closes the whole panel instead of returning to the grid once this is
+   *  set, so the room's completion check (which only runs on a full panel
+   *  close) reliably fires on the exact fact that reaches the requirement —
+   *  including the case where that fact's own correct-answer auto-return
+   *  timer was already scheduled before this flag flipped true. */
+  roomComplete?: boolean;
+  /** Fires once per fact, only when that fact is actually *finished* —
+   *  narration end for a fact with no question, correct answer for one that
+   *  has a question. Never fires on merely opening a fact. */
   onFactViewed?: (factId: string) => void;
   onFactNarrationEnded?: (factId: string) => void;
-}> = ({ panel, onClose, onFactViewed, onFactNarrationEnded }) => {
+}> = ({ panel, onClose, roomComplete, onFactViewed, onFactNarrationEnded }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // Which fact's comprehension question (if any) is currently showing —
   // set once that fact's narration finishes, cleared whenever a different
@@ -132,29 +145,53 @@ const FactPanelSheet: React.FC<{
 
   const activeItem = expandedId ? panel.items.find((i) => i.id === expandedId) ?? null : null;
 
-  const handleSelectFact = useCallback((item: FactItem) => {
-    onFactViewed?.(item.id);
-    setQuestionFactId(null);
-    setExpandedId(item.id);
+  // roomComplete as a ref, not just a prop read inside closures: the
+  // correct-answer auto-return timer below is scheduled synchronously
+  // inside the click handler, before the parent's state update (which sets
+  // roomComplete) has landed on a new render. A closure capturing the prop
+  // directly would still see the stale "not complete yet" value 1.8s later.
+  // Reading a ref at call-time always sees the latest value.
+  const roomCompleteRef = useRef(roomComplete);
+  useEffect(() => { roomCompleteRef.current = roomComplete; }, [roomComplete]);
+
+  // Dedupe so a fact can't count twice toward completion — reopening an
+  // already-finished fact, or a narration/question callback firing more
+  // than once, must be a no-op here.
+  const finishedFactIdsRef = useRef<Set<string>>(new Set());
+  const markFactFinished = useCallback((factId: string) => {
+    if (finishedFactIdsRef.current.has(factId)) return;
+    finishedFactIdsRef.current.add(factId);
+    onFactViewed?.(factId);
   }, [onFactViewed]);
 
-  const handleBackToFacts = useCallback(() => {
-    setExpandedId(null);
+  const handleSelectFact = useCallback((item: FactItem) => {
+    // Opening a fact no longer counts it — see markFactFinished.
     setQuestionFactId(null);
+    setExpandedId(item.id);
   }, []);
 
+  const handleBackToFacts = useCallback(() => {
+    if (roomCompleteRef.current) {
+      onClose();
+      return;
+    }
+    setExpandedId(null);
+    setQuestionFactId(null);
+  }, [onClose]);
+
   // After a correct comprehension-question answer, hold on the "That's
-  // right!" celebration briefly so the kid actually sees it, then return
-  // to the fact-selection grid automatically — one less tap, and it puts
-  // them right back where they can pick another fact.
+  // right!" celebration briefly so the kid actually sees it, then either
+  // return to the fact-selection grid (more facts still needed) or close
+  // the panel outright (this was the fact that completed the room).
   const correctAnswerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleQuestionCorrect = useCallback(() => {
+    if (expandedId) markFactFinished(expandedId);
     if (correctAnswerTimerRef.current) clearTimeout(correctAnswerTimerRef.current);
     correctAnswerTimerRef.current = setTimeout(() => {
       correctAnswerTimerRef.current = null;
       handleBackToFacts();
     }, 1800);
-  }, [handleBackToFacts]);
+  }, [expandedId, markFactFinished, handleBackToFacts]);
   useEffect(() => {
     return () => {
       if (correctAnswerTimerRef.current) clearTimeout(correctAnswerTimerRef.current);
@@ -203,7 +240,13 @@ const FactPanelSheet: React.FC<{
                   autoPlay
                   onEnded={() => {
                     onFactNarrationEnded?.(activeItem.id);
-                    if (activeItem.question) setQuestionFactId(activeItem.id);
+                    if (activeItem.question) {
+                      setQuestionFactId(activeItem.id);
+                    } else {
+                      // No question to wait for — narration finishing IS
+                      // this fact's completion point.
+                      markFactFinished(activeItem.id);
+                    }
                   }}
                 />
               </div>
@@ -274,6 +317,18 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   // and then segue cleanly into the room-complete VO without stomping on
   // a per-fact reaction.
   const [completingFactId, setCompletingFactId] = useState<string | null>(null);
+  // Ref mirror of completingFactId — handleFactPanelClose (below) can be
+  // invoked from a FactPanelSheet closure captured before completingFactId
+  // actually flipped to non-null (its own auto-return-after-correct-answer
+  // timer, scheduled at click-time, hands off to whatever onClose reference
+  // that render held). Reading the ref at call-time instead of the closed-
+  // over state value ensures the room-complete check always sees the
+  // current value, not a stale one from before the fact that completed the
+  // room finished.
+  const completingFactIdRef = useRef(completingFactId);
+  useEffect(() => {
+    completingFactIdRef.current = completingFactId;
+  }, [completingFactId]);
 
   // Per-room first-visit trace experience. The trace renders directly over
   // the targeted in-room prop — the prop itself swaps to its "active" sprite
@@ -348,19 +403,25 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     localStorage.setItem(roomCompleteKey, "true");
     playEvent("discover-complete");
     // discover-complete plays for ~2s, then the bridge line plays as the
-    // room is fading out. Total dwell before exit = ~3.5s.
+    // MilestoneCelebration overlay (rendered below, tier="room") fades out —
+    // its own duration (3.5s) is what actually ends the dwell now, via
+    // handleRoomCelebrationDone, not a timer here.
     setTimeout(() => playEvent("discover-exit-bridge"), 2200);
-    setTimeout(() => {
-      if (IS_KIOSK_BUILD) {
-        // Hold here — kioskTurnComplete's "Next Player" button is what
-        // actually calls onComplete/onBack (below), once someone taps it.
-        setKioskTurnComplete(true);
-        return;
-      }
-      onComplete?.();
-      onBack();
-    }, 3500);
-  }, [needsCompletion, roomJustCompleted, roomCompleteKey, onComplete, onBack]);
+  }, [needsCompletion, roomJustCompleted, roomCompleteKey]);
+
+  // Fires when the MilestoneCelebration (tier="room") overlay finishes —
+  // this is what actually ends the room-complete dwell (previously a bare
+  // setTimeout here in triggerRoomComplete).
+  const handleRoomCelebrationDone = useCallback(() => {
+    if (IS_KIOSK_BUILD) {
+      // Hold here — kioskTurnComplete's "Next Player" button is what
+      // actually calls onComplete/onBack (below), once someone taps it.
+      setKioskTurnComplete(true);
+      return;
+    }
+    onComplete?.();
+    onBack();
+  }, [onComplete, onBack]);
 
   // Kiosk-only: "Next Player" tap — hands off to the next child. Resets
   // ALL session/progress state via onComplete (no-op in kiosk, see
@@ -388,13 +449,13 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   const handleFactPanelClose = useCallback(() => {
     setActivePanel(null);
     if (
-      completingFactId !== null &&
+      completingFactIdRef.current !== null &&
       needsCompletion &&
       !roomJustCompleted
     ) {
       triggerRoomComplete();
     }
-  }, [completingFactId, needsCompletion, roomJustCompleted, triggerRoomComplete]);
+  }, [needsCompletion, roomJustCompleted, triggerRoomComplete]);
 
   // PARKED — only reachable when MINI_GAMES_ENABLED is flipped on.
   const handleMiniGamesBack = useCallback(() => {
@@ -560,6 +621,11 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     // Only fact-panel props trigger the discovery flow
     if (!prop.factPanel) return;
 
+    // Room already hit its required fact count this visit — the completion
+    // sequence (dwell + exit, or the kiosk "Next Player" hold) is already
+    // underway, so further taps shouldn't open more fact panels on top of it.
+    if (roomJustCompleted) return;
+
     // Check daily cap (skip in dev). The cap is also lifted once any quest
     // tied to this environment is fully complete — kids who finished the
     // content shouldn't be told to come back tomorrow for two more facts.
@@ -573,7 +639,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     }
 
     learnFactForProp(prop);
-  }, [environmentId, learnFactForProp]);
+  }, [environmentId, roomJustCompleted, learnFactForProp]);
 
   const handleHotspotClick = useCallback((hotspot: Hotspot) => {
     setTappedHotspotId(hotspot.id);
@@ -1230,7 +1296,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
           <span className="explore-room-progress__text">
             {factsViewedThisVisit.size === 0
               ? `View ${FACTS_REQUIRED} facts to complete this room`
-              : `${factsViewedThisVisit.size} of ${FACTS_REQUIRED} facts viewed`
+              : `${Math.min(factsViewedThisVisit.size, FACTS_REQUIRED)} of ${FACTS_REQUIRED} facts viewed`
             }
           </span>
         </div>
@@ -1256,13 +1322,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
           </div>
         </div>
       ) : roomJustCompleted && (
-        <div className="explore-room-complete">
-          <div className="explore-room-complete__card">
-            <span className="explore-room-complete__icon">🎉</span>
-            <h2 className="explore-room-complete__title">Room Complete!</h2>
-            <p className="explore-room-complete__sub">Great exploring!</p>
-          </div>
-        </div>
+        <MilestoneCelebration tier="room" onDone={handleRoomCelebrationDone} />
       )}
 
       {/* Hint text — hidden during the first-visit trace */}
@@ -1298,6 +1358,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
           panel={activePanel}
           onClose={handleFactPanelClose}
           ambientColor={env.ambientColor}
+          roomComplete={completingFactId !== null}
           onFactViewed={(factId) => {
             setFactsViewedThisVisit((prev) => {
               const next = new Set(prev);
