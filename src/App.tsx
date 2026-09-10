@@ -347,13 +347,20 @@ export default function App() {
           }
         }, 500);
 
-        // Cross-match review checkpoints (after word 4, 12). The helper
-        // returns the earliest pending checkpoint that the player has reached
-        // — handles both fresh completion and resume-after-skip.
+        // Checkpoints after word 4 and 12. The helper returns the earliest
+        // pending checkpoint that the player has reached — handles both
+        // fresh completion and resume-after-skip. Word 4 -> Cross-Match
+        // (unchanged); word 12 -> Word-Tac-Toe (see mainWordTacToeCheckpoint
+        // above for why this reuses Cross-Match's own completion tracking).
         const pendingCp = getPendingCrossMatch(activeQuest.id, completedWordIndex + 1);
         if (pendingCp !== null) {
-          setCrossMatchCheckpoint(pendingCp);
-          setRoute("cross-match");
+          if (pendingCp === 12) {
+            setMainWordTacToeCheckpoint(pendingCp);
+            setRoute("word-tac-toe");
+          } else {
+            setCrossMatchCheckpoint(pendingCp);
+            setRoute("cross-match");
+          }
           return;
         }
 
@@ -561,6 +568,19 @@ export default function App() {
   // branches from the normal cross-match path.
   const [kioskCrossMatchActive, setKioskCrossMatchActive] = useState(false);
 
+  // Main-build (non-kiosk) checkpoint-12 detour: Word-Tac-Toe instead of a
+  // 2nd Cross-Match, so a normal quest features 3 distinct mechanics
+  // (Potion Game, Cross-Match at word 4, Word-Tac-Toe at word 12) instead of
+  // Potion Game + the same Cross-Match exercise twice. Smallest safe version
+  // of the parked per-quest checkpoint-mini-game idea (see
+  // docs/future-features/checkpoint-minigame-system.md) — fixed per
+  // checkpoint number, same for every quest, no configurable mapping yet.
+  // Reuses the existing Cross-Match completion bookkeeping (markCrossMatchComplete
+  // et al.) purely as "checkpoint N satisfied" tracking — getPendingCrossMatch
+  // doesn't care which mini-game actually satisfied a checkpoint, so this
+  // needs no new persistence/schema, just a different screen at word 12.
+  const [mainWordTacToeCheckpoint, setMainWordTacToeCheckpoint] = useState<number | null>(null);
+
   // ---- Cross-match completed → mark + return to map (or, in kiosk mode,
   // continue the chain into the final word — wordIndex/kioskStep were
   // already advanced before entering cross-match, so this just routes on). ----
@@ -590,6 +610,18 @@ export default function App() {
     setKioskWordTacToeActive(false);
     setRoute("potion-game");
   }, []);
+
+  // Main-build checkpoint-12 Word-Tac-Toe completed → mark + return to map,
+  // mirroring handleCrossMatchComplete's non-kiosk branch exactly. currentWordIndex
+  // is already advanced to 12 by the time this checkpoint fires, so the map
+  // naturally shows node 13 as the next active node — no special-casing needed.
+  const handleMainWordTacToeCheckpointComplete = useCallback(() => {
+    if (!activeQuest || mainWordTacToeCheckpoint === null) return;
+    markCrossMatchComplete(activeQuest.id, mainWordTacToeCheckpoint);
+    setMainWordTacToeCheckpoint(null);
+    setMapRevision((r) => r + 1);
+    setRoute("map");
+  }, [activeQuest?.id, mainWordTacToeCheckpoint]);
 
   const handleTrophyRoomComplete = useCallback(() => {
     if (!activeQuest) return;
@@ -926,10 +958,18 @@ export default function App() {
       {route === "word-tac-toe" && activeQuest && (
         <ScreenGate>
           <WordTacToeScreen
-            key={`wtt-${activeQuest.id}`}
+            key={`wtt-${activeQuest.id}-${mainWordTacToeCheckpoint ?? (kioskWordTacToeActive ? "kiosk" : "open")}`}
             words={activeQuest.words}
-            onComplete={kioskWordTacToeActive ? handleWordTacToeComplete : handleCloseWordTacToe}
-            onBack={kioskWordTacToeActive ? undefined : handleCloseWordTacToe}
+            onComplete={
+              kioskWordTacToeActive ? handleWordTacToeComplete
+                : mainWordTacToeCheckpoint !== null ? handleMainWordTacToeCheckpointComplete
+                  : handleCloseWordTacToe
+            }
+            onBack={
+              kioskWordTacToeActive || mainWordTacToeCheckpoint !== null
+                ? undefined
+                : handleCloseWordTacToe
+            }
           />
         </ScreenGate>
       )}

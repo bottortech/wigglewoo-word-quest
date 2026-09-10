@@ -401,22 +401,6 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   const trophyProgress = useMemo(() => loadTrophyProgress(quest.id), [quest.id]);
   const discoveryProgress = useMemo(() => loadDiscoveryProgress(quest.id), [quest.id]);
 
-  // ---- Word-Tac-Toe discoverability nudge ----
-  // A kid can otherwise finish all 16 words and never notice the button.
-  // Shows once, first map load after the Phase-1 Trophy is earned (so the
-  // nudge doesn't compete for attention before they've seen a trophy room
-  // at all) — separate flag/mechanism from the onboarding arrow above,
-  // same "show once ever" pattern, dismissed by tapping the button itself.
-  const [showWttNudge, setShowWttNudge] = useState(() => {
-    if (localStorage.getItem("ww_wtt_nudge_seen") === "true") return false;
-    return trophyProgress.tier !== "none";
-  });
-
-  const handleWttNudgeDismiss = useCallback(() => {
-    localStorage.setItem("ww_wtt_nudge_seen", "true");
-    setShowWttNudge(false);
-  }, []);
-
   // Count image vs decode words
   const imageWordCount = useMemo(() =>
     quest.words.filter(w => (w.mode ?? "image") === "image").length,
@@ -1379,20 +1363,11 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         <div className="word-tac-toe-btn-wrap">
           <button
             className="word-tac-toe-btn"
-            onClick={() => {
-              if (showWttNudge) handleWttNudgeDismiss();
-              onOpenWordTacToe();
-            }}
+            onClick={onOpenWordTacToe}
             aria-label="Play Word Tac Toe"
           >
             <img src={wordTacToeLogo} alt="Word Tac Toe" className="word-tac-toe-btn__logo" draggable={false} />
           </button>
-          {showWttNudge && (
-            <div className="word-tac-toe-nudge" aria-hidden="true">
-              <div className="word-tac-toe-nudge__arrow">▲</div>
-              <div className="word-tac-toe-nudge__label">New game!</div>
-            </div>
-          )}
         </div>
       )}
 
