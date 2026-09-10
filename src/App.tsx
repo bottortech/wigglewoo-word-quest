@@ -219,10 +219,13 @@ export default function App() {
   // ---- Home Screen → Onboarding (first launch) or Map ----
   const handlePlay = useCallback(() => {
     if (loadSettings().backgroundMusic) backgroundMusic.play();
-    if (IS_KIOSK_BUILD && localStorage.getItem(ONBOARDING_SEEN_KEY) === "true") {
-      // Kiosk mode: every child picks a character first (wardrobe intro),
-      // then sees the map once — see handleCloseWardrobe for the
-      // continuation into "map".
+    if (IS_KIOSK_BUILD) {
+      // Kiosk mode never shows the "spell CAT" tutorial — even on a
+      // genuinely fresh install/reset, a kiosk child goes straight from
+      // Play Now into the character wardrobe intro, then the map. The
+      // tutorial only makes sense for a single home player's first-ever
+      // session, not a fresh child every few minutes at an event table.
+      localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
       setKioskWardrobeIntro(true);
       setWardrobeOpen(true);
     } else if (localStorage.getItem(ONBOARDING_SEEN_KEY) === "true") {
