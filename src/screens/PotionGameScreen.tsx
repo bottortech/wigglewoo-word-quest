@@ -122,11 +122,31 @@ type GameStep =
 
 type ProfState = "idle" | "excited" | "wrong" | "celebrate";
 
+/** Drives the onboarding tutorial through the real Potion Game instead of a
+ *  separate fake UI. When set: the screen opens directly on the "build"
+ *  step (skips lesson-intro/say-cue/trace-prep), the normal completion
+ *  chain (mastery-unlock/parent-prompt/onNavigate) is replaced by a single
+ *  `onComplete` call, and — critically — every call that writes real
+ *  progress/analytics (recordCorrectPlacement, recordNodeComplete,
+ *  saveNodeRating, recordWordCompletion, recordLessonMastery, recordTimeSpent,
+ *  the module-level sessionStreak) is skipped. Nothing about normal gameplay
+ *  changes when this prop is absent. */
+export interface PotionGameTutorialMode {
+  /** Fires once a slot is correctly filled (after the pour animation
+   *  finishes and the tile is removed from the bottle row), so a tutorial
+   *  overlay knows which letter to highlight next. */
+  onSlotFilled: (slotIndex: number) => void;
+  /** Fires once the real celebration for the tutorial word finishes,
+   *  instead of the normal mastery/parent-prompt/navigate chain. */
+  onComplete: () => void;
+}
+
 interface PotionGameScreenProps {
   quest: Quest;
   currentWordIndex: number;
   onNavigate: (target: "next-word" | "quest-map" | "quest-summary") => void;
   onGoHome?: () => void;
+  tutorialMode?: PotionGameTutorialMode;
 }
 
 // =============================================
@@ -137,6 +157,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   currentWordIndex,
   onNavigate,
   onGoHome,
+  tutorialMode,
 }) => {
   const currentWord: CvcWord = quest.words[currentWordIndex];
   const wordLength = currentWord.letters.length;
@@ -181,6 +202,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   }, [currentWord]);
 
   const [step, setStep] = useState<GameStep>(() => {
+    if (tutorialMode) return "build";
     if (showLessonIntro) return "lesson-intro";
     if (isTracePrepWord(currentWordIndex)) {
       const candidate = getTraceLetterForWord(lessonIndex, currentWord.letters);
@@ -245,6 +267,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   useEffect(() => {
     nodeStartTime.current = Date.now();
     return () => {
+      if (tutorialMode) return;
       recordTimeSpent(
         quest.id,
         quest.patternType,
@@ -252,7 +275,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
         Date.now() - nodeStartTime.current,
       );
     };
-  }, [quest.id, quest.patternType, currentWordIndex]);
+  }, [quest.id, quest.patternType, currentWordIndex, tutorialMode]);
 
   // ---- Play target word + say-cue chain (mirrors GameScreen) ----
   const hasPlayedPrompt = useRef(false);
@@ -266,11 +289,11 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
       setAudioActive(true);
       if (audioTimeoutRef.current) clearTimeout(audioTimeoutRef.current);
       audioTimeoutRef.current = setTimeout(() => setAudioActive(false), 1200);
-      if (isLessonStart(currentWordIndex) && !isMasteryWord) {
+      if (isLessonStart(currentWordIndex) && !isMasteryWord && !tutorialMode) {
         sayCueTimerRef.current = setTimeout(() => setStep("say-cue"), 1400);
       }
     }, 800);
-  }, [step, isMasteryWord, currentWord.word, currentWordIndex]);
+  }, [step, isMasteryWord, currentWord.word, currentWordIndex, tutorialMode]);
 
   // ---- Cleanup timers on unmount ----
   useEffect(
@@ -287,7 +310,10 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   useEffect(() => {
     if (step !== "celebrate") return;
 
-    const isLast = currentWordIndex === quest.words.length - 1;
+    // Tutorial mode is never "the last word of a quest" — it's a single
+    // practice word with no quest behind it — so it always gets the
+    // regular success phrase, never the quest-complete VO.
+    const isLast = !tutorialMode && currentWordIndex === quest.words.length - 1;
     waitForLetterDone().then(() => {
       playWordSound(currentWord.word);
       waitForWordDone().then(() => {
@@ -295,6 +321,10 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
         else playSuccessPhrase();
       });
     });
+
+    // Everything below writes real progress/analytics — none of it applies
+    // to a tutorial run, which isn't a real quest word.
+    if (tutorialMode) return;
 
     const elapsed = Date.now() - nodeStartTime.current;
     recordWordCompletion(
@@ -366,12 +396,16 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
           setUsedTileIds((prev) => new Set(prev).add(tile.id));
           setPouringTileId(null);
           setLockedOut(false);
-          recordCorrectPlacement(
-            quest.id,
-            quest.patternType,
-            currentWordIndex,
-            currentWord.word,
-          );
+          if (tutorialMode) {
+            tutorialMode.onSlotFilled(slotToFill);
+          } else {
+            recordCorrectPlacement(
+              quest.id,
+              quest.patternType,
+              currentWordIndex,
+              currentWord.word,
+            );
+          }
 
           if (newSlots.every((s) => s !== null)) {
             triggerProf("celebrate");
@@ -407,6 +441,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
       quest.patternType,
       currentWordIndex,
       triggerProf,
+      tutorialMode,
     ],
   );
 
@@ -417,12 +452,22 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   }, [currentWordIndex, onNavigate, quest.words.length]);
 
   const handleCelebrationComplete = useCallback(() => {
+    if (tutorialMode) {
+      // Back to "build" so the overlay-zone condition below stops rendering
+      // CelebrationOverlay (a full-screen, opaque overlay that otherwise
+      // never unmounts itself) — this reveals the completed lab scene
+      // (filled beaker, word reveal) underneath, exactly where the
+      // tutorial's own "Let's Go!" button gets drawn on top.
+      setStep("build");
+      tutorialMode.onComplete();
+      return;
+    }
     if (isMasteryWord) {
       setStep("mastery-unlock");
       return;
     }
     navigateAfterWord();
-  }, [isMasteryWord, navigateAfterWord]);
+  }, [tutorialMode, isMasteryWord, navigateAfterWord]);
 
   const handleMasteryUnlockComplete = useCallback(() => {
     setStep("parent-prompt");
@@ -493,13 +538,15 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   }, [recordLetterEvent, traceSeqIndex, traceSequence.length]);
 
   const handlePracticeBoardClick = useCallback(() => {
+    // The voluntary trace detour would derail the guided tutorial sequence.
+    if (tutorialMode) return;
     if (step !== "build" || traceSequence.length === 0) return;
     const wordKey = currentWord.word;
     wordAttemptCountsRef.current[wordKey] = (wordAttemptCountsRef.current[wordKey] ?? 0) + 1;
     setIsPracticeTrace(true); // voluntary — show back button
     setTraceSeqIndex(0);
     setStep("trace-prep");
-  }, [step, traceSequence.length, currentWord.word]);
+  }, [tutorialMode, step, traceSequence.length, currentWord.word]);
 
   const handleSayCueDismiss = useCallback(() => {
     setStep("build");
@@ -554,9 +601,11 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
               {/* ── Top bar ── */}
               <div className="pg-top-bar">
-                <div className="pg-progress">
-                  ⭐ {currentWordIndex + 1} / {quest.words.length}
-                </div>
+                {!tutorialMode && (
+                  <div className="pg-progress">
+                    ⭐ {currentWordIndex + 1} / {quest.words.length}
+                  </div>
+                )}
                 {isMasteryWord && step === "build" && (
                   <div
                     className="mastery-marker"
@@ -716,6 +765,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
                               }}
                               onClick={() => handleTileTap(tile, idx, availableTiles.length)}
                               aria-label={`Bottle ${tile.letter.toUpperCase()}`}
+                              data-potion-letter={tile.letter.toLowerCase()}
                             >
                               <div className="pg-bottle__cork" />
                               <div className="pg-bottle__neck" />
@@ -759,7 +809,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
         <div className="pg-overlay-zone">
           {step === "celebrate" && (
             <CelebrationOverlay
-              type={getCelebrationTypeForWord(currentWordIndex, quest.words.length)}
+              type={tutorialMode ? "level-complete" : getCelebrationTypeForWord(currentWordIndex, quest.words.length)}
               onComplete={handleCelebrationComplete}
               wordsComplete={currentWordIndex + 1}
               totalWords={quest.words.length}
@@ -851,9 +901,9 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
       <div
         className={`pg-green-chalkboard${step === "trace-prep" ? " pg-green-chalkboard--active" : ""}`}
         onClick={handlePracticeBoardClick}
-        role={traceSequence.length > 0 && step === "build" ? "button" : undefined}
-        aria-label={traceSequence.length > 0 && step === "build" ? "Practice tracing letters" : undefined}
-        tabIndex={traceSequence.length > 0 && step === "build" ? 0 : -1}
+        role={traceSequence.length > 0 && step === "build" && !tutorialMode ? "button" : undefined}
+        aria-label={traceSequence.length > 0 && step === "build" && !tutorialMode ? "Practice tracing letters" : undefined}
+        tabIndex={traceSequence.length > 0 && step === "build" && !tutorialMode ? 0 : -1}
       >
         <img
           src="/assets/green-chalk-board.png"
@@ -861,7 +911,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
           className="pg-green-chalkboard__img"
           draggable={false}
         />
-        {traceSequence.length > 0 && step !== "trace-prep" && (
+        {traceSequence.length > 0 && step !== "trace-prep" && !tutorialMode && (
           <span className="pg-green-chalkboard__cta" aria-hidden="true">
             Trace<br />the<br />letter
           </span>

@@ -1,6 +1,14 @@
 /* =============================================
    onboarding.css — First-time guided intro
    WiggleWoo's Word Quest
+   =============================================
+   The tutorial now plays out entirely on the real Potion Game screen (see
+   OnboardingScreen.tsx) — no separate intro or completion screens. This
+   file only owns the guide overlay (instruction bar + highlight ring +
+   hand pointer) drawn on top of it, and the final "Let's Go!" CTA that
+   appears on the same lab scene once the real celebration finishes. No
+   slot/tile/bottle styling lives here anymore; that's the real Potion
+   Game's own CSS.
    ============================================= */
 
 .onboarding {
@@ -10,40 +18,6 @@
   bottom: 0;
   left: 0;
   z-index: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(180deg, #E3F2FD 0%, #BBDEFB 40%, #90CAF9 100%);
-  animation: onboard-fade-in 0.5s ease-out;
-}
-
-@keyframes onboard-fade-in {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-.onboarding__content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  max-width: 500px;
-  padding: 20px;
-}
-
-/* Instruction text */
-.onboarding__instruction {
-  font-family: "Nunito", Arial, sans-serif;
-  font-size: clamp(16px, 3.5vw, 24px);
-  font-weight: 700;
-  color: #1565C0;
-  text-align: center;
-  line-height: 1.4;
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-  animation: onboard-text-in 0.4s ease-out;
 }
 
 @keyframes onboard-text-in {
@@ -51,174 +25,60 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Image */
-.onboarding__image {
-  margin: 4px 0;
-}
-
-/* Word slots */
-.onboarding__slots {
-  display: flex;
-  gap: 10px;
-  margin: 8px 0;
-}
-
-.onboarding__slot {
-  width: clamp(50px, 10vw, 70px);
-  height: clamp(50px, 10vw, 70px);
-  border: 3px dashed #90CAF9;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Nunito", Arial, sans-serif;
-  font-size: clamp(24px, 5vw, 36px);
-  font-weight: 800;
-  color: #1565C0;
-  transition: all 0.2s ease;
-}
-
-.onboarding__slot--active {
-  border-color: #FFD54F;
-  border-style: solid;
-  border-width: 3px;
-  background: rgba(255, 215, 0, 0.15);
-  transform: scale(1.08);
-  box-shadow: 0 0 16px rgba(255, 215, 0, 0.4);
-  animation: onboard-slot-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes onboard-slot-pulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(255, 215, 0, 0.4); }
-  50% { box-shadow: 0 0 24px rgba(255, 215, 0, 0.6); }
-}
-
-.onboarding__slot--filled {
-  border-style: solid;
-  border-color: #4DB6AC;
-  background: rgba(77, 182, 172, 0.1);
-  animation: onboard-slot-pop 0.3s ease-out;
-}
-
-@keyframes onboard-slot-pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-/* Letter choices */
-.onboarding__choices {
-  display: flex;
-  gap: 14px;
-  margin: 8px 0;
-}
-
-.onboarding__tile {
-  width: clamp(52px, 10vw, 72px);
-  height: clamp(52px, 10vw, 72px);
-  border: 3px solid #5D4037;
-  border-radius: 12px;
-  background: linear-gradient(to bottom, #fff 0%, #f5f0e5 100%);
-  font-family: "Nunito", Arial, sans-serif;
-  font-size: clamp(22px, 5vw, 34px);
-  font-weight: 800;
-  color: #3E2723;
-  cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.3s ease;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.onboarding__tile:hover {
-  transform: scale(1.08);
-}
-
-.onboarding__tile:active {
-  transform: scale(0.92);
-}
-
-.onboarding__tile[disabled] {
-  cursor: default;
-}
-
-/* Wrong tap shake */
-.onboarding__tile--shake {
-  animation: onboard-tile-shake 0.35s ease-out;
-  border-color: #ef5350;
-}
-
-@keyframes onboard-tile-shake {
-  0%, 100% { transform: translateX(0); }
-  15% { transform: translateX(-6px); }
-  30% { transform: translateX(5px); }
-  45% { transform: translateX(-4px); }
-  60% { transform: translateX(3px); }
-}
-
-/* Done state */
-.onboarding__done {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-
-.onboarding__word-reveal {
-  font-family: "Nunito", Arial, sans-serif;
-  font-size: clamp(48px, 12vw, 80px);
-  font-weight: 900;
-  color: #4DB6AC;
-  letter-spacing: 8px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 24px rgba(77, 182, 172, 0.4);
-  animation: onboard-word-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes onboard-word-pop {
-  0% { opacity: 0; transform: scale(0.5); }
-  60% { transform: scale(1.1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.onboarding__continue {
-  padding: 12px 36px;
-  border: none;
-  border-radius: 30px;
-  background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);
-  color: #fff;
-  font-family: "Nunito", Arial, sans-serif;
-  font-size: clamp(16px, 3vw, 22px);
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
-  transition: transform 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.onboarding__continue:hover {
-  transform: scale(1.05);
-}
-
-.onboarding__continue:active {
-  transform: scale(0.95);
-}
-
 /* =============================================
-   Hand pointer — glides between tiles, taps in demo mode
+   Guide overlay — drawn on top of the real Potion Game. Purely visual:
+   pointer-events: none throughout so it never intercepts a tap meant for
+   the real bottles underneath.
    ============================================= */
-.onboarding__hand {
+.onboarding-guide {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   z-index: 1000;
   pointer-events: none;
-  transition: transform 900ms cubic-bezier(0.33, 1, 0.68, 1);
-  will-change: transform;
 }
 
-.onboarding__hand-inner {
+.onboarding-guide__instruction {
+  position: fixed;
+  top: clamp(8px, 2vh, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(90vw, 560px);
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: rgba(21, 101, 192, 0.92);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(15px, 2.6vh, 22px);
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  animation: onboard-text-in 0.4s ease-out;
+}
+
+/* Pulsing highlight ring — positioned via inline style to the measured
+   bottle rect, inflated slightly so it reads as a halo around the bottle
+   rather than an outline flush against it. */
+.onboarding-guide__ring {
+  position: fixed;
+  border: 4px solid #FFD54F;
+  border-radius: 16px;
+  box-shadow: 0 0 0 4px rgba(255, 213, 79, 0.35), 0 0 20px rgba(255, 213, 79, 0.6);
+  animation: onboard-ring-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes onboard-ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.75; }
+}
+
+/* Hand pointer — hovers just under the highlighted bottle */
+.onboarding-guide__hand {
+  position: fixed;
+}
+
+.onboarding-guide__hand-inner {
   display: inline-block;
-  font-size: 52px;
+  font-size: 44px;
   line-height: 1;
   filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.3));
   transform-origin: top center;
@@ -230,58 +90,55 @@
   50% { transform: translateY(-6px); }
 }
 
-.onboarding__hand-inner--tapping {
-  animation: onboard-hand-tap 320ms ease-out;
-}
-
-@keyframes onboard-hand-tap {
-  0% { transform: translateY(0) scale(1); }
-  40% { transform: translateY(4px) scale(0.78); }
-  100% { transform: translateY(0) scale(1); }
-}
-
 /* =============================================
-   Short viewport — landscape phones (iPhone in landscape is ~393px tall)
-   The default stack (instruction + image + slots + choices + gaps +
-   padding) is taller than 393px, so the top and bottom get cropped. Compact
-   the elements and shrink the WordImage so the whole flow fits without
-   scrolling.
+   Final CTA — appears as an overlay on the SAME Word Laboratory scene once
+   the real CAT celebration has finished (no separate completion screen).
+   Large, high-contrast, and animated so it reads unmistakably as "the
+   thing to tap next" over the busy lab background.
    ============================================= */
-@media (max-height: 500px) {
-  .onboarding__content {
-    gap: 6px;
-    padding: 8px;
-  }
-  .onboarding__instruction {
-    min-height: 0;
-    font-size: clamp(14px, 3vh, 20px);
-  }
-  .onboarding__image {
-    margin: 0;
-  }
-  .onboarding__image .word-image {
-    width: clamp(56px, 14vh, 96px) !important;
-    height: clamp(56px, 14vh, 96px) !important;
-  }
-  .onboarding__slots,
-  .onboarding__choices {
-    gap: 8px;
-    margin: 2px 0;
-  }
-  .onboarding__slot,
-  .onboarding__tile {
-    width: clamp(38px, 10vh, 58px);
-    height: clamp(38px, 10vh, 58px);
-    font-size: clamp(18px, 5vh, 28px);
-  }
-  .onboarding__done {
-    gap: 8px;
-  }
-  .onboarding__word-reveal {
-    font-size: clamp(32px, 9vh, 56px);
-  }
-  .onboarding__continue {
-    padding: 8px 24px;
-    font-size: clamp(14px, 3vh, 18px);
-  }
+.onboarding-cta {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.onboarding-cta__button {
+  pointer-events: auto;
+  padding: clamp(16px, 3vh, 26px) clamp(48px, 9vw, 88px);
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #FFB300 0%, #F57C00 100%);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(24px, 5vw, 40px);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #C05F00, 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 0 6px rgba(255, 255, 255, 0.5);
+  -webkit-tap-highlight-color: transparent;
+  animation: onboard-cta-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both, onboard-cta-glow 1.6s ease-in-out 0.5s infinite;
+}
+
+/* Pulse animates box-shadow only (never transform) so it never fights the
+   :active press feedback below — a running @keyframes animation on the
+   same property as an interaction state always wins, silently breaking
+   the tap feel otherwise. */
+.onboarding-cta__button:active {
+  transform: scale(0.94) translateY(3px);
+  box-shadow: 0 3px 0 #C05F00, 0 6px 14px rgba(0, 0, 0, 0.3), 0 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes onboard-cta-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  70% { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes onboard-cta-glow {
+  0%, 100% { box-shadow: 0 6px 0 #C05F00, 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 0 6px rgba(255, 255, 255, 0.5); }
+  50%      { box-shadow: 0 6px 0 #C05F00, 0 10px 32px rgba(255, 179, 0, 0.6), 0 0 0 10px rgba(255, 255, 255, 0.35); }
 }
