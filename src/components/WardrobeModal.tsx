@@ -4,7 +4,7 @@
 // WiggleWoo's Word Quest
 // =============================================
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   SKIN_REGISTRY,
   DEFAULT_SKIN_ID,
@@ -46,6 +46,22 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
   const [previewSkin, setPreviewSkin] = useState<string | null>(null);
   const [transitioning, setTransitioning] = useState(false);
 
+  // Main build only: which skin is currently being browsed, independent of
+  // which one is actually equipped. Swiping/arrows here only move this —
+  // they never equip (see goToOffset below). Kiosk ignores this entirely
+  // and keeps its original browse-equips-immediately behavior, since every
+  // skin is always unlocked there and it's a different, guided flow.
+  // Reset to whatever's equipped each time the modal opens. (This effect
+  // matches the same "sync local state to a prop" pattern already used a
+  // few lines up for `unlocked`, and elsewhere in this codebase — the
+  // render-time alternatives here would need either a ref mutation or an
+  // impure localStorage read during render, both of which this project's
+  // stricter lint rules reject outright.)
+  const [browseSkinId, setBrowseSkinId] = useState<string | null>(null);
+  useEffect(() => {
+    if (isOpen) setBrowseSkinId(getActiveSkinId());
+  }, [isOpen]);
+
   const skins: SkinCard[] = useMemo(() => {
     const cards: SkinCard[] = [
       {
@@ -70,12 +86,17 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
     return cards;
   }, [unlocked]);
 
-  // The skin shown in preview: previewSkin if transitioning, otherwise active
-  const displayedSkinId = previewSkin ?? activeSkin;
+  // The skin shown in preview: previewSkin (cosmetic spin target) first,
+  // then — for the main build only — whatever's being browsed, falling
+  // back to whatever's equipped. Kiosk never sets browseSkinId, so its
+  // displayed skin is always just the active one, unchanged from before.
+  const displayedSkinId = previewSkin ?? (requireContinue ? activeSkin : browseSkinId ?? activeSkin);
   const displayedSkin = skins.find((s) => s.skinId === displayedSkinId) ?? skins[0];
 
   const handleSelect = useCallback((skinId: string) => {
     if (skinId === activeSkin) return;
+    // Safety net: never equip a locked skin, regardless of call site.
+    if (!skins.find((s) => s.skinId === skinId)?.unlocked) return;
 
     // Commit the actual selection immediately, decoupled from the visual
     // spin transition below. Previously the localStorage write (setActiveSkin)
@@ -97,20 +118,26 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
         setPreviewSkin(null);
       }, 400);
     }, 300);
-  }, [activeSkin, onSkinChanged]);
+  }, [activeSkin, onSkinChanged, skins]);
 
-  // ---- Kiosk carousel: one big character at a time, swipe or arrows to
-  // browse. Whichever is showing is provisionally equipped (handleSelect
-  // already does this); "Let's Go!" just confirms and moves on. Every
-  // skin is unlocked in kiosk builds, so there's no locked state to
-  // handle here. ----
-  const carouselIndex = Math.max(0, skins.findIndex((s) => s.skinId === activeSkin));
+  // ---- Carousel: one big character at a time, swipe or arrows to browse.
+  // Kiosk (requireContinue): whichever is showing is provisionally equipped
+  // — handleSelect fires on every browse step, unchanged from before. Every
+  // skin is unlocked in kiosk builds, so there's no locked state to handle.
+  // Main build (!requireContinue): browsing only moves browseSkinId, never
+  // equips — see the explicit "Use This Character!" action below instead. ----
+  const carouselIndex = Math.max(0, skins.findIndex((s) => s.skinId === displayedSkinId));
 
   const goToOffset = useCallback((offset: number) => {
     if (skins.length === 0) return;
     const nextIndex = (carouselIndex + offset + skins.length) % skins.length;
-    handleSelect(skins[nextIndex].skinId);
-  }, [carouselIndex, skins, handleSelect]);
+    const nextSkinId = skins[nextIndex].skinId;
+    if (requireContinue) {
+      handleSelect(nextSkinId);
+    } else {
+      setBrowseSkinId(nextSkinId);
+    }
+  }, [carouselIndex, skins, handleSelect, requireContinue]);
 
   const handlePrev = useCallback(() => goToOffset(-1), [goToOffset]);
   const handleNext = useCallback(() => goToOffset(1), [goToOffset]);
@@ -144,110 +171,86 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
           )}
         </div>
 
-        {requireContinue ? (
-          /* Kiosk carousel — one big character at a time. Swipe or use
-             the arrow buttons; whichever is showing is the provisional
-             pick, "Let's Go!" below just confirms it. */
-          <div className="wardrobe-carousel">
-            <button
-              type="button"
-              className="wardrobe-carousel__arrow wardrobe-carousel__arrow--prev"
-              onClick={handlePrev}
-              aria-label="Previous character"
-            >
-              ‹
-            </button>
+        {/* One big character at a time, swipe or arrows to browse — used by
+            both the kiosk intro and the voluntary main-build wardrobe.
+            Kiosk: browsing provisionally equips immediately (handleSelect
+            fires every step); "Let's Go!" below just confirms and moves on.
+            Main build: browsing only previews (goToOffset moves
+            browseSkinId, never equips) — the action row below the carousel
+            is what actually equips, or explains why it can't yet. */}
+        <div className="wardrobe-carousel">
+          <button
+            type="button"
+            className="wardrobe-carousel__arrow wardrobe-carousel__arrow--prev"
+            onClick={handlePrev}
+            aria-label="Previous character"
+          >
+            ‹
+          </button>
 
-            <div
-              className="wardrobe-carousel__stage"
-              onPointerDown={handleSwipeStart}
-              onPointerUp={handleSwipeEnd}
-            >
+          <div
+            className="wardrobe-carousel__stage"
+            onPointerDown={handleSwipeStart}
+            onPointerUp={handleSwipeEnd}
+          >
+            <div className="wardrobe-carousel__img-wrap">
               <img
                 src={displayedSkin.thumbnailPath}
                 alt={displayedSkin.label}
-                className={`wardrobe-carousel__img ${transitioning ? "wardrobe-preview__img--spin" : ""}`}
+                className={`wardrobe-carousel__img ${transitioning ? "wardrobe-preview__img--spin" : ""} ${!displayedSkin.unlocked ? "wardrobe-carousel__img--locked" : ""}`}
                 draggable={false}
               />
-              <span className="wardrobe-carousel__label">{displayedSkin.label}</span>
-              <div className="wardrobe-carousel__dots" aria-hidden="true">
-                {skins.map((skin) => (
-                  <span
-                    key={skin.skinId}
-                    className={`wardrobe-carousel__dot ${skin.skinId === activeSkin ? "wardrobe-carousel__dot--active" : ""}`}
-                  />
-                ))}
-              </div>
+              {!displayedSkin.unlocked && (
+                <span className="wardrobe-carousel__lock-icon" aria-hidden="true">🔒</span>
+              )}
+            </div>
+            <span className="wardrobe-carousel__label">{displayedSkin.label}</span>
+            <div className="wardrobe-carousel__dots" aria-hidden="true">
+              {skins.map((skin) => (
+                <span
+                  key={skin.skinId}
+                  className={[
+                    "wardrobe-carousel__dot",
+                    skin.skinId === displayedSkinId ? "wardrobe-carousel__dot--active" : "",
+                    !skin.unlocked ? "wardrobe-carousel__dot--locked" : "",
+                  ].filter(Boolean).join(" ")}
+                />
+              ))}
             </div>
 
-            <button
-              type="button"
-              className="wardrobe-carousel__arrow wardrobe-carousel__arrow--next"
-              onClick={handleNext}
-              aria-label="Next character"
-            >
-              ›
-            </button>
-          </div>
-        ) : (
-          /* Scrollable body — header stays fixed above; only the
-             preview + grid scroll. */
-          <div className="wardrobe-scroll-body">
-            {/* Preview panel */}
-            <div className="wardrobe-preview">
-              <div className="wardrobe-preview__ring" />
-              <img
-                src={displayedSkin.thumbnailPath}
-                alt={displayedSkin.label}
-                className={`wardrobe-preview__img ${transitioning ? "wardrobe-preview__img--spin" : ""}`}
-                draggable={false}
-              />
-              <span className="wardrobe-preview__label">{displayedSkin.label}</span>
-            </div>
-
-            <div className="wardrobe-grid">
-              {skins.map((skin) => {
-                const isActive = activeSkin === skin.skinId;
-                return (
+            {/* Main build only — kiosk keeps its own "Let's Go!" below. */}
+            {!requireContinue && (
+              <div className="wardrobe-carousel__action">
+                {!displayedSkin.unlocked ? (
+                  <span className="wardrobe-carousel__status wardrobe-carousel__status--locked">
+                    🔒 Complete {displayedSkin.roomName} Discovery Room to unlock
+                  </span>
+                ) : displayedSkin.skinId === activeSkin ? (
+                  <span className="wardrobe-carousel__status wardrobe-carousel__status--equipped">
+                    ✓ Equipped
+                  </span>
+                ) : (
                   <button
-                    key={skin.skinId}
-                    className={[
-                      "wardrobe-card",
-                      isActive ? "wardrobe-card--active" : "",
-                      !skin.unlocked ? "wardrobe-card--locked" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onClick={() => skin.unlocked && handleSelect(skin.skinId)}
-                    disabled={!skin.unlocked}
-                    aria-label={`${skin.label}${!skin.unlocked ? " (locked)" : ""}${isActive ? " (equipped)" : ""}`}
+                    type="button"
+                    className="wardrobe-carousel__equip-btn"
+                    onClick={() => handleSelect(displayedSkin.skinId)}
                   >
-                    <div className="wardrobe-card__img-wrap">
-                      <img
-                        src={skin.thumbnailPath}
-                        alt={skin.label}
-                        className="wardrobe-card__img"
-                        draggable={false}
-                      />
-                      {!skin.unlocked && (
-                        <div className="wardrobe-card__lock-overlay">
-                          <span className="wardrobe-card__lock-icon">🔒</span>
-                        </div>
-                      )}
-                    </div>
-                    <span className="wardrobe-card__label">{skin.label}</span>
-                    {isActive && <span className="wardrobe-card__equipped">Equipped</span>}
-                    {!skin.unlocked && (
-                      <span className="wardrobe-card__hint">
-                        Complete {skin.roomName} Discovery Room
-                      </span>
-                    )}
+                    Use This Character!
                   </button>
-                );
-              })}
-            </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
+
+          <button
+            type="button"
+            className="wardrobe-carousel__arrow wardrobe-carousel__arrow--next"
+            onClick={handleNext}
+            aria-label="Next character"
+          >
+            ›
+          </button>
+        </div>
 
         {requireContinue && (
           <button className="wardrobe-continue-btn" onClick={onClose}>

@@ -26,11 +26,11 @@
   border: 2px solid rgba(180, 140, 255, 0.35);
   border-radius: 20px;
   /* Every size in this file is vh-driven (clamp with a vh middle term)
-     so the whole modal — title, preview, all 6 cards, and the Let's Go
-     button — fits within the viewport with no internal scrolling, down
-     to short tablets like the Galaxy Tab A7 Lite (~553px CSS height in
-     landscape). Do not swap these back to fixed px without re-checking
-     that math on that device. */
+     so the whole modal — title, carousel, and the action row/Let's Go
+     button below it — fits within the viewport with no internal
+     scrolling, down to short tablets like the Galaxy Tab A7 Lite (~553px
+     CSS height in landscape). Do not swap these back to fixed px without
+     re-checking that math on that device. */
   padding: clamp(8px, 1.8vh, 16px) clamp(12px, 2.5vw, 20px) clamp(10px, 2vh, 18px);
   width: 90%;
   max-width: 520px;
@@ -42,15 +42,6 @@
     0 8px 32px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   animation: wardrobe-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* No scroll here either — content is sized to always fit above. */
-.wardrobe-scroll-body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 @keyframes wardrobe-pop {
@@ -95,47 +86,9 @@
   color: #fff;
 }
 
-/* ---- Preview panel ---- */
-
-.wardrobe-preview {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  margin-bottom: clamp(2px, 0.8vh, 8px);
-  position: relative;
-  padding: clamp(2px, 0.6vh, 8px) 0;
-}
-
-.wardrobe-preview__ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: clamp(58px, 10.5vh, 88px);
-  height: clamp(58px, 10.5vh, 88px);
-  transform: translate(-50%, -55%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(180, 140, 255, 0.08) 0%, transparent 70%);
-  border: 2px solid rgba(180, 140, 255, 0.12);
-  box-shadow: 0 0 30px rgba(140, 80, 255, 0.08);
-  pointer-events: none;
-}
-
-.wardrobe-preview__img {
-  width: clamp(44px, 8vh, 68px);
-  height: clamp(44px, 8vh, 68px);
-  object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
-  transition: transform 0.3s ease;
-  position: relative;
-  z-index: 1;
-}
-
-/* Spin transition: out → in */
-.wardrobe-preview__img--spin {
-  animation: wardrobe-spin-swap 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
+/* Spin transition: out → in — cosmetic feedback for an actual equip
+   (kiosk's provisional browse-equip, or main build's explicit "Use This
+   Character!" tap). Shared by the carousel image regardless of mode. */
 @keyframes wardrobe-spin-swap {
   0%   { transform: scale(1) rotateY(0deg); opacity: 1; }
   40%  { transform: scale(0.6) rotateY(180deg); opacity: 0; }
@@ -143,17 +96,8 @@
   100% { transform: scale(1) rotateY(360deg); opacity: 1; }
 }
 
-.wardrobe-preview__label {
-  margin-top: clamp(2px, 0.5vh, 6px);
-  font-size: clamp(10px, 1.6vh, 13px);
-  font-weight: 700;
-  color: #c8b0ff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 1;
-}
-
-/* ---- Kiosk carousel — one big character at a time ---- */
+/* ---- Carousel — one big character at a time. Shared by the kiosk intro
+   and the voluntary main-build wardrobe (see WardrobeModal.tsx). ---- */
 
 .wardrobe-carousel {
   display: flex;
@@ -200,11 +144,32 @@
   touch-action: pan-y;
 }
 
+.wardrobe-carousel__img-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .wardrobe-carousel__img {
   width: clamp(90px, 22vh, 170px);
   height: clamp(90px, 22vh, 170px);
   object-fit: contain;
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
+  pointer-events: none;
+}
+
+.wardrobe-carousel__img--locked {
+  filter: grayscale(0.8) brightness(0.5) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
+}
+
+.wardrobe-carousel__lock-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(32px, 7vh, 52px);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
   pointer-events: none;
 }
 
@@ -236,12 +201,63 @@
   transform: scale(1.25);
 }
 
-/* ---- Grid ---- */
+/* Subtle secondary cue — locked characters read as dimmer dots even when
+   not the one currently displayed. */
+.wardrobe-carousel__dot--locked {
+  background: rgba(255, 255, 255, 0.08);
+}
 
-.wardrobe-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(4px, 1vh, 10px) clamp(4px, 1.5vw, 10px);
+/* ---- Main-build action row — below the carousel stage, replaces the
+   grid's per-card equip/lock affordances now that only one card shows at
+   a time. Browsing never equips (see WardrobeModal.tsx); this is the only
+   thing that does. ---- */
+.wardrobe-carousel__action {
+  margin-top: clamp(8px, 1.6vh, 16px);
+  min-height: clamp(28px, 5vh, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wardrobe-carousel__status {
+  font-size: clamp(11px, 1.9vh, 15px);
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.wardrobe-carousel__status--equipped {
+  color: #78dc78;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wardrobe-carousel__status--locked {
+  color: #c8b8e0;
+}
+
+.wardrobe-carousel__equip-btn {
+  padding: clamp(7px, 1.4vh, 12px) clamp(20px, 4.5vw, 34px);
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #7ED957 0%, #4CAF50 100%);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(13px, 2.1vh, 17px);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(76, 175, 80, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wardrobe-carousel__equip-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px rgba(76, 175, 80, 0.5);
+}
+
+.wardrobe-carousel__equip-btn:active {
+  transform: scale(0.95);
 }
 
 /* ---- Kiosk-intro continue button — same warm-orange language as
@@ -273,101 +289,3 @@
   transform: scale(0.95);
 }
 
-/* ---- Skin card ---- */
-
-.wardrobe-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: clamp(8px, 1.4vh, 14px);
-  padding: clamp(4px, 0.9vh, 10px) clamp(3px, 0.8vw, 8px) clamp(3px, 0.7vh, 8px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(1px, 0.4vh, 5px);
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, transform 0.15s;
-}
-
-.wardrobe-card:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(180, 140, 255, 0.4);
-  transform: translateY(-2px);
-}
-
-.wardrobe-card--active {
-  border-color: rgba(120, 220, 120, 0.7);
-  background: rgba(120, 220, 120, 0.08);
-  box-shadow: 0 0 12px rgba(120, 220, 120, 0.2);
-}
-
-.wardrobe-card--locked {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.wardrobe-card--locked:hover {
-  transform: none;
-}
-
-/* ---- Card image ---- */
-
-.wardrobe-card__img-wrap {
-  position: relative;
-  width: clamp(36px, 6.5vh, 52px);
-  height: clamp(36px, 6.5vh, 52px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wardrobe-card__img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.wardrobe-card--locked .wardrobe-card__img {
-  filter: grayscale(0.8) brightness(0.5) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.wardrobe-card__lock-overlay {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wardrobe-card__lock-icon {
-  font-size: clamp(16px, 2.8vh, 26px);
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
-}
-
-/* ---- Card text ---- */
-
-.wardrobe-card__label {
-  font-size: clamp(8px, 1.3vh, 10.5px);
-  font-weight: 600;
-  color: #d4c8e8;
-  text-align: center;
-  line-height: 1.15;
-}
-
-.wardrobe-card__equipped {
-  font-size: clamp(6.5px, 1.05vh, 8px);
-  font-weight: 700;
-  color: #78dc78;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.wardrobe-card__hint {
-  font-size: clamp(6px, 1vh, 7.5px);
-  color: #999;
-  text-align: center;
-  line-height: 1.15;
-}
