@@ -28,6 +28,7 @@ import badgeLogo from "../assets/wigglewoos_word_quest_badge-logo.png";
 import trophyIcon from "../assets/trophy.png";
 import wordTacToeLogo from "../assets/transparent-word-tac-toe-logo.png";
 import GlassDisplayCase from "../components/GlassDisplayCase";
+import LockBreakEffect from "../components/LockBreakEffect";
 import UnlockModal from "../components/UnlockModal";
 import ParentGate from "../components/ParentGate";
 import WaterBaseLayer from "../components/WaterBaseLayer";
@@ -352,6 +353,12 @@ interface QuestMapScreenProps {
   trophyJustEarned?: boolean;
   challengeMode?: boolean;
   onToggleChallengeMode?: () => void;
+  /** The vowel quest id that just crossed its unlock threshold, if any —
+   *  set by App.tsx right when landing on the map after the "quest-unlock"
+   *  celebration, so this specific tab can play the lock-break reveal.
+   *  Cleared via onVowelUnlockAnimationDone once played. */
+  justUnlockedVowelId?: string | null;
+  onVowelUnlockAnimationDone?: () => void;
 }
 
 const QuestMapInner: React.FC<QuestMapScreenProps> = ({
@@ -374,6 +381,8 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   arrivedFromWord,
   challengeMode: _challengeMode,
   onToggleChallengeMode: _onToggleChallengeMode,
+  justUnlockedVowelId,
+  onVowelUnlockAnimationDone,
 }) => {
   void _challengeMode; void _onToggleChallengeMode;
 
@@ -642,6 +651,36 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     });
   };
 
+  // =============================================
+  // WORD-TAC-TOE GATE — locked until 2 full CVC quests are completed.
+  // Reuses existing trophy-tier progress (no new win counter): a quest
+  // reaches tier "full" at the same point its Phase 2 Trophy is awarded.
+  // devUnlock bypasses this exactly like every other gate on this screen.
+  // =============================================
+  const wttFullQuestCount = useMemo(
+    () => CVC_QUEST_IDS.filter((id) => loadTrophyProgress(id).tier === "full").length,
+    // mapRevision changes whenever progress-affecting actions happen
+    // elsewhere in the app and this screen remounts/updates — re-reading
+    // here keeps the count fresh without needing its own event system.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [quest.id]
+  );
+  const isWttProgressUnlocked = wttFullQuestCount >= 2;
+  const isWttUnlocked = devUnlock || isWttProgressUnlocked;
+
+  // One-time reveal: the first time this screen renders with the real
+  // progress gate satisfied (regardless of how the player got here), play
+  // the lock-break animation once, then never again — a tiny presentation
+  // flag, not a duplicate of the progress data the gate itself reads.
+  const [wttUnlockSeen, setWttUnlockSeen] = useState(
+    () => localStorage.getItem("ww_wtt_unlock_seen") === "true"
+  );
+  const showWttUnlockAnim = isWttProgressUnlocked && !wttUnlockSeen;
+  const handleWttUnlockAnimDone = useCallback(() => {
+    localStorage.setItem("ww_wtt_unlock_seen", "true");
+    setWttUnlockSeen(true);
+  }, []);
+
   // Dev: hide nodes to see board layout clearly
   const [devHideNodes, setDevHideNodes] = useState(false);
   // Dev: collapse dev controls (default hidden for clean preview)
@@ -793,10 +832,17 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     setQuestBoxView("types");
   };
 
-  const isVowelUnlocked = (_questId: string): boolean => {
-    // All vowel tracks within a quest type are freely selectable.
-    // Players can jump between any Short A/E/I/O/U at will.
-    return true;
+  const isVowelUnlocked = (questId: string): boolean => {
+    // Sequential within a tier: the first vowel is always open; each next
+    // one unlocks once the previous quest reaches its halfway point (word
+    // 8 — the same "half" trophy tier already awarded at the Phase 1
+    // Trophy Room), not full completion. Tier-agnostic via getTierQuestIds
+    // so this holds for any future tier's vowel order too.
+    const tierIds = getTierQuestIds(questId);
+    const idx = tierIds.indexOf(questId);
+    if (idx <= 0) return true;
+    const prevQuestId = tierIds[idx - 1];
+    return loadTrophyProgress(prevQuestId).tier !== "none";
   };
 
   // ---- WW positioning ----
@@ -1315,6 +1361,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                       </span>
                     )}
                     {!isUnlocked && <span className="word-quest-box__lock">🔒</span>}
+                    {track.id === justUnlockedVowelId && (
+                      <LockBreakEffect onDone={() => onVowelUnlockAnimationDone?.()} />
+                    )}
                   </button>
                 );
               })}
@@ -1358,15 +1407,25 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           of a hand-built CSS card — simpler and matches the approved art
           direction directly. Sits in the open pocket below the Quest Type
           panel so it doesn't crowd the map, the panel, or the top-right
-          utility buttons. */}
+          utility buttons.
+          Locked until 2 full CVC quests are completed (see isWttUnlocked
+          above) — dimmed art + a visible lock badge, not just a disabled
+          button, so a curious kid understands it's coming rather than
+          thinking it's broken. Once unlocked the lock-break animation
+          plays once, then the button stays normally available forever. */}
       {!showOnboardingArrow && onOpenWordTacToe && (
         <div className="word-tac-toe-btn-wrap">
           <button
-            className="word-tac-toe-btn"
-            onClick={onOpenWordTacToe}
-            aria-label="Play Word Tac Toe"
+            className={`word-tac-toe-btn${!isWttUnlocked ? " word-tac-toe-btn--locked" : ""}`}
+            onClick={isWttUnlocked ? onOpenWordTacToe : undefined}
+            disabled={!isWttUnlocked}
+            aria-label={isWttUnlocked ? "Play Word Tac Toe" : "Word Tac Toe — locked, complete 2 quests to unlock"}
           >
             <img src={wordTacToeLogo} alt="Word Tac Toe" className="word-tac-toe-btn__logo" draggable={false} />
+            {!isWttUnlocked && (
+              <span className="word-tac-toe-btn__lock" aria-hidden="true">🔒</span>
+            )}
+            {showWttUnlockAnim && <LockBreakEffect onDone={handleWttUnlockAnimDone} />}
           </button>
         </div>
       )}

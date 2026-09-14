@@ -12,7 +12,7 @@ import wigglewooCelebration from "../assets/wigglewoo_celebration_transparent.pn
 import wigglewooJumping from "../assets/jumping pose.png";
 import wigglewooHero from "../assets/wiggle_woo_hero_stance.png";
 
-export type CelebrationTier = "activity" | "room" | "unlock" | "trophy";
+export type CelebrationTier = "activity" | "room" | "unlock" | "trophy" | "quest-unlock";
 
 export interface CelebrationVariant {
   mascot: string;
@@ -30,6 +30,7 @@ export interface CelebrationTierConfig {
 // Duration/intensity scale with how big the moment is:
 //   activity (per-game win)      — quick, light touch, never blocks the pace of play
 //   room (Discovery Room done)   — bigger beat, the room is genuinely finished
+//   quest-unlock (next vowel)    — reaching the halfway point opens the next quest
 //   unlock (new Discovery Room)  — a major event, biggest non-trophy moment
 //   trophy (trophy earned)       — the single biggest celebration in the game
 export const CELEBRATION_TIERS: Record<CelebrationTier, CelebrationTierConfig> = {
@@ -49,6 +50,15 @@ export const CELEBRATION_TIERS: Record<CelebrationTier, CelebrationTierConfig> =
       { mascot: wigglewooJumping, headline: "Amazing Job!", subtext: "You explored the whole room!" },
       { mascot: wigglewooCelebration, headline: "You Did It!", subtext: "Room complete!" },
       { mascot: wigglewooHero, headline: "Great Work!", subtext: "Every fact discovered!" },
+    ],
+  },
+  "quest-unlock": {
+    durationMs: 3500,
+    confettiCount: 50,
+    variants: [
+      { mascot: wigglewooHero, headline: "New Quest Unlocked!", subtext: "A new adventure is ready for you!" },
+      { mascot: wigglewooCelebration, headline: "You Did It!", subtext: "A new quest just opened up!" },
+      { mascot: wigglewooJumping, headline: "Halfway There!", subtext: "Time for a new quest!" },
     ],
   },
   unlock: {

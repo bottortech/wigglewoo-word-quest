@@ -1,0 +1,53 @@
+/* ==========================================
+   LOCK BREAK EFFECT — reusable map unlock animation
+   Renders as a child of a position:relative button (vowel tab,
+   Word-Tac-Toe) that just became unlocked. Purely decorative —
+   pointer-events: none throughout so it never blocks the real button.
+   ========================================== */
+.lock-break {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 5;
+}
+
+.lock-break__icon {
+  display: inline-block;
+  font-size: clamp(16px, 3vw, 26px);
+  animation: lock-break-icon 1.1s ease-out forwards;
+}
+
+@keyframes lock-break-icon {
+  0%   { transform: scale(1) rotate(0deg); opacity: 1; }
+  15%  { transform: scale(1.15) rotate(-8deg); }
+  30%  { transform: scale(1.15) rotate(8deg); }
+  45%  { transform: scale(1.25) rotate(-6deg); }
+  60%  { transform: scale(1.4) rotate(12deg); opacity: 1; }
+  100% { transform: scale(0.6) rotate(20deg); opacity: 0; }
+}
+
+/* Sparks burst outward from center along their own angle (--spark-angle,
+   set inline per spark) — translate distance is baked into the keyframe,
+   direction comes from the rotate() wrapping it. */
+.lock-break__spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(4px, 0.8vw, 7px);
+  height: clamp(4px, 0.8vw, 7px);
+  border-radius: 50%;
+  background: #FFD54F;
+  box-shadow: 0 0 6px rgba(255, 213, 79, 0.8);
+  transform: rotate(var(--spark-angle)) translate(0, 0);
+  animation: lock-break-spark 0.8s ease-out 0.25s forwards;
+  opacity: 0;
+}
+
+@keyframes lock-break-spark {
+  0%   { transform: rotate(var(--spark-angle)) translate(0, 0); opacity: 1; }
+  100% { transform: rotate(var(--spark-angle)) translate(0, -28px); opacity: 0; }
+}

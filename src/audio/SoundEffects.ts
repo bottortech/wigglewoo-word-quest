@@ -177,9 +177,11 @@ export type EventSlug =
   | "celebrate-perfect" | "celebrate-assisted"
   | "celebrate-quest-complete" | "celebrate-word-power"
   // Milestone celebration (MilestoneCelebration.tsx) — trophy earned / new
-  // Discovery Room unlocked. Not played for the "activity"/"room" tiers,
-  // which are embedded inside screens that already manage their own audio.
+  // Discovery Room unlocked / next vowel quest unlocked. Not played for the
+  // "activity"/"room" tiers, which are embedded inside screens that already
+  // manage their own audio.
   | "celebrate-milestone-trophy" | "celebrate-milestone-unlock"
+  | "celebrate-milestone-quest-unlock"
   // Wrong / feedback
   | "wrong-gentle" | "wrong-almost" | "wrong-hint"
   // Placement test

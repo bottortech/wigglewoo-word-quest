@@ -40,6 +40,9 @@
 .milestone-celebration--room {
   background: radial-gradient(ellipse at center, rgba(30, 90, 70, 0.55) 0%, rgba(10, 10, 25, 0.85) 75%);
 }
+.milestone-celebration--quest-unlock {
+  background: radial-gradient(ellipse at center, rgba(80, 40, 110, 0.55) 0%, rgba(10, 10, 30, 0.86) 75%);
+}
 .milestone-celebration--unlock {
   background: radial-gradient(ellipse at center, rgba(30, 70, 110, 0.6) 0%, rgba(10, 10, 30, 0.88) 75%);
 }
@@ -57,6 +60,7 @@
 }
 
 .milestone-celebration--room .milestone-celebration__mascot,
+.milestone-celebration--quest-unlock .milestone-celebration__mascot,
 .milestone-celebration--unlock .milestone-celebration__mascot,
 .milestone-celebration--trophy .milestone-celebration__mascot {
   width: clamp(110px, 26vh, 230px);

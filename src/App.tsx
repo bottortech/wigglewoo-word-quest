@@ -210,6 +210,11 @@ export default function App() {
     next?.();
   }, [celebrationRequest]);
 
+  // Which vowel quest id just crossed its unlock threshold, if any — set
+  // alongside the "quest-unlock" celebration above, cleared by
+  // QuestMapScreen once it's played the lock-break reveal on that tab.
+  const [justUnlockedVowelId, setJustUnlockedVowelId] = useState<string | null>(null);
+
   const [activeQuest, setActiveQuest] = useState<Quest | null>(resolvedInitial);
   const [wordIndex, setWordIndex] = useState<number>(0);
   // All 16 words passed to screens — decode gating handled in QuestMapScreen
@@ -722,6 +727,30 @@ export default function App() {
       }
     }
 
+    // Phase 1 exit: this quest just crossed its halfway point (the trophy
+    // tier this Trophy Room visit just awarded is "half"), which is exactly
+    // the moment the next vowel quest becomes selectable on the map (see
+    // isVowelUnlocked in QuestMapScreen.tsx). Celebrate that unlock before
+    // landing on the map, same rhythm as the Discovery Room unlock above.
+    const cvcIndex = activeQuest ? CVC_QUEST_IDS.indexOf(activeQuest.id as typeof CVC_QUEST_IDS[number]) : -1;
+    const nextQuestId = cvcIndex >= 0 ? CVC_QUEST_IDS[cvcIndex + 1] : undefined;
+    if (nextQuestId) {
+      triggerCelebration(
+        "quest-unlock",
+        () => {
+          backgroundMusic.restoreMainTheme();
+          setMapRevision((r) => r + 1);
+          // Tells the map which specific vowel tab just unlocked, so it can
+          // play the lock-break reveal on that exact tab once it renders —
+          // QuestMapScreen clears this itself via onVowelUnlockAnimationDone.
+          setJustUnlockedVowelId(nextQuestId);
+          setRoute("map");
+        },
+        "celebrate-milestone-quest-unlock"
+      );
+      return;
+    }
+
     backgroundMusic.restoreMainTheme();
     setMapRevision((r) => r + 1);
     setRoute("map");
@@ -952,6 +981,8 @@ export default function App() {
             hasNewSkin={hasNewSkin}
             trophyJustEarned={trophyJustCompleted}
             arrivedFromWord={arrivedFromWord}
+            justUnlockedVowelId={justUnlockedVowelId}
+            onVowelUnlockAnimationDone={() => setJustUnlockedVowelId(null)}
           />
         </ScreenGate>
       )}

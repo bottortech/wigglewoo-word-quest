@@ -1832,6 +1832,32 @@
   pointer-events: none;
 }
 
+/* Locked state — dimmed/desaturated art plus a visible lock badge, so it
+   reads as "coming soon" rather than broken. No hover/active scale while
+   locked (disabled buttons don't fire those anyway, but be explicit). */
+.word-tac-toe-btn--locked {
+  cursor: not-allowed;
+}
+
+.word-tac-toe-btn--locked:hover,
+.word-tac-toe-btn--locked:focus-visible,
+.word-tac-toe-btn--locked:active {
+  transform: none;
+}
+
+.word-tac-toe-btn--locked .word-tac-toe-btn__logo {
+  filter: grayscale(0.85) brightness(0.65);
+}
+
+.word-tac-toe-btn__lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(28px, 6vw, 44px);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
 /* ---- DEV CONTROLS BAR ---- */
 .dev-toggle-btn {
   position: absolute;
