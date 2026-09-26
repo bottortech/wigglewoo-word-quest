@@ -1,0 +1,77 @@
+/* Invisible staff tap zone — bottom-left corner (mirrors DemoResetZone,
+   which occupies bottom-right) */
+.guided-demo-start-zone {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  z-index: 9998;
+  background: transparent;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.guided-demo-start-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.guided-demo-start-dialog {
+  background: #fff;
+  border-radius: 24px;
+  padding: 36px 44px;
+  text-align: center;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
+  max-width: 400px;
+  width: 88%;
+}
+
+.guided-demo-start-dialog__msg {
+  font-size: 24px;
+  font-weight: 800;
+  color: #3e2723;
+  margin: 0 0 10px;
+}
+
+.guided-demo-start-dialog__sub {
+  font-size: 15px;
+  color: #795548;
+  margin: 0 0 28px;
+  line-height: 1.4;
+}
+
+.guided-demo-start-dialog__actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.guided-demo-start-dialog__btn {
+  padding: 14px 36px;
+  border: none;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.guided-demo-start-dialog__btn--cancel {
+  background: #eeeeee;
+  color: #666;
+}
+
+.guided-demo-start-dialog__btn--confirm {
+  background: #43a047;
+  color: #fff;
+}

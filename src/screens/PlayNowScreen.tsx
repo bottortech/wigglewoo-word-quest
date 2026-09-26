@@ -89,6 +89,7 @@ const PlayNowScreen: React.FC<PlayNowScreenProps> = ({ onPlay }) => {
           className="home-play-btn"
           onClick={onPlay}
           aria-label="Play Now — start the game"
+          data-tour-id="play-now-btn"
           autoFocus
         >
           Play Now

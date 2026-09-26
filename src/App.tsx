@@ -8,7 +8,7 @@
 // Boot screen: PlayNowScreen
 // =============================================
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import PlayNowScreen from "./screens/PlayNowScreen";
 import QuestMapScreen from "./screens/QuestMapScreen";
 import GameScreen from "./screens/GameScreen";
@@ -82,6 +82,9 @@ import type { CelebrationTier } from "./game/celebrationVariants";
 // import BlendingPowerUnlock from "./components/BlendingPowerUnlock";
 import QuestCompleteCelebration from "./components/QuestCompleteCelebration";
 import DemoResetZone from "./components/DemoResetZone";
+import GuidedDemoStartZone from "./components/GuidedDemoStartZone";
+import GuidedDemoOverlay from "./components/GuidedDemoOverlay";
+import { useGuidedDemo } from "./hooks/useGuidedDemo";
 import OnboardingScreen from "./screens/OnboardingScreen";
 import PotionGameScreen from "./screens/PotionGameScreen";
 import WordTacToeScreen from "./screens/WordTacToeScreen";
@@ -182,6 +185,10 @@ export default function App() {
 
   // Start on Play Now screen
   const [route, setRoute] = useState<Route>("home");
+
+  // ---- Guided Demo (presenter/event walkthrough) ----
+  // Declared early since handleDemoReset (below) needs it in scope already.
+  const guidedDemo = useGuidedDemo();
 
   // ---- Shared milestone celebration (trophy earned / Discovery Room unlock) ----
   // Reserved for the two biggest cross-screen moments — everyday per-answer
@@ -587,7 +594,8 @@ export default function App() {
       awardTrophyTier(defaultQuest.id, "half");
     }
     setRoute("home");
-  }, []);
+    guidedDemo.dispatch({ type: "RESET_FOR_NEXT_VISITOR" });
+  }, [guidedDemo]);
 
   // ---- Enter Trophy Room ----
   // Phase is chosen from current tier: none → phase 1, half → phase 2.
@@ -925,7 +933,100 @@ export default function App() {
 
   const handleSkinChanged = useCallback(() => {
     setSkinRevision((r) => r + 1);
-  }, []);
+    if (guidedDemo.currentStep?.id === "wardrobe-intro") {
+      // Let the modal's own equip spin-animation play out before closing —
+      // matches the ~700ms it already takes internally.
+      window.setTimeout(() => {
+        setWardrobeOpen(false);
+        guidedDemo.dispatch({ type: "NEXT" });
+      }, 900);
+    }
+  }, [guidedDemo]);
+
+  // =============================================
+  // GUIDED DEMO — presenter/event walkthrough (see useGuidedDemo,
+  // guidedDemoSteps.ts, GuidedDemoOverlay). Off by default; a hidden 3-tap
+  // corner zone (GuidedDemoStartZone) arms it. Every step's advance
+  // condition is a real app-state transition the normal game already
+  // produces — this block just watches for the one relevant to whichever
+  // step is currently active, per GUIDED_DEMO_STEPS's `advance` field.
+  // "tap-callout" steps need no watcher — the overlay's own button
+  // dispatches NEXT directly.
+  // =============================================
+  const guidedDemoStepId = guidedDemo.currentStep?.id ?? null;
+
+  const handleStartGuidedDemo = useCallback(() => {
+    // Skip the CAT tutorial AND the Map's separate first-visit "Tap here to
+    // start!" arrow cue for the duration of the tour — Guided Demo does its
+    // own teaching, and that arrow also hides the Word-Tac-Toe/Badges/For
+    // Parents buttons entirely until dismissed, which would block the
+    // WTT/Discovery/Trophy preview steps below.
+    localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+    localStorage.setItem("ww_onboarding_arrow_seen", "true");
+    setRoute("home");
+    guidedDemo.dispatch({ type: "START" });
+  }, [guidedDemo]);
+
+  const handleSkipGuidedDemo = useCallback(() => {
+    setWardrobeOpen(false);
+    setRoute("map");
+    guidedDemo.dispatch({ type: "END" });
+  }, [guidedDemo]);
+
+  const handleGuidedDemoAdvanceTap = useCallback(() => {
+    guidedDemo.dispatch({ type: "NEXT" });
+  }, [guidedDemo]);
+
+  const handleGuidedDemoVowelTap = useCallback(() => {
+    if (guidedDemoStepId === "vowel-choice") {
+      guidedDemo.dispatch({ type: "NEXT" });
+    }
+  }, [guidedDemoStepId, guidedDemo]);
+
+  // home-play → wardrobe-intro: Play Now was tapped (route left "home").
+  useEffect(() => {
+    if (guidedDemoStepId !== "home-play") return;
+    if (route !== "home") {
+      setWardrobeOpen(true);
+      guidedDemo.dispatch({ type: "NEXT" });
+    }
+  }, [guidedDemoStepId, route, guidedDemo]);
+
+  // start-activity → complete-word: a gear node was tapped.
+  useEffect(() => {
+    if (guidedDemoStepId !== "start-activity") return;
+    if (route === "potion-game") guidedDemo.dispatch({ type: "NEXT" });
+  }, [guidedDemoStepId, route, guidedDemo]);
+
+  // complete-word → progress-rewards: the word was completed and the app
+  // returned to the map (arrivedFromWord is set exactly then).
+  useEffect(() => {
+    if (guidedDemoStepId !== "complete-word") return;
+    if (arrivedFromWord !== null) guidedDemo.dispatch({ type: "NEXT" });
+  }, [guidedDemoStepId, arrivedFromWord, guidedDemo]);
+
+  // The three "preview" steps (Word-Tac-Toe, Discovery Room, Trophy Room)
+  // all share the same shape: spotlight a Map button, let the visitor enter
+  // that activity, advance once they're back on the map. One tracked
+  // previous-route ref covers all three rather than three near-identical
+  // effects. The read and the write both happen in this one effect (read
+  // first) — splitting them into two separate effects is a real ordering
+  // bug: both would fire in the same commit when `route` changes, and
+  // whichever declared second would always see the ref already overwritten
+  // with the new value instead of the one from before the transition.
+  const prevRouteRef = useRef(route);
+  useEffect(() => {
+    const returnFrom: Partial<Record<string, Route>> = {
+      "word-tac-toe-preview": "word-tac-toe",
+      "discovery-room-preview": "explore",
+      "trophy-room-preview": "trophy-room",
+    };
+    const awayRoute = guidedDemoStepId ? returnFrom[guidedDemoStepId] : undefined;
+    if (awayRoute && prevRouteRef.current === awayRoute && route === "map") {
+      guidedDemo.dispatch({ type: "NEXT" });
+    }
+    prevRouteRef.current = route;
+  }, [guidedDemoStepId, route, guidedDemo]);
 
   // Brief loading state while lazy chunk loads (returning CVCC/CVVC user)
   if (!activeQuest) {
@@ -983,6 +1084,8 @@ export default function App() {
             arrivedFromWord={arrivedFromWord}
             justUnlockedVowelId={justUnlockedVowelId}
             onVowelUnlockAnimationDone={() => setJustUnlockedVowelId(null)}
+            guidedDemoActive={guidedDemo.state.active}
+            onVowelTabTap={handleGuidedDemoVowelTap}
           />
         </ScreenGate>
       )}
@@ -1109,6 +1212,7 @@ export default function App() {
         onClose={handleCloseWardrobe}
         onSkinChanged={handleSkinChanged}
         requireContinue={kioskWardrobeIntro}
+        guidedDemoActive={guidedDemo.state.active}
       />
 
       {showChallengeUnlock && activeQuest && (
@@ -1151,6 +1255,14 @@ export default function App() {
       )}
 
       <DemoResetZone onReset={handleDemoReset} />
+      <GuidedDemoStartZone onStart={handleStartGuidedDemo} />
+      {guidedDemo.currentStep && (
+        <GuidedDemoOverlay
+          step={guidedDemo.currentStep}
+          onAdvanceTap={handleGuidedDemoAdvanceTap}
+          onSkip={handleSkipGuidedDemo}
+        />
+      )}
 
      </OrientationOverlay>
     </LoadingGate>

@@ -359,6 +359,18 @@ interface QuestMapScreenProps {
    *  Cleared via onVowelUnlockAnimationDone once played. */
   justUnlockedVowelId?: string | null;
   onVowelUnlockAnimationDone?: () => void;
+  /** True while a Guided Demo tour is running (see useGuidedDemo). Bypasses
+   *  the Word-Tac-Toe progress gate and the active quest's Discovery Room
+   *  gate for the duration of the tour only — same idea as `devUnlock`,
+   *  just keyed to the demo instead of import.meta.env.DEV, since Guided
+   *  Demo needs to work in real production builds at events. Drops back to
+   *  the visitor's real, honestly-earned state the moment the tour ends. */
+  guidedDemoActive?: boolean;
+  /** Fired on every vowel-tab tap, regardless of whether it changes the
+   *  selection — purely so the Guided Demo controller can detect "the
+   *  visitor tapped a vowel tab" even when the default tab was already
+   *  active. Real quest selection is unaffected. */
+  onVowelTabTap?: () => void;
 }
 
 const QuestMapInner: React.FC<QuestMapScreenProps> = ({
@@ -383,6 +395,8 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   onToggleChallengeMode: _onToggleChallengeMode,
   justUnlockedVowelId,
   onVowelUnlockAnimationDone,
+  guidedDemoActive = false,
+  onVowelTabTap,
 }) => {
   void _challengeMode; void _onToggleChallengeMode;
 
@@ -484,6 +498,12 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     getTrophyNodeState(progress, trophyProgress),
     [progress, trophyProgress, imageWordCount]
   );
+  // During a Guided Demo tour, preview the Trophy Room even though a
+  // brand-new visitor hasn't earned it yet — same bypass idea as WTT and
+  // Discovery Room above. Only overrides "locked"; a state that's honestly
+  // "active"/"completed" already is left alone.
+  const effectiveTrophyNodeState =
+    guidedDemoActive && trophyNodeState === "locked" ? "active" : trophyNodeState;
 
   // Discovery room node state — triggers after image words complete
   // Discovery room ONLY unlocks after ALL 16 nodes complete (image + decode)
@@ -666,7 +686,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     [quest.id]
   );
   const isWttProgressUnlocked = wttFullQuestCount >= 2;
-  const isWttUnlocked = devUnlock || isWttProgressUnlocked;
+  const isWttUnlocked = devUnlock || guidedDemoActive || isWttProgressUnlocked;
 
   // One-time reveal: the first time this screen renders with the real
   // progress gate satisfied (regardless of how the player got here), play
@@ -1030,6 +1050,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
               }}
+              data-tour-id={i === 0 ? "gear-node-1" : undefined}
             >
               <GearNode
                 state={isDecodeLocked ? "locked" : state}
@@ -1091,24 +1112,25 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           */}
           
           <button
-            className={`trophy-node trophy-node--${trophyNodeState}${shakingTrophy ? ' trophy-node--shaking' : ''}`}
+            className={`trophy-node trophy-node--${effectiveTrophyNodeState}${shakingTrophy ? ' trophy-node--shaking' : ''}`}
             onClick={() => {
-              if (trophyNodeState === "active") {
+              if (effectiveTrophyNodeState === "active") {
                 onEnterTrophyRoom?.();
-              } else if (trophyNodeState === "locked") {
+              } else if (effectiveTrophyNodeState === "locked") {
                 handleLockedTrophyTap();
               }
             }}
             disabled={false}
-            aria-label={`Trophy Room — ${trophyNodeState}`}
+            aria-label={`Trophy Room — ${effectiveTrophyNodeState}`}
+            data-tour-id="trophy-room-btn"
           >
-            <img 
-              src={trophyIcon} 
-              alt="Trophy" 
+            <img
+              src={trophyIcon}
+              alt="Trophy"
               className="trophy-node__img"
               draggable={false}
             />
-            {trophyNodeState === "active" && (
+            {effectiveTrophyNodeState === "active" && (
               <div className="trophy-node__glow" />
             )}
           </button>
@@ -1209,7 +1231,8 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       {/* DISCOVERY ROOM PREVIEW ROW — reward shelf above the map */}
       <div className="discovery-preview-row">
         {DISCOVERY_ROOM_PREVIEWS.map((room) => {
-          const unlocked = isEnvironmentUnlocked(room.envId);
+          const isTourTarget = guidedDemoActive && QUEST_ENVIRONMENT_MAP[quest.id] === room.envId;
+          const unlocked = isTourTarget || isEnvironmentUnlocked(room.envId);
           return (
             <button
               key={room.envId}
@@ -1224,6 +1247,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                 }
               }}
               aria-label={unlocked ? `Explore ${room.label}` : `${room.label} — locked`}
+              data-tour-id={isTourTarget ? "discovery-room-btn" : undefined}
             >
               <img
                 src={room.image}
@@ -1282,7 +1306,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       </button>
 
       {/* WORD QUEST BOX — right side */}
-      <div className="word-quest-box">
+      <div className="word-quest-box" data-tour-id="quest-type-tabs">
         <div className="word-quest-box__header">
           {questBoxView === "vowels" && (
             <button
@@ -1339,9 +1363,13 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
                     className={`word-quest-box__vowel-btn ${
                       isActive ? "word-quest-box__vowel-btn--active" : ""
                     } ${!isUnlocked ? "word-quest-box__vowel-btn--locked" : ""}`}
-                    onClick={() => isUnlocked && handleVowelSelect(track.id)}
+                    onClick={() => {
+                      onVowelTabTap?.();
+                      if (isUnlocked) handleVowelSelect(track.id);
+                    }}
                     disabled={!isUnlocked}
                     aria-label={track.label}
+                    data-tour-id="vowel-tab"
                   >
                     <span className="word-quest-box__vowel-letter">{track.vowel}</span>
                     {mastery && (
@@ -1420,6 +1448,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             onClick={isWttUnlocked ? onOpenWordTacToe : undefined}
             disabled={!isWttUnlocked}
             aria-label={isWttUnlocked ? "Play Word Tac Toe" : "Word Tac Toe — locked, complete 2 quests to unlock"}
+            data-tour-id="word-tac-toe-btn"
           >
             <img src={wordTacToeLogo} alt="Word Tac Toe" className="word-tac-toe-btn__logo" draggable={false} />
             {!isWttUnlocked && (

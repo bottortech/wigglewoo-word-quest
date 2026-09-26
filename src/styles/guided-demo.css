@@ -1,0 +1,107 @@
+/* =============================================
+   guided-demo.css — Guided Demo spotlight overlay
+   ============================================= */
+
+.guided-demo {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* Each band blocks taps (pointer-events: auto) — together they dim/cover
+   everything except the rectangular cutout around the current target. */
+.guided-demo__scrim {
+  position: fixed;
+  background: rgba(20, 10, 30, 0.72);
+  pointer-events: auto;
+}
+
+.guided-demo__ring {
+  position: fixed;
+  border: 4px solid #ffd700;
+  border-radius: 16px;
+  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.35), 0 0 24px rgba(255, 215, 0, 0.5);
+  pointer-events: none;
+  animation: guided-demo-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes guided-demo-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.guided-demo__hand {
+  position: fixed;
+  width: 48px;
+  height: 48px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: guided-demo-bounce 1s ease-in-out infinite;
+}
+
+.guided-demo__hand-inner {
+  font-size: clamp(28px, 5vh, 40px);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
+@keyframes guided-demo-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.guided-demo__callout {
+  position: fixed;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: clamp(12px, 2vh, 20px) clamp(16px, 3vw, 26px);
+  max-width: min(360px, 82vw);
+  text-align: center;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.guided-demo__message {
+  margin: 0;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(14px, 2.2vh, 18px);
+  font-weight: 700;
+  color: #3e2723;
+  line-height: 1.35;
+}
+
+.guided-demo__advance-btn {
+  margin-top: clamp(8px, 1.6vh, 14px);
+  padding: clamp(8px, 1.5vh, 12px) clamp(20px, 4vw, 32px);
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff9800 0%, #f57c00 100%);
+  color: #fff;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(13px, 2vh, 16px);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 152, 0, 0.4);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.guided-demo__skip-btn {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}

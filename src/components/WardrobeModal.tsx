@@ -25,6 +25,12 @@ interface WardrobeModalProps {
    *  Continue button, so picking a character always reads as a
    *  deliberate first step rather than something to dismiss past. */
   requireContinue?: boolean;
+  /** Guided Demo tour only: preview every skin as unlocked so a brand-new
+   *  visitor — who has nothing unlocked beyond the default — has something
+   *  to actually equip. Same bypass-for-the-tour idea used for Word-Tac-Toe/
+   *  Discovery Room/Trophy Room in QuestMapScreen; doesn't touch the real
+   *  unlocked-skins data, so it reverts the moment the tour ends. */
+  guidedDemoActive?: boolean;
 }
 
 interface SkinCard {
@@ -40,6 +46,7 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
   onClose,
   onSkinChanged,
   requireContinue = false,
+  guidedDemoActive = false,
 }) => {
   const unlocked = useMemo(() => new Set(loadUnlockedSkins()), [isOpen]);
   const [activeSkin, setActiveSkinLocal] = useState(() => getActiveSkinId());
@@ -78,13 +85,13 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
         skinId: def.skinId,
         label: def.label,
         thumbnailPath: def.thumbnailPath,
-        unlocked: unlocked.has(def.skinId),
+        unlocked: guidedDemoActive || unlocked.has(def.skinId),
         roomName: def.label.replace(" WiggleWoo", ""),
       });
     }
 
     return cards;
-  }, [unlocked]);
+  }, [unlocked, guidedDemoActive]);
 
   // The skin shown in preview: previewSkin (cosmetic spin target) first,
   // then — for the main build only — whatever's being browsed, falling
@@ -178,7 +185,7 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
             Main build: browsing only previews (goToOffset moves
             browseSkinId, never equips) — the action row below the carousel
             is what actually equips, or explains why it can't yet. */}
-        <div className="wardrobe-carousel">
+        <div className="wardrobe-carousel" data-tour-id="wardrobe-carousel">
           <button
             type="button"
             className="wardrobe-carousel__arrow wardrobe-carousel__arrow--prev"
