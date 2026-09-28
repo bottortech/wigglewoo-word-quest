@@ -1,0 +1,87 @@
+/* Presenter menu for the event build. Sits above every other overlay
+   (guided demo scrim 10000, hidden zones 9998) so nothing can steal a tap. */
+
+.evm {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 18, 40, 0.72);
+  padding: 12px;
+  font-family: "Nunito", Arial, sans-serif;
+}
+
+.evm__card {
+  width: min(620px, 100%);
+  max-height: 96vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 22px;
+  padding: clamp(14px, 2.4vh, 24px) clamp(16px, 3vw, 28px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 12px);
+}
+
+.evm__title { margin: 0 0 2px; font-size: 24px; font-weight: 900; color: #3e2723; }
+
+.evm__btn {
+  border: none;
+  border-radius: 14px;
+  min-height: 52px;
+  padding: 10px 18px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  color: #3e2723;
+  background: #f0e7db;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.evm__btn:active { transform: scale(0.98); }
+.evm__btn--go { background: linear-gradient(180deg, #7ed957, #4caf50); color: #fff; }
+.evm__btn--small { min-height: 46px; padding: 8px 14px; font-size: 16px; white-space: nowrap; background: #dceeec; color: #2e6f67; }
+.evm__btn--reset { background: #fdeaea; color: #b3261e; }
+.evm__btn--confirm { background: #e53935; color: #fff; }
+.evm__btn--close { background: #eee; color: #555; text-align: center; }
+
+.evm__section { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 2px; border-top: 2px solid #f0e7db; }
+.evm__label { font-size: 14px; font-weight: 800; color: #795548; }
+.evm__row { display: flex; gap: 8px; }
+.evm__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  border: 2px solid #d8c9b6;
+  border-radius: 12px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  color: #3e2723;
+}
+.evm__input:focus { outline: none; border-color: #37897f; }
+.evm__statusline { min-height: 22px; }
+.evm__status { font-size: 14px; font-weight: 700; color: #795548; }
+.evm__status--ok { color: #2e7d32; }
+.evm__status--bad { color: #b3261e; }
+
+.evm__check { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: #5d4037; }
+.evm__check input { width: 22px; height: 22px; flex: none; }
+
+/* Hidden trigger in the bottom-left corner (event build only). */
+.evm-zone {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  z-index: 9998;
+  background: transparent;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}

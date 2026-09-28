@@ -21,6 +21,18 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        // Event build (two-tablet Word-Tac-Toe demo). A separate app id so it
+        // installs ALONGSIDE the main and kiosk builds instead of replacing
+        // them, and its own src/event overlay (manifest + launcher name) so
+        // the cleartext-traffic allowance the LAN relay needs never touches
+        // the standard build. Debug-signed, like the debug builds we sideload.
+        // Install with: gradlew installEvent   (or `npm run event:install`).
+        event {
+            initWith debug
+            applicationIdSuffix ".event"
+            versionNameSuffix "-event"
+            matchingFallbacks = ['debug']
+        }
     }
 }
 

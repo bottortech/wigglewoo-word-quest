@@ -8,6 +8,9 @@
     "dev:kiosk": "vite --mode kiosk",
     "build": "tsc -b && vite build",
     "build:kiosk": "tsc -b && vite build --mode kiosk",
+    "dev:event": "vite --mode event",
+    "build:event": "tsc -b && vite build --mode event",
+    "event:install": "node scripts/event-install.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

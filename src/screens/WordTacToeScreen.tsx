@@ -48,7 +48,7 @@ type Cell = Mark | null;
 type ChallengeType = "missing-letter" | "word-picture-match";
 type GameResult = "win" | "lose" | "tie" | null;
 
-interface Challenge {
+export interface Challenge {
   type: ChallengeType;
   word: CvcWord;
   blankIndex?: number; // missing-letter only
@@ -98,7 +98,7 @@ function cpuChooseMove(board: Cell[], cpuMark: Mark, childMark: Mark): number | 
   return empties[Math.floor(Math.random() * empties.length)];
 }
 
-function shuffle<T>(arr: T[]): T[] {
+export function shuffle<T>(arr: T[]): T[] {
   const out = [...arr];
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -110,7 +110,7 @@ function shuffle<T>(arr: T[]): T[] {
 /** Build a missing-letter challenge from a word: blank one letter, offer
  *  the correct letter plus its own distractors (padded with random
  *  letters if the word has fewer than 2). */
-function buildMissingLetterChallenge(word: CvcWord): Challenge {
+export function buildMissingLetterChallenge(word: CvcWord): Challenge {
   const blankIndex = Math.floor(Math.random() * word.letters.length);
   const correct = word.letters[blankIndex];
   const wrong: string[] = [...word.distractors];
@@ -126,7 +126,7 @@ function buildMissingLetterChallenge(word: CvcWord): Challenge {
 
 /** Build a word-picture-match challenge: show the picture, offer the
  *  correct word plus 2 distractor words sampled from the rest of the pool. */
-function buildWordPictureChallenge(word: CvcWord, pool: CvcWord[]): Challenge {
+export function buildWordPictureChallenge(word: CvcWord, pool: CvcWord[]): Challenge {
   const others = shuffle(pool.filter((w) => w.word !== word.word)).slice(0, 2).map((w) => w.word);
   const options = shuffle([word.word, ...others]);
   return { type: "word-picture-match", word, options, correctIndex: options.indexOf(word.word) };

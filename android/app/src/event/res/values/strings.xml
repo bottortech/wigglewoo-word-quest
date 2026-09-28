@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Overrides the launcher name for the event build so it is easy to tell
+     apart from the main and kiosk apps on the same tablet. -->
+<resources>
+    <string name="app_name">WiggleWoo Event</string>
+    <string name="title_activity_main">WiggleWoo Event</string>
+</resources>

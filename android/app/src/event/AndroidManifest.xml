@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Merged ONLY into the `event` build type (see app/build.gradle). The event
+     tablets talk to the presenter laptop's relay over a private network with
+     plain ws://, which Android blocks by default. The main and kiosk builds do
+     not get this. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>

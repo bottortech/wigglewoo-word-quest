@@ -8,7 +8,7 @@
 // Boot screen: PlayNowScreen
 // =============================================
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import PlayNowScreen from "./screens/PlayNowScreen";
 import QuestMapScreen from "./screens/QuestMapScreen";
 import GameScreen from "./screens/GameScreen";
@@ -85,6 +85,15 @@ import DemoResetZone from "./components/DemoResetZone";
 import GuidedDemoStartZone from "./components/GuidedDemoStartZone";
 import GuidedDemoOverlay from "./components/GuidedDemoOverlay";
 import { useGuidedDemo } from "./hooks/useGuidedDemo";
+import { IS_EVENT_BUILD } from "./game/eventMode";
+import { getVersusWords } from "./versus/versusWords";
+
+// Event build only (two-tablet Word-Tac-Toe demo). Guarded by the build-mode
+// constant, so in the standard and kiosk builds these branches — and the
+// chunks behind them — are removed entirely at build time.
+const WordTacToeVersusScreen = IS_EVENT_BUILD ? lazy(() => import("./screens/WordTacToeVersusScreen")) : null;
+const EventMenu = IS_EVENT_BUILD ? lazy(() => import("./components/EventMenu")) : null;
+const EventMenuZone = IS_EVENT_BUILD ? lazy(() => import("./components/EventMenuZone")) : null;
 import OnboardingScreen from "./screens/OnboardingScreen";
 import PotionGameScreen from "./screens/PotionGameScreen";
 import WordTacToeScreen from "./screens/WordTacToeScreen";
@@ -92,9 +101,11 @@ import LetterGallery from "./components/handwriting/LetterGallery";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges" | "word-tac-toe";
+type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges" | "word-tac-toe" | "versus";
 
 const ONBOARDING_SEEN_KEY = "ww_onboarding_seen";
+/** Event build: set while this tablet is in the versus game, so a restarted app resumes it. */
+const VERSUS_ACTIVE_KEY = "ww_versus_active";
 
 /** Load the correct quest chunk for a given quest ID */
 async function ensureQuestLoaded(questId: string): Promise<void> {
@@ -183,8 +194,14 @@ export default function App() {
     }
   }, []);
 
-  // Start on Play Now screen
-  const [route, setRoute] = useState<Route>("home");
+  // Start on Play Now screen — except in the event build, where a tablet that
+  // was mid-game when its app died (stray back gesture, Android reclaiming
+  // memory, a crash) goes straight back into the versus game: its saved id
+  // gets its seat back and the relay resends the board, so recovery is
+  // instant instead of a trip through the presenter menu.
+  const [route, setRoute] = useState<Route>(() =>
+    IS_EVENT_BUILD && localStorage.getItem(VERSUS_ACTIVE_KEY) === "true" ? "versus" : "home"
+  );
 
   // ---- Guided Demo (presenter/event walkthrough) ----
   // Declared early since handleDemoReset (below) needs it in scope already.
@@ -557,6 +574,7 @@ export default function App() {
       "ww_env_visited",
       "ww_factProgress",
       "ww_learning_analytics",
+      VERSUS_ACTIVE_KEY,
       "ww_dev_unlock",
       "ww_placement",
       "ww_placement_tiers",
@@ -967,6 +985,39 @@ export default function App() {
     guidedDemo.dispatch({ type: "START" });
   }, [guidedDemo]);
 
+  // ---- Event menu (event build): presenter launcher, opened by the hidden
+  // bottom-left triple-tap. Its address/id live under their own localStorage
+  // keys, which handleDemoReset does not touch, so a reset between visitors
+  // never makes a tablet forget where the relay is.
+  const [eventMenuOpen, setEventMenuOpen] = useState(false);
+  const [versusSound, setVersusSound] = useState(() => localStorage.getItem("ww_versus_sound") === "true");
+  const versusWords = useMemo(() => (IS_EVENT_BUILD ? getVersusWords() : []), []);
+  const handleVersusSoundChange = useCallback((on: boolean) => {
+    setVersusSound(on);
+    try { localStorage.setItem("ww_versus_sound", String(on)); } catch { /* non-fatal */ }
+  }, []);
+  const handleOpenEventMenu = useCallback(() => setEventMenuOpen(true), []);
+  const handleCloseEventMenu = useCallback(() => setEventMenuOpen(false), []);
+  const handlePlayVersus = useCallback(() => {
+    setEventMenuOpen(false);
+    setWardrobeOpen(false);
+    try { localStorage.setItem(VERSUS_ACTIVE_KEY, "true"); } catch { /* non-fatal */ }
+    setRoute("versus");
+  }, []);
+  const handleLeaveVersus = useCallback(() => {
+    setEventMenuOpen(false);
+    try { localStorage.removeItem(VERSUS_ACTIVE_KEY); } catch { /* non-fatal */ }
+    setRoute("map");
+  }, []);
+  const handleEventStartGuidedDemo = useCallback(() => {
+    setEventMenuOpen(false);
+    handleStartGuidedDemo();
+  }, [handleStartGuidedDemo]);
+  const handleEventReset = useCallback(() => {
+    setEventMenuOpen(false);
+    handleDemoReset();
+  }, [handleDemoReset]);
+
   const handleSkipGuidedDemo = useCallback(() => {
     setWardrobeOpen(false);
     setRoute("map");
@@ -1152,6 +1203,14 @@ export default function App() {
         </ScreenGate>
       )}
 
+      {IS_EVENT_BUILD && WordTacToeVersusScreen && route === "versus" && (
+        <ScreenGate>
+          <Suspense fallback={null}>
+            <WordTacToeVersusScreen words={versusWords} tabletSound={versusSound} />
+          </Suspense>
+        </ScreenGate>
+      )}
+
       {route === "word-tac-toe" && activeQuest && (
         <ScreenGate>
           <WordTacToeScreen
@@ -1255,7 +1314,25 @@ export default function App() {
       )}
 
       <DemoResetZone onReset={handleDemoReset} />
-      <GuidedDemoStartZone onStart={handleStartGuidedDemo} />
+      {IS_EVENT_BUILD && EventMenuZone ? (
+        <Suspense fallback={null}><EventMenuZone onOpen={handleOpenEventMenu} /></Suspense>
+      ) : (
+        <GuidedDemoStartZone onStart={handleStartGuidedDemo} />
+      )}
+      {IS_EVENT_BUILD && EventMenu && eventMenuOpen && (
+        <Suspense fallback={null}>
+          <EventMenu
+            inVersus={route === "versus"}
+            tabletSound={versusSound}
+            onTabletSoundChange={handleVersusSoundChange}
+            onPlayVersus={handlePlayVersus}
+            onLeaveVersus={handleLeaveVersus}
+            onStartGuidedDemo={handleEventStartGuidedDemo}
+            onResetTablet={handleEventReset}
+            onClose={handleCloseEventMenu}
+          />
+        </Suspense>
+      )}
       {guidedDemo.currentStep && (
         <GuidedDemoOverlay
           step={guidedDemo.currentStep}
