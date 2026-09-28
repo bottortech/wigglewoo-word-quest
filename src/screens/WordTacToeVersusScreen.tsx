@@ -106,6 +106,19 @@ const WordTacToeVersusScreen: React.FC<Props> = ({ words, tabletSound = false })
     return () => clearTimeout(t);
   }, [finder]);
 
+  // No address was saved when this screen first mounted (e.g. the presenter
+  // tapped Play before successfully finding the game). The main find-relay
+  // effect above only fires on a saved address, so on its own this would sit
+  // stuck forever even after the presenter sets one in the event menu —
+  // poll localStorage until one shows up, then hand off to that effect.
+  useEffect(() => {
+    if (finder !== "no-address") return;
+    const t = setInterval(() => {
+      if (loadRelayAddress()) { setFinder("searching"); setAttempt((a) => a + 1); }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [finder]);
+
   // Gone for a while? The laptop may have come back on a different address
   // (new DHCP lease), which plain retrying would never discover — so after 10 s
   // down, start over from the finder, which re-scans the saved network.
