@@ -985,6 +985,13 @@ export default function App() {
     localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
     localStorage.setItem("ww_onboarding_arrow_seen", "true");
     setRoute("home");
+    // WardrobeModal is rendered globally (see its JSX below), controlled
+    // purely by `wardrobeOpen` — independent of `route`. If it was left open
+    // from something earlier (shown to a visitor, a prior test/tour run),
+    // it would still be sitting on top of the Home/Map screen after this
+    // reset, making the tour look like it skipped straight to the wardrobe.
+    // Force it closed so every tour starts from a clean, predictable slate.
+    setWardrobeOpen(false);
     guidedDemo.dispatch({ type: "START", steps });
   }, [guidedDemo]);
   const handleStartGuidedDemo = useCallback(() => startGuidedTour(), [startGuidedTour]);
