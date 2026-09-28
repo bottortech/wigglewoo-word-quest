@@ -19,7 +19,9 @@ interface EventMenuProps {
   onPlayVersus: () => void;
   onLeaveVersus: () => void;
   onStartGuidedDemo: () => void;
-  /** Short ~1–1.5 min on-stage preset — one word, no scaffolding beyond that. */
+  /** Short ~1–1.5 min on-stage preset — a presenter-paced feature highlight
+   *  tour (not a gameplay demo), ending on Word-Tac-Toe as the cue to call
+   *  up volunteers. */
   onStartStageDemo: () => void;
   onResetTablet: () => void;
   onClose: () => void;
@@ -111,7 +113,7 @@ export default function EventMenu(props: EventMenuProps) {
         ) : (
           <button className="evm__btn evm__btn--go" onClick={props.onPlayVersus}>🎮 Play Word-Tac-Toe (versus)</button>
         )}
-        <button className="evm__btn" onClick={props.onStartStageDemo}>⚡ Quick stage demo (1 word)</button>
+        <button className="evm__btn" onClick={props.onStartStageDemo}>⚡ Stage highlights (ends on Word-Tac-Toe)</button>
         <button className="evm__btn" onClick={props.onStartGuidedDemo}>🧭 Start the full guided tour</button>
         {props.inVersus && (
           <button className="evm__btn evm__btn--go" onClick={handleNextPair} disabled={nextPair === "sending"}>

@@ -1232,7 +1232,13 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       <div className="discovery-preview-row">
         {DISCOVERY_ROOM_PREVIEWS.map((room) => {
           const isTourTarget = guidedDemoActive && QUEST_ENVIRONMENT_MAP[quest.id] === room.envId;
-          const unlocked = isTourTarget || isEnvironmentUnlocked(room.envId);
+          // During ANY guided tour, all five preview visually unlocked — same
+          // "whole tour, not just its own step" bypass granularity already
+          // used for Word-Tac-Toe/Trophy Room, so this stays consistent with
+          // that rather than being a new, narrower special case. Real
+          // unlock progress is untouched; this is display + click-through
+          // only, and reverts the moment guidedDemoActive goes false.
+          const unlocked = guidedDemoActive || isEnvironmentUnlocked(room.envId);
           return (
             <button
               key={room.envId}
@@ -1248,6 +1254,11 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
               }}
               aria-label={unlocked ? `Explore ${room.label}` : `${room.label} — locked`}
               data-tour-id={isTourTarget ? "discovery-room-btn" : undefined}
+              // Stable per-room target (unlike data-tour-id above, which
+              // only tags whichever ONE room matches current progress) — so
+              // the stage tour can spotlight each of the five individually,
+              // in a fixed order, regardless of real progress.
+              data-room-id={room.envId}
             >
               <img
                 src={room.image}
@@ -1295,6 +1306,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         onClick={onOpenWardrobe}
         aria-label="Open Wardrobe"
         title="Change WiggleWoo's outfit"
+        data-tour-id="wardrobe-open-btn"
       >
         <img
           src={skinAssets.heroImg || heroImg}

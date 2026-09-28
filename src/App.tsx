@@ -86,6 +86,7 @@ import GuidedDemoStartZone from "./components/GuidedDemoStartZone";
 import GuidedDemoOverlay from "./components/GuidedDemoOverlay";
 import { useGuidedDemo } from "./hooks/useGuidedDemo";
 import { STAGE_DEMO_STEPS } from "./game/guidedDemoSteps";
+import type { GuidedDemoStep } from "./game/guidedDemoSteps";
 import { IS_EVENT_BUILD } from "./game/eventMode";
 import { getVersusWords } from "./versus/versusWords";
 
@@ -974,28 +975,20 @@ export default function App() {
   // =============================================
   const guidedDemoStepId = guidedDemo.currentStep?.id ?? null;
 
-  const handleStartGuidedDemo = useCallback(() => {
-    // Skip the CAT tutorial AND the Map's separate first-visit "Tap here to
-    // start!" arrow cue for the duration of the tour — Guided Demo does its
-    // own teaching, and that arrow also hides the Word-Tac-Toe/Badges/For
-    // Parents buttons entirely until dismissed, which would block the
-    // WTT/Discovery/Trophy preview steps below.
+  // Shared by the full tour and the short stage preset — both start at Home
+  // for the same reason: skip the CAT tutorial AND the Map's separate
+  // first-visit "Tap here to start!" arrow cue for the duration of the tour
+  // (Guided Demo does its own teaching, and that arrow also hides the
+  // Word-Tac-Toe/Badges/For Parents buttons until dismissed, which would
+  // block later preview steps in either list).
+  const startGuidedTour = useCallback((steps?: GuidedDemoStep[]) => {
     localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
     localStorage.setItem("ww_onboarding_arrow_seen", "true");
     setRoute("home");
-    guidedDemo.dispatch({ type: "START" });
+    guidedDemo.dispatch({ type: "START", steps });
   }, [guidedDemo]);
-
-  // Short on-stage preset (see STAGE_DEMO_STEPS) — starts on the Map, not
-  // Home, since the whole point is skipping everything but one word build.
-  // Still needs the arrow-cue flag cleared: on a genuinely fresh tablet,
-  // the Map's own first-visit "Tap here to start!" overlay would otherwise
-  // block the gear node the same way it does for the full tour.
-  const handleStartStageDemo = useCallback(() => {
-    localStorage.setItem("ww_onboarding_arrow_seen", "true");
-    setRoute("map");
-    guidedDemo.dispatch({ type: "START", steps: STAGE_DEMO_STEPS });
-  }, [guidedDemo]);
+  const handleStartGuidedDemo = useCallback(() => startGuidedTour(), [startGuidedTour]);
+  const handleStartStageDemo = useCallback(() => startGuidedTour(STAGE_DEMO_STEPS), [startGuidedTour]);
 
   // ---- Event menu (event build): presenter launcher, opened by the hidden
   // bottom-left triple-tap. Its address/id live under their own localStorage
@@ -1058,6 +1051,47 @@ export default function App() {
       guidedDemo.dispatch({ type: "NEXT" });
     }
   }, [guidedDemoStepId, route, guidedDemo]);
+
+  // stage-home-play → map-overview: Play Now was tapped. Unlike "home-play"
+  // above, this deliberately does NOT force the wardrobe open — the stage
+  // tour shows the Map first, and reaches the wardrobe later as its own
+  // step, by the presenter tapping the real button live.
+  useEffect(() => {
+    if (guidedDemoStepId !== "stage-home-play") return;
+    if (route !== "home") guidedDemo.dispatch({ type: "NEXT" });
+  }, [guidedDemoStepId, route, guidedDemo]);
+
+  // stage-wardrobe-open → wardrobe-intro: the real "Open Wardrobe" button on
+  // the map was tapped for real.
+  useEffect(() => {
+    if (guidedDemoStepId !== "stage-wardrobe-open") return;
+    if (wardrobeOpen) guidedDemo.dispatch({ type: "NEXT" });
+  }, [guidedDemoStepId, wardrobeOpen, guidedDemo]);
+
+  // Safety net for the wardrobe steps: a real equip already closes the
+  // wardrobe itself (see handleSkinChanged), but a step that advances via a
+  // plain "Got it" tap instead (the stage tour's presenter-paced narration
+  // steps, unlike the full tour's app-state/real-equip advance) has no such
+  // side effect — without this, the wardrobe would sit open, fully covering
+  // the screen, for the rest of the tour. While any tour is active, the
+  // wardrobe should only ever be open during a wardrobe-related step; the
+  // moment the step moves past both of them, close it regardless of how it
+  // advanced.
+  //
+  // Both ids are exempted, not just "wardrobe-intro" — "stage-wardrobe-open"
+  // is the step that's OPENING it (wardrobeOpen flips true while stepId is
+  // still "stage-wardrobe-open", one tick before the dispatch above lands).
+  // Without exempting it too, this effect and that one would race on the
+  // exact same wardrobeOpen change within the same commit: this one would
+  // see the not-yet-updated stepId and close it again immediately, before
+  // it was ever visible.
+  useEffect(() => {
+    if (!guidedDemo.state.active) return;
+    const wardrobeStepIds = guidedDemoStepId === "wardrobe-intro" || guidedDemoStepId === "stage-wardrobe-open";
+    if (!wardrobeStepIds && wardrobeOpen) {
+      setWardrobeOpen(false);
+    }
+  }, [guidedDemo.state.active, guidedDemoStepId, wardrobeOpen]);
 
   // start-activity → complete-word: a gear node was tapped.
   useEffect(() => {
