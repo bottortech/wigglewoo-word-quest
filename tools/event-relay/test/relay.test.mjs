@@ -212,6 +212,32 @@ test("HTTP: /info (CORS), /health, /state", async (t) => {
   assert.equal((await (await fetch(`${r.http}/state`)).json()).phase, "lobby");
 });
 
+test("HTTP admin: POST /clearseats, /newgame, /resetscores, /swap all work like their WS commands", async (t) => {
+  const r = await room(t);
+  const screen = await r.add({ type: "hello", role: "screen", id: "screen" });
+  const a = await r.add({ type: "hello", role: "player", id: "tab-a" });
+  const b = await r.add({ type: "hello", role: "player", id: "tab-b" });
+  await play(a, screen, 0); await play(b, screen, 3); await play(a, screen, 1); await play(b, screen, 4); await play(a, screen, 2);
+  await screen.waitFor((s) => s.state.phase === "over");
+
+  const swap = await fetch(`${r.http}/swap`, { method: "POST" });
+  assert.equal(swap.status, 200);
+  assert.deepEqual(await swap.json(), { ok: true });
+  await screen.waitFor((s) => s.state.seats.X.id === "tab-b" && s.state.phase === "playing");
+
+  assert.equal((await fetch(`${r.http}/resetscores`, { method: "POST" })).status, 200);
+  await screen.waitFor((s) => s.state.wins.O === 0 && s.state.round === 1);
+
+  assert.equal((await fetch(`${r.http}/newgame`, { method: "POST" })).status, 200);
+  await screen.waitFor((s) => s.state.round === 2);
+});
+
+test("HTTP admin: an unknown or GET action 404s instead of silently doing nothing", async (t) => {
+  const r = await room(t);
+  assert.equal((await fetch(`${r.http}/notarealcommand`, { method: "POST" })).status, 404);
+  assert.equal((await fetch(`${r.http}/clearseats`, { method: "GET" })).status, 404);
+});
+
 test("HTTP static: big screen, app assets and art are served; escapes are not", async (t) => {
   const r = await room(t);
   const page = await fetch(`${r.http}/`);

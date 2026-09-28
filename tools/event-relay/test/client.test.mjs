@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { startRelay, connect } from "./helpers.mjs";
 import { RelayClient } from "../../../src/versus/relayClient.ts";
-import { parseRelayAddress, probeRelay, findRelay, getDeviceId, loadRelayAddress, saveRelayAddress, relayWsUrl } from "../../../src/versus/relayAddress.ts";
+import { parseRelayAddress, probeRelay, findRelay, getDeviceId, loadRelayAddress, saveRelayAddress, relayWsUrl, callRelayAdmin } from "../../../src/versus/relayAddress.ts";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const until = async (pred, ms = 4000, label = "condition") => {
@@ -221,4 +221,35 @@ test("client: a socket that opens but never gets a welcome is also abandoned and
   await sleep(3000);
   c.stop();
   assert.ok(made >= 3, `only ${made} attempts`);
+});
+
+test("client: 'New pair' (HTTP clearseats from a tablet) boots both tablets off and they reseat fresh on their own", async (t) => {
+  const env = await startRelay();
+  const a = tablet(env.url, "tab-a");
+  const b = tablet(env.url, "tab-b");
+  t.after(async () => { a.client.stop(); b.client.stop(); await env.relay.close(); });
+  await until(() => a.state?.phase === "playing" && b.state?.phase === "playing", 3000, "seated and playing");
+  a.client.sendChallenge(4, challenge());
+  await until(() => a.state.challenge?.cell === 4, 3000, "mid-question when the reset lands");
+
+  const ok = await callRelayAdmin("127.0.0.1", "clearseats", env.relay.port);
+  assert.equal(ok, true);
+
+  // Neither tablet navigated away or reconnected manually — this is purely
+  // the RelayClient's own reconnect path reacting to the terminated socket.
+  await until(() => a.statuses.some(([s]) => s === "down"), 3000, "a noticed the drop");
+  await until(() => b.statuses.some(([s]) => s === "down"), 3000, "b noticed the drop");
+  const t0 = Date.now();
+  await until(() => a.client.status === "open" && b.client.status === "open", 6000, "both reconnected");
+  console.log(`      both reseated ${Date.now() - t0}ms after the reset`);
+  await until(() => a.state?.phase === "playing" && b.state?.phase === "playing", 3000, "fresh game, both seated again");
+  assert.deepEqual(a.state.board, Array(9).fill(null));
+  assert.equal(a.state.challenge, null);
+  assert.deepEqual(a.state.wins, { X: 0, O: 0 });
+  // Same device ids as before, freshly (re-)seated — not two strangers.
+  assert.deepEqual([a.state.seats.X.id, a.state.seats.O.id].sort(), ["tab-a", "tab-b"]);
+});
+
+test("client: callRelayAdmin reports failure cleanly when nothing is listening", async () => {
+  assert.equal(await callRelayAdmin("127.0.0.1", "clearseats", 1, 300), false);
 });

@@ -56,6 +56,36 @@ export function parseRelayAddress(input: string): { host: string; port: number }
 export const relayWsUrl = (host: string, port: number = RELAY_PORT): string => `ws://${host}:${port}/ws`;
 const infoUrl = (host: string, port: number): string => `http://${host}:${port}/info`;
 
+/**
+ * Fire a presenter admin action (currently just "clearseats" — a fast,
+ * low-stakes reset of the shared versus game between pairs of Expo-table
+ * volunteers) directly from a tablet. Tablets connect to the relay as
+ * "player" over the WebSocket and can't send presenter commands that way
+ * (see server.mjs); this plain HTTP route is the tablet-reachable escape
+ * hatch for the one or two admin actions a tablet's hidden EventMenu needs,
+ * without granting every "player" socket presenter privileges.
+ */
+export async function callRelayAdmin(
+  host: string,
+  action: "clearseats",
+  port: number = RELAY_PORT,
+  timeoutMs = 2500,
+  fetchImpl: typeof fetch = fetch,
+): Promise<boolean> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const res = await fetchImpl(`http://${host}:${port}/${action}`, { method: "POST", signal: ctl.signal });
+    if (!res.ok) return false;
+    const body = await res.json();
+    return body?.ok === true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Ask one address whether a relay lives there. Null on timeout or anything else. */
 export async function probeRelay(
   host: string,

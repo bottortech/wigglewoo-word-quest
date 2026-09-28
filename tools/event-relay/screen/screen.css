@@ -198,9 +198,14 @@ body.show-cursor { cursor: default; }
 #confetti { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
 
 /* ---------- viewport-level bits ---------- */
-#conn, #sound, #toast { position: fixed; z-index: 50; font-weight: 800; border-radius: 999px; transition: opacity .4s; font-family: inherit; }
+#conn, #sound, #toast, #nextdemo { position: fixed; z-index: 50; font-weight: 800; border-radius: 999px; transition: opacity .4s, transform .15s; font-family: inherit; }
 #conn { left: 50%; bottom: 14px; transform: translateX(-50%); padding: 6px 20px; font-size: 15px; background: rgba(255,244,214,.95); color: #8A5A00; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
 #sound { right: 16px; bottom: 14px; padding: 6px 16px; font-size: 14px; background: rgba(62,39,35,.72); color: #fff; }
+/* Bottom-left, mirroring #sound on the right — a visible click target for
+   "clear both tablets" so the presenter isn't required to reach for a
+   keyboard at a booth table. Same double-tap-to-confirm as the K key. */
+#nextdemo { left: 16px; bottom: 14px; padding: 8px 18px; font-size: 14px; border: none; background: rgba(62,39,35,.72); color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#nextdemo:active { transform: scale(.95); }
 #toast { left: 50%; bottom: 56px; transform: translateX(-50%); padding: 12px 30px; font-size: 22px; background: rgba(62,39,35,.9); color: #fff; }
 .hidden { opacity: 0; pointer-events: none; }
 #help { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(62,39,35,.55); }

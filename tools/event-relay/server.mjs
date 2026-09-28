@@ -171,6 +171,15 @@ export async function createRelay({
       res.end(JSON.stringify(body));
       return;
     }
+    // Admin action a tablet can fire directly (no WS "presenter" role needed
+    // — see presenterOps above). Named to match the WS command exactly.
+    if (req.method === "POST" && pathname.slice(1) in presenterOps) {
+      const r = presenterOps[pathname.slice(1)]();
+      if (r.ok) { log("admin-http", { cmd: pathname.slice(1) }); broadcastState(); }
+      res.writeHead(r.ok ? 200 : 409, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" });
+      res.end(JSON.stringify(r));
+      return;
+    }
     const file = resolveStatic(url, repoRoot);
     if (!file) { res.writeHead(404); res.end(); return; }
     serveFile(req, res, file);
@@ -239,14 +248,37 @@ export async function createRelay({
     }
   }
 
+  // Shared by the WS presenter path (screen/presenter role) and the HTTP
+  // admin route below (tablets — a "player" WS can't send these; see
+  // onHello). Both are only reachable via the hidden presenter surfaces
+  // (the spectator page's hotkeys, or a tablet's hidden EventMenu), so this
+  // stays unauthenticated like the rest of the relay — the private LAN is
+  // the trust boundary, same as everything else here.
+  const presenterOps = {
+    newgame: () => game.newGame({ force: true }),
+    resetscores: () => game.resetScores(),
+    // Unlike the other ops, a tablet that's still sitting on the versus
+    // screen after clearSeats() won't spontaneously re-`hello` on its own —
+    // its WebSocket never dropped, so it never has a reason to resend one,
+    // and it would otherwise just sit there believing it's still X or O on
+    // a game that no longer has anyone seated. Terminating both player
+    // sockets forces each RelayClient through its own (already reliable,
+    // already-tested) reconnect path, which DOES send a fresh hello — and
+    // since seats are null by then, that hello seats it fresh, exactly like
+    // a new pair of volunteers picking the tablets up for the first time.
+    clearseats: () => {
+      const r = game.clearSeats();
+      if (r.ok) {
+        for (const ws of playerSockets.values()) { try { ws.terminate(); } catch { /* already gone */ } }
+        playerSockets.clear();
+      }
+      return r;
+    },
+    swap: () => game.swapSeats(),
+  };
+
   function onPresenterMessage(ws, m) {
-    const ops = {
-      newgame: () => game.newGame({ force: true }),
-      resetscores: () => game.resetScores(),
-      clearseats: () => game.clearSeats(),
-      swap: () => game.swapSeats(),
-    };
-    const op = ops[m.type];
+    const op = presenterOps[m.type];
     if (!op) return false;
     const r = op();
     if (!r.ok) sendError(ws, r.error);

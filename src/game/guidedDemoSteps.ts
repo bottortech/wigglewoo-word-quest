@@ -96,3 +96,29 @@ export const GUIDED_DEMO_STEPS: GuidedDemoStep[] = [
     advance: "tap-callout",
   },
 ];
+
+/**
+ * Short preset for the ~1–1.5 minute on-stage segment of a live presentation
+ * — one clean example of the core interaction, nothing more. Reuses the
+ * "start-activity" and "complete-word" step ids on purpose: every App.tsx
+ * effect that advances the tour is keyed by step id, not by which list it
+ * came from, so this needs zero wiring changes there — it's just a shorter
+ * array. Ends automatically the moment the word is built (the reducer treats
+ * completing the last step of whichever list is active as END), dropping
+ * the presenter right back on the real map with the real celebration having
+ * played, ready to move on to the Word-Tac-Toe segment.
+ */
+export const STAGE_DEMO_STEPS: GuidedDemoStep[] = [
+  {
+    id: "start-activity",
+    targetSelector: '[data-tour-id="gear-node-1"]',
+    message: "Tap a gear to start a word!",
+    advance: "app-state",
+  },
+  {
+    id: "complete-word",
+    targetSelector: '[data-potion-letter]',
+    message: "Build the word by tapping the potions in order.",
+    advance: "app-state",
+  },
+];

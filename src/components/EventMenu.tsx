@@ -8,7 +8,7 @@
 // reset for the next visitor.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findRelay, loadRelayAddress, parseRelayAddress, probeRelay, saveRelayAddress } from "../versus/relayAddress";
+import { callRelayAdmin, findRelay, loadRelayAddress, parseRelayAddress, probeRelay, saveRelayAddress } from "../versus/relayAddress";
 import type { RelayInfo } from "../versus/relayAddress";
 import "./EventMenu.css";
 
@@ -19,6 +19,8 @@ interface EventMenuProps {
   onPlayVersus: () => void;
   onLeaveVersus: () => void;
   onStartGuidedDemo: () => void;
+  /** Short ~1–1.5 min on-stage preset — one word, no scaffolding beyond that. */
+  onStartStageDemo: () => void;
   onResetTablet: () => void;
   onClose: () => void;
 }
@@ -37,6 +39,7 @@ export default function EventMenu(props: EventMenuProps) {
   const [probe, setProbe] = useState<Probe>(() => (loadRelayAddress() ? { kind: "checking" } : { kind: "idle" }));
   const [confirmReset, setConfirmReset] = useState(false);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [nextPair, setNextPair] = useState<"idle" | "sending" | "done" | "failed">("idle");
 
   // Check the saved address as soon as the menu opens.
   useEffect(() => {
@@ -62,6 +65,20 @@ export default function EventMenu(props: EventMenuProps) {
     const info = await probeRelay(host, parsed.port);
     setProbe(info ? { kind: "ok", host, info } : { kind: "none" });
   }, [addr]);
+
+  // Low-stakes on purpose: this only zeroes the shared versus game (both
+  // tablets return to the lobby, ready for a new pair of volunteers) — it
+  // never touches a tablet's own progress, so it doesn't need the same
+  // deliberate two-tap-with-a-timeout guard as the destructive full reset
+  // below. Single tap, findable from either tablet mid-booth-rush.
+  const handleNextPair = useCallback(async () => {
+    const host = probe.kind === "ok" ? probe.host : parseRelayAddress(addr)?.host;
+    if (!host) return;
+    setNextPair("sending");
+    const ok = await callRelayAdmin(host, "clearseats");
+    setNextPair(ok ? "done" : "failed");
+    setTimeout(() => setNextPair("idle"), 2000);
+  }, [probe, addr]);
 
   const handleReset = useCallback(() => {
     if (!confirmReset) {
@@ -94,7 +111,16 @@ export default function EventMenu(props: EventMenuProps) {
         ) : (
           <button className="evm__btn evm__btn--go" onClick={props.onPlayVersus}>🎮 Play Word-Tac-Toe (versus)</button>
         )}
-        <button className="evm__btn" onClick={props.onStartGuidedDemo}>🧭 Start the guided demo</button>
+        <button className="evm__btn" onClick={props.onStartStageDemo}>⚡ Quick stage demo (1 word)</button>
+        <button className="evm__btn" onClick={props.onStartGuidedDemo}>🧭 Start the full guided tour</button>
+        {props.inVersus && (
+          <button className="evm__btn evm__btn--go" onClick={handleNextPair} disabled={nextPair === "sending"}>
+            {nextPair === "done" ? "✓ Cleared — waiting for two tablets"
+              : nextPair === "failed" ? "✗ Couldn't reach the game — try again"
+                : nextPair === "sending" ? "Clearing…"
+                  : "🔁 New pair (reset Word-Tac-Toe)"}
+          </button>
+        )}
 
         <div className="evm__section">
           <label className="evm__label" htmlFor="evm-addr">Game address (the laptop)</label>

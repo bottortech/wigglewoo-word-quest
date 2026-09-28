@@ -85,6 +85,7 @@ import DemoResetZone from "./components/DemoResetZone";
 import GuidedDemoStartZone from "./components/GuidedDemoStartZone";
 import GuidedDemoOverlay from "./components/GuidedDemoOverlay";
 import { useGuidedDemo } from "./hooks/useGuidedDemo";
+import { STAGE_DEMO_STEPS } from "./game/guidedDemoSteps";
 import { IS_EVENT_BUILD } from "./game/eventMode";
 import { getVersusWords } from "./versus/versusWords";
 
@@ -985,6 +986,17 @@ export default function App() {
     guidedDemo.dispatch({ type: "START" });
   }, [guidedDemo]);
 
+  // Short on-stage preset (see STAGE_DEMO_STEPS) — starts on the Map, not
+  // Home, since the whole point is skipping everything but one word build.
+  // Still needs the arrow-cue flag cleared: on a genuinely fresh tablet,
+  // the Map's own first-visit "Tap here to start!" overlay would otherwise
+  // block the gear node the same way it does for the full tour.
+  const handleStartStageDemo = useCallback(() => {
+    localStorage.setItem("ww_onboarding_arrow_seen", "true");
+    setRoute("map");
+    guidedDemo.dispatch({ type: "START", steps: STAGE_DEMO_STEPS });
+  }, [guidedDemo]);
+
   // ---- Event menu (event build): presenter launcher, opened by the hidden
   // bottom-left triple-tap. Its address/id live under their own localStorage
   // keys, which handleDemoReset does not touch, so a reset between visitors
@@ -1013,6 +1025,10 @@ export default function App() {
     setEventMenuOpen(false);
     handleStartGuidedDemo();
   }, [handleStartGuidedDemo]);
+  const handleEventStartStageDemo = useCallback(() => {
+    setEventMenuOpen(false);
+    handleStartStageDemo();
+  }, [handleStartStageDemo]);
   const handleEventReset = useCallback(() => {
     setEventMenuOpen(false);
     handleDemoReset();
@@ -1328,6 +1344,7 @@ export default function App() {
             onPlayVersus={handlePlayVersus}
             onLeaveVersus={handleLeaveVersus}
             onStartGuidedDemo={handleEventStartGuidedDemo}
+            onStartStageDemo={handleEventStartStageDemo}
             onResetTablet={handleEventReset}
             onClose={handleCloseEventMenu}
           />

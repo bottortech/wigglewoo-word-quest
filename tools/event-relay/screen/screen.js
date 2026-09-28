@@ -271,6 +271,17 @@
     if (armed && armed.key === key && Date.now() < armed.until) { armed = null; command(type, label); }
     else { armed = { key, until: Date.now() + 2000 }; toast(prompt); }
   }
+  // Visible click target for "clear both tablets" — same double-tap-to-
+  // confirm as the K key (they share `armed`, so pressing K then clicking,
+  // or the reverse, still counts as the confirm). A click on this button
+  // shouldn't count as "the mouse moved, show the cursor" — that's just
+  // incidental to normal use, not what the corner button is for.
+  $("nextdemo").addEventListener("pointerdown", (e) => e.stopPropagation());
+  $("nextdemo").addEventListener("click", () => {
+    unlockAudio();
+    twice("k", "clearseats", "Cleared — waiting for tablets", "Tap again to clear both tablets");
+  });
+
   addEventListener("pointerdown", unlockAudio);
   let cursorTimer = 0;
   addEventListener("mousemove", () => {

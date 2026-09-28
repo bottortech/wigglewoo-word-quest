@@ -44,6 +44,7 @@
 }
 .evm__btn:active { transform: scale(0.98); }
 .evm__btn--go { background: linear-gradient(180deg, #7ed957, #4caf50); color: #fff; }
+.evm__btn:disabled { opacity: .6; cursor: default; }
 .evm__btn--small { min-height: 46px; padding: 8px 14px; font-size: 16px; white-space: nowrap; background: #dceeec; color: #2e6f67; }
 .evm__btn--reset { background: #fdeaea; color: #b3261e; }
 .evm__btn--confirm { background: #e53935; color: #fff; }
