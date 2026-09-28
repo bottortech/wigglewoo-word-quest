@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WiggleWoo's Word-Tac-Toe</title>
+  <link rel="icon" href="/img/wigglewoo_X.png">
+  <link rel="stylesheet" href="/screen.css">
+</head>
+<body>
+  <div id="stage">
+    <div id="topbar">
+      <div class="pcard x" id="card-X"></div>
+      <div id="brand">
+        <img src="/img/wigglewoos_word_quest_badge-logo.png" alt="WiggleWoo's Word Quest" draggable="false">
+        <div class="brand-title">WORD-TAC-TOE</div>
+      </div>
+      <div class="pcard o" id="card-O"></div>
+    </div>
+
+    <div id="main">
+      <div id="board-wrap">
+        <div id="board"></div>
+        <svg id="winline" viewBox="0 0 760 760" aria-hidden="true"></svg>
+      </div>
+      <div id="panel"></div>
+    </div>
+
+    <div id="lobby"></div>
+    <canvas id="confetti" width="1920" height="1080"></canvas>
+  </div>
+
+  <div id="conn" class="hidden">Reconnecting…</div>
+  <div id="sound" class="hidden">🔊 Click anywhere to turn on sound</div>
+  <div id="toast" class="hidden"></div>
+  <div id="help" class="hidden">
+    <div class="help-card">
+      <h2>Presenter keys</h2>
+      <div><kbd>N</kbd> New game (keeps scores)</div>
+      <div><kbd>R</kbd> <kbd>R</kbd> Reset scores</div>
+      <div><kbd>K</kbd> <kbd>K</kbd> Clear both tablets (back to lobby)</div>
+      <div><kbd>S</kbd> Swap X / O tablets</div>
+      <div><kbd>F</kbd> Full screen</div>
+      <div><kbd>M</kbd> Mute / unmute</div>
+      <div><kbd>H</kbd> Hide this help</div>
+    </div>
+  </div>
+
+  <script src="/screen.js"></script>
+</body>
+</html>

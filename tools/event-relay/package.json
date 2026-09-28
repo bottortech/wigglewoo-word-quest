@@ -1,0 +1,15 @@
+{
+  "name": "wigglewoo-event-relay",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Local relay + big-screen spectator for the two-tablet Word-Tac-Toe event demo",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "bots": "node bots.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
