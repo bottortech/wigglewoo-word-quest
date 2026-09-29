@@ -44,19 +44,19 @@ test("a full game over the wire: X wins, then Play Again from a tablet", async (
   assert.equal(screen.state.board.filter(Boolean).length, 0);
 });
 
-test("wrong answers keep the turn; hints appear from the second miss; correct still lands", async (t) => {
+test("a wrong answer ends the turn over the wire — no retry, cell stays empty", async (t) => {
   const r = await room(t);
   const { screen, a } = await seated(r);
-  a.send({ type: "challenge", cell: 4, challenge: letterChallenge({ options: ["o", "a", "u", "e"] }) });
+  a.send({ type: "challenge", cell: 4, challenge: letterChallenge() });
   await screen.waitFor((s) => s.state.challenge);
-  a.send({ type: "answer", index: 0 });
-  await screen.waitFor((s) => s.state.challenge.wrongN === 1);
-  a.send({ type: "answer", index: 2 });
-  await screen.waitFor((s) => s.state.challenge.eliminated.length === 1);
-  assert.equal(screen.state.turn, "X");
+  a.send({ type: "answer", index: 0 }); // wrong — correctIndex is 1
+  await screen.waitFor((s) => s.state.challenge?.status === "wrong" && s.state.challenge.wrongN === 1);
+  assert.equal(screen.state.turn, "X"); // still X during the brief WRONG_MS hold
+  // A retry on the same challenge is rejected — one wrong tap, no do-over.
   a.send({ type: "answer", index: 1 });
-  await screen.waitFor((s) => s.state.challenge?.status === "correct");
-  await screen.waitFor((s) => s.state.board[4] === "X" && s.state.turn === "O");
+  await a.waitFor((c) => c.errors.some((e) => e.code === "no-challenge"));
+  await screen.waitFor((s) => s.state.turn === "O" && s.state.challenge === null);
+  assert.equal(screen.state.board[4], null); // cell was never claimed
 });
 
 test("illegal actions get an error and change nothing", async (t) => {

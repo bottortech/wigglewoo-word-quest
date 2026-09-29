@@ -7,7 +7,8 @@
 // WHO DOES WHAT
 //   - The mover's tablet builds the literacy challenge (it has the app's real
 //     word data) and sends it once. Everything after that is decided here:
-//     correctness, hint elimination, turn order, winner, scores.
+//     correctness, turn order, winner, scores. One wrong tap ends the turn —
+//     no retries, no hints; the cell stays empty for whoever picks it later.
 //   - Tablets and the big screen are thin renderers of `state`.
 //
 // PROTOCOL (JSON over WebSocket at /ws; every change broadcasts a FULL state
@@ -38,8 +39,10 @@ export const LINES = [
 ];
 /** Pause between a correct answer and the mark landing (matches the single-player screen). */
 export const CORRECT_MS = 700;
-/** From this many wrong taps on one challenge, each further miss removes one wrong option. */
-export const HINT_AFTER_WRONG = 2;
+/** Pause between a wrong answer and the turn passing — long enough for the
+ *  "wrong" flash/shake and sound to land before the board hands off. One
+ *  wrong tap ends the turn; there's no retry and no hint. */
+export const WRONG_MS = 900;
 export const CHALLENGE_TYPES = ["missing-letter", "word-picture-match"];
 
 const other = (m) => (m === "X" ? "O" : "X");
@@ -114,6 +117,7 @@ export class Game {
     for (const m of ["X", "O"]) if (g.state.seats[m]) g.state.seats[m].connected = false;
     const c = g.state.challenge;
     if (c && c.status === "correct") g.resolveCorrect(c.id);
+    else if (c && c.status === "wrong") g.resolveWrong(c.id);
     return g;
   }
 
@@ -175,6 +179,13 @@ export class Game {
     const clean = sanitizeChallenge(challenge);
     if (!clean) return err("bad-challenge");
     s.challengeCount += 1;
+    // wrongCount/eliminated are vestigial — kept on the wire since tablet
+    // and screen UIs already key their "wrong" flash off wrongN/wrongIndex,
+    // not worth a protocol change. wrongCount now only ever reaches 0 or 1
+    // (one wrong tap ends the turn — see answer()) and eliminated stays
+    // permanently empty; no client currently special-cases either beyond
+    // that, so leaving them is simpler than threading a field removal
+    // through every consumer for the Oct 10 timeline.
     s.challenge = {
       id: s.challengeCount, seat, cell, ...clean,
       status: "open", wrongCount: 0, wrongN: 0, wrongIndex: null, eliminated: [],
@@ -183,6 +194,11 @@ export class Game {
     return ok({ challengeId: s.challengeCount });
   }
 
+  /** One wrong tap ends the turn immediately — no retries, no hint. The
+   *  challenge moves to "wrong" (mirroring "correct") so the relay can hold
+   *  it open just long enough for clients to show the miss before the turn
+   *  actually passes (see resolveWrong). The cell the mover picked is never
+   *  claimed on a miss; it's still open for whoever picks it later. */
   answer(id, index) {
     const s = this.state;
     const seat = this._seatOf(id);
@@ -198,15 +214,12 @@ export class Game {
       this._touch();
       return ok({ correct: true, challengeId: c.id });
     }
+    c.status = "wrong";
     c.wrongCount += 1;
     c.wrongN += 1;
     c.wrongIndex = index;
-    if (c.wrongCount >= HINT_AFTER_WRONG) {
-      const candidates = c.options.map((_, i) => i).filter((i) => i !== c.correctIndex && !c.eliminated.includes(i));
-      if (candidates.length) c.eliminated.push(candidates[Math.floor(this.rng() * candidates.length)]);
-    }
     this._touch();
-    return ok({ correct: false });
+    return ok({ correct: false, challengeId: c.id });
   }
 
   /** Called by the relay CORRECT_MS after a correct answer. Places the mark,
@@ -229,6 +242,19 @@ export class Game {
     } else {
       s.turn = other(c.seat);
     }
+    this._touch();
+    return ok({ phase: s.phase });
+  }
+
+  /** Called by the relay WRONG_MS after a wrong answer. Passes the turn
+   *  without placing a mark — the mover's cell stays empty. Idempotent
+   *  against stale timers, same pattern as resolveCorrect. */
+  resolveWrong(challengeId) {
+    const s = this.state;
+    const c = s.challenge;
+    if (!c || c.id !== challengeId || c.status !== "wrong") return err("stale");
+    s.turn = other(c.seat);
+    s.challenge = null;
     this._touch();
     return ok({ phase: s.phase });
   }

@@ -43,13 +43,18 @@ test("client: seats itself, forwards a challenge and answer, receives every snap
   assert.equal(a.client.status, "open");
   await until(() => a.state?.phase === "playing" && b.state?.phase === "playing", 3000, "game started on both");
 
+  // A wrong answer ends X's turn immediately — no retry, cell stays empty.
   a.client.sendChallenge(4, challenge());
   await until(() => b.state.challenge?.cell === 4, 3000, "opponent sees the challenge");
   assert.equal(b.state.challenge.seat, "X");
   a.client.sendAnswer(0);                                       // wrong
-  await until(() => a.state.challenge.wrongN === 1, 3000, "wrong registered");
-  a.client.sendAnswer(1);                                       // right
-  await until(() => a.state.board[4] === "X" && a.state.turn === "O", 3000, "mark placed, turn passed");
+  await until(() => a.state.challenge?.wrongN === 1, 3000, "wrong registered");
+  await until(() => a.state.turn === "O" && a.state.board[4] === null, 3000, "turn passed, cell still empty");
+
+  // O then answers correctly and claims a different cell.
+  b.client.sendChallenge(0, challenge());
+  b.client.sendAnswer(1);                                       // right
+  await until(() => b.state.board[0] === "O" && b.state.turn === "X", 3000, "mark placed, turn passed");
 });
 
 test("client: a full game between two real clients ends with a winner and Play Again works", async (t) => {

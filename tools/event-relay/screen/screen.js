@@ -81,7 +81,6 @@
   const panel = $("panel");
   let lastPanelSig = "";
   let lastChallengeId = null;
-  let lastWrongN = 0;
   const cardHtml = { X: "", O: "" };
 
   function renderCards(s) {
@@ -134,11 +133,11 @@
   function challengeHtml(s) {
     const c = s.challenge;
     const correct = c.status === "correct";
+    const wrong = c.status === "wrong";
     const seat = s.seats[c.seat];
     const chip = `<div class="chip ${c.seat.toLowerCase()}"><img src="${MARK_IMG[c.seat]}" alt="">${esc(seat?.name ?? NAME[c.seat]).toUpperCase()}</div>`;
-    const showWrong = c.wrongN > lastWrongN && !correct;
     const opts = `<div class="options${c.type === "word-picture-match" ? " words" : ""}">` + c.options.map((o, i) => {
-      const cls = ["opt", c.eliminated.includes(i) ? "gone" : "", showWrong && c.wrongIndex === i ? "wrong" : "", correct && i === c.correctIndex ? "right" : ""].join(" ");
+      const cls = ["opt", c.eliminated.includes(i) ? "gone" : "", wrong && c.wrongIndex === i ? "wrong" : "", correct && i === c.correctIndex ? "right" : ""].join(" ");
       return `<div class="${cls}">${up(o)}</div>`;
     }).join("") + `</div>`;
     let body;
@@ -151,7 +150,8 @@
       body = `<div class="question long">Which word matches the picture?</div>` +
         `<div class="pic"><img src="/assets/words/${esc(c.word)}.png" alt="" onerror="this.style.visibility='hidden'"></div>`;
     }
-    return chip + body + opts + (correct ? `<div class="stamp">✓ Correct!</div>` : "");
+    const stamp = correct ? `<div class="stamp">✓ Correct!</div>` : wrong ? `<div class="stamp wrong">✗ Next turn!</div>` : "";
+    return chip + body + opts + stamp;
   }
 
   function idleHtml(s) {
@@ -183,11 +183,11 @@
     if (sig === lastPanelSig) return;
     const fresh = mode !== "challenge" || !c || c.id !== lastChallengeId;
     lastPanelSig = sig;
-    panel.className = mode === "over" ? "" : `turn-${s.turn.toLowerCase()}` + (c?.status === "correct" ? " is-correct" : "");
+    const statusClass = c?.status === "correct" ? " is-correct" : c?.status === "wrong" ? " is-wrong" : "";
+    panel.className = mode === "over" ? "" : `turn-${s.turn.toLowerCase()}` + statusClass;
     panel.innerHTML = mode === "over" ? overHtml(s) : mode === "challenge" ? challengeHtml(s) : idleHtml(s);
     if (fresh) { panel.classList.add("enter"); }
     lastChallengeId = c ? c.id : null;
-    lastWrongN = c ? c.wrongN : 0;
   }
 
   function renderLobby(s) {
@@ -317,9 +317,10 @@
     lobby: () => ({ ...blank(), phase: "lobby", seats: { X: { id: "a", name: "Player X", connected: true }, O: null } }),
     idle: () => mid({ turn: "X" }),
     letter: () => mid({ challenge: chal() }),
-    hint: () => mid({ challenge: chal({ options: ["o", "a", "u", "e"], eliminated: [2], wrongCount: 2, wrongN: 2, wrongIndex: 2 }) }),
     picture: () => mid({ turn: "O", challenge: chal({ seat: "O", type: "word-picture-match", word: "bat", options: ["bat", "hat", "map"], correctIndex: 0, letters: undefined, blankIndex: undefined }) }),
-    wrong: () => mid({ challenge: chal({ wrongCount: 1, wrongN: 1, wrongIndex: 0 }) }),
+    // One wrong tap ends the turn (no retries, no hint) — this is the brief
+    // WRONG_MS hold before the relay passes the turn and clears the cell.
+    wrong: () => mid({ challenge: chal({ status: "wrong", wrongCount: 1, wrongN: 1, wrongIndex: 0 }) }),
     correct: () => mid({ challenge: chal({ status: "correct" }) }),
     win: () => ({ ...blank(), phase: "over", board: ["X", "O", null, "O", "X", null, null, null, "X"], result: { winner: "X", line: [0, 4, 8] }, wins: { X: 2, O: 1 } }),
     winO: () => ({ ...blank(), phase: "over", board: ["X", "X", "O", null, "O", null, "O", null, "X"], result: { winner: "O", line: [2, 4, 6] }, wins: { X: 1, O: 2 }, turn: "O" }),
@@ -332,7 +333,7 @@
     let i = 0;
     const show = () => {
       const name = names[i++ % names.length];
-      lastPanelSig = ""; lastChallengeId = null; lastWrongN = 0;
+      lastPanelSig = ""; lastChallengeId = null;
       prevState = null;
       setState(PREVIEWS[name]());
       if (name === "win" || name === "winO") confetti(60000);

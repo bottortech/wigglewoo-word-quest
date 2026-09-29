@@ -23,7 +23,10 @@ export interface ServerChallenge extends WireChallenge {
   id: number;
   seat: Mark;
   cell: number;
-  status: "open" | "correct";
+  /** "wrong" holds briefly (WRONG_MS on the relay) after a miss, same as
+   *  "correct" does before the mark lands — one wrong tap ends the turn,
+   *  no retries. */
+  status: "open" | "correct" | "wrong";
   wrongCount: number;
   /** Increments on every wrong tap — clients animate when it changes. */
   wrongN: number;

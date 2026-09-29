@@ -205,6 +205,17 @@ const WordTacToeVersusScreen: React.FC<Props> = ({ words, tabletSound = false })
         <span>Correct!</span>
       </div>
     );
+  } else if (c && mine && c.status === "wrong") {
+    // Held briefly (WRONG_MS on the relay, mirroring how "correct" holds for
+    // CORRECT_MS) so the options panel below doesn't stay tappable during
+    // the window before the turn actually passes — one wrong tap ends the
+    // turn, there's no retry.
+    panel = (
+      <div className="wtt__panel-feedback wtt__panel-feedback--wrong">
+        <span className="wtt__panel-feedback-icon">❌</span>
+        <span>Not quite — {oppName}'s turn!</span>
+      </div>
+    );
   } else if (c && mine) {
     panel = (
       <div className="wtt__panel-challenge">
