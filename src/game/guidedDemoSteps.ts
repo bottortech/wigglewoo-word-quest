@@ -125,17 +125,40 @@ export const GUIDED_DEMO_STEPS: GuidedDemoStep[] = [
  * exactly the ordering this preset deliberately avoids) — each needs its
  * own small App.tsx watcher.
  *
- * Reused verbatim from the full tour, each with zero extra wiring:
- * "wardrobe-intro" and "trophy-room-preview" (both app-state/tap-callout
- * effects already keyed by id, not by which list is running — Trophy Room's
- * exit doesn't require finishing the matching game, its "Continue Quest"
- * button is available immediately on entry); "map-overview",
- * "progress-rewards", "word-tac-toe-preview" (plain tap-callout, no watcher
- * at all). The five discovery-preview-* steps are new: unlike the full
- * tour's single "discovery-room-preview" (which only ever tags whichever
- * ONE room matches current progress), each targets its own stable
- * [data-room-id] so all five can be spotlighted individually in a fixed
- * order — preview-only, no need to actually enter any of them.
+ * Reused verbatim from the full tour, each with zero extra wiring: "map-overview",
+ * "wardrobe-intro", "progress-rewards", "word-tac-toe-preview" — all plain
+ * tap-callout, advanced by App.tsx's step-id-keyed effects the same way
+ * regardless of which list is running. "quest-nodes-overview" is new,
+ * highlighting the whole node path (all 16 gears) as one step rather than
+ * any single gear, and comes right before "progress-rewards" — App.tsx's
+ * `questBoxViewOverride` resets the quest-type box to its normal vowels view
+ * on "progress-rewards" (not "stage-wardrobe-open", since that step no
+ * longer immediately follows "map-overview" in this list).
+ *
+ * Two steps spotlight more than one element at once, via GuidedDemoOverlay's
+ * union-rect measure(): "stage-parents-badges" (a comma-separated selector —
+ * the For Parents and Badges pills are each independently `position:
+ * absolute`, so no wrapper div could size around both) right after the
+ * stars, for the parents/teachers/educators in the audience; and
+ * "discovery-rooms-all" (a single container selector, since its five icons
+ * are normal flex children) right before the five individual
+ * discovery-preview-* stops, so the room highlights go "all five together,
+ * then one by one" rather than folding the "these are the five..." framing
+ * into the first individual stop.
+ *
+ * Trophy Room and the five Discovery Rooms are preview-only here — no real
+ * entry into any of them, unlike the full tour's "trophy-room-preview" and
+ * "discovery-room-preview" (both of which do enter/exit for real). A
+ * presenter-paced highlight tour has no use for gameplay happening inside
+ * either (the Trophy Room's win celebration only plays if someone actually
+ * finishes its memory-match game), so this list uses its own
+ * "stage-trophy-preview" id — tap-callout, no watcher — instead of reusing
+ * "trophy-room-preview". The five discovery-preview-* steps are similarly
+ * new: unlike the full tour's single "discovery-room-preview" (which only
+ * ever tags whichever ONE room matches current progress), each targets its
+ * own stable [data-room-id] so all five can be spotlighted individually in a
+ * fixed order, each message terse since discovery-rooms-all already said
+ * "these are the five Discovery Rooms."
  */
 export const STAGE_DEMO_STEPS: GuidedDemoStep[] = [
   {
@@ -151,6 +174,32 @@ export const STAGE_DEMO_STEPS: GuidedDemoStep[] = [
     advance: "tap-callout",
   },
   {
+    id: "quest-nodes-overview",
+    targetSelector: '[data-tour-id="quest-nodes-overview"]',
+    message: "Each quest has 16 fun word-building stops along the path — tap a gear to practice a word!",
+    advance: "tap-callout",
+  },
+  {
+    id: "progress-rewards",
+    targetSelector: '[data-tour-id="vowel-tab"]',
+    message: "Kids earn stars and see their progress every step of the way.",
+    advance: "tap-callout",
+  },
+  // Group highlight — the For Parents and Badges pills sit right next to
+  // each other (top-right corner), each `position: absolute` on their own,
+  // so a comma-separated selector (not a wrapper div) is what lets
+  // GuidedDemoOverlay spotlight both as one hole — see its union-rect
+  // measure(). Placed right after the stars step since that's the natural
+  // "progress" cluster for this audience (parents/teachers/educators at the
+  // Expo), even though Badges physically sits with For Parents, not with
+  // the vowel-tab stars box itself.
+  {
+    id: "stage-parents-badges",
+    targetSelector: '[data-tour-id="for-parents-btn"], [data-tour-id="badges-btn"]',
+    message: "For Parents and educators, plus Badges — where kids can see every skill they've picked up.",
+    advance: "tap-callout",
+  },
+  {
     id: "stage-wardrobe-open",
     targetSelector: '[data-tour-id="wardrobe-open-btn"]',
     message: "And here's WiggleWoo — tap here to see his wardrobe!",
@@ -162,33 +211,40 @@ export const STAGE_DEMO_STEPS: GuidedDemoStep[] = [
     message: "Kids unlock new looks for him as they explore the app.",
     advance: "tap-callout",
   },
+  // Preview-only, unlike the full tour's "trophy-room-preview" (which
+  // actually enters/exits the real room) — deliberately its own id, own
+  // tap-callout advance, no real entry. A presenter-paced highlight tour
+  // has no use for the win celebration inside (it only plays if someone
+  // actually finishes the memory-match game), and skipping entry entirely
+  // removes any chance of it firing mid-narration.
   {
-    id: "progress-rewards",
-    targetSelector: '[data-tour-id="vowel-tab"]',
-    message: "Kids earn stars and see their progress every step of the way.",
+    id: "stage-trophy-preview",
+    targetSelector: '[data-tour-id="trophy-room-btn"]',
+    message: "The Trophy Room is a reward kids unlock as they go.",
     advance: "tap-callout",
   },
-  // Reuses the full tour's "trophy-room-preview" id on purpose — that step
-  // is already app-state (the shared "preview steps" watcher in App.tsx
-  // advances once the presenter enters the real Trophy Room and exits back
-  // to the map), so it works here with zero new wiring. Exiting doesn't
-  // require finishing the matching game — TrophyRoomScreen's "Continue
-  // Quest" button is available immediately on entry.
+  // Group highlight first — all five Discovery Room icons together, via the
+  // same union-rect selector mechanism as stage-parents-badges (here just a
+  // single container selector, .discovery-preview-row, since its five
+  // buttons are normal flex children rather than independently absolute-
+  // positioned — the container's own rect already encloses all five).
   {
-    id: "trophy-room-preview",
-    targetSelector: '[data-tour-id="trophy-room-btn"]',
-    message: "The Trophy Room is a reward kids unlock as they go — let's peek inside.",
-    advance: "app-state",
+    id: "discovery-rooms-all",
+    targetSelector: '[data-tour-id="discovery-rooms-group"]',
+    message: "And these are the five Discovery Rooms — kids unlock each one as they finish a sound family.",
+    advance: "tap-callout",
   },
   // Five individual stops, one per Discovery Room, in a fixed left-to-right
   // order — each targets its own stable [data-room-id], unlike the full
   // tour's single "discovery-room-preview" step (which only ever tags
   // whichever ONE room matches current progress). Preview-only by design —
-  // no need to actually enter any of them to mention what they are.
+  // no need to actually enter any of them to mention what they are. Terse
+  // on purpose — "these are the five Discovery Rooms" was already said by
+  // discovery-rooms-all just above, so these just name each one.
   {
     id: "discovery-preview-valcano",
     targetSelector: '[data-room-id="valcano"]',
-    message: "And these are the five Discovery Rooms — like Rumble Peak — kids unlock as they finish each sound family.",
+    message: "Rumble Peak.",
     advance: "tap-callout",
   },
   {

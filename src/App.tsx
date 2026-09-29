@@ -1197,7 +1197,7 @@ export default function App() {
             questBoxViewOverride={
               guidedDemoStepId === "map-overview"
                 ? "types"
-                : guidedDemoStepId === "stage-wardrobe-open" || guidedDemoStepId === "vowel-choice"
+                : guidedDemoStepId === "progress-rewards" || guidedDemoStepId === "vowel-choice"
                 ? "vowels"
                 : undefined
             }

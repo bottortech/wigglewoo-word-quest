@@ -380,11 +380,11 @@ interface QuestMapScreenProps {
    *  the top-level type list, so this nudges the box to that list just for
    *  the tour's own arrival — the same way starting a tour also
    *  force-closes a stale-open wardrobe — then explicitly back to "vowels"
-   *  on the very next step in either list ("stage-wardrobe-open" for the
-   *  stage preset, "vowel-choice" for the full tour), well before either
-   *  reaches a step targeting [data-tour-id="vowel-tab"] ("progress-rewards"
-   *  or "vowel-choice" itself), which only renders in that view. Doesn't
-   *  stop the presenter drilling into a type themselves mid-tour — each
+   *  on "progress-rewards" in either list, which is also the step whose own
+   *  [data-tour-id="vowel-tab"] target only renders in that view (the full
+   *  tour's earlier "vowel-choice" step targets the same element and gets
+   *  the same reset). Doesn't stop the presenter drilling into a type
+   *  themselves mid-tour — each
    *  value only applies once, on its own transition. */
   questBoxViewOverride?: "types" | "vowels";
 }
@@ -1012,6 +1012,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         ref={mapOverlayRef}
         className="quest-map-overlay"
         style={devHideNodes ? { display: "none" } : questFullyDone ? { pointerEvents: "none" } : undefined}
+        data-tour-id="quest-nodes-overview"
       >
         {/* DEV: Red dashed guideline for safe-zone calibration */}
         <div className="quest-map-guideline" />
@@ -1256,7 +1257,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
       <span className="machine-bolt machine-bolt--br" />
 
       {/* DISCOVERY ROOM PREVIEW ROW — reward shelf above the map */}
-      <div className="discovery-preview-row">
+      <div className="discovery-preview-row" data-tour-id="discovery-rooms-group">
         {DISCOVERY_ROOM_PREVIEWS.map((room) => {
           const isTourTarget = guidedDemoActive && QUEST_ENVIRONMENT_MAP[quest.id] === room.envId;
           // During ANY guided tour, all five preview visually unlocked — same
@@ -1444,12 +1445,19 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
         <span className="demo-banner__text">Tap a gear node to start a word!</span>
       </div>
 
-      {/* For Parents — Apple Kids requires reachable privacy policy + parental gate */}
+      {/* For Parents — Apple Kids requires reachable privacy policy + parental gate.
+          Both this and Badges are `position: absolute` pills (see their own
+          CSS) positioned independently, not flex/flow children — a shared
+          wrapper div wouldn't size around them (absolutely-positioned
+          descendants don't contribute to a static parent's box). The guided
+          tour spotlights both as one group via a comma-separated selector
+          instead — see GuidedDemoOverlay's multi-element union-rect support. */}
       {!showOnboardingArrow && (
         <button
           className="for-parents-btn"
           onClick={handleInsightsClick}
           aria-label="For parents and teachers"
+          data-tour-id="for-parents-btn"
         >
           <span className="for-parents-btn__wave" aria-hidden="true">👋</span>
           <span className="for-parents-btn__label">For Parents</span>
@@ -1462,6 +1470,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           className="badges-btn"
           onClick={onOpenBadges}
           aria-label="See my skill badges"
+          data-tour-id="badges-btn"
         >
           <span className="badges-btn__star" aria-hidden="true">★</span>
           <span className="badges-btn__label">Badges</span>

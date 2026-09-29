@@ -39,13 +39,27 @@ const GuidedDemoOverlay: React.FC<GuidedDemoOverlayProps> = ({ step, onAdvanceTa
   const [rect, setRect] = useState<Rect | null>(null);
 
   const measure = useCallback(() => {
-    const el = document.querySelector(step.targetSelector) as HTMLElement | null;
-    if (!el) {
+    // querySelectorAll + union rect, not querySelector + single rect — a
+    // step's targetSelector can be a comma-separated list naming several
+    // independently-positioned elements (e.g. the For Parents + Badges
+    // pills, each `position: absolute` on their own, so a shared wrapper
+    // div can't be used to size around them) that should spotlight as one
+    // group. Selectors matching exactly one element behave exactly as
+    // before — this is a superset, not a behavior change for existing steps.
+    const els = document.querySelectorAll(step.targetSelector);
+    if (els.length === 0) {
       setRect(null);
       return;
     }
-    const r = el.getBoundingClientRect();
-    setRect({ x: r.left, y: r.top, width: r.width, height: r.height });
+    let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+    els.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      left = Math.min(left, r.left);
+      top = Math.min(top, r.top);
+      right = Math.max(right, r.right);
+      bottom = Math.max(bottom, r.bottom);
+    });
+    setRect({ x: left, y: top, width: right - left, height: bottom - top });
   }, [step.targetSelector]);
 
   // Poll continuously for the life of the step, rather than once — the
@@ -72,7 +86,25 @@ const GuidedDemoOverlay: React.FC<GuidedDemoOverlayProps> = ({ step, onAdvanceTa
     : null;
 
   // Callout placement: below the hole if there's room, otherwise above it.
+  // For a large target (e.g. the whole node path, spanning most of the
+  // screen), "below" and "above" can both run out of room — the old
+  // hole.y-relative math had no floor/ceiling, so the callout (and its
+  // "Got it" button) could render partly or fully off-screen and become
+  // untappable. VIEWPORT_MARGIN plus the CALLOUT_HEIGHT_ESTIMATE clamp below
+  // guarantee it always lands fully within the viewport, at the cost of not
+  // always sitting snugly against the hole for very large targets.
+  const VIEWPORT_MARGIN = 16;
+  const CALLOUT_HEIGHT_ESTIMATE = 220; // generous — message + "Got it" button
   const calloutBelow = hole ? hole.y + hole.height + 140 < window.innerHeight : true;
+  const calloutTop = hole
+    ? Math.max(
+        VIEWPORT_MARGIN,
+        Math.min(
+          calloutBelow ? hole.y + hole.height + 28 : hole.y - 28 - CALLOUT_HEIGHT_ESTIMATE,
+          window.innerHeight - CALLOUT_HEIGHT_ESTIMATE - VIEWPORT_MARGIN
+        )
+      )
+    : 0;
 
   return (
     <div className="guided-demo">
@@ -116,8 +148,7 @@ const GuidedDemoOverlay: React.FC<GuidedDemoOverlayProps> = ({ step, onAdvanceTa
             className={`guided-demo__callout ${calloutBelow ? "guided-demo__callout--below" : "guided-demo__callout--above"}`}
             style={{
               left: Math.min(Math.max(hole.x + hole.width / 2, 160), window.innerWidth - 160),
-              top: calloutBelow ? hole.y + hole.height + 28 : undefined,
-              bottom: calloutBelow ? undefined : window.innerHeight - hole.y + 28,
+              top: calloutTop,
             }}
           >
             <p className="guided-demo__message">{step.message}</p>
