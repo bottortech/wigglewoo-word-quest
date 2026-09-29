@@ -21,6 +21,7 @@ import {
   loadLessonMastery,
 } from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
+import { IS_EVENT_BUILD } from "../game/eventMode";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS, ADVANCED_QUEST_IDS } from "../game/questIds";
 import { loadCvccQuests, loadCvvcQuests, loadMagicEQuests, loadAdvancedQuests, areAllImageWordsComplete } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
@@ -148,8 +149,15 @@ function isPlacementUnlocked(tier: string): boolean {
 // "Coming soon" and locked regardless of placement / completion state.
 // Expand this set as Magic E / Vowel Teams / Advanced ship.
 // V1 ships CVC only. Blending Power (CVCC) is parked for the 1.1 update —
-// flip this back to ["CVC", "CVCC"] when re-enabling.
-const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(["CVC"]);
+// flip this back to ["CVC", "CVCC"] when re-enabling for real.
+//
+// Event-build exception: CVCC is opened for the Oct 10 ED Games Expo only
+// (see App.tsx's matching ww_placement_tiers clamp), to show off the
+// expanded vocabulary already in the game. Scoped to IS_EVENT_BUILD so the
+// real, release-ready main app stays CVC-only — this does not touch v1.0.
+const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(
+  IS_EVENT_BUILD ? ["CVC", "CVCC"] : ["CVC"]
+);
 
 function isTierShipped(tier: QuestType): boolean {
   return SHIPPED_TIERS.has(tier);

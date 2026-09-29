@@ -89,6 +89,16 @@ import { STAGE_DEMO_STEPS } from "./game/guidedDemoSteps";
 import type { GuidedDemoStep } from "./game/guidedDemoSteps";
 import { IS_EVENT_BUILD } from "./game/eventMode";
 import { getVersusWords } from "./versus/versusWords";
+import { CVCC_QUESTS } from "./game/wordData.cvcc";
+
+// Placement tiers this build ships. V1 ships CVC only — CVCC / Magic E /
+// Vowel Teams / Advanced stay parked for 1.1 (see docs/future-features/
+// v2-quest-tiers.md for the real blockers). Event-build exception: CVCC is
+// opened for the Oct 10 ED Games Expo only, to show off the expanded
+// vocabulary already in the game — scoped to IS_EVENT_BUILD so the real,
+// release-ready main app is untouched. Matches QuestMapScreen.tsx's
+// SHIPPED_TIERS, which gates the map UI side of the same decision.
+const SHIPPED_PLACEMENT_TIERS = IS_EVENT_BUILD ? ["CVC", "CVCC"] : ["CVC"];
 
 // Event build only (two-tablet Word-Tac-Toe demo). Guarded by the build-mode
 // constant, so in the standard and kiosk builds these branches — and the
@@ -184,12 +194,10 @@ export default function App() {
   // Resolve initial quest synchronously for CVC, null if chunk not loaded
   const resolvedInitial = getQuestById(globalProg.activeQuestId) ?? null;
 
-  // V1 ships CVC only. Blending Power (CVCC) is parked for 1.1 — clamp
-  // the placement tier list so stale localStorage from any prior build
-  // can't expose CVCC / Magic E / Vowel Teams / Advanced. When CVCC is
-  // re-enabled in 1.1, change this back to ["CVC", "CVCC"].
+  // Clamp the placement tier list to SHIPPED_PLACEMENT_TIERS so stale
+  // localStorage from any prior build can't expose an unshipped tier.
   useEffect(() => {
-    const expected = JSON.stringify(["CVC"]);
+    const expected = JSON.stringify(SHIPPED_PLACEMENT_TIERS);
     const tiers = localStorage.getItem("ww_placement_tiers");
     if (tiers !== expected) {
       localStorage.setItem("ww_placement_tiers", expected);
@@ -303,8 +311,7 @@ export default function App() {
   // ---- Onboarding complete → Map (first word of first quest) ----
   const handleOnboardingComplete = useCallback(() => {
     localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
-    // V1 ships CVC only — see App.tsx clamp above for the 1.1 path.
-    localStorage.setItem("ww_placement_tiers", JSON.stringify(["CVC"]));
+    localStorage.setItem("ww_placement_tiers", JSON.stringify(SHIPPED_PLACEMENT_TIERS));
     if (IS_KIOSK_BUILD) {
       // Wardrobe intro comes right after onboarding, before the map —
       // see handleCloseWardrobe for the continuation into "map".
@@ -1003,7 +1010,17 @@ export default function App() {
   // never makes a tablet forget where the relay is.
   const [eventMenuOpen, setEventMenuOpen] = useState(false);
   const [versusSound, setVersusSound] = useState(() => localStorage.getItem("ww_versus_sound") === "true");
-  const versusWords = useMemo(() => (IS_EVENT_BUILD ? getVersusWords() : []), []);
+  // Follows whichever quest is active on this tablet when the presenter
+  // taps "Play Word-Tac-Toe (versus)" — a CVCC quest active means the
+  // versus game showcases CVCC vocabulary instead of the default CVC pool.
+  // Each tablet decides this independently (the mover's own tablet builds
+  // every challenge locally — see WordTacToeVersusScreen's handleCellTap —
+  // so there's no need to reconcile two tablets that might have different
+  // quests active; whoever's turn it is just uses their own).
+  const versusWords = useMemo(
+    () => (IS_EVENT_BUILD ? getVersusWords(activeQuest?.patternType === "cvcc" ? CVCC_QUESTS : CVC_QUESTS) : []),
+    [activeQuest?.patternType]
+  );
   const handleVersusSoundChange = useCallback((on: boolean) => {
     setVersusSound(on);
     try { localStorage.setItem("ww_versus_sound", String(on)); } catch { /* non-fatal */ }

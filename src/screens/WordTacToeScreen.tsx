@@ -171,7 +171,11 @@ const WordTacToeScreen: React.FC<WordTacToeScreenProps> = ({ words, onComplete, 
 
   const startChallenge = useCallback((cellIndex: number) => {
     const word = nextWord();
-    const built = Math.random() < 0.5
+    // Decode-mode words have no picture by design (v2 tiers' advanced-reader
+    // words) — word-picture-match would show a picture that will never
+    // exist, so they always get the text-only challenge instead of the
+    // normal 50/50 coin flip.
+    const built = word.mode === "decode" || Math.random() < 0.5
       ? buildMissingLetterChallenge(word)
       : buildWordPictureChallenge(word, words);
     setActiveCell(cellIndex);

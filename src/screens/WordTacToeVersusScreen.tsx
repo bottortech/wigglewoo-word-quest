@@ -140,7 +140,17 @@ const WordTacToeVersusScreen: React.FC<Props> = ({ words, tabletSound = false })
     pendingRef.current = true;
     setTimeout(() => { pendingRef.current = false; }, 1200);
     const word = nextWord();
-    const built = Math.random() < 0.5 ? buildMissingLetterChallenge(word) : buildWordPictureChallenge(word, words);
+    // Decode-mode words have no picture by design (v2 tiers' advanced-reader
+    // words) — see the same guard in WordTacToeScreen.tsx's startChallenge.
+    // versusWords.ts's getVersusWords() already filters decode-mode words
+    // out of whichever tier's pool is in play (CVC or, when the tablet's
+    // active quest is CVCC, CVCC — see App.tsx), so this should never
+    // actually trigger in versus mode today; kept anyway as the same
+    // defense-in-depth as the single-player screen, in case that filter
+    // ever changes.
+    const built = word.mode === "decode" || Math.random() < 0.5
+      ? buildMissingLetterChallenge(word)
+      : buildWordPictureChallenge(word, words);
     const wire: WireChallenge = built.type === "missing-letter"
       ? { type: built.type, word: word.word, letters: word.letters, blankIndex: built.blankIndex, options: built.options, correctIndex: built.correctIndex }
       : { type: built.type, word: word.word, options: built.options, correctIndex: built.correctIndex };

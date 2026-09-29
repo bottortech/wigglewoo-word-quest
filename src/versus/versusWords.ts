@@ -1,16 +1,19 @@
 import { CVC_QUESTS } from "../game/wordData";
-import type { CvcWord } from "../game/types";
+import type { CvcWord, Quest } from "../game/types";
 
 /**
- * Challenge pool for the two-tablet versus game: every CVC quest's picture
- * words (so a demo mixes all five vowels, not just short-A). Only words the
- * relay's challenge format can represent are kept — a real picture on file and
- * one letter per phoneme, so the blank always lines up with the word.
+ * Challenge pool for the two-tablet versus game: every quest's picture words
+ * in the given tier (so a demo mixes all five vowels, not just short-A).
+ * Only words the relay's challenge format can represent are kept — a real
+ * picture on file and one letter per phoneme, so the blank always lines up
+ * with the word. Defaults to CVC_QUESTS; the event build's "follow the
+ * tablet's active quest" behavior (App.tsx) passes CVCC_QUESTS instead when
+ * a CVCC quest is active, reusing the exact same filtering.
  */
-export function getVersusWords(): CvcWord[] {
+export function getVersusWords(quests: Quest[] = CVC_QUESTS): CvcWord[] {
   const seen = new Set<string>();
   const out: CvcWord[] = [];
-  for (const quest of CVC_QUESTS) {
+  for (const quest of quests) {
     for (const w of quest.words) {
       if ((w.mode ?? "image") !== "image") continue;
       if (!/^[a-z]{1,16}$/.test(w.word)) continue;
