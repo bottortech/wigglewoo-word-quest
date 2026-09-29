@@ -102,12 +102,22 @@ import { CVCC_QUESTS } from "./game/wordData.cvcc";
 // in every build (see docs/future-features/v2-quest-tiers.md).
 const SHIPPED_PLACEMENT_TIERS = (IS_EVENT_BUILD || IS_KIOSK_BUILD) ? ["CVC", "CVCC"] : ["CVC"];
 
-// Event build only (two-tablet Word-Tac-Toe demo). Guarded by the build-mode
-// constant, so in the standard and kiosk builds these branches — and the
-// chunks behind them — are removed entirely at build time.
-const WordTacToeVersusScreen = IS_EVENT_BUILD ? lazy(() => import("./screens/WordTacToeVersusScreen")) : null;
-const EventMenu = IS_EVENT_BUILD ? lazy(() => import("./components/EventMenu")) : null;
-const EventMenuZone = IS_EVENT_BUILD ? lazy(() => import("./components/EventMenuZone")) : null;
+// Word-Tac-Toe versus is available in all three builds, but reached
+// differently:
+//   - Event / kiosk: the hidden presenter corner-tap menu (EventMenu),
+//     appropriate for a staffed event/kiosk session.
+//   - Standard build: a real, visible "Play with a Friend" entry point
+//     (PlayWithFriendScreen), since a random App Store family has no
+//     presenter and would never find a hidden triple-tap corner.
+// Every path still needs the exact same thing: a computer on the same
+// Wi-Fi running the relay (tools/event-relay) — none of this removes that
+// requirement, it only changes how a player reaches the join screen.
+const SUPPORTS_PRESENTER_MENU = IS_EVENT_BUILD || IS_KIOSK_BUILD;
+const IS_STANDARD_BUILD = !IS_EVENT_BUILD && !IS_KIOSK_BUILD;
+const WordTacToeVersusScreen = lazy(() => import("./screens/WordTacToeVersusScreen"));
+const EventMenu = SUPPORTS_PRESENTER_MENU ? lazy(() => import("./components/EventMenu")) : null;
+const EventMenuZone = SUPPORTS_PRESENTER_MENU ? lazy(() => import("./components/EventMenuZone")) : null;
+const PlayWithFriendScreen = IS_STANDARD_BUILD ? lazy(() => import("./screens/PlayWithFriendScreen")) : null;
 import OnboardingScreen from "./screens/OnboardingScreen";
 import PotionGameScreen from "./screens/PotionGameScreen";
 import WordTacToeScreen from "./screens/WordTacToeScreen";
@@ -115,7 +125,7 @@ import LetterGallery from "./components/handwriting/LetterGallery";
 import { resetPlacement } from "./game/placementTest";
 import type { Quest, VowelId } from "./game/types";
 
-type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges" | "word-tac-toe" | "versus";
+type Route = "home" | "onboarding" | "map" | "game" | "potion-game" | "trophy-room" | "trophy-room-view" | "insights" | "explore" | "discovery-room" | "wardrobe" | "cross-match" | "badges" | "word-tac-toe" | "versus" | "play-with-friend";
 
 const ONBOARDING_SEEN_KEY = "ww_onboarding_seen";
 /** Event build: set while this tablet is in the versus game, so a restarted app resumes it. */
@@ -212,7 +222,7 @@ export default function App() {
   // gets its seat back and the relay resends the board, so recovery is
   // instant instead of a trip through the presenter menu.
   const [route, setRoute] = useState<Route>(() =>
-    IS_EVENT_BUILD && localStorage.getItem(VERSUS_ACTIVE_KEY) === "true" ? "versus" : "home"
+    localStorage.getItem(VERSUS_ACTIVE_KEY) === "true" ? "versus" : "home"
   );
 
   // ---- Guided Demo (presenter/event walkthrough) ----
@@ -1011,7 +1021,15 @@ export default function App() {
   // keys, which handleDemoReset does not touch, so a reset between visitors
   // never makes a tablet forget where the relay is.
   const [eventMenuOpen, setEventMenuOpen] = useState(false);
-  const [versusSound, setVersusSound] = useState(() => localStorage.getItem("ww_versus_sound") === "true");
+  // Defaults off for event/kiosk (the laptop/big-screen already plays sound
+  // for the room — see EventMenu's checkbox), but on for the standard
+  // build, which has no EventMenu checkbox at all and no separate
+  // "room speaker" — the tablet itself is the only audio two kids playing
+  // together would have. An explicit prior choice (any build) always wins.
+  const [versusSound, setVersusSound] = useState(() => {
+    const saved = localStorage.getItem("ww_versus_sound");
+    return saved !== null ? saved === "true" : IS_STANDARD_BUILD;
+  });
   // Follows whichever quest is active on this tablet when the presenter
   // taps "Play Word-Tac-Toe (versus)" — a CVCC quest active means the
   // versus game showcases CVCC vocabulary instead of the default CVC pool.
@@ -1020,7 +1038,7 @@ export default function App() {
   // so there's no need to reconcile two tablets that might have different
   // quests active; whoever's turn it is just uses their own).
   const versusWords = useMemo(
-    () => (IS_EVENT_BUILD ? getVersusWords(activeQuest?.patternType === "cvcc" ? CVCC_QUESTS : CVC_QUESTS) : []),
+    () => getVersusWords(activeQuest?.patternType === "cvcc" ? CVCC_QUESTS : CVC_QUESTS),
     [activeQuest?.patternType]
   );
   const handleVersusSoundChange = useCallback((on: boolean) => {
@@ -1040,6 +1058,12 @@ export default function App() {
     try { localStorage.removeItem(VERSUS_ACTIVE_KEY); } catch { /* non-fatal */ }
     setRoute("map");
   }, []);
+  // Standard build only — the map's real, visible "Play with a Friend"
+  // entry point (PlayWithFriendScreen), instead of the event/kiosk builds'
+  // hidden presenter corner-tap menu. "Join the Game!" there reuses
+  // handlePlayVersus as-is: same VERSUS_ACTIVE_KEY bookkeeping, same route.
+  const handleOpenPlayWithFriend = useCallback(() => setRoute("play-with-friend"), []);
+  const handleBackFromPlayWithFriend = useCallback(() => setRoute("map"), []);
   const handleEventStartGuidedDemo = useCallback(() => {
     setEventMenuOpen(false);
     handleStartGuidedDemo();
@@ -1204,6 +1228,7 @@ export default function App() {
             onOpenInsights={handleOpenInsights}
             onOpenBadges={handleOpenBadges}
             onOpenWordTacToe={handleOpenWordTacToe}
+            onPlayWithFriend={IS_STANDARD_BUILD ? handleOpenPlayWithFriend : undefined}
             onExplore={handleExplore}
             onOpenWardrobe={handleOpenWardrobe}
             hasNewSkin={hasNewSkin}
@@ -1286,10 +1311,18 @@ export default function App() {
         </ScreenGate>
       )}
 
-      {IS_EVENT_BUILD && WordTacToeVersusScreen && route === "versus" && (
+      {route === "versus" && (
         <ScreenGate>
           <Suspense fallback={null}>
             <WordTacToeVersusScreen words={versusWords} tabletSound={versusSound} />
+          </Suspense>
+        </ScreenGate>
+      )}
+
+      {IS_STANDARD_BUILD && PlayWithFriendScreen && route === "play-with-friend" && (
+        <ScreenGate>
+          <Suspense fallback={null}>
+            <PlayWithFriendScreen onBack={handleBackFromPlayWithFriend} onJoin={handlePlayVersus} />
           </Suspense>
         </ScreenGate>
       )}
@@ -1397,12 +1430,12 @@ export default function App() {
       )}
 
       <DemoResetZone onReset={handleDemoReset} />
-      {IS_EVENT_BUILD && EventMenuZone ? (
+      {SUPPORTS_PRESENTER_MENU && EventMenuZone ? (
         <Suspense fallback={null}><EventMenuZone onOpen={handleOpenEventMenu} /></Suspense>
       ) : (
         <GuidedDemoStartZone onStart={handleStartGuidedDemo} />
       )}
-      {IS_EVENT_BUILD && EventMenu && eventMenuOpen && (
+      {SUPPORTS_PRESENTER_MENU && EventMenu && eventMenuOpen && (
         <Suspense fallback={null}>
           <EventMenu
             inVersus={route === "versus"}

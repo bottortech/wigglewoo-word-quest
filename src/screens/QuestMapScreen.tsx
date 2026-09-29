@@ -353,6 +353,11 @@ interface QuestMapScreenProps {
   onOpenBadges?: () => void;
   /** Opens the Word-Tac-Toe mini-game. */
   onOpenWordTacToe?: () => void;
+  /** Standard build only (undefined elsewhere) — opens PlayWithFriendScreen,
+   *  the real, visible entry point to Word-Tac-Toe versus for a family with
+   *  no presenter menu. Still needs a computer on the same Wi-Fi running
+   *  the relay; this just gives a real player a real way to reach it. */
+  onPlayWithFriend?: () => void;
   onExplore?: (envId: string) => void;
   onOpenWardrobe?: () => void;
   hasNewSkin?: boolean;
@@ -409,6 +414,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   onOpenInsights,
   onOpenBadges,
   onOpenWordTacToe,
+  onPlayWithFriend,
   onExplore,
 
   onOpenWardrobe,
@@ -1512,6 +1518,19 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             )}
             {showWttUnlockAnim && <LockBreakEffect onDone={handleWttUnlockAnimDone} />}
           </button>
+          {/* Standard build only — versus mode still needs a computer on the
+              same Wi-Fi running the relay, so this is a secondary/optional
+              pill next to the always-working single-player button, not
+              styled to compete with it. */}
+          {onPlayWithFriend && isWttUnlocked && (
+            <button
+              className="play-with-friend-btn"
+              onClick={onPlayWithFriend}
+              aria-label="Play Word-Tac-Toe with a friend on another tablet"
+            >
+              👥 Play with a Friend
+            </button>
+          )}
         </div>
       )}
 

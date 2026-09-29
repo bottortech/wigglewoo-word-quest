@@ -1799,12 +1799,22 @@
      viewport size. */
   width: clamp(100px, calc(120px * var(--umin)), 136px);
   z-index: 199;
+  /* Column layout so the optional "Play with a Friend" pill (standard
+     build only) can sit below the main logo button without needing its
+     own separately-anchored position — not yet visually verified on a
+     real device, may need a follow-up pass once someone can look at it. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4px, calc(6px * var(--umin)), 8px);
 }
 
 .word-tac-toe-btn {
   position: relative;
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1831,6 +1841,29 @@
   filter: drop-shadow(0 clamp(4px, calc(5px * var(--umin)), 7px) clamp(8px, calc(10px * var(--umin)), 14px) rgba(0, 0, 0, 0.35));
   pointer-events: none;
 }
+
+/* Standard-build-only secondary entry point, sitting below the main WTT
+   logo button in the same wrap — deliberately smaller/plainer than the
+   logo button so it reads as an optional extra, not a competing primary
+   action (versus mode needs a computer running the relay nearby; single-
+   player always just works). */
+.play-with-friend-btn {
+  flex: none;
+  width: 100%;
+  min-height: 0;
+  border: none;
+  border-radius: 999px;
+  padding: clamp(4px, calc(5px * var(--umin)), 7px) 4px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: clamp(9px, calc(10px * var(--umin)), 11px);
+  font-weight: 800;
+  color: #2e6f67;
+  background: #dceeec;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.play-with-friend-btn:active { transform: scale(0.96); }
 
 /* Locked state — dimmed/desaturated art plus a visible lock badge, so it
    reads as "coming soon" rather than broken. No hover/active scale while

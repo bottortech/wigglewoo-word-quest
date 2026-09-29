@@ -8,8 +8,8 @@
 // reset for the next visitor.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { callRelayAdmin, findRelay, loadRelayAddress, parseRelayAddress, probeRelay, saveRelayAddress } from "../versus/relayAddress";
-import type { RelayInfo } from "../versus/relayAddress";
+import { callRelayAdmin, parseRelayAddress } from "../versus/relayAddress";
+import { useRelayFinder } from "../versus/useRelayFinder";
 import "./EventMenu.css";
 
 interface EventMenuProps {
@@ -27,46 +27,15 @@ interface EventMenuProps {
   onClose: () => void;
 }
 
-type Probe =
-  | { kind: "idle" }
-  | { kind: "checking" }
-  | { kind: "ok"; host: string; info: RelayInfo }
-  | { kind: "none" }
-  | { kind: "invalid" };
-
 const seatWord = (ready: boolean) => (ready ? "ready" : "waiting");
 
 export default function EventMenu(props: EventMenuProps) {
-  const [addr, setAddr] = useState(() => loadRelayAddress() ?? "");
-  const [probe, setProbe] = useState<Probe>(() => (loadRelayAddress() ? { kind: "checking" } : { kind: "idle" }));
+  const { addr, setAddr, probe, findGame } = useRelayFinder();
   const [confirmReset, setConfirmReset] = useState(false);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [nextPair, setNextPair] = useState<"idle" | "sending" | "done" | "failed">("idle");
 
-  // Check the saved address as soon as the menu opens.
-  useEffect(() => {
-    const saved = loadRelayAddress();
-    if (!saved) return;
-    let dead = false;
-    probeRelay(saved).then((info) => {
-      if (!dead) setProbe(info ? { kind: "ok", host: saved, info } : { kind: "none" });
-    });
-    return () => { dead = true; };
-  }, []);
-
   useEffect(() => () => { if (resetTimer.current) clearTimeout(resetTimer.current); }, []);
-
-  const findGame = useCallback(async () => {
-    const parsed = parseRelayAddress(addr);
-    if (!parsed) { setProbe({ kind: "invalid" }); return; }
-    setProbe({ kind: "checking" });
-    const host = await findRelay(parsed.host, { port: parsed.port });
-    if (!host) { setProbe({ kind: "none" }); return; }
-    saveRelayAddress(host);
-    setAddr(host);
-    const info = await probeRelay(host, parsed.port);
-    setProbe(info ? { kind: "ok", host, info } : { kind: "none" });
-  }, [addr]);
 
   // Low-stakes on purpose: this only zeroes the shared versus game (both
   // tablets return to the lobby, ready for a new pair of volunteers) — it
