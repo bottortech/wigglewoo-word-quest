@@ -371,6 +371,22 @@ interface QuestMapScreenProps {
    *  visitor tapped a vowel tab" even when the default tab was already
    *  active. Real quest selection is unaffected. */
   onVowelTabTap?: () => void;
+  /** Set to "types" for the one render where the guided tour's
+   *  "map-overview" step becomes active, then "vowels" once the tour moves
+   *  past it. The quest-type box defaults to `questBoxView: "vowels"`
+   *  (whichever quest type is currently selected, e.g. "Sound Builders") —
+   *  real, ordinary behavior for any returning player, not tour-specific.
+   *  But "map-overview"'s narration ("five sound families...") describes
+   *  the top-level type list, so this nudges the box to that list just for
+   *  the tour's own arrival — the same way starting a tour also
+   *  force-closes a stale-open wardrobe — then explicitly back to "vowels"
+   *  on the very next step in either list ("stage-wardrobe-open" for the
+   *  stage preset, "vowel-choice" for the full tour), well before either
+   *  reaches a step targeting [data-tour-id="vowel-tab"] ("progress-rewards"
+   *  or "vowel-choice" itself), which only renders in that view. Doesn't
+   *  stop the presenter drilling into a type themselves mid-tour — each
+   *  value only applies once, on its own transition. */
+  questBoxViewOverride?: "types" | "vowels";
 }
 
 const QuestMapInner: React.FC<QuestMapScreenProps> = ({
@@ -397,6 +413,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   onVowelUnlockAnimationDone,
   guidedDemoActive = false,
   onVowelTabTap,
+  questBoxViewOverride,
 }) => {
   void _challengeMode; void _onToggleChallengeMode;
 
@@ -651,6 +668,16 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     () => questTypeFromPattern(quest.patternType)
   );
   const [questBoxView, setQuestBoxView] = useState<"types" | "vowels">("vowels");
+
+  // See `questBoxViewOverride` doc comment above — nudges the box to match
+  // whichever tour step is currently narrating it: the top-level type list
+  // for "map-overview", then back to the vowels view (its normal default)
+  // once the tour moves on, so the later "progress-rewards" step's
+  // [data-tour-id="vowel-tab"] target — only rendered in the vowels view —
+  // is there again by the time the tour reaches it.
+  useEffect(() => {
+    if (questBoxViewOverride) setQuestBoxView(questBoxViewOverride);
+  }, [questBoxViewOverride]);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [unlockModalType, setUnlockModalType] = useState<QuestType | null>(null);
   const activeVowelId = quest.id;

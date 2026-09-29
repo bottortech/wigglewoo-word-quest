@@ -1194,6 +1194,13 @@ export default function App() {
             onVowelUnlockAnimationDone={() => setJustUnlockedVowelId(null)}
             guidedDemoActive={guidedDemo.state.active}
             onVowelTabTap={handleGuidedDemoVowelTap}
+            questBoxViewOverride={
+              guidedDemoStepId === "map-overview"
+                ? "types"
+                : guidedDemoStepId === "stage-wardrobe-open" || guidedDemoStepId === "vowel-choice"
+                ? "vowels"
+                : undefined
+            }
           />
         </ScreenGate>
       )}
