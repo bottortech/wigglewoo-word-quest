@@ -91,14 +91,16 @@ import { IS_EVENT_BUILD } from "./game/eventMode";
 import { getVersusWords } from "./versus/versusWords";
 import { CVCC_QUESTS } from "./game/wordData.cvcc";
 
-// Placement tiers this build ships. V1 ships CVC only — CVCC / Magic E /
-// Vowel Teams / Advanced stay parked for 1.1 (see docs/future-features/
-// v2-quest-tiers.md for the real blockers). Event-build exception: CVCC is
-// opened for the Oct 10 ED Games Expo only, to show off the expanded
-// vocabulary already in the game — scoped to IS_EVENT_BUILD so the real,
-// release-ready main app is untouched. Matches QuestMapScreen.tsx's
-// SHIPPED_TIERS, which gates the map UI side of the same decision.
-const SHIPPED_PLACEMENT_TIERS = IS_EVENT_BUILD ? ["CVC", "CVCC"] : ["CVC"];
+// Placement-based EARLY unlock for CVCC — bypasses the normal "complete all
+// CVC quests first" gate (see QuestMapScreen.tsx's getQuestTypeLockState).
+// Kiosk and event builds get it immediately: a child already past CVC
+// shouldn't have to grind a full CVC playthrough in one short kiosk/event
+// session just to reach it. The main app does NOT get this bypass — CVCC is
+// shipped there too (SHIPPED_TIERS includes it in all three builds now),
+// but stays genuinely locked until areAllQuestsComplete(CVC), same as any
+// other earned tier. Magic E / Vowel Teams / Advanced stay parked for 1.1
+// in every build (see docs/future-features/v2-quest-tiers.md).
+const SHIPPED_PLACEMENT_TIERS = (IS_EVENT_BUILD || IS_KIOSK_BUILD) ? ["CVC", "CVCC"] : ["CVC"];
 
 // Event build only (two-tablet Word-Tac-Toe demo). Guarded by the build-mode
 // constant, so in the standard and kiosk builds these branches — and the

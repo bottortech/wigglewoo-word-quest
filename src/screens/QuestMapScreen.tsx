@@ -21,7 +21,6 @@ import {
   loadLessonMastery,
 } from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
-import { IS_EVENT_BUILD } from "../game/eventMode";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS, ADVANCED_QUEST_IDS } from "../game/questIds";
 import { loadCvccQuests, loadCvvcQuests, loadMagicEQuests, loadAdvancedQuests, areAllImageWordsComplete } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
@@ -148,16 +147,17 @@ function isPlacementUnlocked(tier: string): boolean {
 // Tiers that ship in this release. Everything else is shown as
 // "Coming soon" and locked regardless of placement / completion state.
 // Expand this set as Magic E / Vowel Teams / Advanced ship.
-// V1 ships CVC only. Blending Power (CVCC) is parked for the 1.1 update —
-// flip this back to ["CVC", "CVCC"] when re-enabling for real.
 //
-// Event-build exception: CVCC is opened for the Oct 10 ED Games Expo only
-// (see App.tsx's matching ww_placement_tiers clamp), to show off the
-// expanded vocabulary already in the game. Scoped to IS_EVENT_BUILD so the
-// real, release-ready main app stays CVC-only — this does not touch v1.0.
-const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(
-  IS_EVENT_BUILD ? ["CVC", "CVCC"] : ["CVC"]
-);
+// CVCC ships in all three builds, but its real UNLOCK state (see
+// getQuestTypeLockState below) differs by build:
+//   - Main app: genuinely locked until areAllQuestsComplete(CVC) — no
+//     bypass, matches the "shipped but earned" behavior every other tier
+//     already has. This is real v1.0 content, not a Coming Soon placeholder.
+//   - Kiosk / event builds: bypassed immediately via the matching
+//     ww_placement_tiers clamp in App.tsx (SHIPPED_PLACEMENT_TIERS), so a
+//     child already past CVC can explore it in one short kiosk/event
+//     session without grinding all of CVC first.
+const SHIPPED_TIERS: ReadonlySet<QuestType> = new Set<QuestType>(["CVC", "CVCC"]);
 
 function isTierShipped(tier: QuestType): boolean {
   return SHIPPED_TIERS.has(tier);
