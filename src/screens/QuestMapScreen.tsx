@@ -21,6 +21,7 @@ import {
   loadLessonMastery,
 } from "../game/progression";
 import { getActiveSkinAssets } from "../game/skins";
+import { IS_EVENT_BUILD } from "../game/eventMode";
 import { CVC_QUEST_IDS, CVCC_QUEST_IDS, MAGIC_E_QUEST_IDS, CVVC_QUEST_IDS, ADVANCED_QUEST_IDS } from "../game/questIds";
 import { loadCvccQuests, loadCvvcQuests, loadMagicEQuests, loadAdvancedQuests, areAllImageWordsComplete } from "../game/wordData";
 import heroImg from "../assets/wiggle_woo_hero_stance.png";
@@ -717,6 +718,9 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
   // Reuses existing trophy-tier progress (no new win counter): a quest
   // reaches tier "full" at the same point its Phase 2 Trophy is awarded.
   // devUnlock bypasses this exactly like every other gate on this screen.
+  // Event build also bypasses it — Oct 3rd walk-up event, kids should be
+  // able to freely try Word-Tac-Toe (solo or versus) without needing to
+  // grind 2 full quests first. Main app's real gate is untouched.
   // =============================================
   const wttFullQuestCount = useMemo(
     () => CVC_QUEST_IDS.filter((id) => loadTrophyProgress(id).tier === "full").length,
@@ -727,7 +731,7 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     [quest.id]
   );
   const isWttProgressUnlocked = wttFullQuestCount >= 2;
-  const isWttUnlocked = devUnlock || guidedDemoActive || isWttProgressUnlocked;
+  const isWttUnlocked = devUnlock || guidedDemoActive || isWttProgressUnlocked || IS_EVENT_BUILD;
 
   // One-time reveal: the first time this screen renders with the real
   // progress gate satisfied (regardless of how the player got here), play

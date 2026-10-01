@@ -88,7 +88,7 @@ import { useGuidedDemo } from "./hooks/useGuidedDemo";
 import { STAGE_DEMO_STEPS } from "./game/guidedDemoSteps";
 import type { GuidedDemoStep } from "./game/guidedDemoSteps";
 import { IS_EVENT_BUILD } from "./game/eventMode";
-import { getVersusWords } from "./versus/versusWords";
+import { getVersusWords, getFreeExploreWttWords } from "./versus/versusWords";
 import { CVCC_QUESTS } from "./game/wordData.cvcc";
 
 // Placement-based EARLY unlock for CVCC — bypasses the normal "complete all
@@ -104,20 +104,25 @@ const SHIPPED_PLACEMENT_TIERS = (IS_EVENT_BUILD || IS_KIOSK_BUILD) ? ["CVC", "CV
 
 // Word-Tac-Toe versus is available in all three builds, but reached
 // differently:
-//   - Event / kiosk: the hidden presenter corner-tap menu (EventMenu),
-//     appropriate for a staffed event/kiosk session.
-//   - Standard build: a real, visible "Play with a Friend" entry point
-//     (PlayWithFriendScreen), since a random App Store family has no
-//     presenter and would never find a hidden triple-tap corner.
+//   - Kiosk: only the hidden presenter corner-tap menu (EventMenu) —
+//     appropriate for a staffed kiosk session, kids don't self-serve it.
+//   - Event: BOTH the hidden presenter menu (so the presenter can still set
+//     up/verify the relay address once) AND the real "Play with a Friend"
+//     entry point on the map — kids at a walk-up event (e.g. Oct 3rd) can
+//     freely choose solo Word-Tac-Toe or versus themselves, without needing
+//     the presenter to manually seat every pair.
+//   - Standard build: "Play with a Friend" only, no hidden menu — a random
+//     App Store family would never find a hidden triple-tap corner.
 // Every path still needs the exact same thing: a computer on the same
 // Wi-Fi running the relay (tools/event-relay) — none of this removes that
 // requirement, it only changes how a player reaches the join screen.
 const SUPPORTS_PRESENTER_MENU = IS_EVENT_BUILD || IS_KIOSK_BUILD;
+const SUPPORTS_PLAY_WITH_FRIEND_SCREEN = IS_EVENT_BUILD || !IS_KIOSK_BUILD;
 const IS_STANDARD_BUILD = !IS_EVENT_BUILD && !IS_KIOSK_BUILD;
 const WordTacToeVersusScreen = lazy(() => import("./screens/WordTacToeVersusScreen"));
 const EventMenu = SUPPORTS_PRESENTER_MENU ? lazy(() => import("./components/EventMenu")) : null;
 const EventMenuZone = SUPPORTS_PRESENTER_MENU ? lazy(() => import("./components/EventMenuZone")) : null;
-const PlayWithFriendScreen = IS_STANDARD_BUILD ? lazy(() => import("./screens/PlayWithFriendScreen")) : null;
+const PlayWithFriendScreen = SUPPORTS_PLAY_WITH_FRIEND_SCREEN ? lazy(() => import("./screens/PlayWithFriendScreen")) : null;
 import OnboardingScreen from "./screens/OnboardingScreen";
 import PotionGameScreen from "./screens/PotionGameScreen";
 import WordTacToeScreen from "./screens/WordTacToeScreen";
@@ -1041,6 +1046,15 @@ export default function App() {
     () => getVersusWords(activeQuest?.patternType === "cvcc" ? CVCC_QUESTS : CVC_QUESTS),
     [activeQuest?.patternType]
   );
+  // Single-player Word-Tac-Toe's own word pool. Event build (Oct 3rd walk-up
+  // event): mixes CVC + CVCC for variety, filtered to words with real
+  // voice-over audio — see getFreeExploreWttWords's own doc comment. Main
+  // and kiosk builds are unaffected, same as always: whichever one
+  // quest/vowel is currently active.
+  const wttWords = useMemo(
+    () => (IS_EVENT_BUILD ? getFreeExploreWttWords([...CVC_QUESTS, ...CVCC_QUESTS]) : activeQuest?.words ?? []),
+    [activeQuest]
+  );
   const handleVersusSoundChange = useCallback((on: boolean) => {
     setVersusSound(on);
     try { localStorage.setItem("ww_versus_sound", String(on)); } catch { /* non-fatal */ }
@@ -1228,7 +1242,7 @@ export default function App() {
             onOpenInsights={handleOpenInsights}
             onOpenBadges={handleOpenBadges}
             onOpenWordTacToe={handleOpenWordTacToe}
-            onPlayWithFriend={IS_STANDARD_BUILD ? handleOpenPlayWithFriend : undefined}
+            onPlayWithFriend={SUPPORTS_PLAY_WITH_FRIEND_SCREEN ? handleOpenPlayWithFriend : undefined}
             onExplore={handleExplore}
             onOpenWardrobe={handleOpenWardrobe}
             hasNewSkin={hasNewSkin}
@@ -1319,7 +1333,7 @@ export default function App() {
         </ScreenGate>
       )}
 
-      {IS_STANDARD_BUILD && PlayWithFriendScreen && route === "play-with-friend" && (
+      {SUPPORTS_PLAY_WITH_FRIEND_SCREEN && PlayWithFriendScreen && route === "play-with-friend" && (
         <ScreenGate>
           <Suspense fallback={null}>
             <PlayWithFriendScreen onBack={handleBackFromPlayWithFriend} onJoin={handlePlayVersus} />
@@ -1331,7 +1345,7 @@ export default function App() {
         <ScreenGate>
           <WordTacToeScreen
             key={`wtt-${activeQuest.id}-${mainWordTacToeCheckpoint ?? (kioskWordTacToeActive ? "kiosk" : "open")}`}
-            words={activeQuest.words}
+            words={wttWords}
             onComplete={
               kioskWordTacToeActive ? handleWordTacToeComplete
                 : mainWordTacToeCheckpoint !== null ? handleMainWordTacToeCheckpointComplete
