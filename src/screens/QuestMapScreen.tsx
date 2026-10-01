@@ -1284,7 +1284,10 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
           // that rather than being a new, narrower special case. Real
           // unlock progress is untouched; this is display + click-through
           // only, and reverts the moment guidedDemoActive goes false.
-          const unlocked = guidedDemoActive || isEnvironmentUnlocked(room.envId);
+          // Event build: same bypass, but always on (not tour-gated) — Oct
+          // 3rd walk-up kids should be able to freely click into any
+          // Discovery Room, not just explore it during a scripted tour.
+          const unlocked = guidedDemoActive || IS_EVENT_BUILD || isEnvironmentUnlocked(room.envId);
           return (
             <button
               key={room.envId}
@@ -1409,7 +1412,11 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
             <div className="word-quest-box__vowels">
               {QUEST_CATALOG[selectedQuestType].tracks.map((track) => {
                 const isActive = activeVowelId === track.id;
-                const isUnlocked = devUnlock || isVowelUnlocked(track.id);
+                // Event build: all vowel tracks within a tier open at once,
+                // not just sequentially as the previous one is half-done —
+                // Oct 3rd walk-up kids should be able to freely jump to any
+                // vowel. Main app's real sequential unlock is untouched.
+                const isUnlocked = devUnlock || IS_EVENT_BUILD || isVowelUnlocked(track.id);
                 // Phase C: 4 mini-stars showing lesson-mastery state for
                 // this quest — kid + parent can see at a glance how many
                 // skill badges have been earned on this vowel without
