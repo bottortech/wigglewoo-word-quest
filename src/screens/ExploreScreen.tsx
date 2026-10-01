@@ -41,6 +41,7 @@ import TraceMoment from "../components/handwriting/TraceMoment";
 import { LETTER_PATHS } from "../components/handwriting/letterPaths";
 import { useTraceValidator } from "../components/handwriting/useTraceValidator";
 import { IS_KIOSK_BUILD } from "../game/kioskMode";
+import { IS_EVENT_BUILD } from "../game/eventMode";
 import "../styles/explore.css";
 
 // =============================================
@@ -309,7 +310,12 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
   // member/parent taps Next Player — see triggerRoomComplete below.
   const [kioskTurnComplete, setKioskTurnComplete] = useState(false);
   const FACTS_REQUIRED = 2;
-  const needsCompletion = !!onComplete && !isRoomAlreadyComplete;
+  // Event build: never "complete" the room — no forced celebration, no
+  // auto-exit after 2 facts, no ww_room_complete_<envId> bookkeeping. Oct
+  // 3rd walk-up kids should be able to wander in and out of any room
+  // freely, as many times as they like, with nothing to reset between one
+  // child and the next. Main/kiosk behavior is untouched.
+  const needsCompletion = !!onComplete && !isRoomAlreadyComplete && !IS_EVENT_BUILD;
 
   // The fact whose narration finishing should trigger discover-complete
   // (instead of the usual fact-reaction). Captured the moment the kid views
@@ -626,11 +632,16 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
     // underway, so further taps shouldn't open more fact panels on top of it.
     if (roomJustCompleted) return;
 
-    // Check daily cap (skip in dev). The cap is also lifted once any quest
-    // tied to this environment is fully complete — kids who finished the
-    // content shouldn't be told to come back tomorrow for two more facts.
+    // Check daily cap (skip in dev, and on the event build — this cap is
+    // per-device via localStorage, not per-child; on a shared event tablet
+    // the first few kids of the day would exhaust it in minutes, then every
+    // kid after that would be blocked until midnight). The cap is also
+    // lifted once any quest tied to this environment is fully complete —
+    // kids who finished the content shouldn't be told to come back
+    // tomorrow for two more facts.
     if (
       !import.meta.env.DEV &&
+      !IS_EVENT_BUILD &&
       isDailyFactCapReached(environmentId) &&
       !isEnvironmentVowelMastered(environmentId)
     ) {
