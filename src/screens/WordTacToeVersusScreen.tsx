@@ -199,9 +199,33 @@ const WordTacToeVersusScreen: React.FC<Props> = ({ words, tabletSound = false })
   const c = vs.challenge;
   const mine = !!c && c.seat === seat;
   const oppName = oppSeat?.name ?? `Player ${opp}`;
+  const over = vs.phase === "over";
+  const winnerMark = vs.result?.winner ?? null;
+  const winnerName = winnerMark ? (vs.seats[winnerMark]?.name ?? `Player ${winnerMark}`) : null;
 
   let panel: React.ReactNode;
-  if (vs.phase === "lobby") {
+  if (over) {
+    // Same board-stays-visible, side-panel layout as every other state on
+    // this screen (challenge, correct/wrong, idle) — matches the big
+    // screen's own win display (mascot + name + "Three in a row!"), just
+    // with Play Again right here instead of "tap your tablet." No full-
+    // screen takeover: the board (with its winning-line highlight, see
+    // wttv__cell--win below) stays fully visible the whole time.
+    panel = (
+      <div className="wtt__panel-result">
+        {winnerMark ? (
+          <>
+            <img src={MARK_ASSET[winnerMark]} alt="" className="wtt__panel-result-mascot" draggable={false} />
+            <span className="wtt__panel-result-name">{winnerName} wins!</span>
+            <span className="wtt__panel-result-sub">Three in a row! ⭐</span>
+          </>
+        ) : (
+          <span className="wtt__panel-result-name">It's a tie!</span>
+        )}
+        <button className="wttv__again-btn wttv__again-btn--panel" onClick={handlePlayAgain}>Play Again!</button>
+      </div>
+    );
+  } else if (vs.phase === "lobby") {
     panel = (
       <div className="wtt__panel-idle">
         <img src={MARK_ASSET[seat]} alt="" className="wtt__panel-idle-mascot" draggable={false} />
@@ -273,11 +297,6 @@ const WordTacToeVersusScreen: React.FC<Props> = ({ words, tabletSound = false })
     );
   }
 
-  const over = vs.phase === "over";
-  const won = over && vs.result?.winner === seat;
-  const tie = over && vs.result?.winner === null;
-  const resultText = won ? "🌟 You got three in a row! 🌟" : tie ? "It's a tie — great game!" : `${oppName} got three in a row!\nGreat try!`;
-
   return (
     <div className="wtt wttv">
       <div className="wttv__bar">
@@ -315,15 +334,8 @@ const WordTacToeVersusScreen: React.FC<Props> = ({ words, tabletSound = false })
             </div>
           </div>
         </div>
-        <div className={`wtt__panel${myTurn && !c ? " wttv__panel--go" : ""}`}>{panel}</div>
+        <div className={`wtt__panel${myTurn && !c ? " wttv__panel--go" : ""}`} aria-live={over ? "polite" : undefined}>{panel}</div>
       </div>
-
-      {over && (
-        <div className="wtt__celebration" aria-live="polite">
-          <span className="wtt__celebration-text wttv-multiline">{resultText}</span>
-          <button className="wttv__again-btn" onClick={handlePlayAgain}>Play Again!</button>
-        </div>
-      )}
     </div>
   );
 };

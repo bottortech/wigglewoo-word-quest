@@ -88,6 +88,48 @@
 }
 .wttv__again-btn:active { transform: translateY(calc(3px * var(--uv))) scale(0.97); }
 
+/* ---- Game-over state — lives in the same side panel as everything else
+   (idle/challenge/correct/wrong), never a full-screen overlay, so the
+   board (and its winning-line highlight above) stays fully visible the
+   whole time. Sized to fit comfortably inside .wtt__panel's ~42%-width
+   column rather than the full-screen button above. */
+.wtt__panel-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(10px * var(--uv));
+  animation: wtt-panel-pop 0.25s ease-out;
+}
+
+.wtt__panel-result-mascot {
+  width: calc(100px * var(--u));
+  height: auto;
+  filter: drop-shadow(0 calc(4px * var(--u)) calc(10px * var(--u)) rgba(0, 0, 0, 0.22));
+  animation: wtt-cta-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.wtt__panel-result-name {
+  font-size: calc(22px * var(--u));
+  font-weight: 900;
+  color: #3E2723;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.wtt__panel-result-sub {
+  font-size: calc(16px * var(--u));
+  font-weight: 800;
+  color: #2E6F67;
+  text-align: center;
+}
+
+.wttv__again-btn--panel {
+  margin-top: calc(4px * var(--uv));
+  padding: calc(10px * var(--uv)) calc(28px * var(--u));
+  font-size: calc(18px * var(--u));
+  animation-delay: 0.25s;
+}
+
 /* ---- full-screen waiting / not-connected states ---- */
 .wttv-wait {
   flex: 1;
