@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Game, LINES, checkWinner, sanitizeChallenge } from "../game.mjs";
+import { Game, LINES, HINT_AFTER_WRONG, checkWinner, sanitizeChallenge } from "../game.mjs";
 
 const seq = (values) => { let i = 0; return () => values[i++ % values.length]; };
 
@@ -105,30 +105,44 @@ test("a correct answer holds the mark until resolveCorrect, then passes the turn
   assert.equal(g.state.turn, "O");
 });
 
-test("a wrong answer holds the miss until resolveWrong, then passes the turn without placing a mark", () => {
+test("a wrong answer never costs the turn — the same challenge stays open for a retry", () => {
   const g = started();
   g.submitChallenge("a", { cell: 4, challenge: letterChallenge() });
   const r = g.answer("a", 0);
   assert.deepEqual([r.ok, r.correct], [true, false]);
   assert.equal(g.state.turn, "X");
-  assert.equal(g.state.challenge.status, "wrong");
+  assert.equal(g.state.challenge.status, "open");
   assert.equal(g.state.challenge.wrongIndex, 0);
   assert.equal(g.state.challenge.wrongN, 1);
   assert.equal(g.state.board[4], null);
-  g.resolveWrong(r.challengeId);
-  assert.equal(g.state.challenge, null);
-  assert.equal(g.state.turn, "O");
-  assert.equal(g.state.board[4], null); // cell never claimed, still open for either player
+  // the same challenge takes a retry — no need to re-submit
+  const r2 = g.answer("a", 1);
+  assert.deepEqual([r2.ok, r2.correct], [true, true]);
+  assert.equal(g.state.challenge.status, "correct");
 });
 
-test("one wrong tap ends the turn — there is no retry on the same challenge", () => {
-  const g = started();
-  g.submitChallenge("a", { cell: 4, challenge: letterChallenge() });
+test(`hints: from the ${HINT_AFTER_WRONG}nd miss on, each miss removes one wrong option; the answer is never removed`, () => {
+  const g = started({ rng: seq([0, 0]) });
+  g.submitChallenge("a", { cell: 4, challenge: letterChallenge({ options: ["o", "a", "u"], correctIndex: 1 }) });
+  g.answer("a", 0); // 1st miss — no hint yet
+  assert.deepEqual(g.state.challenge.eliminated, []);
+  g.answer("a", 2); // 2nd miss — hint eliminates one wrong option
+  assert.equal(g.state.challenge.eliminated.length, 1);
+  assert.notEqual(g.state.challenge.eliminated[0], g.state.challenge.correctIndex);
+  // retry with the correct answer still resolves normally
+  const r = g.answer("a", g.state.challenge.correctIndex);
+  assert.deepEqual([r.ok, r.correct], [true, true]);
+});
+
+test("an eliminated option can't be tapped again, and the challenge never auto-resolves", () => {
+  const g = started({ rng: seq([0]) });
+  g.submitChallenge("a", { cell: 4, challenge: letterChallenge({ options: ["o", "a", "u"], correctIndex: 1 }) });
   g.answer("a", 0);
-  // The challenge is held (status "wrong") for the relay's WRONG_MS pause,
-  // not reopened — a second answer attempt on it is rejected, same as
-  // trying to answer again after a correct guess.
-  assert.equal(g.answer("a", 1).error, "no-challenge");
+  g.answer("a", 2);
+  const gone = g.state.challenge.eliminated[0];
+  assert.equal(g.answer("a", gone).error, "bad-option");
+  assert.equal(g.state.challenge.status, "open");
+  assert.equal(g.state.board[4], null);
 });
 
 test("malformed challenges are rejected", () => {

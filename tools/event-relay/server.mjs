@@ -23,7 +23,7 @@ import path from "node:path";
 import os from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { WebSocketServer } from "ws";
-import { Game, CORRECT_MS, WRONG_MS, PROTOCOL_VERSION } from "./game.mjs";
+import { Game, CORRECT_MS, PROTOCOL_VERSION } from "./game.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_REPO = path.resolve(__dirname, "..", "..");
@@ -240,11 +240,9 @@ export async function createRelay({
         after(CORRECT_MS, () => {
           if (game.resolveCorrect(r.challengeId).ok) broadcastState();
         });
-      } else {
-        after(WRONG_MS, () => {
-          if (game.resolveWrong(r.challengeId).ok) broadcastState();
-        });
       }
+      // A wrong answer needs no follow-up timer — the challenge just stays
+      // open on the broadcasted state above, ready for a retry.
     } else if (m.type === "rematch") {
       const r = game.newGame();
       if (!r.ok) return sendError(ws, r.error);

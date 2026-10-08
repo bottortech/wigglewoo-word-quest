@@ -73,13 +73,10 @@ const WordTacToeVersusScreen: React.FC<Props> = ({ words, tabletSound = false })
           const c = s.challenge;
           if (soundRef.current) {
             if (c && c.id !== lastChallengeId.current && c.seat === client.seat) playWordSound(c.word);
-            // "wrong-almost" ("Sooo close!" / "Almost!" / "Right idea!"), not
             // "wrong-gentle" ("Try again!" / "Not yet!" / "Take another
-            // look!") — one wrong tap ends the turn here (see game.mjs), so
-            // the retry language wrong-gentle promises would be inaccurate.
-            // Single-player (WordTacToeScreen.tsx) still genuinely allows a
-            // retry, so it correctly keeps wrong-gentle as-is.
-            if (c && c.wrongN > lastWrongN.current && c.seat === client.seat) playEvent("wrong-almost");
+            // look!") — accurate again now that a wrong answer never ends
+            // the turn, same as single-player's own call.
+            if (c && c.wrongN > lastWrongN.current && c.seat === client.seat) playEvent("wrong-gentle");
             if (c?.status === "correct" && !lastCorrect.current && c.seat === client.seat) playSuccessPhrase();
           }
           if (c && c.wrongN > lastWrongN.current && c.wrongIndex !== null) {
@@ -243,17 +240,6 @@ const WordTacToeVersusScreen: React.FC<Props> = ({ words, tabletSound = false })
       <div className="wtt__panel-feedback wtt__panel-feedback--correct">
         <span className="wtt__panel-feedback-icon">✅</span>
         <span>Correct!</span>
-      </div>
-    );
-  } else if (c && mine && c.status === "wrong") {
-    // Held briefly (WRONG_MS on the relay, mirroring how "correct" holds for
-    // CORRECT_MS) so the options panel below doesn't stay tappable during
-    // the window before the turn actually passes — one wrong tap ends the
-    // turn, there's no retry.
-    panel = (
-      <div className="wtt__panel-feedback wtt__panel-feedback--wrong">
-        <span className="wtt__panel-feedback-icon">❌</span>
-        <span>Not quite — {oppName}'s turn!</span>
       </div>
     );
   } else if (c && mine) {

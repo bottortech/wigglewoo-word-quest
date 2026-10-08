@@ -43,13 +43,16 @@ test("client: seats itself, forwards a challenge and answer, receives every snap
   assert.equal(a.client.status, "open");
   await until(() => a.state?.phase === "playing" && b.state?.phase === "playing", 3000, "game started on both");
 
-  // A wrong answer ends X's turn immediately — no retry, cell stays empty.
+  // A wrong answer keeps X's turn — the same challenge stays open for a retry.
   a.client.sendChallenge(4, challenge());
   await until(() => b.state.challenge?.cell === 4, 3000, "opponent sees the challenge");
   assert.equal(b.state.challenge.seat, "X");
   a.client.sendAnswer(0);                                       // wrong
   await until(() => a.state.challenge?.wrongN === 1, 3000, "wrong registered");
-  await until(() => a.state.turn === "O" && a.state.board[4] === null, 3000, "turn passed, cell still empty");
+  assert.equal(a.state.turn, "X");
+  assert.equal(a.state.board[4], null);
+  a.client.sendAnswer(1);                                       // retry, same challenge, now correct
+  await until(() => a.state.turn === "O" && a.state.board[4] === "X", 3000, "retry landed the mark, turn passed");
 
   // O then answers correctly and claims a different cell.
   b.client.sendChallenge(0, challenge());

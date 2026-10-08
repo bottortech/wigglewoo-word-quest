@@ -44,19 +44,22 @@ test("a full game over the wire: X wins, then Play Again from a tablet", async (
   assert.equal(screen.state.board.filter(Boolean).length, 0);
 });
 
-test("a wrong answer ends the turn over the wire — no retry, cell stays empty", async (t) => {
+test("a wrong answer keeps the turn over the wire; hints appear from the second miss, correct still lands", async (t) => {
   const r = await room(t);
   const { screen, a } = await seated(r);
   a.send({ type: "challenge", cell: 4, challenge: letterChallenge() });
   await screen.waitFor((s) => s.state.challenge);
   a.send({ type: "answer", index: 0 }); // wrong — correctIndex is 1
-  await screen.waitFor((s) => s.state.challenge?.status === "wrong" && s.state.challenge.wrongN === 1);
-  assert.equal(screen.state.turn, "X"); // still X during the brief WRONG_MS hold
-  // A retry on the same challenge is rejected — one wrong tap, no do-over.
-  a.send({ type: "answer", index: 1 });
-  await a.waitFor((c) => c.errors.some((e) => e.code === "no-challenge"));
-  await screen.waitFor((s) => s.state.turn === "O" && s.state.challenge === null);
-  assert.equal(screen.state.board[4], null); // cell was never claimed
+  await screen.waitFor((s) => s.state.challenge?.wrongN === 1);
+  assert.equal(screen.state.turn, "X"); // still X — the same challenge stays open for a retry
+  assert.equal(screen.state.challenge.status, "open");
+  assert.deepEqual(screen.state.challenge.eliminated, []); // no hint yet after 1 miss
+  a.send({ type: "answer", index: 2 }); // 2nd miss, a different wrong option
+  await screen.waitFor((s) => s.state.challenge?.wrongN === 2);
+  assert.equal(screen.state.challenge.eliminated.length, 1); // hint kicks in on the 2nd miss
+  assert.notEqual(screen.state.challenge.eliminated[0], screen.state.challenge.correctIndex);
+  a.send({ type: "answer", index: 1 }); // retry with the correct option, same challenge
+  await screen.waitFor((s) => s.state.turn === "O" && s.state.board[4] === "X");
 });
 
 test("illegal actions get an error and change nothing", async (t) => {
