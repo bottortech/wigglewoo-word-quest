@@ -35,6 +35,9 @@ ios/App/App/*
 !ios/App/App/Info.plist
 ios/App/App.xcodeproj/*
 !ios/App/App.xcodeproj/project.pbxproj
+!ios/App/ci_scripts/
+ios/App/ci_scripts/*
+!ios/App/ci_scripts/ci_post_clone.sh
 
 # Word doc temp lock files
 ~$*
