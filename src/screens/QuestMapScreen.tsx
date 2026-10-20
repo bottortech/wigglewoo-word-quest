@@ -452,6 +452,15 @@ const QuestMapInner: React.FC<QuestMapScreenProps> = ({
     onStartLevel(0); // Start level 1 directly
   }, [onStartLevel]);
 
+  // "Tap here to start!" cue had no audio — onboard-tap-gear.m4a already
+  // existed, just never got called. Runs once on mount, so it only ever
+  // fires for a genuinely first-time player (showOnboardingArrow is already
+  // false by mount for everyone else).
+  useEffect(() => {
+    if (showOnboardingArrow) playEvent("onboard-tap-gear");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const progress = useMemo(() => loadQuestProgress(quest.id), [quest.id]);
   const trophyProgress = useMemo(() => loadTrophyProgress(quest.id), [quest.id]);
   const discoveryProgress = useMemo(() => loadDiscoveryProgress(quest.id), [quest.id]);

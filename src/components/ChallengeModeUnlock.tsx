@@ -8,6 +8,7 @@
 // =============================================
 
 import { useState, useEffect } from "react";
+import { playEvent } from "../audio/SoundEffects";
 import "../styles/challenge-mode.css";
 
 interface ChallengeModeUnlockProps {
@@ -17,6 +18,12 @@ interface ChallengeModeUnlockProps {
 
 const ChallengeModeUnlock: React.FC<ChallengeModeUnlockProps> = ({ questTitle, onDismiss }) => {
   const [visible, setVisible] = useState(true);
+
+  // Same recorded line as the tier-wide decode-unlock modal on the Quest
+  // Map — this per-quest banner had never been wired to play it.
+  useEffect(() => {
+    playEvent("decode-unlock");
+  }, []);
 
   // Auto-dismiss after 2s
   useEffect(() => {
