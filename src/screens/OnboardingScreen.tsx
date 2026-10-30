@@ -22,7 +22,12 @@ import { useState, useCallback, useEffect, useLayoutEffect } from "react";
 import PotionGameScreen from "./PotionGameScreen";
 import { QUEST_SHORT_A } from "../game/wordData";
 import type { Quest } from "../game/types";
-import { playEvent } from "../audio/SoundEffects";
+import {
+  playEvent,
+  playOnboardingTapCPhrase,
+  playOnboardingTapAPhrase,
+  playOnboardingTapTPhrase,
+} from "../audio/SoundEffects";
 import "../styles/onboarding.css";
 
 interface OnboardingScreenProps {
@@ -124,10 +129,26 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   const [readyToContinue, setReadyToContinue] = useState(false);
 
   // Welcome VO — plays once over the real lab scene as it appears; no
-  // separate welcome screen anymore.
+  // separate welcome screen anymore. The step-1 instruction (previously
+  // silent text-only) follows once the welcome line finishes (~3.7s).
   useEffect(() => {
     playEvent("onboard-intro");
+    const t = setTimeout(() => playOnboardingTapCPhrase(), 3800);
+    return () => clearTimeout(t);
   }, []);
+
+  // Step 2 / step 3 instructions (also previously silent) — short delay so
+  // they don't talk over the potion-pour animation's own audio.
+  useEffect(() => {
+    if (guideIndex === 1) {
+      const t = setTimeout(() => playOnboardingTapAPhrase(), 400);
+      return () => clearTimeout(t);
+    }
+    if (guideIndex === 2) {
+      const t = setTimeout(() => playOnboardingTapTPhrase(), 400);
+      return () => clearTimeout(t);
+    }
+  }, [guideIndex]);
 
   const handleSlotFilled = useCallback((slotIndex: number) => {
     const next = slotIndex + 1;

@@ -52,6 +52,16 @@ const EXPLORE_PHRASES = [phraseUrl("lets-explore")];
 const RETRY_PHRASES = [phraseUrl("try-it-again")];
 const NEW_CHALLENGE_PHRASE = phraseUrl("time-for-a-new-challenge");
 
+// Round 5 silent-spot pickup — one clip each, no pool needed.
+const ONBOARDING_TAP_C_PHRASE = phraseUrl("onboarding-tap-c");
+const ONBOARDING_TAP_A_PHRASE = phraseUrl("onboarding-tap-a");
+const ONBOARDING_TAP_T_PHRASE = phraseUrl("onboarding-tap-t");
+const WTT_CHOOSE_PIECE_PHRASE = phraseUrl("wtt-choose-piece");
+const DAILY_CAP_REACHED_PHRASE = phraseUrl("daily-cap-reached");
+const TRACE_THE_LETTER_PHRASE = phraseUrl("trace-the-letter");
+const WARDROBE_INTRO_PHRASE = phraseUrl("wardrobe-intro");
+const WARDROBE_LOCKED_PHRASE = phraseUrl("wardrobe-locked");
+
 // ---- Channels: one Audio element per channel for instant interrupt ----
 let letterAudio: HTMLAudioElement | null = null;
 let phraseAudio: HTMLAudioElement | null = null;
@@ -165,6 +175,46 @@ export function playRetryPhrase(): void {
 
 export function playNewChallengePhrase(): void {
   play("phrase", NEW_CHALLENGE_PHRASE, 0.35);
+}
+
+/** "Let's make CAT! Tap the C potion." — onboarding tutorial, step 1 */
+export function playOnboardingTapCPhrase(): void {
+  play("phrase", ONBOARDING_TAP_C_PHRASE, 0.35);
+}
+
+/** "Now tap the A potion." — onboarding tutorial, step 2 */
+export function playOnboardingTapAPhrase(): void {
+  play("phrase", ONBOARDING_TAP_A_PHRASE, 0.35);
+}
+
+/** "Last one — tap the T potion!" — onboarding tutorial, step 3 */
+export function playOnboardingTapTPhrase(): void {
+  play("phrase", ONBOARDING_TAP_T_PHRASE, 0.35);
+}
+
+/** "Choose your piece!" — Word-Tac-Toe's piece-select screen */
+export function playWttChoosePiecePhrase(): void {
+  play("phrase", WTT_CHOOSE_PIECE_PHRASE, 0.35);
+}
+
+/** Daily Discovery Room fact cap reached */
+export function playDailyCapReachedPhrase(): void {
+  play("phrase", DAILY_CAP_REACHED_PHRASE, 0.35);
+}
+
+/** "Trace the letter with your finger!" — first-visit trace overlay */
+export function playTraceTheLetterPhrase(): void {
+  play("phrase", TRACE_THE_LETTER_PHRASE, 0.35);
+}
+
+/** "Pick your favorite WiggleWoo look!" — Wardrobe opens */
+export function playWardrobeIntroPhrase(): void {
+  play("phrase", WARDROBE_INTRO_PHRASE, 0.35);
+}
+
+/** "Finish the Discovery Room to unlock this WiggleWoo!" — locked skin browsed */
+export function playWardrobeLockedPhrase(): void {
+  play("phrase", WARDROBE_LOCKED_PHRASE, 0.35);
 }
 
 // =============================================

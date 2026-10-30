@@ -12,6 +12,7 @@ import {
   getActiveSkinId,
   setActiveSkin,
 } from "../game/skins";
+import { playWardrobeIntroPhrase, playWardrobeLockedPhrase } from "../audio/SoundEffects";
 import "../styles/wardrobe.css";
 
 // Default WiggleWoo thumbnail (bundled import)
@@ -69,6 +70,11 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
     if (isOpen) setBrowseSkinId(getActiveSkinId());
   }, [isOpen]);
 
+  // "Pick your favorite WiggleWoo look!" — was text-only.
+  useEffect(() => {
+    if (isOpen) playWardrobeIntroPhrase();
+  }, [isOpen]);
+
   const skins: SkinCard[] = useMemo(() => {
     const cards: SkinCard[] = [
       {
@@ -99,6 +105,12 @@ const WardrobeModal: React.FC<WardrobeModalProps> = ({
   // displayed skin is always just the active one, unchanged from before.
   const displayedSkinId = previewSkin ?? (requireContinue ? activeSkin : browseSkinId ?? activeSkin);
   const displayedSkin = skins.find((s) => s.skinId === displayedSkinId) ?? skins[0];
+
+  // "Finish the Discovery Room to unlock this WiggleWoo!" — was text-only.
+  // Re-fires each time browsing lands on a (still) locked skin.
+  useEffect(() => {
+    if (isOpen && !displayedSkin.unlocked) playWardrobeLockedPhrase();
+  }, [isOpen, displayedSkin.skinId, displayedSkin.unlocked]);
 
   const handleSelect = useCallback((skinId: string) => {
     if (skinId === activeSkin) return;

@@ -3,13 +3,20 @@
 // WiggleWoo's Word Quest
 // =============================================
 
+import { useEffect } from "react";
+import { playDailyCapReachedPhrase } from "../audio/SoundEffects";
 import "../styles/choice-modal.css";
 
 interface DailyCapModalProps {
   onClose: () => void;
 }
 
-const DailyCapModal: React.FC<DailyCapModalProps> = ({ onClose }) => (
+const DailyCapModal: React.FC<DailyCapModalProps> = ({ onClose }) => {
+  useEffect(() => {
+    playDailyCapReachedPhrase();
+  }, []);
+
+  return (
   <div className="choice-modal-backdrop" onClick={onClose}>
     <div className="choice-modal choice-modal--cap" onClick={(e) => e.stopPropagation()}>
       <div className="choice-modal__emoji">🌟</div>
@@ -23,6 +30,7 @@ const DailyCapModal: React.FC<DailyCapModalProps> = ({ onClose }) => (
       </button>
     </div>
   </div>
-);
+  );
+};
 
 export default DailyCapModal;

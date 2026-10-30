@@ -27,7 +27,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CvcWord } from "../game/types";
-import { playWordSound, playSuccessPhrase, playEvent } from "../audio/SoundEffects";
+import { playWordSound, playSuccessPhrase, playEvent, playWttChoosePiecePhrase } from "../audio/SoundEffects";
 import continueQuestBtn from "../assets/cont_quest.png";
 import wigglewooX from "../assets/wigglewoo_X.png";
 import wigglewooO from "../assets/wigglewoo_O.png";
@@ -157,6 +157,14 @@ const WordTacToeScreen: React.FC<WordTacToeScreenProps> = ({ words, onComplete, 
   // places — gives the answer a visible moment to land instead of the
   // mark just appearing instantly on tap.
   const [correctFeedback, setCorrectFeedback] = useState(false);
+
+  // "Choose your piece!" — screen 1, before a mark is picked. Previously
+  // silent text-only.
+  useEffect(() => {
+    if (childMark) return;
+    playWttChoosePiecePhrase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Intro VO, once the child has committed to a mark and play begins.
   useEffect(() => {

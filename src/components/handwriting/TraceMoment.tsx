@@ -30,7 +30,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LETTER_PATHS } from "./letterPaths";
 import { useTraceValidator } from "./useTraceValidator";
-import { playLetterSound, playEvent, waitForLetterDone } from "../../audio/SoundEffects";
+import { playLetterSound, playEvent, waitForLetterDone, playTraceTheLetterPhrase } from "../../audio/SoundEffects";
 import "../../styles/trace-moment.css";
 
 interface TraceMomentProps {
@@ -200,6 +200,13 @@ const TraceMoment: React.FC<TraceMomentProps> = ({
     const t = window.setTimeout(() => setSkipVisible(true), SKIP_REVEAL_MS);
     return () => window.clearTimeout(t);
   }, [onSkip]);
+
+  // "Trace the letter" prompt — was text-only. Fires shortly after the
+  // overlay opens, same pattern as Cross-Match's intro delay.
+  useEffect(() => {
+    const t = window.setTimeout(() => playTraceTheLetterPhrase(), 400);
+    return () => window.clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!path) onComplete();
