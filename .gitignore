@@ -24,20 +24,18 @@ dist-ssr
 *.sln
 *.sw?
 
-# iOS native build (Capacitor) — managed by `npx cap sync`.
-# Track only the two App-Store-critical config files; ignore everything else.
-ios/*
-!ios/App/
-ios/App/*
-!ios/App/App/
-!ios/App/App.xcodeproj/
-ios/App/App/*
-!ios/App/App/Info.plist
-ios/App/App.xcodeproj/*
-!ios/App/App.xcodeproj/project.pbxproj
-!ios/App/ci_scripts/
-ios/App/ci_scripts/*
-!ios/App/ci_scripts/ci_post_clone.sh
+# iOS native build (Capacitor). The native Xcode project itself must be
+# committed — Xcode Cloud clones fresh from git, so anything excluded here
+# doesn't exist for CI even though it's sitting on local disk. Only ignore
+# what `npx cap sync ios` / `pod install` regenerate every build.
+ios/App/Pods/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/capacitor-cordova-ios-plugins/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+ios/App/App.xcworkspace/xcuserdata/
+ios/DerivedData/
 
 # Word doc temp lock files
 ~$*
