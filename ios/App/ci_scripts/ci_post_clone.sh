@@ -10,22 +10,22 @@ fi
 node --version
 npm --version
 
-cd "$CI_WORKSPACE"
-
-echo "=== DEBUG: workspace ==="
-echo "CI_WORKSPACE=$CI_WORKSPACE"
-pwd
-git log -1 --oneline
-echo "--- ios/ before build ---"
-ls -la ios || echo "ios MISSING before build"
-ls -la ios/App || true
+# $CI_WORKSPACE was observed empty in this environment — `cd "$CI_WORKSPACE"`
+# silently no-ops instead of erroring, leaving the shell in this script's own
+# directory (ios/App/ci_scripts). npm/npx ascend to find the nearest
+# package.json so `npm run build` still worked from there, but Capacitor's
+# own CLI resolves its project root from the plain cwd (no ascending search),
+# so `cap sync ios` was looking for `ios/` inside ios/App/ci_scripts instead
+# of the real one at the repo root. Resolve the repo root from this script's
+# own path instead, which can't be wrong regardless of env var quirks.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+cd "$REPO_ROOT"
+echo "Repo root: $(pwd)"
+ls -la ios
 
 npm install
 npm run build
-
-echo "=== DEBUG: ios/ after build, before cap sync ==="
-ls -la ios || echo "ios MISSING after build"
-ls -la ios/App || true
 
 # cap sync also runs pod install — no separate CocoaPods step needed.
 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios
