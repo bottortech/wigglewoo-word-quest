@@ -1268,27 +1268,33 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
 
 @media (max-height: 500px) {
 
-  /* ── Phone landscape tokens — override design tokens for compact layout ── */
+  /* ── Phone landscape tokens — override design tokens for compact layout ──
+     Sized up ~30-40% from the original compact pass (which was never
+     visually verified against a real device — see the "not yet visually
+     verified" note this block used to carry). Now that the canvas-scale
+     and background bugs are fixed and the screen is actually visible, the
+     play objects read as too small/cramped next to the reference; this
+     brings them closer to that reference's proportions. */
   .machine-world--potion {
     --pg-prof-w:      88px;
     --pg-prof-bottom: 3%;
     --pg-prof-left:   auto;
     --pg-prof-right:  2%;
-    --pg-slot-sz:     44px;
-    --pg-slot-fs:     20px;
-    --pg-rim-w:       180px;
-    --pg-rim-h:       16px;
-    --pg-beaker-w:    150px;
-    --pg-beaker-h:    108px;
-    --pg-stand-w:     128px;
-    --pg-stand-h:     26px;
-    --pg-cork-w:      14px;
-    --pg-cork-h:      7px;
-    --pg-neck-w:      14px;
-    --pg-neck-h:      9px;
-    --pg-bottle-w:    46px;
-    --pg-bottle-h:    62px;
-    --pg-bottle-fs:   20px;
+    --pg-slot-sz:     60px;
+    --pg-slot-fs:     26px;
+    --pg-rim-w:       240px;
+    --pg-rim-h:       20px;
+    --pg-beaker-w:    200px;
+    --pg-beaker-h:    148px;
+    --pg-stand-w:     172px;
+    --pg-stand-h:     34px;
+    --pg-cork-w:      18px;
+    --pg-cork-h:      9px;
+    --pg-neck-w:      18px;
+    --pg-neck-h:      12px;
+    --pg-bottle-w:    60px;
+    --pg-bottle-h:    82px;
+    --pg-bottle-fs:   24px;
   }
 
 
@@ -1346,7 +1352,11 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
     width: 100%;
   }
 
-  /* ── Picture card: lifted out of flex flow so gameplay-col fills full panel width ── */
+  /* ── Picture card: lifted out of flex flow so gameplay-col fills full panel width ──
+     Enlarged (105px → 150px) to match the reference's bigger card; kept
+     flush at left:0 rather than pushed further negative, since map-window
+     and its ancestors clip overflow and a more aggressive negative offset
+     risks clipping the card instead of moving it further out. */
   .pg-image-wrap {
     position: absolute;
     left: 0;
@@ -1358,8 +1368,8 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
     border-radius: 12px;
   }
   .pg-image-wrap > div {
-    width: 105px !important;
-    height: 105px !important;
+    width: 150px !important;
+    height: 150px !important;
   }
 
   /* ── Gameplay column: tiles+beaker+bottles centered as one group ── */
@@ -1386,9 +1396,13 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
   /* ── Pour drip: 16px = just past the rim ── */
   .pg-pour-drip { top: 16px; }
 
-  /* ── Bottles: shape only; size from token ── */
+  /* ── Bottles: shape only; size from token ──
+     gap was vw-based, which (like the old HUD padding calc) doesn't scale
+     with the canvas's own transform now that it can be letterboxed — fixed
+     px instead, and widened to match the bottle row spreading wider in the
+     reference now that the bottles themselves are bigger. */
   .pg-bottles-row {
-    gap: clamp(10px, 1.8vw, 20px);
+    gap: 30px;
     padding-bottom: 0;
     justify-content: center;
   }
@@ -1403,6 +1417,14 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
   .machine-world--potion .title-badge {
     width: 140px;
     max-width: 140px;
+  }
+
+  /* ── Hanging light: shrink + lift slightly so it can't reach down into
+     the top bar / star counter's row now that the top of the canvas is
+     actually visible (it used to be cropped off along with the logo). ── */
+  .pg-hanging-light {
+    width: clamp(70px, 12%, 110px);
+    top: -4%;
   }
 
   /* ── HUD row clearance ──
