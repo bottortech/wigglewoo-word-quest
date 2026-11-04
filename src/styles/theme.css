@@ -91,8 +91,12 @@
 
 /* Legacy sizing for .machine-world--potion alone (always paired with
    .machine-world in practice — see the more specific rule below, which
-   wins for an element carrying both classes). Kept for safety; no longer
-   carries background — that's .pg-bg-fill's job now. */
+   wins for an element carrying both classes). No longer carries
+   background — that's .pg-bg-fill's job now — and explicitly clears it
+   (not just omits it) because this element also carries the base
+   .machine-world class, whose own background-color/image would otherwise
+   still apply here: an unset property doesn't override an equal-specificity
+   rule's value for that property, it just leaves it alone. */
 .machine-world--potion {
   position: absolute;
   top: 0;
@@ -103,6 +107,8 @@
   height: 100%;
   max-height: none;
   aspect-ratio: unset;
+  background-color: transparent;
+  background-image: none;
 }
 
 /* ==========================================
