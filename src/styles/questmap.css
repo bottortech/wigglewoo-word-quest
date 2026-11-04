@@ -1441,11 +1441,53 @@
   /* NO overlay repositioning — mobile uses same bounds as desktop
      for proportional scale-down behavior */
 
-  /* Logo: landscape size */
+  /* Logo: landscape size. left/top use max() against the safe-area inset so the
+     badge never renders under the sensor-housing cutout on either landscape edge. */
   .title-badge {
     max-width: 136px;
-    top: 0.5%;
-    left: -0.7% !important;
+    top: max(0.5%, env(safe-area-inset-top));
+    left: max(-0.7%, env(safe-area-inset-left)) !important;
+  }
+
+  /* For Parents / Badges pills: unlike .discovery-preview-row (scaled by
+     --umin), these two were sized in fixed px, so on phones smaller than
+     the 932×430 reference (--umin < 1) the discovery row shrinks but these
+     pills don't — closing the gap between them and causing an overlap on
+     narrower devices (e.g. iPhone SE-class widths) even though there's
+     clearance on larger phones. Shrinking both pills here removes that risk
+     across the board. Not yet visually verified on a real device — may need
+     a follow-up pass on exact spacing once someone can look at it. */
+  .for-parents-btn {
+    padding: 4px 10px 4px 8px;
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  .badges-btn {
+    right: calc(max(12px, env(safe-area-inset-right)) + 92px);
+    padding: 4px 11px 4px 8px;
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  .for-parents-btn__wave {
+    font-size: 12px;
+  }
+
+  .badges-btn__star {
+    font-size: 13px;
+  }
+
+  /* Discovery room shelf: trim the upper clamp bound a bit for extra
+     clearance from the pills above on this breakpoint (belt-and-suspenders
+     alongside shrinking the pills themselves). */
+  .discovery-preview-row {
+    gap: calc(10px * var(--umin));
+  }
+
+  .discovery-preview {
+    width: clamp(40px, calc(56px * var(--umin)), 56px);
+    height: clamp(40px, calc(56px * var(--umin)), 56px);
   }
 
   /* Trophy showcase: below logo, properly sized */
@@ -1489,12 +1531,17 @@
     height: 120px;
   }
 
-  /* Right panel: visible with full labels */
+  /* Right panel: visible with full labels.
+     Widened from 100px — too narrow to fit the 4 quest-mastery-stars dots
+     plus the vowel letter and lock icon in a row, so stars were overflowing
+     the box and getting clipped by its overflow:hidden.
+     max-height capped well below word-tac-toe-btn-wrap's top:74% (see that
+     rule's comment) so the panel can't grow tall enough to sit underneath it. */
   .word-quest-box {
-    width: 100px;
+    width: 128px;
     right: 0.5% !important;
     top: 12%;
-    max-height: 88%;
+    max-height: 58%;
     transform: none;
     transform-origin: top right;
   }

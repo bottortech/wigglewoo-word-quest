@@ -570,15 +570,18 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
   const profSrc = skinAssets.heroImg;
 
-  // ── Canvas scale: fill viewport width exactly. The 1366×1024 canvas overflows
-  //    vertically on non-4:3 viewports; quest-stage overflow:hidden crops the edges.
-  //    Background-size:cover on the fixed canvas stays at the same scale everywhere,
-  //    so all percentage-positioned assets remain locked to the lab image.
+  // ── Canvas scale: contain-fit the fixed 1366×1024 design canvas inside the
+  //    viewport (min of width-fit and height-fit), so the whole canvas — top
+  //    bar included — stays fully visible on any aspect ratio instead of
+  //    overflowing vertically and getting cropped by ancestor overflow:hidden.
+  //    On the iPad Pro 4:3 reference the two ratios are equal, so this is
+  //    identical to the previous width-only math (scale stays 1, no tablet change).
   const sceneRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const DESIGN_W = 1366;
+    const DESIGN_H = 1024;
     const update = () => {
-      const s = window.innerWidth / DESIGN_W;
+      const s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
       sceneRef.current?.style.setProperty("--potion-scale", s.toFixed(4));
     };
     update();

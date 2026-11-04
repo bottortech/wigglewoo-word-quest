@@ -1405,14 +1405,18 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
     max-width: 140px;
   }
 
-  /* ── HUD row: offset to clear the logo's right edge regardless of viewport width ──
-     Logo sits at left:2% and is 140px wide → right edge at (2vw + 140px).
-     pg-top-bar starts at map-window left (12vw) + pg-shell padding (10px).
-     Needed clearance = (2vw + 140px) − (12vw + 10px) = 130px − 10vw.
-     max(0px, ...) prevents negative padding on very wide screens. */
-  .machine-world--potion .pg-top-bar {
-    padding-left: max(0px, calc(130px - 10vw));
-  }
+  /* ── HUD row clearance ──
+     This used to offset pg-top-bar with a raw-vw calc assuming the 1366×1024
+     canvas filled the viewport width exactly. Now that the canvas is properly
+     contain-fit (min of width/height scale, see PotionGameScreen.tsx), every
+     element inside it — including the logo (left:2%, 140px wide) and
+     pg-top-bar (starts at map-window's left:12% + pg-shell's 10px padding) —
+     is positioned in the canvas's own design-space coordinates, which the
+     ancestor transform:scale() already keeps proportionally correct at any
+     viewport size. In that coordinate space the logo's right edge (~167px)
+     sits left of pg-top-bar's start (~174px) with no overlap, so no extra
+     clearance padding is needed here; a vw-based value would be wrong now
+     that the canvas can be narrower than the viewport (letterboxed). */
 
 }
 

@@ -153,8 +153,8 @@
    ========================================== */
 .title-badge {
   position: absolute;
-  top: 2%;
-  left: 2%;
+  top: max(2%, env(safe-area-inset-top));
+  left: max(2%, env(safe-area-inset-left));
   z-index: 10;
   /* --umin (not --u alone) so the badge shrinks on short/square
      viewports too, instead of only reacting to width and relying on
@@ -204,8 +204,8 @@
 @media (max-width: 600px) {
   .title-badge {
     max-width: 100px;
-    top: 1%;
-    left: 1%;
+    top: max(1%, env(safe-area-inset-top));
+    left: max(1%, env(safe-area-inset-left));
   }
 }
 
