@@ -70,16 +70,30 @@
   background-image: url("../assets/game-play-background.png");
 }
 
-/* Potion game screen — classroom/lab background.
-   Always fills the full stage (overrides base 3:2 contain behavior) so no
-   colour gap appears at the bottom on iPad Pro landscape (4:3 viewport).
+/* Potion game screen — classroom/lab background layer.
+   Separate full-viewport element, NOT the scaled content canvas (see
+   .pg-bg-fill below) — always fills the full stage so no colour gap
+   appears regardless of the canvas's own contain-fit scale/letterboxing.
    background-size:cover scales the image proportionally; no distortion. */
-.machine-world--potion {
+.pg-bg-fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: #8b7355;
   background-image: url("/assets/new-gameplay-screen-background.png");
   background-size: cover;
   background-position: center center;
-  /* Fill full stage at every viewport size */
+}
+
+/* Legacy sizing for .machine-world--potion alone (always paired with
+   .machine-world in practice — see the more specific rule below, which
+   wins for an element carrying both classes). Kept for safety; no longer
+   carries background — that's .pg-bg-fill's job now. */
+.machine-world--potion {
   position: absolute;
   top: 0;
   right: 0;

@@ -594,6 +594,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
   // JSX
   // =============================================
   return (
+    <div className="pg-bg-fill">
     <div ref={sceneRef} className="machine-world machine-world--potion">
       <div className="map-window">
         <div className="game-shell-panel" />
@@ -964,6 +965,7 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
         tabIndex={0}
         onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
       />
+    </div>
     </div>
   );
 };
