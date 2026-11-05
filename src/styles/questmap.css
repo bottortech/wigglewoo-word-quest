@@ -1441,12 +1441,53 @@
   /* NO overlay repositioning — mobile uses same bounds as desktop
      for proportional scale-down behavior */
 
+  /* Map window: left/top/right/bottom MUST stay at the tablet's own
+     16%/21%/16%/13% here — they are not just a content-cropping box, they
+     also have to line up with the blue frame artwork painted into
+     .machine-world's background. That background uses
+     background-size:100% 100% (stretch-fit, see theme.css), not cover —
+     stretching doesn't crop, so the frame's window cutout sits at a FIXED
+     percentage of .machine-world's box on any aspect ratio, phone or
+     tablet alike. An earlier change narrowed this inset (16%→9%, and at
+     one point 21%/13%→12%/6%) to stop map CONTENT from clipping at the
+     frame edge on wide phones — but since the frame itself doesn't move,
+     that widened .map-window past where the frame actually is, which
+     visibly covered the frame's border instead of sitting inside it
+     (confirmed by screenshot — reverting these four values to the exact
+     tablet numbers brought the border back, at both the narrowest and
+     widest tested phone, with no content clipping observed either).
+     If a future change needs more of the map's own content visible
+     (e.g. the rightmost island), that has to come from .map-window's
+     OWN background-size/position (it uses cover — see below — a
+     genuinely aspect-dependent crop), not from moving this box off the
+     frame again. */
+  .map-window {
+    left: 16%;
+    right: 16%;
+    top: 21%;
+    bottom: 13%;
+  }
+
   /* Logo: landscape size. left/top use max() against the safe-area inset so the
-     badge never renders under the sensor-housing cutout on either landscape edge. */
+     badge never renders under the sensor-housing cutout on either landscape edge.
+     Previously shrunk hard to 46px because .map-window's left inset was
+     narrowed to 9% at the time — that inset is back to the tablet's 16% now
+     (see .map-window below), which frees up real room again (16% of even
+     the narrowest supported phone, 667px, is ~107px, not ~60px), so the
+     logo can grow back up.
+     max-width: calc(13vw - 10px) — at 667px that's ~77px, at 932px ~111px,
+     always leaving a real margin before the map's 16vw edge (checked at
+     every supported width, 28px+ clear at the narrowest, growing wider).
+     left: calc(-3.5vw + 40px) — chosen so the logo's *center*
+     (left + width/2) always comes out to exactly calc(3% + 35px), the
+     same value as .wardrobe-map-btn's own base `left` (its position was
+     never touched here — see .wardrobe-map-btn below) and
+     .trophy-showcase's `left` below, so all three sit on one shared
+     center column instead of three different ones. */
   .title-badge {
-    max-width: 136px;
+    max-width: calc(13vw - 10px);
     top: max(0.5%, env(safe-area-inset-top));
-    left: max(-0.7%, env(safe-area-inset-left)) !important;
+    left: max(calc(-3.5vw + 40px), env(safe-area-inset-left)) !important;
   }
 
   /* For Parents / Badges pills: unlike .discovery-preview-row (scaled by
@@ -1480,9 +1521,14 @@
 
   /* Discovery room shelf: trim the upper clamp bound a bit for extra
      clearance from the pills above on this breakpoint (belt-and-suspenders
-     alongside shrinking the pills themselves). */
+     alongside shrinking the pills themselves). Also shifted left off dead-
+     center — the row was centered on the full stage width, which left it
+     right up against the Badges pill (no reserved clearance at all on
+     narrower phones); centering it in the space to the left of the two
+     pills instead guarantees a fixed gap regardless of row width. */
   .discovery-preview-row {
     gap: calc(10px * var(--umin));
+    transform: translateX(calc(-50% - 60px));
   }
 
   .discovery-preview {
@@ -1490,46 +1536,37 @@
     height: clamp(40px, calc(56px * var(--umin)), 56px);
   }
 
-  /* Trophy showcase: below logo, properly sized */
+  /* Trophy showcase: below logo. Was centered flush against the left
+     screen edge (its old center was only ~5–11px in, well under half its
+     real rendered width), reported as sitting right against the edge.
+     Moved to the same shared center column as .title-badge and
+     .wardrobe-map-btn — calc(3% + 35px), identical to
+     .wardrobe-map-btn's own unchanged base `left` — which both
+     re-centers it in its own spot and clears it from the edge.
+     Correction: the .trophy-showcase__container/__spotlight/__pedestal/
+     __plaque/__title rules that used to be here never did anything —
+     this screen's real trophy visual is <GlassDisplayCase> (rendered as
+     .glass-display / .glass-display__case etc., styled in
+     trophy-showcase.css, already sized responsively via its own --u
+     scaling through the size="medium" prop), not those __* names, which
+     belong to a separate, unused TrophyShowcase.tsx component. Nothing
+     needed resizing here at all — .glass-display--medium already comes
+     out small enough on every tested phone width to clear the map on
+     its own; only this wrapper's position needed fixing. */
   .trophy-showcase {
     margin-top: 163px;
-    width: 120px;
-    left: calc(1.3% + 48px);
+    left: calc(3% + 35px);
   }
 
-  .trophy-showcase__container {
-    width: 110px;
-    height: 110px;
-  }
-
-  .trophy-showcase__spotlight {
-    width: 140px;
-    height: 140px;
-  }
-
-  .trophy-showcase__pedestal {
-    width: 80px;
-    margin-top: -14px;
-  }
-
-  .trophy-showcase__plaque {
-    margin-top: -18px;
-    padding: 3px 10px;
-  }
-
-  .trophy-showcase__title {
-    font-size: 8px;
-    letter-spacing: 0.5px;
-  }
-
-  .trophy-showcase__title-sub {
-    font-size: 6px;
-  }
-
-  .trophy-showcase__sparkles {
-    width: 120px;
-    height: 120px;
-  }
+  /* Wardrobe button: deliberately has NO override here. Its base rule
+     (left: calc(3% + 35px), width/height: calc(50px + 24px*var(--u,1)))
+     already produces the size/position confirmed to be good — a compact
+     override was added here once before, but it sat *earlier* in this
+     file than that base rule, so — same specificity, and CSS resolves
+     ties by source order, not by whether a media query matched — the
+     base rule always won anyway; it was dead code. .title-badge and
+     .trophy-showcase above are now built to match THIS element's
+     position (calc(3% + 35px)), rather than the other way around. */
 
   /* Right panel: visible with full labels.
      Widened from 100px — too narrow to fit the 4 quest-mastery-stars dots
@@ -1555,17 +1592,65 @@
     font-size: 11px;
   }
 
-  .word-quest-box__body {
+  /* Was `.word-quest-box__body` — that class doesn't exist anywhere in
+     QuestMapScreen.tsx's JSX (the real wrapper is `__content`, and the
+     row gap belongs on `__types`/`__vowels`, its flex children, not on
+     `__content` itself, which isn't a flex container) — this whole rule
+     was dead code, same category of bug as .trophy-showcase__container
+     targeting the unused TrophyShowcase.tsx earlier. In practice this
+     meant the intended tighter compact padding never applied, AND the
+     overflow-y:auto meant to let a tap-and-scroll reach rows clipped by
+     .word-quest-box's own max-height + overflow:hidden (base rule)
+     never worked either — any row pushed past that height was just
+     unreachable, not scrollable. */
+  .word-quest-box__content {
     padding: 2px;
-    gap: 2px;
     overflow-y: auto;
     max-height: calc(100% - 20px);
     -webkit-overflow-scrolling: touch;
   }
+  .word-quest-box__types,
+  .word-quest-box__vowels {
+    gap: 2px;
+  }
 
+  /* Shared with .word-quest-box__type-btn (the quest-TYPE list — Sound
+     Builders/Blending Power/Magic E/Vowel Teams/Advanced Reading, shown
+     when the back arrow is tapped) — previously only .word-quest-btn
+     was listed here, so the type list kept the full base padding
+     (8px 10px) even in compact mode, making its 5 rows noticeably
+     taller than the vowel list's and even more likely to need scrolling
+     to reach the last one. Tightened further than the old 4px 8px too:
+     measured exactly 208.8px available at 740×360 (.word-quest-box's
+     own max-height:58%, which is itself already at its safe ceiling —
+     any taller and it reaches .word-tac-toe-btn-wrap) against a real
+     224px needed for a 2-line header + 5 rows at the old padding — short
+     by ~15px. This (2px 6px, down from 4px 8px) saves 4px × 5 rows =
+     20px, enough to fit all 5 rows with a few px to spare, confirmed by
+     re-measuring afterward, not just estimating. */
+  .word-quest-box__type-btn,
   .word-quest-box__vowel-btn {
-    padding: 4px 8px;
-    gap: 6px;
+    padding: 2px 6px;
+    gap: 4px;
+  }
+
+  /* Type label ("Blending Power", "Advanced Reading", ...) shrunk a
+     little so the longest labels wrap to at most 2 lines instead of
+     occasionally 3, which the 5-rows-must-fit budget above assumes. */
+  .word-quest-box__type-btn {
+    font-size: 10px;
+  }
+
+  /* Vowel letter/code badge (A, I, O, U, E for Sound Builders, but also
+     2–3 character codes for other quest types — AR/ER/2S/MX for
+     Advanced Reading, AI/EA/OA/OO/EE for Vowel Teams) — still a fixed
+     24×24px box (unchanged), but at the base 14px font a 2-character
+     code rendered wider than the box and pushed into the star row next
+     to it, clipping its last star (confirmed by screenshot on Advanced
+     Reading's "AR"/"ER"/"2S" rows). 10px comfortably fits 3 characters
+     within 24px. */
+  .word-quest-box__vowel-letter {
+    font-size: 10px;
   }
 
   .word-quest-box__quest-btn .quest-letter-badge {
@@ -2358,28 +2443,82 @@
     font-size: 20px;
   }
 
-  /* 1. Logo — larger, aligned with left column */
+  /* 1. Logo — larger, aligned with left column.
+     Grown from 108px/41px*u to 116px/41px*u (a modest bump, not a
+     redesign) and shifted from left:3.5% to left:2% to make room for
+     that growth without reaching .map-window's left edge — at the
+     narrower Galaxy tablet (A7 Lite, ~1340px wide) the OLD 3.5%-anchored
+     logo's right edge already sat within 1px of the map's edge with zero
+     margin to grow into, so enlarging it required freeing up room on the
+     left, not just growing further right. */
   .title-badge {
-    max-width: calc(108px + 41px * var(--u, 1));
-    left: 3.5%;
+    max-width: calc(116px + 41px * var(--u, 1));
+    left: 2%;
     margin-bottom: 16px;
   }
 
-  /* 2. Trophy showcase — 16px more space below logo */
+  /* 2. Trophy showcase — centered in line with the logo. Its *center*
+     (left, via the base rule's transform:translateX(-50%)) is set to
+     calc(2% + 58px + 20.5px*var(--u,1)) — algebraically .title-badge's
+     own left (2%) plus half its own max-width
+     ((116px + 41px*u)/2 = 58px + 20.5px*u) — so it's always exactly the
+     logo's center, not a separately-tuned number that can drift out of
+     alignment again. Container/spotlight/pedestal shrunk from the base
+     220px/280px/160px: at that size, even perfectly centered on the
+     logo, the case would still reach past .map-window's left edge on
+     the narrower Galaxy tablet — these keep it comfortably clear at
+     both tested tablet widths while still scaling up with --u like
+     everything else on this breakpoint.
+     Correction: .trophy-showcase__container/__spotlight/__pedestal
+     (removed below) never actually did anything — this screen's real
+     trophy visual is <GlassDisplayCase>, which renders .glass-display /
+     .glass-display__case etc. (styled in trophy-showcase.css, sized via
+     the size="medium" prop → .glass-display--medium, also --u-scaled on
+     its own), not the .trophy-showcase__* names, which belong to a
+     separate, unused TrophyShowcase.tsx component. The *position* fix
+     above (this .trophy-showcase rule's own `left`) is real and correct
+     — .trophy-showcase is GlassDisplayCase's actual positioned wrapper,
+     confirmed by measurement (.glass-display's own box matches
+     .trophy-showcase's exactly) — only the now-deleted size overrides
+     were dead code targeting the wrong component. */
   .trophy-showcase {
     margin-top: 330px;
+    left: calc(2% + 58px + 20.5px * var(--u, 1));
   }
 
-  /* 3. Wardrobe — directly under trophy showcase */
+  /* 3. Wardrobe — enlarged (60px/30px*u → 69px/34.5px*u, ~15% bigger),
+     and aligned to the SAME shared center as the logo and trophy case
+     above instead of its own separate calc(3.5% + 70px), which matched
+     neither.
+     top bumped 68% → 74%: enlarging the wardrobe button also revealed
+     that .trophy-showcase (via the real GlassDisplayCase, not the dead
+     code above) runs taller on the narrower Galaxy tablet (A7 Lite,
+     ~1340×800) than this fixed 68% left room for — its plaque text was
+     getting covered by the wardrobe button rising up into it. 74%
+     measured with a real ~15px clear gap at A7 Lite and an even larger
+     gap at the wider tab84, so it's safe at both tested tablet sizes. */
   .wardrobe-map-btn {
-    width: calc(60px + 30px * var(--u, 1));
-    height: calc(60px + 30px * var(--u, 1));
-    left: calc(3.5% + 70px);
+    width: calc(69px + 34.5px * var(--u, 1));
+    height: calc(69px + 34.5px * var(--u, 1));
+    left: calc(2% + 58px + 20.5px * var(--u, 1));
     bottom: auto;
-    top: 68%;
+    top: 74%;
   }
 
-  /* 4. Quest panel — aligned vertically with trophy showcase */
+  /* 4. Quest panel — aligned vertically with trophy showcase.
+     Width (160px) AND this original top (calc(2% + 330px), matching
+     the trophy case's own original position) both still apply to both
+     tablets here — confirmed fine on tab84 (226px clear of the Word
+     Tac Toe button below it) and not the reported problem on A7 Lite
+     either (that one's overlap is vertical, caused by the panel's
+     natural content height, not this `top` value). The height-cap fix
+     for A7 Lite's overlap lives in its own scoped block further down
+     instead of here, since a shared change to `top` here would also
+     have shifted tab84, which the user asked to leave unchanged.
+     (An earlier pass here mistakenly dropped `top` entirely while
+     moving that fix out — caught by re-measuring tab84 afterward: it
+     had silently fallen back to a base rule's top:17%, a real
+     regression, not just an unrelated leftover value.) */
   .word-quest-box {
     width: 160px;
     top: calc(2% + 330px);
@@ -2779,6 +2918,239 @@
   .discovery-beacon,
   .discovery-beacon__sparkle {
     animation: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   TROPHY CASE — even spacing above/below.
+   Measured directly (not estimated): the gap between .title-badge's
+   bottom and the trophy case's top (.glass-display, the real rendered
+   component — see the compact-block comment on .trophy-showcase above
+   for why it's .glass-display and not .trophy-showcase__*) almost never
+   matched the gap between the case's bottom and .wardrobe-map-btn's top:
+     phone compact (740):  above 39px  /  below -9px  (overlapping!)
+     phone compact (852):  above 18px  /  below  2px
+     tablet (A7 Lite 1340): above 76px  /  below 15px
+   This phone-block fix (740+852, a straight line through both real
+   measured targets so gap-above == gap-below exactly at each, not a
+   guessed constant) applies at every phone width. The tablet fix is
+   scoped to A7 Lite specifically, below in its own width-scoped block
+   (1200–1600px) alongside its other fixes — tab84 (1920px) is excluded
+   there and stays at its original margin-top, unchanged, per
+   instruction ("leave tab84 unchanged for now"); its own even trophy
+   spacing — which would need a ~80px shift, a much bigger change than
+   this phone fix — is deferred to when tab84's sizing is revisited. */
+@media (max-height: 500px) {
+  .trophy-showcase {
+    margin-top: calc(14.45vw + 32.22px);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   740 PHONE ONLY (max-height:500px, 720–800px wide) — three fixes:
+   1. Word Tac Toe button shifted clear of .map-window's right edge
+      (measured 14.7px gap — tight enough to read as touching).
+   2. .badges-btn moved off the last .discovery-preview icon it was
+      covering by ~9px (confirmed by screenshot, the icon was visibly
+      peeking out from under the pill's left edge). Deliberately only
+      *shrunk* (padding/gap/font), not repositioned via `right`: the
+      gap between the discovery row and .for-parents-btn (which sits at
+      its own safe-area minimum already, so it can't move further
+      right) is only ~89px, barely narrower than the button's original
+      ~90px width — shrinking it opens clearance on the discovery-row
+      side while its right edge, and so its distance from
+      .for-parents-btn, stays exactly where it already safely was. An
+      earlier version of this fix also moved `right`, which pushed the
+      (still fairly wide) pill's right edge into .for-parents-btn
+      instead — caught by re-measuring both edges after the change,
+      not just the one side being fixed.
+   3. Quest Type panel (.word-quest-box) narrowed from 128px to 98px:
+      its left edge (anchored via `right`, unchanged) measured 13.3px
+      *inside* .map-window's right edge, a real overlap, not just a
+      tight gap. Narrowing it (rather than repositioning) keeps its
+      right-anchor exactly where it was, relative to the Badges/For
+      Parents pills above it, while opening ~17px of real clearance
+      from the map. */
+@media (max-height: 500px) and (min-width: 720px) and (max-width: 800px) {
+  .word-tac-toe-btn-wrap {
+    width: 75px;
+  }
+  .badges-btn {
+    padding: 3px 8px 3px 6px;
+    gap: 3px;
+    font-size: 9px;
+  }
+  .word-quest-box {
+    width: 98px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   852 PHONE ONLY (max-height:500px, 820–900px wide) — two fixes:
+   1. More room between .map-window and the Word Tac Toe button
+      (measured 22.4px gap; no .badges-btn/discovery-room issue
+      reported at this width, so that's left alone here).
+   2. Quest Type panel narrowed from 128px to 116px — its left edge
+      measured only 4.1px clear of .map-window's right edge (reads as
+      touching even though not technically overlapping), same fix
+      approach as 740: narrow rather than reposition, so its
+      right-anchor relative to the pills above stays put. */
+@media (max-height: 500px) and (min-width: 820px) and (max-width: 900px) {
+  .word-tac-toe-btn-wrap {
+    width: 94.7px;
+  }
+  .word-quest-box {
+    width: 116px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GALAXY TAB A7 LITE ONLY (min-width:1200px, 1200–1600px wide —
+   excludes tab84 at 1920px, left unchanged per instruction) — four
+   fixes:
+   1. More room between .map-window and the Word Tac Toe button.
+   2. The five .discovery-preview room icons enlarged — they were
+      already sitting at this rule's clamp() ceiling (56px, the same
+      ceiling tab84 also hits), so the only way to grow them without
+      touching tab84 is a width-scoped override like this one.
+   3. Trophy case even spacing (see the .trophy-showcase comment
+      earlier in this file) — A7 Lite's own fixed target, solved the
+      same way as the phone block's targets (gap-above == gap-below,
+      45px each, from real measurements of .title-badge, .glass-display,
+      and .wardrobe-map-btn). A single fixed px value, not a vw-based
+      line, since this is the only tablet calibration point now that
+      tab84 is excluded — a 2-point line needs two points.
+   4. Quest Type panel (.word-quest-box) moved up to match the trophy
+      case's new position (top: calc(2% + 330px) → calc(2% + 300px),
+      same 30px shift as the trophy fix above, keeping the "aligned
+      vertically with trophy showcase" intent from the shared rule's
+      original comment) and height-capped with a scrollable body —
+      measured 62px of overlap with the Word Tac Toe button below it
+      otherwise (its natural, content-driven height reaches further
+      down than there's room for at this viewport, unlike on tab84,
+      which has 226px of clearance and needs no such cap). Confirmed
+      by re-measurement, not just visual inspection, that the capped
+      panel's bottom edge now clears the button with real margin. */
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .word-tac-toe-btn-wrap {
+    width: 116px;
+  }
+  .discovery-preview {
+    width: clamp(40px, calc(85px * var(--umin)), 85px);
+    height: clamp(40px, calc(85px * var(--umin)), 85px);
+  }
+  .trophy-showcase {
+    margin-top: 300px;
+  }
+  .word-quest-box {
+    top: calc(2% + 300px);
+    max-height: 255px;
+  }
+  /* Was `.word-quest-box__body`, which doesn't exist in the JSX — see
+     the matching fix/comment on the phone-block version of this rule
+     above. Without this fix the panel's 5th row (the vowel locked
+     behind the visible 4) was clipped by .word-quest-box's own
+     max-height with no way to scroll to it, not just visually capped. */
+  .word-quest-box__content {
+    overflow-y: auto;
+    max-height: calc(100% - 50px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Same row-tightening as the phone block above, and for the same
+     reason: at the base (untouched-here) padding of 8px 10px, 5 rows +
+     header needed ~286px against the 255px max-height set above (itself
+     already at its safe ceiling against the Word Tac Toe button) —
+     short by ~31px, so only 4 of 5 rows fit and the 5th relied entirely
+     on the scroll fix just above to be reachable at all. Tightened the
+     same way (padding 2px 6px, gap 4px, 10px letter/type font) brings
+     the 5-row content height down to ~168px, comfortably inside the
+     255px budget with real margin to spare — confirmed by
+     re-measurement, all 5 rows now fit without scrolling. */
+  .word-quest-box__type-btn,
+  .word-quest-box__vowel-btn {
+    padding: 2px 6px;
+    gap: 4px;
+  }
+  .word-quest-box__type-btn {
+    font-size: 10px;
+  }
+  .word-quest-box__vowel-letter {
+    font-size: 10px;
+  }
+  .word-quest-box__types,
+  .word-quest-box__vowels {
+    gap: 2px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   GALAXY TAB84 ONLY (min-width:1700px — well above A7 Lite's own
+   scoped ceiling of 1600px, so this never matches it; tab84 itself is
+   1920px wide). Four enlargements, all measured against real tab84
+   bounding boxes so nothing new overlaps:
+
+   1. Discovery room buttons: .discovery-preview was already pegged at
+      its clamp() ceiling (68px — var(--umin) evaluates to 2.06 here,
+      68px*2.06 clamps down to 68), same ceiling A7 Lite's used to hit
+      before its own fix. Raised to 115px. The row is centered
+      (left:50%, translateX(-50%)) with ~137px of clear margin on the
+      map side even at the old size, so a much wider row at the new
+      size (measured 690px vs the map's nearest edge over 600px away)
+      still clears everything with room to spare.
+
+   2. Badges / For Parents: both use fixed, non---u-scaled px values
+      (font-size:12px, modest padding) everywhere, including tab84 —
+      they were never sized relative to the big tablet screen they sit
+      on. Enlarged font/padding/gap ~33%. .badges-btn's `right` is
+      computed from .for-parents-btn's width via a hardcoded "+ 120px"
+      offset in the base rule — re-measured .for-parents-btn's actual
+      new width here and set this override's offset to match, rather
+      than trust the old 120px constant against the new, bigger button.
+
+   3. Quest Type panel (.word-quest-box): widened 160px → 220px. Still
+      right-anchored at the unchanged right:0.5% from the base rule, so
+      it grows leftward, toward the map — checked the resulting left
+      edge against .map-window's right edge: 77.6px of clear margin
+      remains (was 137.6px before), still a real gap, not touching.
+
+   4. Word Tac Toe button: widened to 220px — matching the new Quest
+      Type panel width exactly, on purpose, the same way the base rule
+      already matches their *old* widths ("Matches .word-quest-box's
+      own width formula exactly ... guarantees this card's left edge
+      never reaches further into the map than the panel it sits under"
+      — see that rule's own comment). Equal widths at the same
+      right:0.5% anchor keeps their centers aligned automatically,
+      without needing a separate center calculation. */
+@media (min-width: 1700px) {
+  .discovery-preview {
+    width: clamp(46px, calc(115px * var(--umin)), 115px);
+    height: clamp(46px, calc(115px * var(--umin)), 115px);
+  }
+
+  .badges-btn {
+    right: calc(max(12px, env(safe-area-inset-right)) + 162px);
+    padding: 8px 18px 8px 13px;
+    gap: 8px;
+    font-size: 16px;
+  }
+
+  .for-parents-btn {
+    padding: 8px 16px 8px 13px;
+    gap: 8px;
+    font-size: 16px;
+  }
+
+  .for-parents-btn__wave {
+    font-size: 18px;
+  }
+
+  .word-quest-box {
+    width: 220px;
+  }
+
+  .word-tac-toe-btn-wrap {
+    width: 220px;
   }
 }
 
