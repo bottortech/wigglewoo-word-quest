@@ -494,7 +494,11 @@ const CASTLE_ENV: EnvironmentConfig = {
       id: "treasure-box",
       src: "/assets/discovery rooms/stonewall-castle/closed-treasure-box.png",
       x: 15,
-      y: 108,
+      // The chest art sits in the top ~68% of its source canvas (~32%
+      // transparent padding below it), so y needs to run well past 100
+      // to pull the visible chest down flush with the floor line the
+      // other floor props (king/knight/sword) sit on.
+      y: 115,
       width: 22,
       factPanel: {
         title: "Medieval Treasure",
@@ -1066,8 +1070,8 @@ const TECH_CITY_ENV: EnvironmentConfig = {
       id: "hanging-light-3",
       src: "/assets/discovery rooms/geartown-workshop/hanging light off-3.png",
       x: 79,
-      y: -19,
-      width: 8,
+      y: -22,
+      width: 6.5,
       anchor: "top",
     },
     {
@@ -1373,15 +1377,17 @@ const TECH_CITY_ENV: EnvironmentConfig = {
       id: "geartown-logo",
       src: "/assets/discovery rooms/geartown-workshop/logo-no-smoke.png",
       x: 56,
-      y: 27,
+      // Tablet position — sits just above the blueprint board. Phones get
+      // their own smaller, repositioned version in explore.css.
+      y: 31,
       width: 26.5,
     },
     {
       id: "robot-parts",
       src: "/assets/discovery rooms/geartown-workshop/robot-parts.png",
       x: 24,
-      y: 32,
-      width: 24,
+      y: 26,
+      width: 19,
     },
     {
       id: "wigglewoo",

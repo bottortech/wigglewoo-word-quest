@@ -2421,3 +2421,42 @@
     animation: none !important;
   }
 }
+
+/* ---- Geartown Workshop, phones only ----
+   Prop positions are plain inline styles (not scaled per device like the
+   rest of the app), so phone-only tweaks need `!important` here to win
+   over them. Tablets (tab84/a7lite) keep the values set directly in
+   exploreData.ts. */
+@media (max-width: 1024px) {
+  /* Logo: smaller and pulled down just enough to sit right above the
+     blueprint board instead of dipping into it. */
+  [data-prop-id="geartown-logo"] {
+    top: 23% !important;
+    width: 20% !important;
+  }
+
+  /* Wall gears + their spinning overlays move down together (by the same
+     amount) so the rotating gears stay aligned with the static artwork
+     underneath — still anchored to the wall, just lower on it. */
+  [data-prop-id="gears-on-wall"] {
+    top: 72% !important;
+  }
+  [data-prop-id="geartown-spinner-1"] {
+    top: 61% !important;
+  }
+  [data-prop-id="geartown-spinner-2"] {
+    top: 52% !important;
+  }
+  [data-prop-id="geartown-spinner-3"] {
+    top: 61.7% !important;
+  }
+  [data-prop-id="geartown-spinner-4"] {
+    top: 67% !important;
+  }
+
+  /* Hanging light: raised further than the tablet position so it doesn't
+     hang as low. */
+  [data-prop-id="hanging-light-3"] {
+    top: -32% !important;
+  }
+}

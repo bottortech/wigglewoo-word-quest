@@ -1076,6 +1076,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         return (
           <button
             key={prop.id}
+            data-prop-id={prop.id}
             className={[
               "explore-prop",
               "explore-prop--interactive",
@@ -1114,6 +1115,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
         return (
           <div
             key={prop.id}
+            data-prop-id={prop.id}
             className={`explore-prop geartown-spinner geartown-spinner--${variant}`}
             style={{
               position: "absolute",
@@ -1185,6 +1187,7 @@ const ExploreScreen: React.FC<ExploreScreenProps> = ({ environmentId, questId, o
       return (
         <div
           key={prop.id}
+          data-prop-id={prop.id}
           className={`explore-prop ${isFlame ? "explore-prop--flame" : ""} ${fishClass}`}
           style={{
             position: "absolute",
