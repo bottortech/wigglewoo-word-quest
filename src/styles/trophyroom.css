@@ -82,6 +82,12 @@
   z-index: 50;
   transform: translateY(calc(14px * var(--uv)));
   animation: title-glow 3s ease-in-out infinite;
+  /* Decorative only (no click handler) — the banner image's transparent
+     padding makes this box taller than the visible ribbon art, and at
+     certain breakpoints (e.g. 740x360) that invisible padding dips down
+     far enough to sit on top of the card grid's top row, silently
+     swallowing taps meant for the cards underneath. */
+  pointer-events: none;
 }
 
 .trophy-room__title-img {
@@ -819,9 +825,14 @@
 
 /* Mobile: vertical positioning — trophy top, grid middle, button bottom */
 @media (max-width: 1024px) {
+  /* Title: up toward the frame top, freeing up room below */
+  .trophy-room__title-area {
+    transform: translateY(calc(14px * var(--uv) - 18px));
+  }
+
   /* Trophy: up toward the logo */
   .trophy-room__trophy-area {
-    transform: translateY(-58px);
+    transform: translateY(-78px);
   }
 
   /* Grid: up with the trophy, maintain gap */
@@ -829,16 +840,20 @@
     transform: translateX(10%) translateY(calc(-14% - 22px));
   }
 
-  /* Card spacing */
+  /* Card spacing — rows pulled closer together than columns, while still
+     keeping clear separation between the top and bottom row */
   .trophy-room__card-grid {
-    gap: 22px;
+    column-gap: 22px;
+    row-gap: 10px;
   }
 
-  /* Button: anchored to bottom with breathing room */
+  /* Button: anchored to bottom with breathing room, centered under the
+     trophy (which sits at true horizontal center, unlike the cards-row
+     group which is offset to balance WiggleWoo standing beside it) */
   .trophy-room__continue-wrap {
     position: absolute;
     bottom: -22px;
-    left: 53%;
+    left: 50%;
     transform: translateX(-50%);
     margin: 0;
     z-index: 20;
@@ -852,6 +867,11 @@
 @media (max-height: 500px) {
   .trophy-room {
     justify-content: flex-start;
+    /* Shifted up 40px to frame the content better on short phone-landscape
+       viewports; background-size is stretched by the same 40px so the
+       image's bottom edge still reaches the container's bottom edge
+       instead of leaving a gap that exposes the stage's blue behind it. */
+    background-size: 100% calc(100% + 40px);
     background-position: center -40px;
   }
 }
