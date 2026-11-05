@@ -977,8 +977,18 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
 }
 
 /* Chalk dust: faint light haze at all four edges + corner smudge patches.
-   z-index 0 keeps it below pg-shell children (z-index 1). */
-.machine-world--potion .pg-overlay-zone::before {
+   z-index 0 keeps it below pg-shell children (z-index 1).
+   Grouped with .pg-overlay-zone--phone here (and on every other
+   .pg-overlay-zone child/pseudo-element rule below) — the phone instance
+   of this same content, rendered as a sibling of the canvas instead of
+   nested inside it (see PotionGameScreen.tsx). Only the outer shell's
+   position/size differs between the two (that rule is NOT extended this
+   way — .pg-overlay-zone--phone has its own, in the compact media query);
+   everything else — chalk-dust texture, border-radius, and the
+   lesson-objective card's internal sizing — stays identical by sharing
+   these same rules rather than duplicating them. */
+.machine-world--potion .pg-overlay-zone::before,
+.pg-overlay-zone--phone::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1003,7 +1013,8 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
 
 /* Chalk wipe streaks: near-horizontal lines visible only at the perimeter.
    The radial mask keeps the center 35% of the board completely clear. */
-.machine-world--potion .pg-overlay-zone::after {
+.machine-world--potion .pg-overlay-zone::after,
+.pg-overlay-zone--phone::after {
   content: '';
   position: absolute;
   top: 0;
@@ -1274,12 +1285,15 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
      verified" note this block used to carry). Now that the canvas-scale
      and background bugs are fixed and the screen is actually visible, the
      play objects read as too small/cramped next to the reference; this
-     brings them closer to that reference's proportions. */
+     brings them closer to that reference's proportions.
+
+     --pg-prof-* used to live here too, but on phone Professor WiggleWoo is
+     now a sibling of this canvas (rendered against .pg-bg-fill — see
+     PotionGameScreen.tsx's isCompact branch and the .pg-professor compact
+     rule below) instead of a descendant, so these custom properties no
+     longer reach it there. Tablet still uses them unchanged, since on
+     tablet Professor stays nested inside this canvas as before. */
   .machine-world--potion {
-    --pg-prof-w:      88px;
-    --pg-prof-bottom: 3%;
-    --pg-prof-left:   auto;
-    --pg-prof-right:  2%;
     --pg-slot-sz:     60px;
     --pg-slot-fs:     26px;
     --pg-rim-w:       240px;
@@ -1372,6 +1386,16 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
     height: 150px !important;
   }
 
+  /* Room-decoration positions (Professor, logo, shelves, tracing board,
+     loose potions) live in a SEPARATE, later media-query block at the end
+     of this file — see the comment there for why. */
+  .pg-room-logo {
+    top: 1%;
+    left: 1%;
+    width: 110px;
+    max-width: 110px;
+  }
+
   /* ── Gameplay column: tiles+beaker+bottles centered as one group ── */
   .pg-gameplay-col {
     flex: 1 1 0;
@@ -1413,11 +1437,11 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
     animation: pg-bottle-pour-compact 1.10s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
   }
 
-  /* ── Logo: moderate shrink so HUD elements have breathing room ── */
-  .machine-world--potion .title-badge {
-    width: 140px;
-    max-width: 140px;
-  }
+  /* Logo sizing on phone now lives on .pg-room-logo above — this selector
+     (.machine-world--potion .title-badge) can't match there any more since
+     the logo element is a sibling of the canvas on phone, not a
+     descendant. Tablet is unaffected either way: this media query never
+     matches on tablet. */
 
   /* ── Hanging light: shrink + lift slightly so it can't reach down into
      the top bar / star counter's row now that the top of the canvas is
@@ -1446,47 +1470,63 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
    The Blue Gameplay Chalkboard interior is ~56% of screen height. The default card is
    designed for a full-height panel and overflows. These overrides mirror
    the max-height:500px landscape rules but scoped to the potion context
-   so no other screen is affected. */
-.machine-world--potion .pg-overlay-zone .lesson-objective__card {
+   so no other screen is affected. Each selector is grouped with the
+   equivalent .pg-overlay-zone--phone rule — the phone instance of this
+   same card, rendered as a sibling of the canvas (see PotionGameScreen.tsx
+   and the .pg-overlay-zone shell rules above) — so sizing stays identical
+   between the two instead of the phone one falling back to this
+   component's non-compact defaults. All vh/vw-based, so the values
+   already mean the same thing in both DOM locations regardless of the
+   canvas's own scale/letterboxing. */
+.machine-world--potion .pg-overlay-zone .lesson-objective__card,
+.pg-overlay-zone--phone .lesson-objective__card {
   gap: clamp(4px, 0.9vh, 8px);
   padding: clamp(10px, 1.6vh, 16px) clamp(16px, 3vw, 28px);
 }
 
-.machine-world--potion .pg-overlay-zone .lesson-objective__focus {
+.machine-world--potion .pg-overlay-zone .lesson-objective__focus,
+.pg-overlay-zone--phone .lesson-objective__focus {
   font-size: clamp(22px, 4.8vh, 36px);
 }
 
-.machine-world--potion .pg-overlay-zone .lesson-objective__goal {
+.machine-world--potion .pg-overlay-zone .lesson-objective__goal,
+.pg-overlay-zone--phone .lesson-objective__goal {
   font-size: clamp(14px, 2.6vh, 20px);
 }
 
-.machine-world--potion .pg-overlay-zone .lesson-objective__sub {
+.machine-world--potion .pg-overlay-zone .lesson-objective__sub,
+.pg-overlay-zone--phone .lesson-objective__sub {
   font-size: clamp(11px, 1.9vh, 14px);
 }
 
 /* Example word card: switch to side-by-side to save ~80px of vertical space */
-.machine-world--potion .pg-overlay-zone .lesson-objective__example {
+.machine-world--potion .pg-overlay-zone .lesson-objective__example,
+.pg-overlay-zone--phone .lesson-objective__example {
   flex-direction: row;
   gap: clamp(8px, 1.2vw, 14px);
   padding: clamp(6px, 1vh, 10px) clamp(12px, 2vw, 18px);
   margin: 0;
 }
 
-.machine-world--potion .pg-overlay-zone .lesson-objective__example-image {
+.machine-world--potion .pg-overlay-zone .lesson-objective__example-image,
+.pg-overlay-zone--phone .lesson-objective__example-image {
   width:  clamp(52px, 9.5vh, 84px);
   height: clamp(52px, 9.5vh, 84px);
   flex-shrink: 0;
 }
 
-.machine-world--potion .pg-overlay-zone .lesson-objective__example-word {
+.machine-world--potion .pg-overlay-zone .lesson-objective__example-word,
+.pg-overlay-zone--phone .lesson-objective__example-word {
   font-size: clamp(18px, 3.8vh, 28px);
 }
 
-.machine-world--potion .pg-overlay-zone .lesson-objective__example-listen {
+.machine-world--potion .pg-overlay-zone .lesson-objective__example-listen,
+.pg-overlay-zone--phone .lesson-objective__example-listen {
   font-size: clamp(10px, 1.6vh, 13px);
 }
 
-.machine-world--potion .pg-overlay-zone .lesson-objective__continue {
+.machine-world--potion .pg-overlay-zone .lesson-objective__continue,
+.pg-overlay-zone--phone .lesson-objective__continue {
   padding: clamp(8px, 1.3vh, 12px) clamp(22px, 4vw, 36px);
   font-size: clamp(14px, 2.6vh, 18px);
 }
@@ -1744,5 +1784,126 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
 .pg-green-chalkboard--active {
   opacity: 0;
   pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════════
+   COMPACT MOBILE (phone only) — room-prop position overrides.
+   Deliberately placed in its OWN media-query block at the very end of
+   the file: .pg-desk-potion(--N) and .pg-professor each already have an
+   unguarded base rule earlier in this file (the originals above, used
+   on tablet where these elements are still nested inside the scaled
+   canvas). An override for the same selector written *inside* the
+   compact media query but positioned *before* that later unguarded
+   rule loses the cascade — same specificity, and CSS resolves ties by
+   source order, not by whether a media query matched. Putting the
+   override block after every conflicting base rule guarantees it wins
+   whenever the media query actually matches, without raising
+   specificity or touching the tablet-only rules above. Tablet is
+   unaffected either way: this query never matches there. ── */
+@media (max-height: 500px) {
+  /* Potion shelf: same size as the bookshelf on the right (matching
+     clamp), sitting high on the left wall, clear of the chalkboard below
+     it — measured bounding boxes at top:22% showed only ~9px of
+     clearance from the chalkboard at the widest tested phone (932×430),
+     which read as "almost touching"; top:26% (below) restores a real
+     gap at every tested size, now that the chalkboard itself is also
+     shrunk (see below) rather than eating the whole band on its own. */
+  .pg-potion-shelf {
+    top: 26%;
+    left: -1.5%;
+    width: clamp(115px, 17%, 228px);
+  }
+
+  /* Chalkboard rests flush on the floor/desk, same baseline as Professor
+     and the books+potions cluster. Shrunk from the tablet-tuned
+     clamp(80px,18%,210px): that size alone (up to 220px tall at 932×430)
+     left no room to fit the now-bookshelf-matched potion shelf above it
+     with any real margin at any tested phone size — the two props
+     together need more vertical room than exists between the logo and
+     the floor on a phone. This keeps the chalkboard's exact position
+     (bottom:0%, left:2%) and "resting on the desk" look, just at a size
+     that actually leaves breathing room above it. */
+  .pg-green-chalkboard {
+    bottom: 0%;
+    left: 2%;
+    width: clamp(70px, 14%, 160px);
+  }
+
+  /* Professor enlarged; left unchanged so the extra width grows rightward,
+     away from the chalkboard, not into it. */
+  .pg-professor {
+    bottom: 0%;
+    left: 25%;
+    right: auto;
+    width: 100px;
+  }
+
+  /* Books enlarged, still resting on the desk beside the potions. */
+  .pg-books--vertical {
+    right: 2%;
+    bottom: 3%;
+    width: clamp(60px, 10%, 110px);
+  }
+
+  /* Loose potions enlarged further. Real rendered size at this clamp is
+     ~75×56px (bottle art is wider than tall) — re-spaced at 6%-viewport-
+     width steps against that measured size so neighbors overlap only
+     slightly (a deliberate clustered-bottles look) while the group as a
+     whole clears both Professor (left) and the books (right) with real
+     margin at every supported phone size, 667×375 up to 932×430. Spacing
+     is a tight 4%-of-viewport-width step on purpose — bunched together
+     like bottles clustered on a shelf, not spread apart; only the group's
+     clearance from Professor and the books matters, not gaps between
+     bottles within it. */
+  .pg-desk-potion {
+    height: clamp(56px, 11vh, 90px);
+  }
+  .pg-desk-potion--1 { bottom: 3%; right: 18%; }
+  .pg-desk-potion--2 { bottom: 4%; right: 22%; }
+  .pg-desk-potion--3 { bottom: 3%; right: 26%; }
+  .pg-desk-potion--4 { bottom: 4%; right: 30%; }
+  .pg-desk-potion--5 { bottom: 3%; right: 34%; }
+
+  /* Blue Gameplay Chalkboard overlay zone (phone) — the celebrate /
+     lesson-intro / say-cue / mastery-unlock / parent-prompt card, as a
+     sibling of the canvas (see PotionGameScreen.tsx: overlayZoneChildren
+     / .pg-overlay-zone--phone).
+
+     A single flat top:0%/bottom:15% (tried first) can't be right for
+     every phone size: the background is cover-fit, so it crops MORE off
+     the top/bottom at wider aspect ratios and LESS at narrower ones —
+     the vertical position of the board inside the viewport genuinely
+     shifts with aspect ratio, it's not just measurement noise. At
+     667×375 (the narrowest supported phone) a flat 0%/15% overshot the
+     board's real top/bottom edges — the card's rounded corners visibly
+     poked out past the frame onto the wall, and the bottom edge sat low
+     enough to cover the desk potions. At 932×430 (the widest) the same
+     flat values undershot, leaving gaps at the corners.
+
+     Fix: derive top/bottom as a straight-line function of aspect ratio
+     (cover-fit crop amount IS linear in viewport_width/viewport_height
+     for a fixed background image), fitted from two precisely-measured
+     points — interior top/bottom edge pixel position, sampled directly
+     off real-gameplay screenshots at 667×375 and a calibration shot —
+     then expressed directly in CSS via calc(Nvw + Mvh), which tracks the
+     true cover-fit math continuously instead of guessing one compromise
+     value. A negative result (happens at wider phones, where the board's
+     rounded top corner is cropped above the viewform entirely) is fine —
+     it just pushes the card's top edge above the screen, which is
+     correct when the real frame corner isn't visible either.
+
+     left/right (15%/15%) stay flat: horizontal is never cropped by
+     cover-fit here (the background is always width-bound), confirmed
+     identical (14.8–15%) at both measured aspect ratios. */
+  .pg-overlay-zone--phone {
+    position: absolute;
+    top: calc(-38.33vw + 71.92vh);
+    bottom: calc(-15.12vw + 49.16vh);
+    left: 15%;
+    right: 15%;
+    border-radius: 36px;
+    overflow: hidden;
+    z-index: 20;
+  }
 }
 

@@ -570,18 +570,23 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
 
   const profSrc = skinAssets.heroImg;
 
-  // ── Canvas scale: contain-fit the fixed 1366×1024 design canvas inside the
-  //    viewport (min of width-fit and height-fit), so the whole canvas — top
-  //    bar included — stays fully visible on any aspect ratio instead of
-  //    overflowing vertically and getting cropped by ancestor overflow:hidden.
-  //    On the iPad Pro 4:3 reference the two ratios are equal, so this is
-  //    identical to the previous width-only math (scale stays 1, no tablet change).
+  // ── Canvas scale: width-fit the fixed 1366×1024 design canvas, exactly as
+  //    original — this is what's actually installed on the Galaxy tablets,
+  //    which are ~16:10, not 4:3, so a width/height-min "contain" formula
+  //    (tried earlier) measurably changes their layout even though it's a
+  //    no-op on the exact-4:3 iPad Pro. Width-fit stays the tablet baseline.
+  //    Only on true phone-landscape (isCompact, below) do we switch to
+  //    contain-fit, so the canvas — top bar included — doesn't overflow
+  //    vertically and get cropped on very short viewports.
   const sceneRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const DESIGN_W = 1366;
     const DESIGN_H = 1024;
     const update = () => {
-      const s = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+      const compact = window.matchMedia("(max-height: 500px)").matches;
+      const s = compact
+        ? Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H)
+        : window.innerWidth / DESIGN_W;
       sceneRef.current?.style.setProperty("--potion-scale", s.toFixed(4));
     };
     update();
@@ -589,6 +594,90 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
     ro.observe(document.documentElement);
     return () => ro.disconnect();
   }, []);
+
+  // ── Compact (phone-landscape) breakpoint — JS mirror of the CSS
+  //    `@media (max-height: 500px)` query used throughout potion-game.css.
+  //    Room decorations (Professor, logo, shelves, books, loose potions,
+  //    tracing board) render in a different part of the tree depending on
+  //    this: nested inside the scaled canvas on Galaxy tablets and other
+  //    non-compact devices — exactly the original, unmodified structure —
+  //    or as siblings of the canvas against the unscaled .pg-bg-fill room
+  //    on phones, where the canvas is narrower than the viewport and the
+  //    painted chalkboard, so anything confined to it can't reach the
+  //    wall/floor around it. The picture card, slots, cauldron, and bottle
+  //    row are NOT gated — they always stay nested inside the board, on
+  //    every breakpoint, unchanged from the original.
+  const [isCompact, setIsCompact] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-height: 500px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-height: 500px)");
+    const update = () => setIsCompact(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // ── Blue Gameplay Chalkboard overlay content (celebrate / lesson-intro /
+  //    say-cue / mastery-unlock / parent-prompt) — computed once so both
+  //    possible mount points below (tablet: nested in the canvas, unchanged;
+  //    phone: a sibling of the canvas, see isCompact further down) render
+  //    the exact same children instead of duplicating this step-switch. */
+  const overlayZoneChildren =
+    (step === "celebrate" ||
+      step === "lesson-intro" ||
+      step === "say-cue" ||
+      step === "mastery-unlock" ||
+      step === "parent-prompt") && (
+      <>
+        {step === "celebrate" && (
+          <CelebrationOverlay
+            type={tutorialMode ? "level-complete" : getCelebrationTypeForWord(currentWordIndex, quest.words.length)}
+            onComplete={handleCelebrationComplete}
+            wordsComplete={currentWordIndex + 1}
+            totalWords={quest.words.length}
+            word={currentWord.word}
+            rating={
+              incorrectCount === 0
+                ? "perfect"
+                : incorrectCount <= 2
+                ? "clean"
+                : "assisted"
+            }
+          />
+        )}
+        {step === "lesson-intro" && (
+          <LessonObjectiveCard
+            lessonIndex={getLessonIndex(currentWordIndex)}
+            questTitle={quest.title}
+            exampleWord={currentWord}
+            onContinue={handleLessonIntroComplete}
+          />
+        )}
+        {step === "say-cue" && (
+          <SayItOutLoudCue
+            word={currentWord.word}
+            onDismiss={handleSayCueDismiss}
+          />
+        )}
+        {step === "mastery-unlock" && (
+          <MasteryBadgeUnlock
+            lessonIndex={getLessonIndex(currentWordIndex)}
+            focusLabel={getFocusLabel(quest.title)}
+            onContinue={handleMasteryUnlockComplete}
+          />
+        )}
+        {step === "parent-prompt" && (
+          <ParentPrompt
+            prompt={getParentPrompt(
+              questIdToVowelId(quest.id),
+              getLessonIndex(currentWordIndex),
+            )}
+            onDismiss={handleParentPromptDismiss}
+          />
+        )}
+      </>
+    );
 
   // =============================================
   // JSX
@@ -787,10 +876,14 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
                     </div>
                   </div>
 
-                  {/* WiggleWoo — shows the kid's equipped wardrobe skin */}
-                  <div className={`pg-professor pg-professor--${profState}`}>
-                    <img src={profSrc} alt="WiggleWoo" draggable={false} />
-                  </div>
+                  {/* WiggleWoo — shows the kid's equipped wardrobe skin.
+                      Tablet only; the phone version renders as a sibling of
+                      the canvas further down this return (isCompact). */}
+                  {!isCompact && (
+                    <div className={`pg-professor pg-professor--${profState}`}>
+                      <img src={profSrc} alt="WiggleWoo" draggable={false} />
+                    </div>
+                  )}
                 </>
               )}
 
@@ -801,63 +894,14 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
       </div>
       {/* end map-window */}
 
-      {/* ── Blue Gameplay Chalkboard overlay zone ──
+      {/* ── Blue Gameplay Chalkboard overlay zone (tablet) ──
           All modal / lesson screens render here, bounded to the Blue Gameplay Chalkboard.
           Each overlay component uses position:absolute;inset:0 and fills this div,
-          which is sized and clipped to the Blue Gameplay Chalkboard inner bounds. */}
-      {(step === "celebrate" ||
-        step === "lesson-intro" ||
-        step === "say-cue" ||
-        step === "mastery-unlock" ||
-        step === "parent-prompt") && (
-        <div className="pg-overlay-zone">
-          {step === "celebrate" && (
-            <CelebrationOverlay
-              type={tutorialMode ? "level-complete" : getCelebrationTypeForWord(currentWordIndex, quest.words.length)}
-              onComplete={handleCelebrationComplete}
-              wordsComplete={currentWordIndex + 1}
-              totalWords={quest.words.length}
-              word={currentWord.word}
-              rating={
-                incorrectCount === 0
-                  ? "perfect"
-                  : incorrectCount <= 2
-                  ? "clean"
-                  : "assisted"
-              }
-            />
-          )}
-          {step === "lesson-intro" && (
-            <LessonObjectiveCard
-              lessonIndex={getLessonIndex(currentWordIndex)}
-              questTitle={quest.title}
-              exampleWord={currentWord}
-              onContinue={handleLessonIntroComplete}
-            />
-          )}
-          {step === "say-cue" && (
-            <SayItOutLoudCue
-              word={currentWord.word}
-              onDismiss={handleSayCueDismiss}
-            />
-          )}
-          {step === "mastery-unlock" && (
-            <MasteryBadgeUnlock
-              lessonIndex={getLessonIndex(currentWordIndex)}
-              focusLabel={getFocusLabel(quest.title)}
-              onContinue={handleMasteryUnlockComplete}
-            />
-          )}
-          {step === "parent-prompt" && (
-            <ParentPrompt
-              prompt={getParentPrompt(
-                questIdToVowelId(quest.id),
-                getLessonIndex(currentWordIndex),
-              )}
-              onDismiss={handleParentPromptDismiss}
-            />
-          )}
-        </div>
+          which is sized and clipped to the Blue Gameplay Chalkboard inner bounds.
+          On phone this same content renders instead as a sibling of the canvas,
+          further down (isCompact) — see overlayZoneChildren above for why. */}
+      {!isCompact && overlayZoneChildren && (
+        <div className="pg-overlay-zone">{overlayZoneChildren}</div>
       )}
 
       {/* ── Green Teaching Chalkboard — TraceMoment renders on the expanded desk easel during trace-prep ── */}
@@ -890,47 +934,50 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
         draggable={false}
       />
 
-      {/* ── Bookshelf — mounted on top-right wall ── */}
-      <div className="pg-bookshelf" aria-hidden="true">
-        <img src="/assets/books-horizontally with shelf.png" alt="" className="pg-bookshelf__books" draggable={false} />
-      </div>
+      {/* ── Room decorations (tablet only) — original structure, nested
+          inside the canvas exactly as before this fix. On phone these
+          render instead as siblings of the canvas, further down
+          (isCompact blocks), against the unscaled room. ── */}
+      {!isCompact && (
+        <>
+          <div className="pg-bookshelf" aria-hidden="true">
+            <img src="/assets/books-horizontally with shelf.png" alt="" className="pg-bookshelf__books" draggable={false} />
+          </div>
 
-      {/* ── Vertical books — bottom-right corner ── */}
-      <img src="/assets/books-vertically.png" alt="" className="pg-books--vertical" draggable={false} />
+          <img src="/assets/books-vertically.png" alt="" className="pg-books--vertical" draggable={false} />
 
-      {/* ── Potion shelf — mounted on left wall ── */}
-      <img src="/assets/poison-bottles-w-shelf.png" alt="" className="pg-potion-shelf" draggable={false} aria-hidden={true} />
+          <img src="/assets/poison-bottles-w-shelf.png" alt="" className="pg-potion-shelf" draggable={false} aria-hidden={true} />
 
-      {/* ── Green Teaching Chalkboard — desk easel; clickable for voluntary letter practice ── */}
-      <div
-        className={`pg-green-chalkboard${step === "trace-prep" ? " pg-green-chalkboard--active" : ""}`}
-        onClick={handlePracticeBoardClick}
-        role={traceSequence.length > 0 && step === "build" && !tutorialMode ? "button" : undefined}
-        aria-label={traceSequence.length > 0 && step === "build" && !tutorialMode ? "Practice tracing letters" : undefined}
-        tabIndex={traceSequence.length > 0 && step === "build" && !tutorialMode ? 0 : -1}
-      >
-        <img
-          src="/assets/green-chalk-board.png"
-          alt=""
-          className="pg-green-chalkboard__img"
-          draggable={false}
-        />
-        {traceSequence.length > 0 && step !== "trace-prep" && !tutorialMode && (
-          <span className="pg-green-chalkboard__cta" aria-hidden="true">
-            Trace<br />the<br />letter
-          </span>
-        )}
-        {hasTraceStar && (
-          <span className="pg-green-chalkboard__star" aria-hidden="true">★</span>
-        )}
-      </div>
+          <div
+            className={`pg-green-chalkboard${step === "trace-prep" ? " pg-green-chalkboard--active" : ""}`}
+            onClick={handlePracticeBoardClick}
+            role={traceSequence.length > 0 && step === "build" && !tutorialMode ? "button" : undefined}
+            aria-label={traceSequence.length > 0 && step === "build" && !tutorialMode ? "Practice tracing letters" : undefined}
+            tabIndex={traceSequence.length > 0 && step === "build" && !tutorialMode ? 0 : -1}
+          >
+            <img
+              src="/assets/green-chalk-board.png"
+              alt=""
+              className="pg-green-chalkboard__img"
+              draggable={false}
+            />
+            {traceSequence.length > 0 && step !== "trace-prep" && !tutorialMode && (
+              <span className="pg-green-chalkboard__cta" aria-hidden="true">
+                Trace<br />the<br />letter
+              </span>
+            )}
+            {hasTraceStar && (
+              <span className="pg-green-chalkboard__star" aria-hidden="true">★</span>
+            )}
+          </div>
 
-      {/* ── Desk potions — clustered by the bottom-right books ── */}
-      <img src="/assets/dark-purple-potion.png"  alt="" className="pg-desk-potion pg-desk-potion--1" draggable={false} />
-      <img src="/assets/golden-honey-potion.png" alt="" className="pg-desk-potion pg-desk-potion--2" draggable={false} />
-      <img src="/assets/green-leaf-potion.png"   alt="" className="pg-desk-potion pg-desk-potion--3" draggable={false} />
-      <img src="/assets/love-potion.png"         alt="" className="pg-desk-potion pg-desk-potion--4" draggable={false} />
-      <img src="/assets/teal-potion.png"         alt="" className="pg-desk-potion pg-desk-potion--5" draggable={false} />
+          <img src="/assets/dark-purple-potion.png"  alt="" className="pg-desk-potion pg-desk-potion--1" draggable={false} />
+          <img src="/assets/golden-honey-potion.png" alt="" className="pg-desk-potion pg-desk-potion--2" draggable={false} />
+          <img src="/assets/green-leaf-potion.png"   alt="" className="pg-desk-potion pg-desk-potion--3" draggable={false} />
+          <img src="/assets/love-potion.png"         alt="" className="pg-desk-potion pg-desk-potion--4" draggable={false} />
+          <img src="/assets/teal-potion.png"         alt="" className="pg-desk-potion pg-desk-potion--5" draggable={false} />
+        </>
+      )}
 
       {/* ── Outer machine decorations ── */}
       <img src={gear2} alt="" className="bg-gear bg-gear-1" draggable={false} />
@@ -955,17 +1002,101 @@ const PotionGameScreen: React.FC<PotionGameScreenProps> = ({
         </div>
       </div>
 
-      <img
-        src="/assets/word-lab-logo.png"
-        alt="WiggleWoo's Word Quest — Go Home"
-        className="title-badge title-badge--clickable"
-        draggable={false}
-        onClick={onGoHome}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
-      />
+      {!isCompact && (
+        <img
+          src="/assets/word-lab-logo.png"
+          alt="WiggleWoo's Word Quest — Go Home"
+          className="title-badge title-badge--clickable"
+          draggable={false}
+          onClick={onGoHome}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
+        />
+      )}
     </div>
+
+      {/* ── Room decorations (phone only) — siblings of the scaled canvas
+          (not descendants), so they render against the unscaled
+          .pg-bg-fill room instead of being clipped to the 1366×1024
+          canvas edge, which on wide phone aspect ratios sits *inside* the
+          painted chalkboard. Positions measured directly off the design
+          reference: the board's painted frame sits at x≈13%/87% of the
+          room width (reliable at any phone aspect ratio — the background
+          is never cropped horizontally, only vertically) and its bottom
+          frame clears by ≈86% of room height. ── */}
+      {isCompact && (step === "build" || step === "say-cue") && (
+        <div className={`pg-professor pg-professor--${profState}`}>
+          <img src={profSrc} alt="WiggleWoo" draggable={false} />
+        </div>
+      )}
+      {isCompact && (
+        <img
+          src="/assets/word-lab-logo.png"
+          alt="WiggleWoo's Word Quest — Go Home"
+          className="title-badge title-badge--clickable pg-room-logo"
+          draggable={false}
+          onClick={onGoHome}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onGoHome?.()}
+        />
+      )}
+      {isCompact && (
+        <>
+          <div className="pg-bookshelf" aria-hidden="true">
+            <img src="/assets/books-horizontally with shelf.png" alt="" className="pg-bookshelf__books" draggable={false} />
+          </div>
+
+          <img src="/assets/books-vertically.png" alt="" className="pg-books--vertical" draggable={false} />
+
+          <img src="/assets/poison-bottles-w-shelf.png" alt="" className="pg-potion-shelf" draggable={false} aria-hidden={true} />
+
+          <div
+            className={`pg-green-chalkboard${step === "trace-prep" ? " pg-green-chalkboard--active" : ""}`}
+            onClick={handlePracticeBoardClick}
+            role={traceSequence.length > 0 && step === "build" && !tutorialMode ? "button" : undefined}
+            aria-label={traceSequence.length > 0 && step === "build" && !tutorialMode ? "Practice tracing letters" : undefined}
+            tabIndex={traceSequence.length > 0 && step === "build" && !tutorialMode ? 0 : -1}
+          >
+            <img
+              src="/assets/green-chalk-board.png"
+              alt=""
+              className="pg-green-chalkboard__img"
+              draggable={false}
+            />
+            {traceSequence.length > 0 && step !== "trace-prep" && !tutorialMode && (
+              <span className="pg-green-chalkboard__cta" aria-hidden="true">
+                Trace<br />the<br />letter
+              </span>
+            )}
+            {hasTraceStar && (
+              <span className="pg-green-chalkboard__star" aria-hidden="true">★</span>
+            )}
+          </div>
+
+          <img src="/assets/dark-purple-potion.png"  alt="" className="pg-desk-potion pg-desk-potion--1" draggable={false} />
+          <img src="/assets/golden-honey-potion.png" alt="" className="pg-desk-potion pg-desk-potion--2" draggable={false} />
+          <img src="/assets/green-leaf-potion.png"   alt="" className="pg-desk-potion pg-desk-potion--3" draggable={false} />
+          <img src="/assets/love-potion.png"         alt="" className="pg-desk-potion pg-desk-potion--4" draggable={false} />
+          <img src="/assets/teal-potion.png"         alt="" className="pg-desk-potion pg-desk-potion--5" draggable={false} />
+        </>
+      )}
+
+      {/* ── Blue Gameplay Chalkboard overlay zone (phone) — same content as
+          the tablet version above (overlayZoneChildren), but as a sibling
+          of the canvas so its position is real-viewport-relative instead
+          of canvas-relative. Needed because the canvas is letterboxed
+          (narrower than the viewport) in compact mode, which left this
+          card too small and visibly off-center inside the real painted
+          board — not full-chalkboard coverage — in every step that uses
+          it (celebrate, lesson-intro, say-cue, mastery-unlock,
+          parent-prompt), not just onboarding. Position is .pg-overlay-zone--phone
+          below, measured directly off real gameplay screenshots at both
+          the narrowest (667×375) and widest (932×430) tested phones. ── */}
+      {isCompact && overlayZoneChildren && (
+        <div className="pg-overlay-zone pg-overlay-zone--phone">{overlayZoneChildren}</div>
+      )}
     </div>
   );
 };

@@ -390,8 +390,10 @@
    clobber the canvas dimensions.
 
    --potion-scale is written by PotionGameScreen's ResizeObserver:
-     min(viewport_w / 1366, viewport_h / 1024)
-   On iPad Pro 1366×1024 this evaluates to exactly 1 — layout unchanged. */
+     viewport_w / 1366 normally (matches the Galaxy tablets, which are not
+     4:3), or min(viewport_w / 1366, viewport_h / 1024) on phone-landscape
+     (max-height: 500px) only, to avoid vertical cropping there.
+   On iPad Pro 1366×1024 both formulas evaluate to exactly 1 — unchanged. */
 .machine-world.machine-world--potion {
   position: absolute;
   width: 1366px;
