@@ -95,13 +95,14 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: clamp(10px, 1.6vh, 14px);
 }
 
 .badge-gallery__quest {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: clamp(8px, 1.6vw, 14px);
   padding: clamp(10px, 1.4vh, 14px) clamp(12px, 2vw, 18px);
   background: rgba(255, 255, 255, 0.78);
@@ -129,8 +130,9 @@
 
 .badge-gallery__slots {
   flex: 1;
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(4px, 0.8vw, 8px);
 }
 
@@ -140,11 +142,13 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
+  min-width: 0;
   padding: clamp(6px, 1vh, 10px) 4px;
   border-radius: 10px;
   background: rgba(230, 240, 248, 0.6);
   border: 2px dashed rgba(95, 115, 140, 0.35);
   text-align: center;
+  overflow: hidden;
   transition: background 0.2s, border 0.2s;
 }
 
@@ -156,11 +160,15 @@
 }
 
 .badge-gallery__slot-label {
+  max-width: 100%;
   font-size: clamp(9px, 1.4vh, 11px);
   font-weight: 700;
   color: #6E7B8A;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Earned state — silver-star + gold gradient ring, matches the
