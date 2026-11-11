@@ -1555,18 +1555,22 @@
      its own; only this wrapper's position needed fixing. */
   .trophy-showcase {
     margin-top: 163px;
-    left: calc(3% + 35px);
+    left: max(calc(3% + 35px), calc(env(safe-area-inset-left) + 6.5vw - 5px));
   }
 
-  /* Wardrobe button: deliberately has NO override here. Its base rule
-     (left: calc(3% + 35px), width/height: calc(50px + 24px*var(--u,1)))
-     already produces the size/position confirmed to be good — a compact
-     override was added here once before, but it sat *earlier* in this
-     file than that base rule, so — same specificity, and CSS resolves
-     ties by source order, not by whether a media query matched — the
-     base rule always won anyway; it was dead code. .title-badge and
-     .trophy-showcase above are now built to match THIS element's
-     position (calc(3% + 35px)), rather than the other way around. */
+  /* Wardrobe button: previously had NO override here, because its base
+     rule (left: calc(3% + 35px)) already matched .title-badge's and
+     .trophy-showcase's shared center column. But .title-badge's own
+     left also clears env(safe-area-inset-left) on notched phones in
+     landscape — on a device where that inset exceeds the formula value,
+     the logo shifts right of the shared column while this button (and
+     .trophy-showcase above, before this fix) stayed put, breaking the
+     alignment on real hardware (not reproducible in a simulator with no
+     notch to simulate). Mirroring the same max() so all three move
+     together regardless of safe-area width. */
+  .wardrobe-map-btn {
+    left: max(calc(3% + 35px), calc(env(safe-area-inset-left) + 6.5vw - 5px));
+  }
 
   /* Right panel: visible with full labels.
      Widened from 100px — too narrow to fit the 4 quest-mastery-stars dots

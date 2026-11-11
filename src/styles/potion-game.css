@@ -1294,21 +1294,24 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
      longer reach it there. Tablet still uses them unchanged, since on
      tablet Professor stays nested inside this canvas as before. */
   .machine-world--potion {
-    --pg-slot-sz:     60px;
-    --pg-slot-fs:     26px;
-    --pg-rim-w:       240px;
-    --pg-rim-h:       20px;
-    --pg-beaker-w:    200px;
-    --pg-beaker-h:    148px;
-    --pg-stand-w:     172px;
-    --pg-stand-h:     34px;
-    --pg-cork-w:      18px;
-    --pg-cork-h:      9px;
-    --pg-neck-w:      18px;
-    --pg-neck-h:      12px;
-    --pg-bottle-w:    60px;
-    --pg-bottle-h:    82px;
-    --pg-bottle-fs:   24px;
+    /* Sized up again (~25% on top of the prior "30-40% over the original
+       compact pass" bump above) — still read as too small/cramped against
+       the generous empty board space once actually tested on device. */
+    --pg-slot-sz:     75px;
+    --pg-slot-fs:     32px;
+    --pg-rim-w:       300px;
+    --pg-rim-h:       25px;
+    --pg-beaker-w:    250px;
+    --pg-beaker-h:    185px;
+    --pg-stand-w:     215px;
+    --pg-stand-h:     42px;
+    --pg-cork-w:      22px;
+    --pg-cork-h:      11px;
+    --pg-neck-w:      22px;
+    --pg-neck-h:      15px;
+    --pg-bottle-w:    75px;
+    --pg-bottle-h:    102px;
+    --pg-bottle-fs:   30px;
   }
 
 
@@ -1390,8 +1393,8 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
      loose potions) live in a SEPARATE, later media-query block at the end
      of this file — see the comment there for why. */
   .pg-room-logo {
-    top: 1%;
-    left: 1%;
+    top: max(1%, env(safe-area-inset-top));
+    left: max(1%, env(safe-area-inset-left));
     width: 110px;
     max-width: 110px;
   }
@@ -1426,7 +1429,7 @@ html[data-input-modality="pointer"] .pg-bottle:focus-visible {
      px instead, and widened to match the bottle row spreading wider in the
      reference now that the bottles themselves are bigger. */
   .pg-bottles-row {
-    gap: 30px;
+    gap: 26px;
     padding-bottom: 0;
     justify-content: center;
   }
